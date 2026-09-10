@@ -1,0 +1,974 @@
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:18 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async getTabValues (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:40:15)
+    at async Promise.all (index 1)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: { valueRenderOption: 'FORMATTED_VALUE' },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050914216,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:18 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async getTabValues (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:40:15)
+    at async Promise.all (index 1)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: { valueRenderOption: 'FORMATTED_VALUE' },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050917779,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:21 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050917736,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:21 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050921230,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:25 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050921225,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:25 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050921374,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:25 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async getTabValues (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:40:15)
+    at async Promise.all (index 1)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: { valueRenderOption: 'FORMATTED_VALUE' },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050941498,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:45 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/values/%27Website%20List%27%21A1%3AZZ2000?valueRenderOption=FORMATTED_VALUE'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050941484,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:45 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050945026,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:48 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050945123,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:48 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+Server error on /api/preview : GaxiosError: Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.
+    at Gaxios._request (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\gaxios\build\src\gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async JWT.requestAsync (C:\Users\toufi_qicjadj\Downloads\maintenance-mailer\node_modules\google-auth-library\build\src\auth\oauth2client.js:429:18)
+    at async listTabTitles (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/sheets.js:32:16)
+    at async Promise.all (index 0)
+    at async getSitePreview (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/dashboardApi.js:260:35)
+    at async Server.<anonymous> (file:///C:/Users/toufi_qicjadj/Downloads/maintenance-mailer/src/server.js:123:20) {
+  config: {
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: {
+      'x-goog-api-client': 'gdcl/7.2.0 gl-node/24.18.0',
+      'Accept-Encoding': 'gzip',
+      'User-Agent': 'google-api-nodejs-client/7.2.0 (gzip)',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.'
+    },
+    params: {},
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 3,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1789050945038,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: {
+    config: {
+      url: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8',
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: [Object],
+      params: {},
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor],
+      retryConfig: [Object]
+    },
+    data: { error: [Object] },
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-encoding': 'gzip',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 10 Sep 2026 14:35:49 GMT',
+      server: 'ESF',
+      'transfer-encoding': 'chunked',
+      vary: 'Origin, X-Origin, Referer',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-l2-request-path': 'l2-managed-6',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://sheets.googleapis.com/v4/spreadsheets/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8'
+    }
+  },
+  error: undefined,
+  status: 429,
+  code: 429,
+  errors: [
+    {
+      message: "Quota exceeded for quota metric 'Read requests' and limit 'Read requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:99462275246'.",
+      domain: 'global',
+      reason: 'rateLimitExceeded'
+    }
+  ],
+  Symbol(gaxios-gaxios-error): '6.7.1'
+}
+
+

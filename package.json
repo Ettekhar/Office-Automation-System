@@ -1,0 +1,22 @@
+{
+  "name": "maintenance-report-mailer",
+  "version": "1.0.0",
+  "description": "Reads the maintenance tracking Google Sheet, finds active sites due for their monthly report, pulls the per-site report tab, and emails it to the client contact.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dashboard": "node src/server.js",
+    "dry-run": "node src/index.js",
+    "send": "node src/index.js --send"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "google-auth-library": "^9.14.1",
+    "googleapis": "^140.0.1",
+    "nodemailer": "^6.9.14"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
