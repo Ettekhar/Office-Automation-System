@@ -281,7 +281,12 @@ const server = http.createServer(async (req, res) => {
       if (/^\/api\/master\/sites\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
         const b = await body();
-        try { return ok({ site: db.updateSite(id, b) }); }
+        try {
+          if (Array.isArray(b.assignedUsers)) {
+            return ok({ site: db.assignUsersToSite(id, b.assignedUsers) });
+          }
+          return ok({ site: db.updateSite(id, b) });
+        }
         catch (e) { return err(404, e.message); }
       }
       // POST /api/master/sites/:id/assign — assign users to a site (admin+)

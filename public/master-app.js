@@ -310,8 +310,20 @@ async function viewMySites() {
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>#</th><th>Website</th><th>Account</th><th>Maintenance</th><th>Report Sent</th>
-              <th>GA4</th><th>Cloudflare</th><th>Uptime</th><th>Links</th>
+              <th>#</th>
+              <th>Website URL</th>
+              <th>Company</th>
+              <th>Maintenance</th>
+              <th>Maintenance Report Sent</th>
+              <th>ClickUp Link</th>
+              <th>GA4 Report</th>
+              <th>Newsletter Mail</th>
+              <th>Form Submission Mail</th>
+              <th>Client Response</th>
+              <th>Booking Engine</th>
+              <th>UPTimeRobot Monitoring</th>
+              <th>Cloudflare issues</th>
+              <th>Actions</th>
             </tr></thead>
             <tbody id="sites-tbody">
               ${rows.map((r,i) => siteRow(r, i)).join('')}
@@ -338,7 +350,7 @@ async function viewMySites() {
   $('site-search').addEventListener('input', filterRows);
   $('site-filter').addEventListener('change', filterRows);
 
-  // Status selects
+  // Status dropdown auto-save
   tbody.querySelectorAll('.status-select').forEach(sel => {
     sel.addEventListener('change', async e => {
       const { rowId, field } = e.target.dataset;
@@ -353,6 +365,14 @@ async function viewMySites() {
       } catch (err) { toast(err.message, 'error'); }
     });
   });
+
+  // Edit row buttons
+  tbody.querySelectorAll('.edit-dr-row-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const r = rows.find(x => x.id === btn.dataset.id);
+      if (r) editDailyReviewRowModal(r, () => viewMySites());
+    });
+  });
 }
 
 function siteRow(r, i) {
@@ -360,21 +380,179 @@ function siteRow(r, i) {
     `<option ${r.maintenanceRaw===o?'selected':''}>${o}</option>`).join('');
   const sentOpts = ['Yes','No','To Do'].map(o =>
     `<option ${r.reportSentRaw===o?'selected':''}>${o}</option>`).join('');
+
+  // 1. ClickUp Link
+  const cuLink = r.clickupLink
+    ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup" title="${esc(r.clickupLink)}">⚡ ClickUp</a>`
+    : '<span class="dim-dash">—</span>';
+
+  // 2. GA4 Report
+  let ga4Html = '<span class="dim-dash">—</span>';
+  if (r.ga4) {
+    if (/^https?:\/\//i.test(r.ga4)) {
+      ga4Html = `<a href="${esc(r.ga4)}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px">GA4 ↗</a>`;
+    } else {
+      const isDim = /no|n\/a/i.test(r.ga4);
+      ga4Html = `<span class="cell-text-badge ${isDim ? 'badge-dim' : 'badge-info'}" title="${esc(r.ga4)}">${esc(r.ga4)}</span>`;
+    }
+  }
+
+  // 3. Newsletter Mail
+  let newsHtml = '<span class="dim-dash">—</span>';
+  if (r.newsletterMail) {
+    const isDim = /no|n\/a/i.test(r.newsletterMail);
+    newsHtml = `<span class="cell-text-badge ${isDim ? 'badge-dim' : 'badge-purple'}" title="${esc(r.newsletterMail)}">${esc(r.newsletterMail)}</span>`;
+  }
+
+  // 4. Form Submission Mail
+  let formHtml = '<span class="dim-dash">—</span>';
+  if (r.formSubmissionMail) {
+    const isDim = /no|n\/a/i.test(r.formSubmissionMail);
+    formHtml = `<span class="cell-text-badge ${isDim ? 'badge-dim' : 'badge-accent'}" title="${esc(r.formSubmissionMail)}">${esc(r.formSubmissionMail)}</span>`;
+  }
+
+  // 5. Client Response
+  let respHtml = '<span class="dim-dash">—</span>';
+  if (r.clientResponse) {
+    const isSuccess = /responded|yes|done/i.test(r.clientResponse);
+    const isDim = /no|n\/a/i.test(r.clientResponse);
+    respHtml = `<span class="cell-text-badge ${isSuccess ? 'badge-success' : isDim ? 'badge-dim' : 'badge-warning'}" title="${esc(r.clientResponse)}">${esc(r.clientResponse)}</span>`;
+  }
+
+  // 6. Booking Engine
+  let bookHtml = '<span class="dim-dash">—</span>';
+  if (r.bookingLink) {
+    if (/^https?:\/\//i.test(r.bookingLink)) {
+      bookHtml = `<a href="${esc(r.bookingLink)}" target="_blank" class="btn-booking" title="${esc(r.bookingLink)}">🍽️ Booking ↗</a>`;
+    } else {
+      const isYes = /yes/i.test(r.bookingLink);
+      bookHtml = `<span class="cell-text-badge ${isYes ? 'badge-success' : 'badge-dim'}">${esc(r.bookingLink)}</span>`;
+    }
+  }
+
+  // 7. UPTimeRobot Monitoring
+  const isUptimeYes = r.uptimeRobot && /yes/i.test(r.uptimeRobot);
+  const uptimeHtml = `<span class="badge ${isUptimeYes ? 'badge-success' : 'badge-dim'}">${isUptimeYes ? '🟢 Yes' : '⚪ No'}</span>`;
+
+  // 8. Cloudflare Issues
+  const isCfIssue = r.cloudflare && !/no/i.test(r.cloudflare) && r.cloudflare.trim() !== '';
+  const cfHtml = isCfIssue
+    ? `<span class="badge badge-danger" title="${esc(r.cloudflare)}">⚠️ Issue</span>`
+    : `<span class="badge badge-success">✓ None</span>`;
+
+  const co = (r.company || 'CW').trim();
+
   return `
-    <tr data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}">
-      <td style="color:var(--text-dim)">${i+1}</td>
+    <tr data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+      <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
       <td class="url-cell"><a href="${esc(r.siteUrl)}" target="_blank" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))}</a></td>
-      <td><span class="badge badge-${r.maintenanceRaw?.includes('CW')||r.company==='CW'?'cw':'rm'}">${esc(r.company||'—')}</span></td>
-      <td><select class="status-select" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
-      <td><select class="status-select" data-row-id="${r.id}" data-field="reportSentStatus">${sentOpts}</select></td>
-      <td style="font-size:11px;color:var(--text-muted)">${esc(r.ga4||'—')}</td>
-      <td>${r.cloudflare==='No'||!r.cloudflare?'<span class="badge badge-success">✓</span>':'<span class="badge badge-warning">Issue</span>'}</td>
-      <td>${uptimeDot('unknown')}</td>
+      <td><span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'}">${esc(co)}</span></td>
+      <td><select class="status-select select-maint" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
+      <td><select class="status-select select-sent" data-row-id="${r.id}" data-field="reportSentStatus">${sentOpts}</select></td>
+      <td>${cuLink}</td>
+      <td>${ga4Html}</td>
+      <td>${newsHtml}</td>
+      <td>${formHtml}</td>
+      <td>${respHtml}</td>
+      <td>${bookHtml}</td>
+      <td>${uptimeHtml}</td>
+      <td>${cfHtml}</td>
       <td>
-        ${r.clickupLink?`<a class="btn btn-ghost btn-sm" href="${esc(r.clickupLink)}" target="_blank">ClickUp</a>`:''}
-        ${r.bookingLink?`<a class="btn btn-ghost btn-sm" href="${esc(r.bookingLink)}" target="_blank">Booking</a>`:''}
+        <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit all columns">✏️</button>
       </td>
     </tr>`;
+}
+
+function editDailyReviewRowModal(row, onSaved) {
+  if (!row) return;
+  const maintOptions = ['Completed','In Progress','To Do','Pending'].map(o =>
+    `<option ${row.maintenanceRaw===o?'selected':''}>${o}</option>`).join('');
+  const sentOptions = ['Yes','No','To Do'].map(o =>
+    `<option ${row.reportSentRaw===o?'selected':''}>${o}</option>`).join('');
+  const uptimeOptions = ['Yes','No'].map(o =>
+    `<option ${(row.uptimeRobot||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('');
+
+  openModal(`Edit Review: ${shortUrl(row.siteUrl)}`, `
+    <div style="font-size:12px;color:var(--accent-2);margin-bottom:12px;word-break:break-all">
+      <a href="${esc(row.siteUrl)}" target="_blank" style="color:inherit">🌐 ${esc(row.siteUrl)}</a>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Company / Account</label>
+        <input class="form-input" id="edr-company" value="${esc(row.company||'CW')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Maintenance Status</label>
+        <select class="form-select" id="edr-maint">${maintOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Report Sent</label>
+        <select class="form-select" id="edr-sent">${sentOptions}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ClickUp Task Link</label>
+        <input class="form-input" id="edr-clickup" value="${esc(row.clickupLink||'')}" placeholder="https://app.clickup.com/t/...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">GA4 Report</label>
+        <input class="form-input" id="edr-ga4" value="${esc(row.ga4||'')}" placeholder="No GA4 Tag / link">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Newsletter Mail</label>
+        <input class="form-input" id="edr-newsletter" value="${esc(row.newsletterMail||'')}" placeholder="MailChimp / email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Form Submission Mail</label>
+        <input class="form-input" id="edr-form" value="${esc(row.formSubmissionMail||'')}" placeholder="Recipient email / form name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client Response</label>
+        <input class="form-input" id="edr-client-resp" value="${esc(row.clientResponse||'')}" placeholder="Client Responded / N/A">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Booking Engine</label>
+        <input class="form-input" id="edr-booking" value="${esc(row.bookingLink||'')}" placeholder="OpenTable / Resy link / Yes / No">
+      </div>
+      <div class="form-group">
+        <label class="form-label">UPTimeRobot Monitoring</label>
+        <select class="form-select" id="edr-uptime">${uptimeOptions}</select>
+      </div>
+      <div class="form-group" style="grid-column: span 2">
+        <label class="form-label">Cloudflare Issues</label>
+        <input class="form-input" id="edr-cf" value="${esc(row.cloudflare||'No')}" placeholder="No / Issue description">
+      </div>
+    </div>
+  `, [
+    { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+    { label: 'Save Changes', cls: 'btn btn-primary', onClick: async () => {
+      const maintRaw = $('edr-maint').value;
+      const sentRaw = $('edr-sent').value;
+      const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','Yes':'sent','No':'no' };
+
+      const updates = {
+        company: $('edr-company').value.trim(),
+        maintenanceRaw: maintRaw,
+        maintenanceStatus: normMap[maintRaw] || 'pending',
+        reportSentRaw: sentRaw,
+        reportSentStatus: normMap[sentRaw] || 'no',
+        clickupLink: $('edr-clickup').value.trim(),
+        ga4: $('edr-ga4').value.trim(),
+        newsletterMail: $('edr-newsletter').value.trim(),
+        formSubmissionMail: $('edr-form').value.trim(),
+        clientResponse: $('edr-client-resp').value.trim(),
+        bookingLink: $('edr-booking').value.trim(),
+        uptimeRobot: $('edr-uptime').value,
+        cloudflare: $('edr-cf').value.trim(),
+      };
+
+      try {
+        await PUT(`/api/master/daily-review/${row.id}`, updates);
+        toast('✅ Row updated successfully', 'success');
+        closeModal();
+        if (onSaved) onSaved();
+      } catch (e) { toast(e.message, 'error'); }
+    }}
+  ]);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -497,29 +675,67 @@ async function viewAllUsers() {
       panel.innerHTML = `
         <div class="card">
           <div class="card-header">
-            <span class="card-title">🌐 ${esc(userName)}'s Sites (${rows.length})</span>
-            <div style="display:flex;align-items:center;gap:10px">
+            <span class="card-title">🌐 ${esc(userName)}'s Assigned Sites (${rows.length})</span>
+            <div style="display:flex;align-items:center;gap:12px">
               <span style="font-size:12px;color:var(--text-muted)">${u.pct||0}% complete</span>
               <div class="progress-wrap" style="width:100px"><div class="progress-fill" style="width:${u.pct||0}%"></div></div>
+              <button class="btn btn-secondary btn-sm" id="btn-assign-sites-to-user">➕ Assign Websites</button>
             </div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>#</th><th>Site</th><th>Account</th><th>Maintenance</th><th>Report Sent</th><th>GA4</th><th>Uptime</th></tr></thead>
-              <tbody>${rows.map((r,i)=>`
-                <tr>
-                  <td style="color:var(--text-dim)">${i+1}</td>
-                  <td class="url-cell"><a href="${esc(r.siteUrl)}" target="_blank">${esc(shortUrl(r.siteUrl))}</a></td>
-                  <td><span class="badge badge-${r.company==='CW'?'cw':'rm'}">${esc(r.company||'—')}</span></td>
-                  <td>${statusBadge(r.maintenanceStatus)}</td>
-                  <td>${r.reportSentRaw?.toLowerCase()==='yes'?'<span class="badge badge-success">✓ Sent</span>':'<span class="badge badge-dim">No</span>'}</td>
-                  <td style="font-size:11px;color:var(--text-muted)">${esc(r.ga4||'—')}</td>
-                  <td>${uptimeDot('unknown')}</td>
-                </tr>`).join('')}
-              </tbody>
+              <thead><tr>
+                <th>#</th>
+                <th>Website URL</th>
+                <th>Company</th>
+                <th>Maintenance</th>
+                <th>Report Sent</th>
+                <th>ClickUp Link</th>
+                <th>GA4 Report</th>
+                <th>Newsletter Mail</th>
+                <th>Form Submission Mail</th>
+                <th>Client Response</th>
+                <th>Booking Engine</th>
+                <th>UPTimeRobot</th>
+                <th>Cloudflare</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody>${rows.map((r,i) => siteRow(r, i)).join('')}</tbody>
             </table>
           </div>
         </div>`;
+
+      // Wire up Assign Websites button
+      const assignBtn = $('btn-assign-sites-to-user');
+      if (assignBtn) {
+        assignBtn.addEventListener('click', () => {
+          openAssignSitesToUserModal(userId, userName, () => loadUser(userId, userName));
+        });
+      }
+
+      // Wire up edit buttons
+      panel.querySelectorAll('.edit-dr-row-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = rows.find(x => x.id === btn.dataset.id);
+          if (r) editDailyReviewRowModal(r, () => loadUser(userId, userName));
+        });
+      });
+
+      // Wire up status dropdowns
+      panel.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', async e => {
+          const { rowId, field } = e.target.dataset;
+          const value = e.target.value;
+          const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','Yes':'sent','No':'no' };
+          try {
+            await PUT(`/api/master/daily-review/${rowId}`, {
+              [field]: normMap[value] || value,
+              [field + 'Raw']: value,
+            });
+            toast('Status updated', 'success');
+          } catch (err) { toast(err.message, 'error'); }
+        });
+      });
     } catch (e) { panel.innerHTML = `<div class="empty-state"><p>${esc(e.message)}</p></div>`; }
   }
 
@@ -588,6 +804,14 @@ async function viewSites() {
   $('acct-filter').addEventListener('change', filter);
   $('uptime-filter').addEventListener('change', filter);
 
+  // Assign buttons
+  tbody.querySelectorAll('.assign-site-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = sites.find(x => x.id === btn.dataset.id);
+      if (s) openAssignModal(btn.dataset.id, s, () => viewSites());
+    });
+  });
+
   // Edit buttons
   tbody.querySelectorAll('.edit-site-btn').forEach(btn => {
     btn.addEventListener('click', () => editSiteModal(btn.dataset.id, sites.find(s=>s.id===btn.dataset.id)));
@@ -621,13 +845,150 @@ function siteFullRow(s) {
       <td>${uptimeDot(s.uptimeStatus)}</td>
       <td style="font-size:11px;color:var(--text-muted)">${esc(assigneeNames||'Unassigned')}</td>
       <td>
-        <button class="btn btn-ghost btn-sm edit-site-btn" data-id="${s.id}">✏️ Edit</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm assign-site-btn" data-id="${s.id}" title="Assign to team members">👤 Assign</button>
+          <button class="btn btn-ghost btn-sm edit-site-btn" data-id="${s.id}" title="Edit site metadata">✏️</button>
+        </div>
       </td>
     </tr>`;
 }
 
+function openAssignModal(siteId, site, onSaved) {
+  if (!site) return;
+  const currentAssigned = site.assignedUsers || [];
+
+  openModal(`Assign Users: ${shortUrl(site.url)}`, `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+      Assign team members to manage <strong>${esc(site.url)}</strong> (${esc(site.company || site.account || 'CW')}).<br>
+      Changes will automatically update their <em>My Sites</em> checklist.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-select-all-users">Select All</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-all-users">Clear All</button>
+    </div>
+    <div class="user-assign-grid">
+      ${S.users.map(u => `
+        <label class="user-check-item">
+          <input type="checkbox" class="user-assign-checkbox" value="${u.id}" ${currentAssigned.includes(u.id)?'checked':''}>
+          <span class="user-check-avatar">${esc((u.name||'U')[0].toUpperCase())}</span>
+          <div>
+            <div class="user-check-name">${esc(u.name)}</div>
+            <div class="user-check-role">${esc(u.role)}</div>
+          </div>
+        </label>
+      `).join('')}
+    </div>
+  `, [
+    { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+    { label: 'Save Assignments', cls: 'btn btn-primary', onClick: async () => {
+      const selected = [...document.querySelectorAll('.user-assign-checkbox:checked')].map(cb => cb.value);
+      try {
+        await POST(`/api/master/sites/${siteId}/assign`, { userIds: selected });
+        toast(`✅ Assigned ${selected.length} user(s) to site`, 'success');
+        closeModal();
+        if (onSaved) onSaved();
+        else navigate('sites');
+      } catch (err) { toast(err.message, 'error'); }
+    }}
+  ]);
+
+  setTimeout(() => {
+    const selAll = $('btn-select-all-users');
+    const clrAll = $('btn-clear-all-users');
+    if (selAll) selAll.addEventListener('click', () => {
+      document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = true);
+    });
+    if (clrAll) clrAll.addEventListener('click', () => {
+      document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = false);
+    });
+  }, 50);
+}
+
+async function openAssignSitesToUserModal(userId, userName, onSaved) {
+  let sites = [];
+  try {
+    const data = await GET('/api/master/sites');
+    sites = data.sites || [];
+  } catch (e) { toast(e.message, 'error'); return; }
+
+  openModal(`Assign Websites to ${esc(userName)}`, `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+      Select websites that <strong>${esc(userName)}</strong> is responsible for. These will appear in their <em>My Sites</em> checklist.
+    </div>
+    <div class="toolbar" style="margin-bottom:12px">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="assign-site-search" class="search-input" placeholder="Search websites…">
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-select-all-sites">Select All Visible</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-all-sites">Clear All</button>
+    </div>
+    <div id="assign-sites-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+      ${sites.map(s => {
+        const isAssigned = (s.assignedUsers||[]).includes(userId);
+        return `
+          <label class="user-check-item site-check-row" data-url="${esc((s.url||'').toLowerCase())}" data-comp="${esc((s.company||'').toLowerCase())}" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <input type="checkbox" class="site-assign-checkbox" value="${s.id}" ${isAssigned?'checked':''}>
+              <div>
+                <div style="font-weight:600;font-size:12px">${esc(shortUrl(s.url, 45))}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${esc(s.company||'—')} · ${esc(s.account||'CW')}</div>
+              </div>
+            </div>
+            <span class="badge badge-${s.account==='CW'?'cw':'rm'}">${esc(s.account||'CW')}</span>
+          </label>`;
+      }).join('')}
+    </div>
+  `, [
+    { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+    { label: 'Save Assignments', cls: 'btn btn-primary', onClick: async () => {
+      const checkedSiteIds = new Set([...document.querySelectorAll('.site-assign-checkbox:checked')].map(cb => cb.value));
+      let count = 0;
+      try {
+        for (const s of sites) {
+          const currentlyAssigned = (s.assignedUsers || []).includes(userId);
+          const shouldAssign = checkedSiteIds.has(s.id);
+          if (currentlyAssigned !== shouldAssign) {
+            let newUserIds = (s.assignedUsers || []).filter(id => id !== userId);
+            if (shouldAssign) newUserIds.push(userId);
+            await POST(`/api/master/sites/${s.id}/assign`, { userIds: newUserIds });
+            count++;
+          }
+        }
+        toast(`✅ Updated assignments for ${count} site(s)`, 'success');
+        closeModal();
+        if (onSaved) onSaved();
+      } catch (err) { toast(err.message, 'error'); }
+    }}
+  ]);
+
+  setTimeout(() => {
+    const searchInput = $('assign-site-search');
+    const siteRows = document.querySelectorAll('.site-check-row');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        const q = e.target.value.toLowerCase();
+        siteRows.forEach(row => {
+          const u = row.dataset.url || '';
+          const c = row.dataset.comp || '';
+          row.classList.toggle('hidden', q && !u.includes(q) && !c.includes(q));
+        });
+      });
+    }
+    const selAll = $('btn-select-all-sites');
+    const clrAll = $('btn-clear-all-sites');
+    if (selAll) selAll.addEventListener('click', () => {
+      document.querySelectorAll('.site-check-row:not(.hidden) .site-assign-checkbox').forEach(cb => cb.checked = true);
+    });
+    if (clrAll) clrAll.addEventListener('click', () => {
+      document.querySelectorAll('.site-assign-checkbox').forEach(cb => cb.checked = false);
+    });
+  }, 50);
+}
+
 function editSiteModal(id, site) {
   if (!site) return;
+  const currentAssigned = site.assignedUsers || [];
   openModal(`Edit Site: ${shortUrl(site.url)}`,
     `<div class="form-group"><label class="form-label">Company</label><input class="form-input" id="edit-company" value="${esc(site.company)}"></div>
      <div class="form-group"><label class="form-label">A/C Manager</label><input class="form-input" id="edit-acm" value="${esc(site.accountManager)}"></div>
@@ -638,15 +999,20 @@ function editSiteModal(id, site) {
          <option ${site.status==='Inactive'?'selected':''}>Inactive</option>
        </select></div>
      <div class="form-group"><label class="form-label">Assign Users</label>
-       <select class="form-select" id="edit-assignees" multiple size="5">
-         ${S.users.map(u=>`<option value="${u.id}" ${(site.assignedUsers||[]).includes(u.id)?'selected':''}>${esc(u.name)}</option>`).join('')}
-       </select>
-       <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Hold Ctrl/Cmd to select multiple</div>
+       <div class="user-assign-grid">
+         ${S.users.map(u=>`
+           <label class="user-check-item">
+             <input type="checkbox" class="modal-edit-assignee" value="${u.id}" ${currentAssigned.includes(u.id)?'checked':''}>
+             <span class="user-check-avatar">${esc((u.name||'U')[0].toUpperCase())}</span>
+             <span class="user-check-name">${esc(u.name)}</span>
+           </label>
+         `).join('')}
+       </div>
      </div>`,
     [
       { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
       { label: 'Save', cls: 'btn btn-primary', onClick: async () => {
-        const selected = [...$('edit-assignees').selectedOptions].map(o => o.value);
+        const selected = [...document.querySelectorAll('.modal-edit-assignee:checked')].map(cb => cb.value);
         try {
           await PUT(`/api/master/sites/${id}`, {
             company: $('edit-company').value,

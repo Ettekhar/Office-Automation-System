@@ -223,34 +223,43 @@ async function importDailyReview(sites, userMap) {
       if (!rows || rows.length < 2) continue;
 
       const h = rows[0];
-      const urlCol   = hi(h, 'website url', 'website');
+      const urlCol   = hi(h, 'website url', 'website', 'url');
       const coCol    = hi(h, 'company');
-      const maintCol = hi(h, 'maintenance');
+      const maintCol = h.findIndex(x => x && x.trim().toLowerCase() === 'maintenance') !== -1
+        ? h.findIndex(x => x && x.trim().toLowerCase() === 'maintenance')
+        : hi(h, 'maintenance');
       const sentCol  = hi(h, 'maintenance report sent', 'report sent');
       const ga4Col   = hi(h, 'ga4');
       const newsCol  = hi(h, 'newsletter');
-      const formCol  = hi(h, 'form submission');
-      const bookCol  = hi(h, 'booking', 'reservation');
+      const formCol  = hi(h, 'form submission', 'form name');
+      const bookCol  = hi(h, 'booking', 'reservation', 'engine');
       const cfCol    = hi(h, 'cloudflare');
       const cuCol    = hi(h, 'clickup');
       const respCol  = hi(h, 'client response', 'smtp');
-      const uptimeCol= hi(h, 'uptime', 'uptimerobot');
+      const uptimeCol= hi(h, 'uptimerobot', 'uptime');
 
       rows.slice(1).forEach((r, rowIdx) => {
-        const rawUrl = (r[urlCol] || r[0] || '').trim();
-        if (!rawUrl || rawUrl.length < 5 || !/^https?:\/\/|^www\./i.test(rawUrl)) return;
+        let rawUrl = (urlCol >= 0 ? (r[urlCol] || '') : '').trim();
+        if (!rawUrl || !/^https?:\/\/|^www\./i.test(rawUrl)) {
+          const found = r.find(c => typeof c === 'string' && /^https?:\/\/|^www\./i.test(c.trim()));
+          if (found) rawUrl = found.trim();
+        }
+        if (!rawUrl || rawUrl.length < 5) return;
+
+        const compVal = (coCol >= 0 && r[coCol])
+          ? r[coCol].trim()
+          : (r.find(c => typeof c === 'string' && (c.trim() === 'CW' || c.trim() === 'RM')) || '');
 
         // Find or create the site record
         let site = sites.find(s => urlMatch(s.url, rawUrl));
         if (!site) {
-          // Site in daily review but not in maintenance lists — add it
           site = {
             id: uuid(),
             url: rawUrl,
-            account: (r[coCol] || '').trim() || 'Unknown',
+            account: compVal || 'CW',
             status: 'Active',
-            cms: '', company: r[coCol] || '', contact: '', accountManager: '',
-            note: '', clickupUrl: r[cuCol] || '', reportUrl: '', backupUrl: '',
+            cms: '', company: compVal || '', contact: '', accountManager: '',
+            note: '', clickupUrl: (cuCol >= 0 ? r[cuCol] : '') || '', reportUrl: '', backupUrl: '',
             latestMonth: '', latestMonthStatus: '', monthlyHistory: [],
             domainExpiry: '', daysLeft: null,
             assignedUsers: [],
@@ -258,6 +267,9 @@ async function importDailyReview(sites, userMap) {
             createdAt: now(), updatedAt: now(),
           };
           sites.push(site);
+        } else {
+          if (!site.company && compVal) site.company = compVal;
+          if (!site.clickupUrl && cuCol >= 0 && r[cuCol]) site.clickupUrl = r[cuCol];
         }
 
         // Assign user to this site
@@ -265,8 +277,8 @@ async function importDailyReview(sites, userMap) {
           site.assignedUsers.push(dbUser.id);
         }
 
-        const maintRaw = r[maintCol] || '';
-        const sentRaw  = r[sentCol] || '';
+        const maintRaw = (maintCol >= 0 ? r[maintCol] : '') || '';
+        const sentRaw  = (sentCol >= 0 ? r[sentCol] : '') || '';
 
         drRows.push({
           id: uuid(),
@@ -274,19 +286,20 @@ async function importDailyReview(sites, userMap) {
           userName: dbUser.name,
           siteId: site.id,
           siteUrl: site.url,
+          company: compVal || site.company || site.account || '',
           rowIndex: rowIdx + 2, // 1-indexed + header
           maintenanceStatus: normStatus(maintRaw),
           maintenanceRaw: maintRaw,
           reportSentStatus: normStatus(sentRaw),
           reportSentRaw: sentRaw,
-          ga4: r[ga4Col] || '',
-          newsletterMail: r[newsCol] || '',
-          formSubmissionMail: r[formCol] || '',
-          bookingLink: r[bookCol] || '',
-          cloudflare: r[cfCol] || '',
-          clickupLink: r[cuCol] || '',
-          clientResponse: r[respCol] || '',
-          uptimeRobot: r[uptimeCol] || '',
+          ga4: (ga4Col >= 0 ? r[ga4Col] : '') || '',
+          newsletterMail: (newsCol >= 0 ? r[newsCol] : '') || '',
+          formSubmissionMail: (formCol >= 0 ? r[formCol] : '') || '',
+          bookingLink: (bookCol >= 0 ? r[bookCol] : '') || '',
+          cloudflare: (cfCol >= 0 ? r[cfCol] : '') || '',
+          clickupLink: (cuCol >= 0 ? r[cuCol] : '') || site.clickupUrl || '',
+          clientResponse: (respCol >= 0 ? r[respCol] : '') || '',
+          uptimeRobot: (uptimeCol >= 0 ? r[uptimeCol] : '') || '',
           createdAt: now(), updatedAt: now(),
         });
       });

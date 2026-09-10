@@ -106,22 +106,129 @@ export function updateSite(id, updates) {
 }
 
 export function assignUsersToSite(siteId, userIds) {
-  return updateSite(siteId, { assignedUsers: userIds });
+  const sites = ensureArray(dbRead('sites'));
+  const idx = sites.findIndex(s => s.id === siteId);
+  if (idx === -1) throw new Error(`Site not found: ${siteId}`);
+
+  sites[idx] = { ...sites[idx], assignedUsers: userIds, updatedAt: now() };
+  setSites(sites);
+  const site = sites[idx];
+
+  // Synchronize daily-review records
+  let drRows = ensureArray(dbRead('daily-review'));
+  const allUsers = getUsers();
+  const userMap = Object.fromEntries(allUsers.map(u => [u.id, u]));
+
+  // 1. Remove rows for users unassigned from this site
+  drRows = drRows.filter(r => {
+    if (r.siteId === siteId) {
+      return userIds.includes(r.userId);
+    }
+    return true;
+  });
+
+  // 2. Add rows for newly assigned users if missing
+  for (const uid of userIds) {
+    const existing = drRows.find(r => r.siteId === siteId && r.userId === uid);
+    if (!existing) {
+      const u = userMap[uid];
+      drRows.push({
+        id: uuid(),
+        userId: uid,
+        userName: u ? u.name : 'User',
+        siteId: site.id,
+        siteUrl: site.url,
+        company: site.company || site.account || '',
+        rowIndex: null,
+        maintenanceStatus: 'todo',
+        maintenanceRaw: 'To Do',
+        reportSentStatus: 'no',
+        reportSentRaw: 'No',
+        ga4: '',
+        newsletterMail: '',
+        formSubmissionMail: '',
+        bookingLink: '',
+        cloudflare: 'No',
+        clickupLink: site.clickupUrl || '',
+        clientResponse: '',
+        uptimeRobot: 'Yes',
+        createdAt: now(),
+        updatedAt: now(),
+      });
+    }
+  }
+
+  setDailyReview(drRows);
+  return site;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DAILY REVIEW ROWS (per-user, per-site records)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-
 export function getDailyReview(filter = {}) {
   let rows = ensureArray(dbRead('daily-review'));
+  const sites = ensureArray(dbRead('sites'));
+  const sitesById = Object.fromEntries(sites.map(s => [s.id, s]));
+  const sitesByUrl = Object.fromEntries(sites.map(s => [(s.url || '').toLowerCase().trim(), s]));
+
+  let targetUserId = filter.userId || null;
+  if (!targetUserId && filter.userName) {
+    const u = getUserByName(filter.userName);
+    if (u) targetUserId = u.id;
+  }
+
+  // Ensure any site that has assignedUsers includes targetUserId has a daily-review row
+  if (targetUserId) {
+    let changed = false;
+    const userSites = sites.filter(s => s.assignedUsers?.includes(targetUserId));
+    const allUsers = getUsers();
+    const u = allUsers.find(x => x.id === targetUserId);
+    const uName = u ? u.name : (filter.userName || 'User');
+
+    for (const s of userSites) {
+      const exists = rows.some(r => (r.siteId === s.id || (r.siteUrl && s.url && r.siteUrl.toLowerCase().trim() === s.url.toLowerCase().trim())) && r.userId === targetUserId);
+      if (!exists) {
+        rows.push({
+          id: uuid(),
+          userId: targetUserId,
+          userName: uName,
+          siteId: s.id,
+          siteUrl: s.url,
+          company: s.company || s.account || '',
+          rowIndex: null,
+          maintenanceStatus: 'todo',
+          maintenanceRaw: 'To Do',
+          reportSentStatus: 'no',
+          reportSentRaw: 'No',
+          ga4: '',
+          newsletterMail: '',
+          formSubmissionMail: '',
+          bookingLink: '',
+          cloudflare: 'No',
+          clickupLink: s.clickupUrl || '',
+          clientResponse: '',
+          uptimeRobot: 'Yes',
+          createdAt: now(),
+          updatedAt: now(),
+        });
+        changed = true;
+      }
+    }
+    if (changed) setDailyReview(rows);
+  }
+
+  // Ensure company and clickupLink fallback from site
+  rows.forEach(r => {
+    const s = (r.siteId ? sitesById[r.siteId] : null) || (r.siteUrl ? sitesByUrl[(r.siteUrl||'').toLowerCase().trim()] : null);
+    if (!r.company && s) r.company = s.company || s.account || '';
+    if (!r.clickupLink && s?.clickupUrl) r.clickupLink = s.clickupUrl;
+  });
+
   if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
   if (filter.siteId) rows = rows.filter(r => r.siteId === filter.siteId);
   if (filter.userName) {
-    const u = getUserByName(filter.userName);
-    if (u) rows = rows.filter(r => r.userId === u.id);
-    else rows = rows.filter(r => (r.userName||'').toLowerCase() === filter.userName.toLowerCase());
+    rows = rows.filter(r => (r.userName||'').toLowerCase() === filter.userName.toLowerCase() || (targetUserId && r.userId === targetUserId));
   }
   return rows;
 }
@@ -134,11 +241,31 @@ export function getDailyReviewByUser(userName) {
 }
 
 export function updateDailyReviewRow(rowId, updates) {
-  const rows = dbRead('daily-review') || [];
+  const rows = ensureArray(dbRead('daily-review'));
   const idx = rows.findIndex(r => r.id === rowId);
   if (idx === -1) throw new Error(`Daily review row not found: ${rowId}`);
+
   rows[idx] = { ...rows[idx], ...updates, updatedAt: now() };
   setDailyReview(rows);
+
+  // If clickupLink or maintenanceStatus is updated, keep site record in sync if site exists
+  if (updates.clickupLink || updates.maintenanceRaw || updates.maintenanceStatus) {
+    const row = rows[idx];
+    if (row.siteId || row.siteUrl) {
+      try {
+        const sites = ensureArray(dbRead('sites'));
+        const sIdx = sites.findIndex(s => s.id === row.siteId || (row.siteUrl && s.url && s.url.toLowerCase().trim() === row.siteUrl.toLowerCase().trim()));
+        if (sIdx !== -1) {
+          const siteUpdates = {};
+          if (updates.clickupLink) siteUpdates.clickupUrl = updates.clickupLink;
+          if (updates.maintenanceRaw) siteUpdates.latestMonthStatus = updates.maintenanceRaw;
+          sites[sIdx] = { ...sites[sIdx], ...siteUpdates, updatedAt: now() };
+          setSites(sites);
+        }
+      } catch {}
+    }
+  }
+
   return rows[idx];
 }
 

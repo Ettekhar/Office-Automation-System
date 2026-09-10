@@ -1,6 +1,6 @@
 [
   {
-    "id": "4a13444f-4c26-421a-a7e0-b9d7dc99dd32",
+    "id": "16487137-9349-422e-9285-6bdde41679f9",
     "url": "qualityinnparkersburg.com",
     "account": "CW",
     "status": "Deactive",
@@ -167,13 +167,13 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "offline",
+    "lastUptimeCheck": "2026-09-10T19:43:48.354Z",
+    "createdAt": "2026-09-10T19:42:05.548Z",
+    "updatedAt": "2026-09-10T20:02:11.823Z"
   },
   {
-    "id": "1a425e32-689b-4ebe-95ba-873f10e814de",
+    "id": "42fcf1c8-7241-47f7-a9e9-c7e09ee0e057",
     "url": "governorsinnnd.com",
     "account": "CW",
     "status": "Active",
@@ -340,13 +340,15 @@
     "domainExpiry": "2027-08-30",
     "daysLeft": 354,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.356Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.351Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1302
   },
   {
-    "id": "1a56158c-3dda-4dda-89a5-4f1237c80090",
+    "id": "6660a069-7c62-40c9-bcd9-c150b7fa59cb",
     "url": "cogwheelmarketing.com",
     "account": "CW",
     "status": "Active",
@@ -513,13 +515,15 @@
     "domainExpiry": "2029-03-12",
     "daysLeft": 914,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.358Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.374Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1595
   },
   {
-    "id": "d42184fd-9ea8-4cf6-a0cd-28a99797d756",
+    "id": "0c298c22-294f-4dd3-bf1a-452447b29b8a",
     "url": "hotelfauchere.com",
     "account": "CW",
     "status": "Active",
@@ -686,13 +690,15 @@
     "domainExpiry": "2027-05-18",
     "daysLeft": 250,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.360Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:48.908Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 892
   },
   {
-    "id": "91341ddb-7862-414b-bba3-c174c0fc2abc",
+    "id": "6c4aa7e2-5df6-4787-8f1f-8c070625a3e8",
     "url": "jivebarlounge.com",
     "account": "CW",
     "status": "Active",
@@ -858,14 +864,18 @@
     ],
     "domainExpiry": "2027-08-10",
     "daysLeft": 334,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.362Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:48.899Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 992
   },
   {
-    "id": "6a056fee-a0ff-4326-938e-1c1a52aa04fd",
+    "id": "d727d693-5c8e-4bc7-aa62-6c7a94792c61",
     "url": "milfordhospitalitygroup.com",
     "account": "CW",
     "status": "Active",
@@ -1031,14 +1041,18 @@
     ],
     "domainExpiry": "2027-03-24",
     "daysLeft": 195,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.364Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.447Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1727
   },
   {
-    "id": "ea514db4-6e51-4611-ae83-9ad6986cd966",
+    "id": "cf9fb6bc-1a5c-47de-9b6d-80052aa03409",
     "url": "https://tcrmservices.com/",
     "account": "CW",
     "status": "Active",
@@ -1204,14 +1218,18 @@
     ],
     "domainExpiry": "2027-06-18",
     "daysLeft": 281,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.366Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:48.924Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1166
   },
   {
-    "id": "13eba74a-450f-4577-872f-a67e963dbd7e",
+    "id": "2eb23d0f-7b81-437b-83e3-6e996de27793",
     "url": "themilfordtheater.com",
     "account": "CW",
     "status": "Active",
@@ -1378,13 +1396,15 @@
     "domainExpiry": "2027-04-01",
     "daysLeft": 203,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.369Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.385Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1641
   },
   {
-    "id": "65752cfa-d1d9-42aa-b585-8a66451f68fd",
+    "id": "2f24077d-fbdf-49d5-ba60-76fc4e52a435",
     "url": "themillatmsu.com",
     "account": "CW",
     "status": "Deactive",
@@ -1551,13 +1571,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.371Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.247Z",
+    "uptimeStatusCode": 308,
+    "uptimeResponseTime": 1490
   },
   {
-    "id": "de6906c7-b68b-4edc-b9a3-100a610c6d96",
+    "id": "f9b7087b-6570-4787-958a-f050c609ff93",
     "url": "tomquickinnmilford.com",
     "account": "CW",
     "status": "Active",
@@ -1724,13 +1746,15 @@
     "domainExpiry": "2027-04-06",
     "daysLeft": 208,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:48.372Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:49.538Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1743
   },
   {
-    "id": "9e63744b-f501-42a8-a121-4d03aa85b34f",
+    "id": "e259f1f6-197f-48e9-badc-a98430398b8c",
     "url": "https://diamondconferencecenter.com/",
     "account": "CW",
     "status": "Active",
@@ -1896,14 +1920,19 @@
     ],
     "domainExpiry": "2028-06-28",
     "daysLeft": 657,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.542Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.120Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1023
   },
   {
-    "id": "f44dc5a5-9c5d-4a98-831d-21132ad8b95d",
+    "id": "f85feb3e-0ca3-413f-aea4-e2a3a0972c1e",
     "url": "alpha3hotels.com",
     "account": "CW",
     "status": "Active",
@@ -2070,13 +2099,15 @@
     "domainExpiry": "2027-04-29",
     "daysLeft": 231,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.544Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.549Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1062
   },
   {
-    "id": "43e45389-02a1-42a8-ae76-5c4439e90ca8",
+    "id": "9aab6492-12e5-4c78-8a93-28b1bfc3934b",
     "url": "atlantichotelsgroup.com",
     "account": "CW",
     "status": "Active",
@@ -2242,14 +2273,18 @@
     ],
     "domainExpiry": "2034-10-21",
     "daysLeft": 2963,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.547Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.094Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1031
   },
   {
-    "id": "cfe8e57f-9773-4f43-a30d-d334bb47c63c",
+    "id": "2bc3806b-6992-4a8e-b504-eeea955efeb0",
     "url": "laposadamilford.com",
     "account": "CW",
     "status": "Active",
@@ -2416,13 +2451,15 @@
     "domainExpiry": "2028-05-03",
     "daysLeft": 601,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.549Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.570Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1185
   },
   {
-    "id": "8b809fad-866b-4760-acea-84f7598302e8",
+    "id": "9bb0f6d5-8400-4249-98b9-5bf5f07b8948",
     "url": "https://jacksonsouthtown.com/",
     "account": "CW",
     "status": "Active",
@@ -2588,14 +2625,19 @@
     ],
     "domainExpiry": "2027-05-16",
     "daysLeft": 248,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.551Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.926Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1657
   },
   {
-    "id": "0f49492d-64fc-4702-8b18-244d275ad987",
+    "id": "d591f3f3-da3d-4dc3-9808-26640874bff4",
     "url": "https://drbillcarroll.com/",
     "account": "CW",
     "status": "Active",
@@ -2762,13 +2804,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.553Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.584Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1643
   },
   {
-    "id": "becdc1c1-0ae8-44a4-9c8b-2294c564fc93",
+    "id": "f23c0258-e7c5-46c4-acfd-3a7f422f39a2",
     "url": "https://nhghotels.com/",
     "account": "CW",
     "status": "Active",
@@ -2935,13 +2979,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.555Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.559Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 2053
   },
   {
-    "id": "63a58cbe-0b5a-47da-8801-6372d74ed958",
+    "id": "0e106b7f-d806-4867-9daa-f5fdee82dc23",
     "url": "https://toolkit.consulting/",
     "account": "CW",
     "status": "Active",
@@ -3107,14 +3153,19 @@
     ],
     "domainExpiry": "2027-01-19",
     "daysLeft": 131,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.556Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.937Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 2039
   },
   {
-    "id": "d78466aa-b5ff-4a9d-8360-076fdf4b5816",
+    "id": "f909aa1f-a3f2-493a-917c-461d9876076a",
     "url": "https://applevalleyrestaurant.com/",
     "account": "CW",
     "status": "Active",
@@ -3280,14 +3331,20 @@
     ],
     "domainExpiry": "2027-04-27",
     "daysLeft": 229,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.558Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.078Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 997
   },
   {
-    "id": "5fe7940e-d261-4d3e-88b3-9ed2347d6096",
+    "id": "e78dd64e-2567-480d-a8fe-e28d75c9ea87",
     "url": "https://chathamlodgingtrust.com/",
     "account": "CW",
     "status": "Active",
@@ -3453,14 +3510,19 @@
     ],
     "domainExpiry": "2030-10-28",
     "daysLeft": 1509,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:49.560Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:50.890Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1876
   },
   {
-    "id": "415de98d-e3e8-4bfc-b28c-7db0964c854b",
+    "id": "8ef717ba-28b7-4463-a095-b70e7b0a46de",
     "url": "https://legacygb.com/wp-admin",
     "account": "CW",
     "status": "Deactive",
@@ -3627,13 +3689,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.942Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.510Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1822
   },
   {
-    "id": "5f729a22-a892-49af-8284-78d20a369262",
+    "id": "4fc5806c-8866-4409-b14b-727c3ddc88bf",
     "url": "https://theelizajane.com/wp-admin",
     "account": "CW",
     "status": "Deactive",
@@ -3800,13 +3864,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.945Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.431Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1612
   },
   {
-    "id": "862d2e96-b844-4b96-ad4f-bce096323f34",
+    "id": "a41b5c27-0674-433a-bd7c-c6bb243040aa",
     "url": "https://foresthallmilford.com/",
     "account": "CW",
     "status": "Active",
@@ -3972,14 +4038,20 @@
     ],
     "domainExpiry": "2027-01-11",
     "daysLeft": 123,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.947Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.348Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1975
   },
   {
-    "id": "1c2f8d91-8870-4bad-a572-3df823d71096",
+    "id": "5f4261a4-189e-4103-a5f6-78bc6806a30a",
     "url": "https://cayugahospitality.com/",
     "account": "CW",
     "status": "Active",
@@ -4145,14 +4217,19 @@
     ],
     "domainExpiry": "2027-12-08",
     "daysLeft": 454,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.949Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.337Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1959
   },
   {
-    "id": "a5441d20-6c73-464d-9933-4b8766adfbe1",
+    "id": "1de954ca-49ef-46af-bd7e-a1dc8ffb97d5",
     "url": "https://valleyofthemoonpartners.com/",
     "account": "CW",
     "status": "Active",
@@ -4318,14 +4395,18 @@
     ],
     "domainExpiry": "2026-10-16",
     "daysLeft": 36,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.951Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:51.710Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1411
   },
   {
-    "id": "6ea4af83-ea32-4508-82d9-d90376ae2ff2",
+    "id": "5e542dac-767d-4131-86db-6bca550d8470",
     "url": "https://www.wilsonarkansas.com",
     "account": "CW",
     "status": "Active",
@@ -4491,14 +4572,19 @@
     ],
     "domainExpiry": "2027-04-13",
     "daysLeft": 215,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.955Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:51.256Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1094
   },
   {
-    "id": "4ea75454-79e2-4fb3-b558-93aa276ab220",
+    "id": "ff5d84dd-d5a7-490a-a69e-1546e3ad7513",
     "url": "www.eatatwilson.com",
     "account": "CW",
     "status": "Active",
@@ -4664,14 +4750,19 @@
     ],
     "domainExpiry": "2027-06-08",
     "daysLeft": 271,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.957Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:51.843Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1105
   },
   {
-    "id": "3a4b84de-edb4-426e-a5f8-b9dafb1824e7",
+    "id": "5532aea6-aa05-49a9-b02a-f942758bb7ca",
     "url": "www.wilsongrange.com",
     "account": "CW",
     "status": "Active",
@@ -4837,14 +4928,19 @@
     ],
     "domainExpiry": "2026-05-22",
     "daysLeft": -111,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.034Z",
-    "updatedAt": "2026-09-10T19:27:48.034Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.959Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:51.509Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1018
   },
   {
-    "id": "dda144b2-4786-4479-abeb-c934bfd2b339",
+    "id": "f917e0c3-899a-4836-bb8a-11b3fcd4bd41",
     "url": "https://thelouishotel.com/",
     "account": "CW",
     "status": "Active",
@@ -5010,14 +5106,19 @@
     ],
     "domainExpiry": "2026-07-19",
     "daysLeft": -53,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.961Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.361Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 2373
   },
   {
-    "id": "a5b17a10-5e75-41cb-a6cc-9cf1d665b6c9",
+    "id": "f80f7cca-dd3d-45f8-b803-847d1c50aa3a",
     "url": "https://innatwise.com/",
     "account": "CW",
     "status": "Active",
@@ -5183,14 +5284,18 @@
     ],
     "domainExpiry": "2029-02-26",
     "daysLeft": 900,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:50.962Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:51.912Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1981
   },
   {
-    "id": "eb2a31d7-a99c-4554-93e2-5c731ea07426",
+    "id": "5f1598cc-0d88-4b45-bdd1-d031a14f8d31",
     "url": "nauticalbeachfrontresort.com",
     "account": "CW",
     "status": "Active",
@@ -5357,13 +5462,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.514Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.841Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 524
   },
   {
-    "id": "5a594b1e-958b-46cd-a8bf-4d368178702f",
+    "id": "81eacb0c-2613-40e6-b474-4178b2f9c86a",
     "url": "https://www.hotelteatro.com/",
     "account": "CW",
     "status": "Active",
@@ -5529,14 +5636,19 @@
     ],
     "domainExpiry": "2027-03-30",
     "daysLeft": 201,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.516Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:53.814Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1789
   },
   {
-    "id": "0907bc2e-5592-4c40-9bcc-ecca52b59eb8",
+    "id": "f9563b1b-5203-4a16-bd11-cf02040ac30a",
     "url": "https://cogwheelanalytics.com/",
     "account": "CW",
     "status": "Active",
@@ -5702,14 +5814,19 @@
     ],
     "domainExpiry": "2028-02-27",
     "daysLeft": 535,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.517Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:53.312Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1258
   },
   {
-    "id": "1ebd8e74-050c-4118-9b9c-3c4464f4190f",
+    "id": "3aa2825c-a6a3-4682-969f-7065a4c7f8c8",
     "url": "https://barmetier.com/",
     "account": "CW",
     "status": "Deactived",
@@ -5876,13 +5993,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.519Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:53.010Z",
+    "uptimeStatusCode": 405,
+    "uptimeResponseTime": 715
   },
   {
-    "id": "7aa7dca6-2c56-40d8-b8ea-cdb0785da368",
+    "id": "81429e9c-e6d2-4eba-9b6f-647ff3270eda",
     "url": "https://trattoriabarnett.com/",
     "account": "CW",
     "status": "Active",
@@ -6049,13 +6168,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.520Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.572Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 530
   },
   {
-    "id": "9bbb513c-b3a5-49d2-9f65-6b19d711723d",
+    "id": "f839dcff-8ec6-42c7-b523-e5fad48970e3",
     "url": "https://winslowhotels.com/",
     "account": "CW",
     "status": "Active",
@@ -6221,14 +6342,21 @@
     ],
     "domainExpiry": "2027-09-30",
     "daysLeft": 385,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.521Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:54.117Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 2255
   },
   {
-    "id": "b4306196-a917-4583-8581-29948ce23558",
+    "id": "5377dace-70ae-4227-b546-d95e01d1050d",
     "url": "https://www.theguildhotel.com/",
     "account": "CW",
     "status": "Deactive",
@@ -6394,14 +6522,20 @@
     ],
     "domainExpiry": "2027-12-08",
     "daysLeft": 454,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.213Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:44:06.172Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1419
   },
   {
-    "id": "640d58b0-9831-4029-aae7-66a783209d18",
+    "id": "92e11c17-ee90-4d7d-b59b-6bdd970c9d4c",
     "url": "https://grangerhotel.com/",
     "account": "CW",
     "status": "Deactive",
@@ -6567,14 +6701,19 @@
     ],
     "domainExpiry": "2027-01-08",
     "daysLeft": 120,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.215Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:44:05.627Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 842
   },
   {
-    "id": "7001bf13-38e6-434b-b166-1f48707cfdf0",
+    "id": "74aac6bf-7d3e-4905-87fe-e029cc92aa47",
     "url": "https://femalefoundersinhospitality.com/",
     "account": "CW",
     "status": "Active",
@@ -6740,14 +6879,19 @@
     ],
     "domainExpiry": "2027-09-10",
     "daysLeft": 365,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.525Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:52.963Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 972
   },
   {
-    "id": "d4246225-3181-4f21-a864-fa451e86f34b",
+    "id": "ad8efee7-920b-4b5d-8634-ff25060cb85a",
     "url": "https://toastedbarrelbar.com/",
     "account": "CW",
     "status": "Active",
@@ -6913,14 +7057,19 @@
     ],
     "domainExpiry": "2026-12-02",
     "daysLeft": 83,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:52.526Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:53.037Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 958
   },
   {
-    "id": "690a6174-e8c2-4da4-8dae-ef4a5edfad34",
+    "id": "ccbe975e-9faa-486e-9e94-013ee45710f4",
     "url": "https://seaworthynola.com/",
     "account": "CW",
     "status": "Active",
@@ -7086,14 +7235,19 @@
     ],
     "domainExpiry": "2028-05-29",
     "daysLeft": 627,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.119Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:56.100Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1229
   },
   {
-    "id": "143c34a3-e174-4e34-9504-9f4bb93682cb",
+    "id": "dcc0ba44-fcfe-42d7-b2c0-74950bb760ae",
     "url": "hotelperla.com",
     "account": "CW",
     "status": "Active",
@@ -7259,14 +7413,19 @@
     ],
     "domainExpiry": "2027-03-30",
     "daysLeft": 201,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "1accc4a5-138f-4347-983b-c64c08ee342f"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.121Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:54.170Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 677
   },
   {
-    "id": "75fc50c0-7220-4537-8ff3-eef1ed78751d",
+    "id": "0ddc7bd4-d2a7-45ff-b76f-207814b40907",
     "url": "https://thebarnett.com/",
     "account": "CW",
     "status": "Active",
@@ -7432,14 +7591,19 @@
     ],
     "domainExpiry": "2027-03-29",
     "daysLeft": 200,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.123Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.091Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1215
   },
   {
-    "id": "ff811c6a-8a57-4017-a77c-dd041c1461b9",
+    "id": "8a3b4a4a-9962-4318-8e95-bf23d9fc6a15",
     "url": "https://salonsalonnola.com/",
     "account": "CW",
     "status": "Active",
@@ -7605,14 +7769,19 @@
     ],
     "domainExpiry": "2027-05-29",
     "daysLeft": 261,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.124Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.125Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1237
   },
   {
-    "id": "2a41c905-989d-436e-be5b-52b6ee3e0420",
+    "id": "7d65339d-19ef-4e50-9c02-272ba41d0d6c",
     "url": "https://maisonmetier.com/",
     "account": "CW",
     "status": "Active",
@@ -7778,14 +7947,18 @@
     ],
     "domainExpiry": "2027-03-29",
     "daysLeft": 200,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.127Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.280Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1378
   },
   {
-    "id": "c4810c75-76f7-421e-a31c-12e91377d328",
+    "id": "ceab96d4-f8b6-44d2-af4e-8134542b4411",
     "url": "https://goodmeasurenola.com/",
     "account": "CW",
     "status": "Active",
@@ -7951,14 +8124,18 @@
     ],
     "domainExpiry": "2027-05-29",
     "daysLeft": 261,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.129Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.325Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1528
   },
   {
-    "id": "b540ff40-6925-402e-b48b-41cca4f23136",
+    "id": "439cc673-5511-4e03-bc4f-d4a0fd8b2991",
     "url": "https://ohioeventcenter.com/",
     "account": "CW",
     "status": "Active",
@@ -8124,14 +8301,18 @@
     ],
     "domainExpiry": "2027-05-17",
     "daysLeft": 249,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.132Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.226Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1542
   },
   {
-    "id": "7102364b-e220-4a21-ade8-f8fcebf58b5e",
+    "id": "7b4bb05b-7045-4ffb-bd0f-ff866f4bfb44",
     "url": "https://craftsmanwoodgrilletaphouse.com/",
     "account": "CW",
     "status": "Active",
@@ -8297,14 +8478,19 @@
     ],
     "domainExpiry": "2027-06-25",
     "daysLeft": 288,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.134Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.191Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1567
   },
   {
-    "id": "8adb64fc-a7de-491e-991a-4fd0a2f2c998",
+    "id": "3549175b-550f-4a62-abb9-110e4580b1ea",
     "url": "https://craftsmankitchenandterrace.com/",
     "account": "CW",
     "status": "Active",
@@ -8470,14 +8656,19 @@
     ],
     "domainExpiry": "2027-06-30",
     "daysLeft": 293,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.136Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.260Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1555
   },
   {
-    "id": "bec53075-ad08-4c30-a68f-ea0eb1fe4c0a",
+    "id": "47c0f8b4-eda5-46eb-8584-8f4ba6a865c2",
     "url": "https://woodcliffgolf.com/",
     "account": "CW",
     "status": "Active",
@@ -8643,14 +8834,19 @@
     ],
     "domainExpiry": "2027-03-02",
     "daysLeft": 173,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:54.137Z",
+    "createdAt": "2026-09-10T19:42:05.549Z",
+    "updatedAt": "2026-09-10T19:43:55.039Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1576
   },
   {
-    "id": "3b3cdb4d-a43a-4dfb-ac71-ed649a4f42a7",
+    "id": "b1df02b8-cbb7-4efb-85e5-e74388804816",
     "url": "https://woodcliffhotelspa.com/",
     "account": "CW",
     "status": "Active",
@@ -8816,14 +9012,18 @@
     ],
     "domainExpiry": "2027-03-22",
     "daysLeft": 193,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.103Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.292Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1026
   },
   {
-    "id": "3a88e066-bdc1-46ea-be9a-5e5ecdb07e8b",
+    "id": "b546b8d0-b492-41ca-abd0-0b1e6f3ed914",
     "url": "https://horizonsmodernkitchen.com/",
     "account": "CW",
     "status": "Active",
@@ -8989,14 +9189,19 @@
     ],
     "domainExpiry": "2027-04-06",
     "daysLeft": 208,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.104Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.604Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1309
   },
   {
-    "id": "c860132a-1310-422a-93f2-5c52832f5e0a",
+    "id": "8549eaf1-bab4-412d-b259-016e9d3644cf",
     "url": "https://craftsmaninn.com/",
     "account": "CW",
     "status": "Active",
@@ -9162,14 +9367,19 @@
     ],
     "domainExpiry": "2026-11-17",
     "daysLeft": 68,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.105Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.150Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1286
   },
   {
-    "id": "6954226c-0e55-45d0-8eda-5d31ec832f8f",
+    "id": "51a8866a-c7ed-4b06-b80d-6dd85cbf8ef7",
     "url": "https://pinoncourt.com/",
     "account": "CW",
     "status": "Active",
@@ -9335,14 +9545,19 @@
     ],
     "domainExpiry": "2027-05-31",
     "daysLeft": 263,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.107Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.391Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1409
   },
   {
-    "id": "8f8794f6-e088-40ea-8f86-27999d96d3bd",
+    "id": "b87c64bb-9e85-434c-9a2e-ac7c7c110d0f",
     "url": "https://www.lafondasantafe.com/",
     "account": "CW",
     "status": "Active",
@@ -9508,14 +9723,19 @@
     ],
     "domainExpiry": "2027-07-05",
     "daysLeft": 298,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "offline",
+    "lastUptimeCheck": "2026-09-10T19:43:56.108Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.273Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1601
   },
   {
-    "id": "56e5f053-d37a-43a3-84be-d2e0dd0f63e1",
+    "id": "430ba676-cdca-4436-a691-2615e4522001",
     "url": "https://senzahotel.com/",
     "account": "CW",
     "status": "Active",
@@ -9681,14 +9901,18 @@
     ],
     "domainExpiry": "2027-02-22",
     "daysLeft": 165,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.109Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.569Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1372
   },
   {
-    "id": "b0fada37-9131-4db5-85a2-d5d292f522ec",
+    "id": "c9da082e-aa7b-4501-bc00-201a5fca89b3",
     "url": "https://hqdallasrooftop.com/",
     "account": "CW",
     "status": "Active",
@@ -9854,14 +10078,20 @@
     ],
     "domainExpiry": "2030-06-03",
     "daysLeft": 1362,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.111Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.552Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1909
   },
   {
-    "id": "84af8bcd-570b-4cd5-8296-fa647f103a61",
+    "id": "07366886-fa1c-4ef5-ac33-5a1ef6b8c5e6",
     "url": "https://romarelevators.com/",
     "account": "CW",
     "status": "Active",
@@ -10027,14 +10257,19 @@
     ],
     "domainExpiry": "2026-09-02",
     "daysLeft": -8,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.114Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:56.635Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1099
   },
   {
-    "id": "e5a5fa08-6470-46f8-861c-e5c4bb442b25",
+    "id": "0821becf-03b6-41e3-987a-6d4e397cde1b",
     "url": "http://freerideuptown.com/",
     "account": "CW",
     "status": "Active",
@@ -10200,14 +10435,20 @@
     ],
     "domainExpiry": "2028-02-27",
     "daysLeft": 535,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.116Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:56.702Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1256
   },
   {
-    "id": "bc904934-ee13-4313-a472-b3a58f763b1a",
+    "id": "23a33784-fce9-4273-883b-33f4bd8ad38a",
     "url": "https://www.upsidewestvillage.com/",
     "account": "CW",
     "status": "Active",
@@ -10373,14 +10614,19 @@
     ],
     "domainExpiry": "2027-01-24",
     "daysLeft": 136,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:56.116Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:57.184Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1916
   },
   {
-    "id": "2aed5b8e-bb90-4454-a851-29817d0db73d",
+    "id": "a7037c02-b955-4855-8913-30ba1d97374d",
     "url": "https://joecaincafe.com/",
     "account": "CW",
     "status": "Active",
@@ -10546,14 +10792,20 @@
     ],
     "domainExpiry": "2028-11-02",
     "daysLeft": 784,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.608Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.592Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 774
   },
   {
-    "id": "1accb517-d9b9-476c-ac85-ddb0271394f8",
+    "id": "625dd7e5-e2ec-4e71-960b-8a88457f0d79",
     "url": "https://bruttoamericano.com/",
     "account": "CW",
     "status": "Active",
@@ -10719,14 +10971,20 @@
     ],
     "domainExpiry": "2027-07-16",
     "daysLeft": 309,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.610Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:59.007Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1282
   },
   {
-    "id": "926f20eb-6cc3-46ff-ba93-0ece3f6c8f79",
+    "id": "cdfe6269-6ad2-487f-bdff-540664b9c8a9",
     "url": "https://room56.com/",
     "account": "CW",
     "status": "Active",
@@ -10892,14 +11150,19 @@
     ],
     "domainExpiry": "2027-01-08",
     "daysLeft": 120,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.611Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.502Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 758
   },
   {
-    "id": "12a76820-71b8-418c-8111-8280d88da2e1",
+    "id": "936a7d85-8fae-41f3-a38c-ca4884dce8bb",
     "url": "https://bentleylegacy.com/",
     "account": "CW",
     "status": "Active",
@@ -11065,14 +11328,19 @@
     ],
     "domainExpiry": "2027-10-27",
     "daysLeft": 412,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.613Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.699Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1446
   },
   {
-    "id": "b13923e8-4a09-4b62-9dd7-71530576a897",
+    "id": "7d4d1dff-2861-455d-91e5-6645e5445183",
     "url": "https://hoteldelapostenola.com/",
     "account": "CW",
     "status": "Active",
@@ -11238,14 +11506,20 @@
     ],
     "domainExpiry": "2026-10-29",
     "daysLeft": 49,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.616Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.472Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1162
   },
   {
-    "id": "529b3a66-2169-4786-abc2-56c0bbae6a60",
+    "id": "873bcae2-88d7-4f08-a27f-fc5cd0f32762",
     "url": "https://hotellajolla.com/",
     "account": "CW",
     "status": "Active",
@@ -11411,14 +11685,20 @@
     ],
     "domainExpiry": "2026-12-29",
     "daysLeft": 110,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.618Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.961Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1557
   },
   {
-    "id": "64db59c3-4c5e-40b9-b623-f8b3115a319e",
+    "id": "0ff13069-3f26-494d-8901-c41d058b9602",
     "url": "https://morrisonhouse.com/",
     "account": "CW",
     "status": "Active",
@@ -11584,14 +11864,19 @@
     ],
     "domainExpiry": "2027-02-28",
     "daysLeft": 171,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.620Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.952Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1736
   },
   {
-    "id": "ec21ffbc-7d9d-4358-a3a9-ee5b33ae4fd6",
+    "id": "f7cecdc1-9d73-4450-b760-3c1feb3afc58",
     "url": "https://raphaelkc.com/",
     "account": "CW",
     "status": "Active",
@@ -11757,14 +12042,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.623Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.519Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1220
   },
   {
-    "id": "2770fa55-808f-4c88-981a-bfab16a7b1be",
+    "id": "314d6012-3801-4931-bb4e-eab5cc0ed070",
     "url": "https://thewilliamfelltavern.com/",
     "account": "CW",
     "status": "Active",
@@ -11930,14 +12219,19 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.625Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:59.659Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1944
   },
   {
-    "id": "ec2dccad-170d-4f11-9918-52a8371e353b",
+    "id": "e41deefc-97ef-4d15-b900-8a7266b31cc4",
     "url": "https://thehotelelysium.com/",
     "account": "CW",
     "status": "Active",
@@ -12104,13 +12398,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:57.628Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:43:58.994Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1715
   },
   {
-    "id": "e4c457b3-f57d-49ea-9b4f-67f6645c819e",
+    "id": "a5daa400-47d6-4d67-aafe-368f52a83e3f",
     "url": "https://www.meyerjabarahotels.com/",
     "account": "CW",
     "status": "Active",
@@ -12276,14 +12572,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.663Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:01.028Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1504
   },
   {
-    "id": "4c6bbd5a-a38e-48ca-98a7-8a87f8b21417",
+    "id": "6b2745b3-8fbd-4389-ab04-37fb891db545",
     "url": "https://ocalaflevents.com/",
     "account": "CW",
     "status": "Active",
@@ -12449,14 +12749,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.665Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:00.386Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1353
   },
   {
-    "id": "69cef1f4-dec5-4fbb-bdec-85d7391f56c4",
+    "id": "fda3570b-4f0b-47a0-b8da-86a243362038",
     "url": "https://hiltonchristiana.com/",
     "account": "CW",
     "status": "Active",
@@ -12622,14 +12926,20 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.667Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:00.398Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1041
   },
   {
-    "id": "ea929f8f-3f81-422a-8085-0e1cd3fc5687",
+    "id": "e3d87880-7907-4c8c-892f-f250563b0480",
     "url": "https://themenhaden.com/",
     "account": "CW",
     "status": "Active",
@@ -12795,14 +13105,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.669Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:01.803Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1974
   },
   {
-    "id": "cd880f8c-ed69-4960-957c-9a766ded9126",
+    "id": "6df0f47a-817d-4a23-8a65-6d49d9c291a4",
     "url": "https://www.thewentworth.com/",
     "account": "CW",
     "status": "Active",
@@ -12968,14 +13282,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.670Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:02.305Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 2134
   },
   {
-    "id": "694b6663-1533-4bb2-9d7b-c2b8695e7431",
+    "id": "0dbfe36c-1a39-41f4-bdfc-520ea77aa032",
     "url": "https://thewentworthrestaurants.com/",
     "account": "CW",
     "status": "Active",
@@ -13141,14 +13459,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.671Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:02.012Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 2103
   },
   {
-    "id": "a10c073b-cf71-4438-85d6-d6ec3ab0d6ee",
+    "id": "6f818570-eb50-4dfa-b925-55004271b972",
     "url": "https://thesagaponackny.com/",
     "account": "CW",
     "status": "Active",
@@ -13314,14 +13636,19 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.673Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:02.104Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 2071
   },
   {
-    "id": "61b27564-d776-4040-a0be-e90cfd2de25f",
+    "id": "c59db648-dc63-4dc6-a74f-79821bba5777",
     "url": "https://baltimoreeventsandcatering.com/",
     "account": "CW",
     "status": "Active",
@@ -13487,14 +13814,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.674Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:00.414Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1442
   },
   {
-    "id": "a2e5ae63-a1c5-4188-b49b-0ee06b9f1cee",
+    "id": "5863794d-f86c-497c-8223-f977517d3998",
     "url": "https://thebensonhotel.com/",
     "account": "CW",
     "status": "Active",
@@ -13661,13 +13992,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.675Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:00.407Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1455
   },
   {
-    "id": "61aad6c5-18e6-46ba-9521-3fcdffae3c5d",
+    "id": "b3564849-45d3-4535-a5fa-c5b9a49e699e",
     "url": "https://www.thenines.com/",
     "account": "CW",
     "status": "Active",
@@ -13833,14 +14166,18 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "assignedUsers": [
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:59.677Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:01.998Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 2612
   },
   {
-    "id": "163dd9e1-50d9-435f-ab21-28b89f012efd",
+    "id": "539ab021-d5b5-410f-974c-e2b5a6e0ea49",
     "url": "Note:https://morrisonhouse.com/",
     "account": "CW",
     "status": "Active",
@@ -14007,13 +14344,13 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.035Z",
-    "updatedAt": "2026-09-10T19:27:48.035Z"
+    "uptimeStatus": "offline",
+    "lastUptimeCheck": "2026-09-10T19:44:02.308Z",
+    "createdAt": "2026-09-10T19:42:05.550Z",
+    "updatedAt": "2026-09-10T19:44:02.328Z"
   },
   {
-    "id": "160d0a3a-0d93-44d1-a32b-a94d81e68c13",
+    "id": "6e39eea3-be46-4326-a510-5b5b22db3149",
     "url": "razibmarketing.com",
     "account": "RM",
     "status": "Active",
@@ -14155,14 +14492,18 @@
     ],
     "domainExpiry": "2027-07-26",
     "daysLeft": 319,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.309Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:03.715Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1483
   },
   {
-    "id": "dbd45f93-2307-4c81-826c-dfc0961d437c",
+    "id": "a29c69b0-6a57-4049-be9a-f1da12dfb015",
     "url": "https://groundupmusicfestival.com/",
     "account": "RM",
     "status": "Active",
@@ -14305,13 +14646,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.310Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:03.121Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 742
   },
   {
-    "id": "d1f2cbe7-63b0-450d-b639-3b74f24c59bd",
+    "id": "70f1e428-6519-4256-a373-2849d24fd187",
     "url": "https://mdmhotelsusa.com/",
     "account": "RM",
     "status": "Active",
@@ -14453,14 +14796,18 @@
     ],
     "domainExpiry": "2028-02-17",
     "daysLeft": 525,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.312Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:02.812Z",
+    "uptimeStatusCode": 405,
+    "uptimeResponseTime": 498
   },
   {
-    "id": "af422a85-1a74-45c9-93e9-17e73f293e5b",
+    "id": "fe9ac78c-675a-485e-b34d-ce50451ec3b9",
     "url": "https://hotelbschool.com/wp-admin/",
     "account": "RM",
     "status": "Active",
@@ -14603,13 +14950,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.314Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:05.197Z",
+    "uptimeStatusCode": 302,
+    "uptimeResponseTime": 2518
   },
   {
-    "id": "719ecd46-c75f-4097-93ba-df675594fcfc",
+    "id": "1024f847-8988-4dea-b444-192272d280eb",
     "url": "https://womenintravelthrive.com/",
     "account": "RM",
     "status": "Active",
@@ -14751,14 +15100,18 @@
     ],
     "domainExpiry": "2026-10-11",
     "daysLeft": 31,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.316Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:04.084Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1962
   },
   {
-    "id": "fd272b0d-808d-479a-95ef-59bc67634f8d",
+    "id": "ee332602-4cf0-4ff4-85f2-5bcc81001a3d",
     "url": "https://cowboytechhub.com/",
     "account": "RM",
     "status": "Active",
@@ -14900,14 +15253,19 @@
     ],
     "domainExpiry": "2028-02-17",
     "daysLeft": 525,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.318Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:02.759Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 952
   },
   {
-    "id": "b917e197-2705-492a-875d-f02f110bdb5d",
+    "id": "d353fd0c-cada-4822-ae00-a61f5c6c0da1",
     "url": "https://mountainmanoutdoors.com/",
     "account": "RM",
     "status": "Active",
@@ -15050,13 +15408,15 @@
     "domainExpiry": "2029-01-29",
     "daysLeft": 872,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.320Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:02.773Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 840
   },
   {
-    "id": "133a3ea2-49d0-4ecd-b11f-274f7f4f2ccd",
+    "id": "d495ba7d-d4d3-41ff-a457-9c2812c94ac7",
     "url": "http://margatemasjid.org/",
     "account": "RM",
     "status": "Active",
@@ -15198,14 +15558,20 @@
     ],
     "domainExpiry": "2027-04-25",
     "daysLeft": 227,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "1accc4a5-138f-4347-983b-c64c08ee342f",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.322Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:03.172Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 1298
   },
   {
-    "id": "1a36e2c8-e357-4212-a6ae-cae52fc82206",
+    "id": "f32bc373-f540-427b-994a-6186ff6f454f",
     "url": "https://www.zwibak.com/",
     "account": "RM",
     "status": "Active",
@@ -15348,13 +15714,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:02.322Z",
+    "createdAt": "2026-09-10T19:42:06.520Z",
+    "updatedAt": "2026-09-10T19:44:02.704Z",
+    "uptimeStatusCode": 404,
+    "uptimeResponseTime": 823
   },
   {
-    "id": "c8eaf7e8-5dbe-4ee1-9f01-2c9429eac7bd",
+    "id": "b92f30bf-421f-4615-83b3-46a180939a1c",
     "url": "https://rev-mm.com/",
     "account": "RM",
     "status": "Active",
@@ -15496,14 +15864,18 @@
     ],
     "domainExpiry": "2026-09-09",
     "daysLeft": -1,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.201Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:06.195Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1244
   },
   {
-    "id": "f8fa261c-c1a3-4cb6-b4c7-6b2248714b1a",
+    "id": "69a712e2-0f61-40b5-99d4-815d7962439e",
     "url": "https://miamikdistribution.com/",
     "account": "RM",
     "status": "Active",
@@ -15646,13 +16018,15 @@
     "domainExpiry": "2026-06-25",
     "daysLeft": -77,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.204Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:05.253Z",
+    "uptimeStatusCode": 302,
+    "uptimeResponseTime": 322
   },
   {
-    "id": "4af39ea7-e0ca-4a73-8acd-5e36625c3d4f",
+    "id": "eedc77fe-8caa-4623-8ae1-dcc3a041ed7e",
     "url": "https://wcbbqcompany.com",
     "account": "RM",
     "status": "Active",
@@ -15795,13 +16169,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.206Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:05.694Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 491
   },
   {
-    "id": "6e9c81b7-daaa-450f-a42c-cfe923004b81",
+    "id": "264f5b2d-74c3-418f-b5db-8357f2656916",
     "url": "https://hotelsheldon.com/",
     "account": "RM",
     "status": "Active",
@@ -15943,14 +16319,19 @@
     ],
     "domainExpiry": "2026-12-30",
     "daysLeft": 111,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.209Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:06.235Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1741
   },
   {
-    "id": "807fc602-8c6a-490a-a996-ef4f70a045ea",
+    "id": "6a25c9d4-58de-46d2-b40b-869a8d55de13",
     "url": "https://amarvacation.com/",
     "account": "RM",
     "status": "Active",
@@ -16092,14 +16473,20 @@
     ],
     "domainExpiry": "2026-11-10",
     "daysLeft": 61,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76",
+      "d4ed8d6f-0ba6-455f-aa09-a77919195319"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.211Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:05.658Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 729
   },
   {
-    "id": "ef474c07-33a5-41a3-b250-6950864ba8ef",
+    "id": "d8e5b2cd-b412-4876-a419-18cf817c1f4e",
     "url": "https://www.theguildhotel.com/",
     "account": "RM",
     "status": "Active",
@@ -16242,13 +16629,15 @@
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:43:24.616Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:43:25.591Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 968
   },
   {
-    "id": "1cdfc815-611d-4d56-ba4c-e8a22f8b2498",
+    "id": "68b43a02-141a-4774-8c79-9017f0e79972",
     "url": "https://grangerhotel.com/",
     "account": "RM",
     "status": "Active",
@@ -16393,11 +16782,11 @@
     "assignedUsers": [],
     "uptimeStatus": "unknown",
     "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:42:06.521Z"
   },
   {
-    "id": "4903e923-7227-4018-8dfb-fbe3294e3da6",
+    "id": "b238dcae-82b0-4553-8a6c-031c7404d4f5",
     "url": "https://duneclimbinn.com/",
     "account": "RM",
     "status": "Active",
@@ -16539,14 +16928,19 @@
     ],
     "domainExpiry": "2028-03-22",
     "daysLeft": 559,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.218Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:05.909Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 915
   },
   {
-    "id": "b59e0a19-ce02-456d-88d2-9afe64c243b9",
+    "id": "b27aa7b6-6b58-4e7f-8122-729758518e69",
     "url": "https://elevatebyhvmg.com/",
     "account": "RM",
     "status": "Active",
@@ -16688,14 +17082,19 @@
     ],
     "domainExpiry": "2027-07-16",
     "daysLeft": 309,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "671ce8a3-5112-4239-a57e-011c6ed75dcd",
+      "3320c667-0c92-4334-a278-c5fcbc047f76"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.221Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:06.121Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1434
   },
   {
-    "id": "3456247b-e2d3-454c-b188-4a3564071001",
+    "id": "35764475-26a3-4445-8815-70e811e8d4cb",
     "url": "https://tanresorts.com/cap-cana/",
     "account": "RM",
     "status": "Active",
@@ -16837,14 +17236,19 @@
     ],
     "domainExpiry": "",
     "daysLeft": null,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:05.222Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:06.660Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 1900
   },
   {
-    "id": "f2720857-8c05-41af-bcfc-6f37072b11a4",
+    "id": "efad539a-b4bc-47b1-92fe-7cbc80905e84",
     "url": "https://tanresorts.com/",
     "account": "RM",
     "status": "Active",
@@ -16986,14 +17390,19 @@
     ],
     "domainExpiry": "2027-04-10",
     "daysLeft": 212,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:06.667Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:07.195Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 744
   },
   {
-    "id": "3feb894d-267d-4c6b-904b-488f2d947ab6",
+    "id": "18a236a9-f689-4aeb-85f4-670fd8098d24",
     "url": "https://insidertravelforwomen.com/",
     "account": "RM",
     "status": "Active",
@@ -17135,14 +17544,20 @@
     ],
     "domainExpiry": "2028-05-27",
     "daysLeft": 625,
-    "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "assignedUsers": [
+      "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
+      "09901b12-d50d-4c19-b659-df49987ae4eb",
+      "6420eb28-11d9-4f35-b8e3-41d96b944de5"
+    ],
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:06.670Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:07.210Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 434
   },
   {
-    "id": "58b37a08-5000-408a-8071-f84c864846a5",
+    "id": "b8567b15-862f-4b83-aff7-3295cb10980c",
     "url": "https://warautospa.com/",
     "account": "RM",
     "status": "Active",
@@ -17285,13 +17700,15 @@
     "domainExpiry": "2026-08-07",
     "daysLeft": -34,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:06.672Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:07.072Z",
+    "uptimeStatusCode": 200,
+    "uptimeResponseTime": 634
   },
   {
-    "id": "9879c6d4-3d2c-4c92-bf67-d63d13acef77",
+    "id": "42ac0e51-4623-4118-97f4-95fa40b5a463",
     "url": "http://bhospitalityadvisors.com/",
     "account": "RM",
     "status": "Active",
@@ -17434,9 +17851,11 @@
     "domainExpiry": "2026-06-05",
     "daysLeft": -97,
     "assignedUsers": [],
-    "uptimeStatus": "unknown",
-    "lastUptimeCheck": null,
-    "createdAt": "2026-09-10T19:27:48.942Z",
-    "updatedAt": "2026-09-10T19:27:48.942Z"
+    "uptimeStatus": "online",
+    "lastUptimeCheck": "2026-09-10T19:44:06.673Z",
+    "createdAt": "2026-09-10T19:42:06.521Z",
+    "updatedAt": "2026-09-10T19:44:06.691Z",
+    "uptimeStatusCode": 301,
+    "uptimeResponseTime": 348
   }
 ]
