@@ -87,20 +87,25 @@ function now() { return new Date().toISOString(); }
 // ─── Step 1: Seed Users ───────────────────────────────────────────────────────
 function seedUsers() {
   report('Seeding users…', 2);
-  const existing = getUsers().filter(u => u && u.name);
-  const existingMap = Object.fromEntries(existing.map(u => [u.name.toLowerCase(), u]));
+
+  // Load existing users safely — filter out any malformed entries
+  const existing = (getUsers() || []).filter(u => u != null && typeof u.name === 'string' && u.name.length > 0);
+  const existingMap = {};
+  for (const u of existing) {
+    existingMap[u.name.toLowerCase()] = u;
+  }
 
   const merged = DEFAULT_USERS.map(du => {
-    const ex = existingMap[du.name.toLowerCase()];
-    if (ex) {
-      // Preserve existing role unless it was set to a higher level
-      return { ...ex, email: ex.email || du.email };
-    }
+    const key = du.name.toLowerCase();
+    const ex = existingMap[key];
+    if (ex) return { ...ex, email: ex.email || du.email };
     return { id: uuid(), name: du.name, role: du.role, email: du.email, createdAt: now(), updatedAt: now() };
   });
 
   setUsers(merged);
-  return Object.fromEntries(merged.map(u => [u.name.toLowerCase(), u]));
+  const userMap = {};
+  for (const u of merged) userMap[u.name.toLowerCase()] = u;
+  return userMap;
 }
 
 // ─── Step 2: Import Sites from CW + RM Website Lists ─────────────────────────
