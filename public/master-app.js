@@ -44,6 +44,7 @@ const NAV = {
     { id: 'distribution',   icon: '📋', label: 'Task Distribution' },
     { id: 'maint-overview', icon: '🔧', label: 'Maintenance Status' },
     { id: 'send-email-admin', icon: '✉️', label: 'Send Emails' },
+    { id: 'sync-data',      icon: '🔄', label: 'Sync from Sheets' },
   ],
   superadmin: [
     { id: 'sa-overview',    icon: '🏠', label: 'Overview' },
@@ -54,6 +55,7 @@ const NAV = {
     { id: 'dev-tracker',    icon: '💻', label: 'Dev Tracker' },
     { id: 'properties',     icon: '🏢', label: 'Property Registry' },
     { id: 'send-email-admin', icon: '✉️', label: 'Send Emails' },
+    { id: 'sync-data',      icon: '🔄', label: 'Sync from Sheets' },
   ],
 };
 
@@ -122,13 +124,25 @@ function daysLeftBadge(days) {
 
 // ─── Landing ──────────────────────────────────────────────────────────────────
 async function initLanding() {
+  const defaultUsers = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif'];
+  userNameSelect.innerHTML = defaultUsers.map(u => `<option value="${u}">${u}</option>`).join('');
+
+  // Check if local DB is initialised
   try {
-    const { users } = await apiFetch('/api/master/users');
-    userNameSelect.innerHTML = users.map(u => `<option value="${u}">${u}</option>`).join('');
-  } catch {
-    userNameSelect.innerHTML = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif']
-      .map(u => `<option value="${u}">${u}</option>`).join('');
-  }
+    const status = await apiFetch('/api/master/db-status', { noCache: true });
+    if (!status.initialised) {
+      const warn = document.createElement('div');
+      warn.style.cssText = 'background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24';
+      warn.innerHTML = '⚠️ <strong>First time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import all data.';
+      document.querySelector('.landing-card').insertBefore(warn, document.querySelector('.btn-enter'));
+    } else {
+      const syncAgo = status.lastSync ? Math.round((Date.now() - new Date(status.lastSync)) / 60000) : null;
+      const info = document.createElement('div');
+      info.style.cssText = 'background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#34d399';
+      info.textContent = `✅ Data ready · ${status.totalSites} sites · ${status.totalDomains} domains${syncAgo !== null ? ` · synced ${syncAgo}m ago` : ''}`;
+      document.querySelector('.landing-card').insertBefore(info, document.querySelector('.btn-enter'));
+    }
+  } catch {}
 
   roleSelect.addEventListener('change', () => {
     userSelectWrap.classList.toggle('hidden', roleSelect.value !== 'user');
@@ -202,6 +216,7 @@ async function navigateTo(viewId) {
     'dev-tracker':     renderDevTracker,
     'properties':      renderProperties,
     'send-email-admin':renderSendEmailsLink,
+    'sync-data':       renderSync,
   };
 
   const fn = views[viewId];
@@ -302,17 +317,18 @@ async function renderMySites() {
   searchInput.addEventListener('input', filterTable);
   filterSelect.addEventListener('change', filterTable);
 
-  // Status update listeners
+  // Status update listeners — saves to local DB
   tbody.querySelectorAll('.status-select').forEach(sel => {
     sel.addEventListener('change', async e => {
-      const { user, row, field } = e.target.dataset;
+      const { siteUrl, field } = e.target.dataset;
       const value = e.target.value;
+      const updates = { [field + 'Raw']: value, [field]: value.toLowerCase().replace(' ', '_') };
       try {
-        await apiFetch('/api/master/update-status', {
+        await apiFetch('/api/master/update-row', {
           method: 'POST',
           noCache: true,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user, rowIndex: Number(row), field, value }),
+          body: JSON.stringify({ user: state.user, url: siteUrl, updates }),
         });
         toast(`Updated to "${value}"`, 'success');
         invalidateCache();
@@ -337,12 +353,12 @@ function renderSiteRow(s, i, user) {
       <td class="url-cell"><a href="${escHtml(s.url)}" target="_blank">${escHtml(s.url.replace(/^https?:\/\//, '').slice(0,40))}</a></td>
       <td><span class="badge ${s.company === 'CW' ? 'badge-todo' : 'badge-pending'}">${escHtml(s.company)}</span></td>
       <td>
-        <select class="status-select" data-user="${escHtml(user)}" data-row="${s.rowIndex}" data-field="maintenance">
+        <select class="status-select" data-site-url="${escHtml(s.url)}" data-field="maintenance">
           ${statusOpts}
         </select>
       </td>
       <td>
-        <select class="status-select" data-user="${escHtml(user)}" data-row="${s.rowIndex}" data-field="reportSent">
+        <select class="status-select" data-site-url="${escHtml(s.url)}" data-field="reportSent">
           ${reportOpts}
         </select>
       </td>
@@ -815,6 +831,135 @@ async function renderSendEmailsLink() {
         Open Email Dashboard →
       </a>
     </div>`;
+}
+
+// ─── VIEW: Sync from Sheets ────────────────────────────────────────────────────
+async function renderSync() {
+  pageTitle.textContent = 'Sync from Sheets';
+  pageSubtitle.textContent = 'Import latest data from all 6 Google Sheets';
+
+  // Check current DB status
+  let status = {};
+  try { status = await apiFetch('/api/master/db-status', { noCache: true }); } catch {}
+
+  mainContent.innerHTML = `
+    <div class="fade-in" style="max-width:640px;margin:0 auto">
+      <div class="section-card">
+        <div class="section-header"><span class="section-title">📊 Current Database Status</span></div>
+        <div class="stat-grid" style="margin-bottom:0">
+          <div class="stat-card ${status.initialised ? 'green' : 'yellow'}">
+            <div class="stat-value">${status.totalSites || 0}</div>
+            <div class="stat-label">Sites (CW+RM)</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-value">${status.totalDomains || 0}</div>
+            <div class="stat-label">Domains tracked</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-value">${status.totalUserSites || 0}</div>
+            <div class="stat-label">User site rows</div>
+          </div>
+          <div class="stat-card ${status.initialised ? 'green' : 'red'}">
+            <div class="stat-value">${status.initialised ? '✓' : '✗'}</div>
+            <div class="stat-label">${status.initialised ? 'DB ready' : 'Needs sync'}</div>
+          </div>
+        </div>
+        ${status.lastSync ? `<div style="margin-top:16px;font-size:12px;color:var(--text-muted)">Last synced: ${new Date(status.lastSync).toLocaleString()}</div>` : ''}
+      </div>
+
+      <div class="section-card">
+        <div class="section-header"><span class="section-title">🔄 Sync All Sheets</span></div>
+        <p style="color:var(--text-muted);margin-bottom:20px;font-size:13px">
+          This will import data from all 6 Google Sheets into the local database.
+          Takes 2–4 minutes due to API rate limits. After sync, all dashboard views load instantly.
+        </p>
+        <div id="sync-progress" class="hidden" style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
+            <span id="sync-step">Starting…</span>
+            <span id="sync-pct">0%</span>
+          </div>
+          <div class="progress-bar-wrap" style="height:10px">
+            <div class="progress-bar-fill" id="sync-bar" style="width:0%;transition:width .3s ease"></div>
+          </div>
+          <div id="sync-log" style="margin-top:12px;font-size:11px;color:var(--text-dim);max-height:120px;overflow-y:auto"></div>
+        </div>
+        <div id="sync-result" class="hidden"></div>
+        <button class="btn btn-primary" id="sync-btn" style="padding:12px 28px;font-size:15px">
+          🔄 Start Sync
+        </button>
+      </div>
+    </div>`;
+
+  $('sync-btn').addEventListener('click', async () => {
+    const btn = $('sync-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Syncing…';
+    $('sync-progress').classList.remove('hidden');
+    $('sync-result').classList.add('hidden');
+
+    const bar = $('sync-bar');
+    const step = $('sync-step');
+    const pct  = $('sync-pct');
+    const log  = $('sync-log');
+
+    try {
+      const evtSource = new EventSource('/api/master/sync-sse');
+      // We'll use fetch with EventSource workaround via POST + SSE
+      // Actually trigger sync via POST with Accept: text/event-stream
+      const response = await fetch('/api/master/sync', {
+        method: 'POST',
+        headers: { Accept: 'text/event-stream' },
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const msg = JSON.parse(line.slice(6));
+            if (msg.step) {
+              step.textContent = msg.step;
+              pct.textContent = `${msg.pct}%`;
+              bar.style.width = `${msg.pct}%`;
+              const entry = document.createElement('div');
+              entry.textContent = `${msg.pct}% — ${msg.step}`;
+              log.appendChild(entry);
+              log.scrollTop = log.scrollHeight;
+            }
+            if (msg.done) {
+              bar.style.width = '100%';
+              pct.textContent = '100%';
+              step.textContent = `✅ Done in ${msg.elapsed}s`;
+              $('sync-result').classList.remove('hidden');
+              $('sync-result').innerHTML = `
+                <div style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:16px;color:var(--success);font-size:14px;font-weight:600">
+                  ✅ Sync complete in ${msg.elapsed}s — all data imported!<br>
+                  <span style="font-size:12px;font-weight:400;color:var(--text-muted)">Navigate to any view to see the data.</span>
+                </div>`;
+              invalidateCache();
+              btn.textContent = '🔄 Sync Again';
+              btn.disabled = false;
+            }
+            if (msg.error) throw new Error(msg.error);
+          } catch {}
+        }
+      }
+    } catch (err) {
+      $('sync-result').classList.remove('hidden');
+      $('sync-result').innerHTML = `<div style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:16px;color:var(--danger)">${escHtml(err.message)}</div>`;
+      btn.textContent = '🔄 Retry Sync';
+      btn.disabled = false;
+      toast(err.message, 'error');
+    }
+  });
 }
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────

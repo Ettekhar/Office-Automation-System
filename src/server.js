@@ -206,131 +206,174 @@ const server = http.createServer(async (req, res) => {
 
     // ═══════════════════════════════════════════════════════════
     // Master Dashboard API routes  (/api/master/*)
+    // All reads → local JSON (data/*.json), no Sheets API on reads.
+    // POST /api/master/sync → triggers full import from all 6 sheets.
     // ═══════════════════════════════════════════════════════════
     if (pathname.startsWith('/api/master/')) {
+      const db = await import('./db.js');
       const {
+        DAILY_REVIEW_USERS,
         getDailyReviewForUser,
         getDailyReviewSummary,
         getAllDailyReview,
         getDomainExpiry,
         getDistributionSheet,
-        getTaskLoad,
-        getDevTracker,
         getPropertyRegistry,
+        getDevTrackerData,
         getMaintenanceOverview,
-        DAILY_REVIEW_USERS,
+        getDashboardStats,
       } = await import('./masterApi.js');
 
-      // GET /api/master/users — list of daily review users
+      // ── GET /api/master/db-status ─────────────────────────────
+      if (pathname === '/api/master/db-status' && method === 'GET') {
+        sendJson(res, 200, db.getDbStats());
+        return;
+      }
+
+      // ── POST /api/master/sync — full import from all 6 sheets ─
+      if (pathname === '/api/master/sync' && method === 'POST') {
+        // Stream progress via SSE if requested, otherwise plain JSON
+        const isSSE = req.headers.accept?.includes('text/event-stream');
+        if (isSSE) {
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*',
+            Connection: 'keep-alive',
+          });
+          const { syncAll, onProgress } = await import('./syncFromSheets.js');
+          onProgress((step, pct) => res.write(`data: ${JSON.stringify({ step, pct })}\n\n`));
+          try {
+            const result = await syncAll();
+            res.write(`data: ${JSON.stringify({ done: true, ...result })}\n\n`);
+          } catch (err) {
+            res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+          }
+          res.end();
+        } else {
+          const { syncAll } = await import('./syncFromSheets.js');
+          try {
+            const result = await syncAll();
+            sendJson(res, 200, result);
+          } catch (err) {
+            sendJson(res, 500, { error: err.message });
+          }
+        }
+        return;
+      }
+
+      // ── GET /api/master/stats ─────────────────────────────────
+      if (pathname === '/api/master/stats' && method === 'GET') {
+        sendJson(res, 200, getDashboardStats());
+        return;
+      }
+
+      // ── GET /api/master/users ─────────────────────────────────
       if (pathname === '/api/master/users' && method === 'GET') {
         sendJson(res, 200, { users: DAILY_REVIEW_USERS });
         return;
       }
 
-      // GET /api/master/daily-review?user=Toufiq — one user's sites
+      // ── GET /api/master/daily-review?user=X ──────────────────
       if (pathname === '/api/master/daily-review' && method === 'GET') {
         const user = reqUrl.searchParams.get('user');
-        if (!user) {
-          sendJson(res, 400, { error: 'user query param required' });
-          return;
-        }
-        const data = await getDailyReviewForUser(user);
-        sendJson(res, 200, { user, sites: data });
+        if (!user) { sendJson(res, 400, { error: 'user param required' }); return; }
+        sendJson(res, 200, { user, sites: getDailyReviewForUser(user) });
         return;
       }
 
-      // GET /api/master/daily-review-all — all users
+      // ── GET /api/master/daily-review-all ─────────────────────
       if (pathname === '/api/master/daily-review-all' && method === 'GET') {
-        const data = await getAllDailyReview();
-        sendJson(res, 200, data);
+        sendJson(res, 200, getAllDailyReview());
         return;
       }
 
-      // GET /api/master/summary — per-user completion stats
+      // ── GET /api/master/summary ───────────────────────────────
       if (pathname === '/api/master/summary' && method === 'GET') {
-        const data = await getDailyReviewSummary();
-        sendJson(res, 200, { summary: data });
+        sendJson(res, 200, { summary: getDailyReviewSummary() });
         return;
       }
 
-      // GET /api/master/domain-expiry
-      if (pathname === '/api/master/domain-expiry' && method === 'GET') {
-        const data = await getDomainExpiry();
-        sendJson(res, 200, { domains: data });
-        return;
-      }
-
-      // GET /api/master/distribution
-      if (pathname === '/api/master/distribution' && method === 'GET') {
-        const [tasks, load] = await Promise.all([getDistributionSheet(), getTaskLoad()]);
-        sendJson(res, 200, { tasks, taskLoad: load });
-        return;
-      }
-
-      // GET /api/master/dev-tracker
-      if (pathname === '/api/master/dev-tracker' && method === 'GET') {
-        const data = await getDevTracker();
-        sendJson(res, 200, { projects: data });
-        return;
-      }
-
-      // GET /api/master/properties
-      if (pathname === '/api/master/properties' && method === 'GET') {
-        const data = await getPropertyRegistry();
-        sendJson(res, 200, { properties: data });
-        return;
-      }
-
-      // GET /api/master/maintenance-overview
-      if (pathname === '/api/master/maintenance-overview' && method === 'GET') {
-        const data = await getMaintenanceOverview();
-        sendJson(res, 200, { sites: data });
-        return;
-      }
-
-      // POST /api/master/update-status — write status back to Daily Review sheet
-      if (pathname === '/api/master/update-status' && method === 'POST') {
+      // ── POST /api/master/update-row — update a daily review row locally ──
+      if (pathname === '/api/master/update-row' && method === 'POST') {
         const body = await parseBody(req);
-        const { user, rowIndex, field, value } = body;
-        if (!user || !rowIndex || !field) {
-          sendJson(res, 400, { error: 'user, rowIndex, field required' });
+        const { user, url, updates } = body;
+        if (!user || !url || !updates) {
+          sendJson(res, 400, { error: 'user, url, updates required' });
           return;
         }
         try {
-          const { google } = await import('googleapis');
-          const { JWT } = await import('google-auth-library');
-          const fs2 = await import('fs');
-          const { config: cfg } = await import('./config.js');
-          const keyFile = JSON.parse(fs2.readFileSync(cfg.serviceAccountKeyPath, 'utf8'));
-          const writeAuth = new JWT({
-            email: keyFile.client_email,
-            key: keyFile.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-          });
-          await writeAuth.authorize();
-          const sheetsWrite = google.sheets({ version: 'v4', auth: writeAuth });
-          const DAILY_REVIEW_ID = '1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs';
-          const FIELD_COLS = { maintenance: 'C', reportSent: 'D' };
-          const col = FIELD_COLS[field];
-          if (!col) { sendJson(res, 400, { error: `Unknown field: ${field}` }); return; }
-          const range = `'${user}'!${col}${rowIndex}`;
-          await sheetsWrite.spreadsheets.values.update({
-            spreadsheetId: DAILY_REVIEW_ID,
-            range,
-            valueInputOption: 'USER_ENTERED',
-            requestBody: { values: [[value]] },
-          });
-          sendJson(res, 200, { success: true, range, value });
+          const updated = db.updateDailyReviewRow(user, url, updates);
+          sendJson(res, 200, { success: true, row: updated });
         } catch (err) {
           sendJson(res, 500, { error: err.message });
         }
         return;
       }
 
+      // ── GET /api/master/domain-expiry ─────────────────────────
+      if (pathname === '/api/master/domain-expiry' && method === 'GET') {
+        sendJson(res, 200, { domains: getDomainExpiry() });
+        return;
+      }
+
+      // ── GET /api/master/distribution ──────────────────────────
+      if (pathname === '/api/master/distribution' && method === 'GET') {
+        const { tasks, taskLoad } = getDistributionSheet();
+        sendJson(res, 200, { tasks, taskLoad });
+        return;
+      }
+
+      // ── GET /api/master/dev-tracker ───────────────────────────
+      if (pathname === '/api/master/dev-tracker' && method === 'GET') {
+        sendJson(res, 200, { projects: getDevTrackerData() });
+        return;
+      }
+
+      // ── GET /api/master/properties ────────────────────────────
+      if (pathname === '/api/master/properties' && method === 'GET') {
+        sendJson(res, 200, { properties: getPropertyRegistry() });
+        return;
+      }
+
+      // ── POST /api/master/update-property ─────────────────────
+      if (pathname === '/api/master/update-property' && method === 'POST') {
+        const body = await parseBody(req);
+        const { url, updates } = body;
+        if (!url || !updates) { sendJson(res, 400, { error: 'url, updates required' }); return; }
+        try {
+          const updated = db.updateProperty(url, updates);
+          sendJson(res, 200, { success: true, property: updated });
+        } catch (err) {
+          sendJson(res, 500, { error: err.message });
+        }
+        return;
+      }
+
+      // ── GET /api/master/maintenance-overview ──────────────────
+      if (pathname === '/api/master/maintenance-overview' && method === 'GET') {
+        sendJson(res, 200, { sites: getMaintenanceOverview() });
+        return;
+      }
+
+      // ── POST /api/master/update-site ──────────────────────────
+      if (pathname === '/api/master/update-site' && method === 'POST') {
+        const body = await parseBody(req);
+        const { url, updates } = body;
+        if (!url || !updates) { sendJson(res, 400, { error: 'url, updates required' }); return; }
+        try {
+          const updated = db.updateSite(url, updates);
+          sendJson(res, 200, { success: true, site: updated });
+        } catch (err) {
+          sendJson(res, 500, { error: err.message });
+        }
+        return;
+      }
 
       sendJson(res, 404, { error: 'Master API route not found' });
       return;
     }
+
 
 
     // Static Files
