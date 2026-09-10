@@ -1,0 +1,5153 @@
+{
+  "1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU": {
+    "label": "Daily Review / Assignments",
+    "tabs": [
+      {
+        "title": "Distribution and Work Sheet",
+        "headers": [
+          "Task Name",
+          "ClickUp Link",
+          "Website",
+          "Task Type",
+          "Assignee",
+          "Status",
+          "Priority",
+          "Account Manager",
+          "Assigned Date",
+          "Client Due Date",
+          "Days Left",
+          "Blockers/Notes",
+          "",
+          "Daily Report Distribution",
+          "Week",
+          "",
+          "Clients",
+          "Support Hour",
+          "Total Hours Spent",
+          "Billable Hours",
+          "SEO Task Hours",
+          "SEO Spend Hours",
+          "Client Approval Request"
+        ],
+        "sample": [
+          [
+            "LLM Txt Generation / Update",
+            "https://app.clickup.com/t/868ha7561",
+            "Hotel Dela Poste",
+            "SEO",
+            "Md Atiar Rahman Ovi",
+            "Client Review",
+            "Low",
+            "Holly",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Sezan Ahmed",
+            "1",
+            "",
+            "MHG"
+          ],
+          [
+            "",
+            "https://app.clickup.com/t/868ha80f6",
+            "Project Farmhouse",
+            "Website Update",
+            "Md Atiar Rahman Ovi",
+            "Client Review",
+            "Low",
+            "Nicole",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Tarikul Islam",
+            "2",
+            "",
+            "Milford Hospitality Group",
+            "2h",
+            "",
+            "",
+            "1h",
+            "",
+            "If any individual support task is expected to exceed 1 hour, approval must be obtained from the Account Manager before proceeding. Additionally, if the total time spent on support tasks reaches the client's allocated support hours, we must request the client's approval before continuing, as any additional time will be billed accordingly."
+          ],
+          [
+            "",
+            "https://app.clickup.com/t/868hawmp3",
+            "Apple Valley Restaurant",
+            "Website Update",
+            "Md Atiar Rahman Ovi",
+            "Completed",
+            "Low",
+            "Jacob",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Nahid Jubail Medul",
+            "3",
+            "",
+            "Hotel Fauchere - MHG",
+            "2h",
+            "",
+            "",
+            "1h"
+          ]
+        ]
+      },
+      {
+        "title": "Task Load & Dependancy Solver",
+        "headers": [
+          "Team Member",
+          "Tasks (On Hand)",
+          "",
+          "Tasks Link (Needs Discussion)",
+          "Team Member",
+          "Additional Details"
+        ],
+        "sample": [
+          [
+            "Sezan Ahmed",
+            "2",
+            "",
+            "https://app.clickup.com/t/868hmmj1b",
+            "Sezan Ahmed"
+          ],
+          [
+            "Md Atiar Rahman Ovi"
+          ],
+          [
+            "Asif Mahmud",
+            "1"
+          ]
+        ]
+      },
+      {
+        "title": "Domain Expiration Sheet",
+        "headers": [
+          " ",
+          "CMS",
+          "Company",
+          "Contact",
+          "A/C Manager",
+          "Website URL",
+          "Domain Expiry Date"
+        ],
+        "sample": [
+          [
+            "Active",
+            "Wordpress",
+            "CW",
+            "daysinn@cassinn.com, lowell@cassinn.com,mohammed@cogwheelmarketing.com",
+            "Mohammed",
+            "governorsinnnd.com",
+            "2027-08-30"
+          ],
+          [
+            "Active",
+            "Wordpress",
+            "CW",
+            "stephanie@cogwheelmarketing.com, jessica@cogwheelmarketing.com",
+            "N/A (Support Team)",
+            "cogwheelmarketing.com",
+            "2029-03-12"
+          ],
+          [
+            "Active",
+            "Wordpress",
+            "CW",
+            "srosado@milfordhospitalitygroup.com, thomas@cogwheelmarketing.com, astratton@milfordhospitalitygroup.com ",
+            "Thomas",
+            "hotelfauchere.com",
+            "2027-05-18"
+          ]
+        ]
+      },
+      {
+        "title": "Daily Review",
+        "headers": [
+          "Daily Review Sheet Link"
+        ],
+        "sample": [
+          [
+            "https://docs.google.com/spreadsheets/d/1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs/edit?gid=0#gid=0"
+          ]
+        ]
+      },
+      {
+        "title": "Maintenance Sheets",
+        "headers": [
+          "Daily Review Sheet Link",
+          "Company"
+        ],
+        "sample": [
+          [
+            "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=0#gid=0",
+            "CWA"
+          ],
+          [
+            "https://docs.google.com/spreadsheets/d/1UHR_PP-Ri1OPU042l62c55LvMVA5KJ-8RufY7KBkr2I/edit?gid=0#gid=0",
+            "RM"
+          ]
+        ]
+      }
+    ]
+  },
+  "1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs": {
+    "label": "Sheet2 (unknown)",
+    "tabs": [
+      {
+        "title": "Toufiq",
+        "headers": [
+          " Website URL",
+          "Company",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "ClickUp Link",
+          "GA4 Report",
+          "Newsletter Mail",
+          "Form Submission Mail",
+          "Client Response",
+          "Booking Engine",
+          "UPTimeRobot Monitoring",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://femalefoundersinhospitality.com/",
+            "CW",
+            "Completed",
+            "No",
+            "https://app.clickup.com/t/10554421/868cbv8zb",
+            "No GA4 Tag",
+            "",
+            "N/A",
+            "No RFP form",
+            "N/A",
+            "Yes",
+            "No"
+          ],
+          [
+            " https://toastedbarrelbar.com/",
+            "CW",
+            "Completed",
+            "No",
+            "https://app.clickup.com/t/10554421/868a83ww4",
+            "No",
+            "",
+            "",
+            "No",
+            "",
+            "Yes",
+            "No"
+          ],
+          [
+            "https://seaworthynola.com/",
+            "CW",
+            "Completed",
+            "No",
+            "https://app.clickup.com/t/10554421/8689y8yu8",
+            "No",
+            "MailChimp",
+            "info@seaworthynola.com",
+            "Client Responded",
+            "https://www.opentable.com/r/seaworthy-new-orleans-2?corrid=edd65d66-feb8-47e7-8d4d-0f80fc80c3eb&avt=eyJ2IjoyLCJtIjowLCJwIjowLCJzIjowLCJuIjowfQ",
+            "Yes",
+            "No"
+          ]
+        ]
+      },
+      {
+        "title": "Sabbir",
+        "headers": [
+          " ",
+          "Website",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "GA4 Report",
+          "Newsletter Mail",
+          "Form Name",
+          "Form Submission Mail",
+          "Booking / Reservstion Link",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://valleyofthemoonpartners.com/",
+            "CW",
+            "Completed",
+            "To Do",
+            "Completed",
+            "",
+            "",
+            "zach@valleyofthemoonpartners.com",
+            "",
+            "No"
+          ],
+          [
+            "https://womenintravelthrive.com/",
+            "RM",
+            "Completed",
+            "To Do",
+            "Completed",
+            "MailChimp",
+            "",
+            "info@womenintravelthrive.com",
+            "",
+            "No"
+          ],
+          [
+            "tomquickinnmilford.com",
+            "CW",
+            "Completed",
+            "To Do",
+            "Completed",
+            "Script",
+            "1.Contact US 2.weddings-events ",
+            "TomQuick@MilfordHospitalityGroup.com, events@milfordhospitalitygroup.com",
+            "https://us2.cloudbeds.com/reservation/3ZRoQW",
+            "No"
+          ]
+        ]
+      },
+      {
+        "title": "Taion",
+        "headers": [
+          " ",
+          "",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "Newsletter Mail",
+          "Form Name",
+          "Form Submission Mail",
+          "Booking / Reservstion Link",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://horizonsmodernkitchen.com/",
+            "CW",
+            "Completed",
+            "No",
+            "",
+            "",
+            "",
+            "https://resy.com/cities/fairport-ny/venues/horizons-restaurant-at-woodcliff-hotel-and-spa?date=2026-01-08&seats=2",
+            "No"
+          ],
+          [
+            "https://hqdallasrooftop.com/",
+            "CW",
+            "Completed",
+            "No",
+            "spraytor@ih-corp.com",
+            "1.Contact,2.(Social RFP and get aquote)",
+            "1.cgerman@ih-corp.com, 2.dgriffin@ih-corp.com",
+            "",
+            "No"
+          ],
+          [
+            "http://freerideuptown.com/",
+            "CW",
+            "Completed",
+            "No",
+            "N/A",
+            "",
+            "N/A",
+            "",
+            "No",
+            "Plugings update option not found"
+          ]
+        ]
+      },
+      {
+        "title": "Medul",
+        "headers": [
+          "-",
+          "Website URL",
+          "Website",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "GA4 Report",
+          "Newsletter Mail",
+          "Form Submission Mail",
+          "SMTP/Client Response",
+          "Booking Engine",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "1",
+            "governorsinnnd.com",
+            "CW",
+            "Completed",
+            "No",
+            "Yes",
+            "N/A",
+            "General Inquiry: \nCasseltonHospitality@gmail.com\nCareer : Daysinncasselton@Cassinn.Com",
+            "No RFP form",
+            "https://www.wyndhamhotels.com/days-inn/casselton-north-dakota/days-inn-fargo-casselton/rooms-rates?brand_id=DI&checkInDate=2026-01-08&checkOutDate=2026-01-09&useWRPoints=false&adults=1&rooms=1",
+            "No"
+          ],
+          [
+            "2",
+            "cogwheelmarketing.com",
+            "CW",
+            "Completed",
+            "No",
+            "Yes",
+            "Hubspot",
+            "Email: info@cogwheelmarketing.com",
+            "No",
+            "hubspot :\n https://meetings.hubspot.com/stephaniecogwheel/30min",
+            "No"
+          ],
+          [
+            "3",
+            "hotelfauchere.com",
+            "CW",
+            "Completed",
+            "No",
+            "Yes",
+            "info@hotelfauchere.com",
+            "RFP: Events@HotelFauchere.com \n, contact : info@hotelfauchere.com\nPress Inquiry: marketing@milfordhospitalitygroup.com",
+            "No",
+            "https://us2.cloudbeds.com/en/reservation/Drj1GS/?currency=usd&checkin=2026-01-08&checkout=2026-01-09",
+            "No"
+          ]
+        ]
+      },
+      {
+        "title": "Saiful",
+        "headers": [
+          "Website URL",
+          "Website",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "GA4 Report",
+          "Newsletter Mail",
+          "Form Name",
+          "Form Submission Mail",
+          "Booking / Reservstion Link",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://www.upsidewestvillage.com/",
+            "CW",
+            "Completed"
+          ],
+          [
+            "https://toolkit.consulting/",
+            "CW",
+            "Completed"
+          ],
+          [
+            "https://atlantichotelsgroup.com",
+            "CW",
+            "Completed"
+          ]
+        ]
+      },
+      {
+        "title": "Tarikul",
+        "headers": [
+          "Website URL",
+          "",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "Account Manager",
+          "Form Name",
+          "Newsletter Mail",
+          "Form Name",
+          "Form Submission Mail",
+          "Booking / Reservstion Link",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://horizonsmodernkitchen.com/",
+            "CW",
+            "Completed",
+            "Yes",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "https://resy.com/cities/fairport-ny/venues/horizons-restaurant-at-woodcliff-hotel-and-spa?date=2026-01-08&seats=2",
+            "No"
+          ],
+          [
+            "https://duneclimbinn.com/",
+            "RM",
+            "Completed",
+            "Yes",
+            "",
+            "",
+            "info@duneclimbinn.com",
+            "",
+            "info@duneclimbinn.com ",
+            "https://hotels.cloudbeds.com/en/reservation/8Etpav?_gl=1*1dx06bu*_ga*NDIyNDgyMzEwLjE3Njc4NjkzNjc.*_ga_9EK770M6Q4*czE3Njc4NjkzNjYkbzEkZzEkdDE3Njc4NjkzNjYkajYwJGwwJGg0Njk2OTUyMjU.&currency=usd",
+            "No"
+          ],
+          [
+            "https://hqdallasrooftop.com/",
+            "CW",
+            "Completed",
+            "Yes",
+            "",
+            "Let’s Connect (on footer)",
+            "spraytor@ih-corp.com",
+            "1.Contact,2.(Social RFP and get aquote)",
+            "1.cgerman@ih-corp.com, 2.dgriffin@ih-corp.com",
+            "",
+            "No"
+          ]
+        ]
+      },
+      {
+        "title": "Roeich",
+        "headers": [
+          "Website URL",
+          "Website",
+          "Maintenance",
+          "Maintenance Report Sent",
+          "GA4 Report",
+          "Newsletter Mail",
+          "Form Name",
+          "Form Submission Mail",
+          "Booking / Reservstion Link",
+          "Cloudflare issues"
+        ],
+        "sample": [
+          [
+            "https://hqdallasrooftop.com/",
+            "CW",
+            "Completed"
+          ],
+          [
+            "https://freerideuptown.com/",
+            "CW",
+            "Completed"
+          ],
+          [
+            "https://bruttoamericano.com/",
+            "CW",
+            "Completed"
+          ]
+        ]
+      },
+      {
+        "title": "Asif",
+        "headers": [
+          "Website URL",
+          "Newsletter Mail",
+          "Form Submission Mail"
+        ],
+        "sample": [
+          [
+            "https://chathamlodgingtrust.com/",
+            "dcraven@cl-trust.com",
+            " contact  form : dcraven@cl-trust.com"
+          ],
+          [
+            "https://cayugahospitality.com/",
+            "{admin_email}",
+            "contact  form         info@cayugahospitality.com    kelleychuck33@gmail.com"
+          ],
+          [
+            "www.wilsonarkansas.com"
+          ]
+        ]
+      }
+    ]
+  },
+  "1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY": {
+    "label": "Sheet3 (unknown)",
+    "tabs": [
+      {
+        "title": "Sheet1",
+        "headers": [
+          "Property Name",
+          "Property URL",
+          "Property Type",
+          "Stauts",
+          "SEO",
+          "H&M",
+          "Task Assigned to SEO",
+          "Task Assigned to WEB"
+        ],
+        "sample": [
+          [
+            "The Nines Portland (Sage)\n",
+            "https://www.thenines.com/",
+            "Soft Vanity",
+            "Active",
+            "Yes",
+            "Under Development"
+          ],
+          [
+            "The Alexandrian (Sage)",
+            "https://www.thealexandrian.com/",
+            "Soft Vanity",
+            "Active",
+            "Yes",
+            "No"
+          ],
+          [
+            "Curtis Denver (Sage)",
+            "https://www.thecurtis.com/",
+            "Soft Vanity",
+            "Active",
+            "Yes",
+            "No"
+          ]
+        ]
+      }
+    ]
+  },
+  "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78": {
+    "label": "Sheet4 (unknown)",
+    "tabs": [
+      {
+        "title": "AnsAngel coalition",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://ansangelscoalition.com/",
+            "Completed",
+            "Feedback-1 URL",
+            "2026-08-07",
+            "Blog page , single blog page , Program page created"
+          ],
+          [
+            "https://ansangelscoalition.com/moochies-story/",
+            "Completed",
+            "",
+            "2026-08-11",
+            "Updated some images what client gave us..all of them are team\nmember photos\n"
+          ],
+          [
+            "https://ansangelscoalition.com/about-us/",
+            "Completed"
+          ]
+        ]
+      },
+      {
+        "title": "Nines Hotel",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://www.thenines.com/",
+            "Completed",
+            "Feedback-1 URL",
+            "2026-08-04",
+            "Completed the remaining content updates in the document.\nAddressed the recent feedback related to image changes across the website plugins.\nUpdated the History page slider section.\nThe History page slider is still using dummy data.\nWe need to request the content and corresponding images for each year to replace the dummy data.\nSome of the Events are added as client requested"
+          ],
+          [
+            "https://www.thenines.com/amenities/",
+            "Completed",
+            "https://docs.google.com/document/d/1cn0I6Js509w6bETodUz_a0UZzbXqOldMrCjmcdEOTVM/edit?pli=1&tab=t.0#heading=h.6fwf6gxl58vz"
+          ],
+          [
+            "https://www.thenines.com/accommodations/",
+            "Completed"
+          ]
+        ]
+      },
+      {
+        "title": "Sara Paris  Booth ",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://sgpbco.com/",
+            "Completed",
+            "Feedback-1 URL",
+            "2026-08-04",
+            "1. are updating the cta button for each Homes property page with CPT- in progress. 2. we will also add a short code for displaying Images on the homes single page - TO DO"
+          ],
+          [
+            "https://sgpbco.com/about/",
+            "Completed",
+            "https://docs.google.com/document/d/1spCuYsydkyH1rZnx8PJYLSx_4_cAWZ9Y/edit",
+            "2026-08-05",
+            "1. added custom  scf field for the cta section to the bottom for each homes 2. custom  gallery for the homes 3. responsive issues fixed"
+          ],
+          [
+            "https://sgpbco.com/studio/",
+            "Completed",
+            "",
+            "2026-08-06",
+            "1. TO DO - Data Entry : Homes page"
+          ]
+        ]
+      },
+      {
+        "title": "Bunting& Murray Construction",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://lightcoral-dolphin-755291.hostingersite.com/",
+            "Completed",
+            "Feedback-1 URL"
+          ],
+          [
+            "https://lightcoral-dolphin-755291.hostingersite.com/about-us/",
+            "Completed",
+            "\n\n\n\n\n\nhttps://docs.google.com/spreadsheets/d/1ePma_uymuypov6hL3qA-Pv6EoQ6KHQZc/edit?gid=1840994945#gid=1840994945",
+            "28/08/26",
+            "Worked on the new feedback.. almost complete but there is some dependency..need images of Coleman Bunting,  Justin Morgan .. all other are commented in the given sheet.... Also Client asked to removed some section to the homepage...Need To verify them before removing the homepage sections."
+          ],
+          [
+            "https://lightcoral-dolphin-755291.hostingersite.com/services/",
+            "Completed",
+            "",
+            "29/08/26",
+            "Feedback Completed"
+          ]
+        ]
+      },
+      {
+        "title": "The House",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://thehouse.cogwheelmarketing.site/",
+            "Completed",
+            "Feedback-1 URL",
+            "03/09/26",
+            "The House Homepage email feedback completed"
+          ],
+          [
+            "https://thehouse.cogwheelmarketing.site/home-2/",
+            "Completed"
+          ]
+        ]
+      },
+      {
+        "title": "Reitz Union",
+        "headers": [
+          "URL",
+          "Status",
+          "Feedbacks URL",
+          "Date",
+          "Note/Updates"
+        ],
+        "sample": [
+          [
+            "https://thereitzunion.cogwheelmarketing.com/",
+            "Completed",
+            "Feedback-1 URL",
+            "2026-08-28",
+            "Changes all given images & some feedbacks from siana in homepage 1 and home page 2"
+          ],
+          [
+            "https://thereitzunion.cogwheelmarketing.com/home-2/",
+            "Completed"
+          ]
+        ]
+      }
+    ]
+  },
+  "19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE": {
+    "label": "CW Maintenance (existing)",
+    "tabs": [
+      {
+        "title": "Website List",
+        "headers": [
+          "Note:",
+          "",
+          "This is the form testing email's template: \"TEST TEST TEST Please confirm receipt by emailing support@cogwheelmarketing.com\""
+        ],
+        "sample": [
+          [
+            "Note:",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Note",
+            "Website URL",
+            "Maintenance Task ClickUp URL",
+            "Maintenance Report URL",
+            "Backup URL",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23"
+          ],
+          [
+            "Deactive",
+            "",
+            "CW",
+            "",
+            "",
+            "",
+            "qualityinnparkersburg.com",
+            "",
+            "",
+            "",
+            "N/A",
+            "Updated & Backup",
+            "Updated & Backup"
+          ],
+          [
+            "Active",
+            "Wordpress",
+            "CW",
+            "taion@razibmarketing.net",
+            "Mohammed",
+            "",
+            "governorsinnnd.com",
+            "https://app.clickup.com/t/868a6gkvn",
+            "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1610374045#gid=1610374045",
+            "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup"
+          ]
+        ]
+      },
+      {
+        "title": "Update List template",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version"
+          ],
+          [
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "3",
+            "",
+            "To Version"
+          ]
+        ]
+      },
+      {
+        "title": "https://thewentworthrestaurants.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "2.84",
+            "",
+            "2027-02-14",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Smash Balloon Instagram Feed",
+            "To Version",
+            "6.12.0 "
+          ],
+          [
+            "3",
+            "WP Sitemap Page",
+            "To Version",
+            "1.9.6 "
+          ]
+        ]
+      },
+      {
+        "title": "https://ocalaflevents.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "3D FlipBook : DearFlip Lite",
+            "To Version",
+            "2.4.37",
+            "",
+            "2027-02-14",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ]
+        ]
+      },
+      {
+        "title": "https://baltimoreeventsandcatering.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2027-07-22",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://thebensonhotel.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.4 ",
+            "",
+            "2027-07-22",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "The Events Calendar",
+            "To Version",
+            "6.17.4 "
+          ]
+        ]
+      },
+      {
+        "title": "https://hiltonchristiana.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2027-04-19",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "http://governorsinnnd.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.107",
+            "",
+            "2027-08-30",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ],
+          [
+            "3",
+            "Easy Accordion",
+            "To Version",
+            "3.1.10"
+          ]
+        ]
+      },
+      {
+        "title": "http://cogwheelmarketing.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "2029-03-12",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://hotelfauchere.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-05-18",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.1"
+          ]
+        ]
+      },
+      {
+        "title": "http://jivebarlounge.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2026-08-10",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2"
+          ]
+        ]
+      },
+      {
+        "title": "https://thewilliamfelltavern.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-01-06",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Has Issues"
+          ],
+          [
+            "2",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://thesagaponackny.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CMS Tree Page View",
+            "To Version",
+            "2.5.2",
+            "",
+            "",
+            "2027-01-06",
+            "Done",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ],
+          [
+            "3",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ]
+        ]
+      },
+      {
+        "title": "http://milfordhospitalitygroup.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            " 6.8.9",
+            "",
+            "",
+            "2027-03-24",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Essential Addons for Elementor",
+            "To Version",
+            " 6.8.1"
+          ]
+        ]
+      },
+      {
+        "title": "http://tcrmservices.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-06-18",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CAPTCHA 4WP",
+            "To Version",
+            "7.6.2"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "http://themilfordtheater.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2027-04-01",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Contact Form 7",
+            "To Version",
+            "6.1.7"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "http://tomquickinnmilford.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.8",
+            "",
+            "",
+            "2027-04-06",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Disable Comments",
+            "To Version",
+            "2.8.0 "
+          ]
+        ]
+      },
+      {
+        "title": "https://diamondconferencecenter.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2028-06-28",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 4.2.3 "
+          ]
+        ]
+      },
+      {
+        "title": "http://alpha3hotels.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-04-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2"
+          ]
+        ]
+      },
+      {
+        "title": "http://atlantichotelsgroup.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2034-10-21",
+            "N/A",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            " 2.3.1"
+          ]
+        ]
+      },
+      {
+        "title": "https://laposadamilford.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2028-05-03",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Broken Link Checker by AIOSEO",
+            "To Version",
+            "1.3.0.1"
+          ],
+          [
+            "3",
+            "Colibri Page Builder PRO",
+            "To Version",
+            "1.0.430-pro"
+          ]
+        ]
+      },
+      {
+        "title": "https://jacksonsouthtown.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-05-16",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2 "
+          ]
+        ]
+      },
+      {
+        "title": "https://nhghotels.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All in One SEO",
+            "To Version",
+            "4.9.3",
+            "",
+            "",
+            "2030-09-11",
+            "No GTM ID",
+            "Done",
+            "No GTM ID",
+            "Done"
+          ],
+          [
+            "2",
+            "Auto Image Attributes From Filename With Bulk Updater",
+            "To Version",
+            "4.9"
+          ],
+          [
+            "3",
+            "Brave Conversion Engine",
+            "To Version",
+            "0.8.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://toolkit.consulting",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-01-19",
+            "No GA4 Account",
+            "No GTM Account",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://applevalleyrestaurant.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.8 ",
+            "",
+            "",
+            "2027-04-27",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ]
+        ]
+      },
+      {
+        "title": "https://chathamlodgingtrust.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "2030-10-28",
+            "No GA4",
+            "No GTM",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 ",
+            "",
+            "",
+            "G-E91ZJPHXPK"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2 "
+          ]
+        ]
+      },
+      {
+        "title": "https://foresthallmilford.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-01-11",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2"
+          ]
+        ]
+      },
+      {
+        "title": "https://cayugahospitality.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-12-08",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2 "
+          ]
+        ]
+      },
+      {
+        "title": "https://valleyofthemoonpartners.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2026-10-16",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ]
+        ]
+      },
+      {
+        "title": "https://www.wilsonarkansas.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC  Check",
+          "Speed Test",
+          "",
+          "",
+          "",
+          "",
+          "Desktop device",
+          "",
+          "",
+          "",
+          "",
+          "mobile device"
+        ],
+        "sample": [
+          [
+            "06-10-2026",
+            "2027-04-13",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Needs Improvement"
+          ],
+          [],
+          []
+        ]
+      },
+      {
+        "title": "http://www.eatatwilson.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GA4 Check",
+          "GSC Check",
+          "Speed Test",
+          "",
+          "",
+          "",
+          "Mobile Device"
+        ],
+        "sample": [
+          [
+            "06-10-26",
+            "2026-06-08",
+            "NO GA4",
+            "NO GA4",
+            "N/A",
+            "Done",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Desktop Device"
+          ]
+        ]
+      },
+      {
+        "title": "https://thelouishotel.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.3 ",
+            "",
+            "",
+            "2022-07-19",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Advanced Custom Fields: Font Awesome",
+            "To Version",
+            "4.9.7.2 "
+          ],
+          [
+            "3",
+            "All in One SEO",
+            "To Version",
+            "3.5.1 "
+          ]
+        ]
+      },
+      {
+        "title": "http://www.wilsongrange.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "06-10-2026",
+            "2028-05-22",
+            "NO GA4",
+            "NO GTM",
+            "N/A",
+            "Done"
+          ]
+        ]
+      },
+      {
+        "title": "https://innatwise.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "2029-02-26",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "Other"
+          ]
+        ]
+      },
+      {
+        "title": "http://nauticalbeachfrontresort.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.97",
+            "",
+            "",
+            "2026-05-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.3.2"
+          ],
+          [
+            "3",
+            "Gravity Forms",
+            "To Version",
+            "2.9.14"
+          ]
+        ]
+      },
+      {
+        "title": "https://hotelteatro.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.3 ",
+            "",
+            "2027-03-30",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2",
+            "",
+            "",
+            "",
+            "Need to create more Tags here"
+          ],
+          [
+            "3",
+            "Redirection",
+            "To Version",
+            "5.10.0 "
+          ]
+        ]
+      },
+      {
+        "title": "https://cogwheelanalytics.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All in One SEO",
+            "To Version",
+            "5.0.1.1 ",
+            "",
+            "2028-02-27",
+            "Has Issues",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4 "
+          ]
+        ]
+      },
+      {
+        "title": "https://barmetier.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.88",
+            "",
+            "",
+            "2025-05-30",
+            "N/A",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "3.27.2"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            " 3.27.0"
+          ]
+        ]
+      },
+      {
+        "title": "https://trattoriabarnett.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.91",
+            "",
+            "",
+            "2025-05-30",
+            "N/A",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "3.28.1"
+          ],
+          [
+            "3",
+            "Simple History",
+            "To Version",
+            "5.8.1"
+          ]
+        ]
+      },
+      {
+        "title": "https://www.thenines.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "AI Engine",
+            "To Version",
+            "3.7.6",
+            "",
+            "2027-07-04",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2"
+          ],
+          [
+            "3",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.110"
+          ]
+        ]
+      },
+      {
+        "title": "https://winslowhotels.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-09-30",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "https://winslowhotels.com/winslow-arizona/"
+          ]
+        ]
+      },
+      {
+        "title": "https://femalefoundersinhospitality.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-09-10",
+            "N/A",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://toastedbarrelbar.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "2026-12-02",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "https://seaworthynola.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "3D FlipBook : DearFlip Lite",
+            "To Version",
+            "2.4.37",
+            "",
+            "",
+            "2028-05-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "hotelperla.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All in One SEO Pro",
+            "To Version",
+            "5.0.0.1",
+            "",
+            "",
+            "2027-03-30",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.107"
+          ],
+          [
+            "3",
+            "Gravity Forms",
+            "To Version",
+            "2.10.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://thebarnett.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-03-29",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Code Snippets",
+            "To Version",
+            "3.10.1 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4 "
+          ]
+        ]
+      },
+      {
+        "title": "https://salonsalonnola.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-05-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://maisonmetier.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-03-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://goodmeasurenola.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 ",
+            "",
+            "",
+            "2027-05-29",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://ohioeventcenter.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2 ",
+            "",
+            "",
+            "2027-05-17",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Fluent Forms",
+            "To Version",
+            "6.2.13 "
+          ]
+        ]
+      },
+      {
+        "title": "https://craftsmanwoodgrilletaphouse.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-06-25",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Contact Form 7",
+            "To Version",
+            "6.1.7 "
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ]
+        ]
+      },
+      {
+        "title": "https://craftsmankitchenandterrace.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-06-30",
+            "Done",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2 "
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ]
+        ]
+      },
+      {
+        "title": "https://woodcliffgolf.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-03-02",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Contact Form 7",
+            "To Version",
+            " 6.1.7",
+            "",
+            "",
+            "",
+            "",
+            "Not enough tag to be fired "
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "  3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "https://woodcliffhotelspa.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2 ",
+            "",
+            "",
+            "2027-03-22",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Category Order and Taxonomy Terms Order",
+            "To Version",
+            "2"
+          ],
+          [
+            "3",
+            "Contact Form 7",
+            "To Version",
+            "6.1.7 "
+          ]
+        ]
+      },
+      {
+        "title": "https://horizonsmodernkitchen.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Contact Form 7",
+            "To Version",
+            "6.1.7 ",
+            "",
+            "",
+            "2027-04-06",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Fluent Forms",
+            "To Version",
+            "6.2.13 "
+          ]
+        ]
+      },
+      {
+        "title": "https://craftsmaninn.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "",
+            "2026-11-17",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Contact Form 7",
+            "To Version",
+            " 6.1.7"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "https://pinoncourt.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-05-31",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Enhanced Responsive Images",
+            "To Version",
+            "1.8.0 "
+          ],
+          [
+            "3",
+            "Gravity Forms",
+            "To Version",
+            "3.1.0.2 ",
+            "",
+            "",
+            "",
+            "",
+            "Not enough tags"
+          ]
+        ]
+      },
+      {
+        "title": "https://www.lafondasantafe.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-07-05",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2 "
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ]
+        ]
+      },
+      {
+        "title": "https://senzahotel.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.8 ",
+            "",
+            "",
+            "2027-02-22",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Akismet Anti-spam: Spam Protection",
+            "To Version",
+            "5.7.2 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ]
+        ]
+      },
+      {
+        "title": "https://hqdallasrooftop.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 ",
+            "",
+            "",
+            "2030-06-03",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://romarelevators.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "",
+            "2027-09-02",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "http://freerideuptown.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.8 ",
+            "",
+            "",
+            "2028-02-27",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "LiteSpeed Cache",
+            "To Version",
+            "7.9"
+          ]
+        ]
+      },
+      {
+        "title": "https://www.upsidewestvillage.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5",
+            "",
+            "",
+            "2027-01-24",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            " 4.2.3"
+          ],
+          [
+            "3",
+            "Elementor pro",
+            "To Version",
+            " 4.2.2"
+          ]
+        ]
+      },
+      {
+        "title": "https://joecaincafe.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2028-11-02",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4 "
+          ]
+        ]
+      },
+      {
+        "title": "https://bruttoamericano.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 ",
+            "",
+            "",
+            "2027-07-16",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://room56.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.1 ",
+            "",
+            "2027-01-08",
+            "N/A",
+            "N/A",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "4.2.1 "
+          ],
+          [
+            "Other"
+          ]
+        ]
+      },
+      {
+        "title": "https://bentleylegacy.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2027-10-27",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "www.hoteldelapostenola.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "",
+            "2026-10-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "Redirection",
+            "To Version",
+            "5.10.0 "
+          ]
+        ]
+      },
+      {
+        "title": "https://hotellajolla.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2026-12-29",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 4.2.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://morrisonhouse.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "",
+            "2027-02-27",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Converter for Media",
+            "To Version",
+            "6.6.5 ",
+            "",
+            "",
+            "",
+            "",
+            "Need to create Tags for GTM"
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "https://raphaelkc.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.4",
+            "",
+            "",
+            "2026-12-09",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "4.2.3"
+          ],
+          [
+            "3",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1"
+          ]
+        ]
+      },
+      {
+        "title": "https://thehotelelysium.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.2",
+            "",
+            "",
+            "2030-11-12",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "4.2.2 "
+          ],
+          [
+            "3",
+            "Redirection",
+            "To Version",
+            "5.10.0 "
+          ]
+        ]
+      },
+      {
+        "title": "https://www.thewentworth.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields PRO",
+            "To Version",
+            "6.8.9",
+            "",
+            "",
+            "2028-09-04",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "CMS Tree Page View",
+            "To Version",
+            "2.5.2"
+          ]
+        ]
+      },
+      {
+        "title": "https://themenhaden.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "",
+            "2030-11-12",
+            "Done",
+            "N/A",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ],
+          [
+            "3",
+            "Location Weather Pro",
+            "To Version",
+            "3.5.0"
+          ]
+        ]
+      },
+      {
+        "title": "https://www.meyerjabarahotels.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.7 ",
+            "",
+            "",
+            "2026-11-09",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.2 "
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.1 "
+          ]
+        ]
+      },
+      {
+        "title": "http://themimllatsu.com",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.76"
+          ],
+          [
+            "2",
+            "Fluent SMTP",
+            "To Version",
+            "2.2.5 "
+          ],
+          [
+            "3",
+            "MalCare WordPress Security Plugin - Malware Scanner, Cleaner, Security Firewall",
+            "To Version",
+            "5.16"
+          ]
+        ]
+      },
+      {
+        "title": "https://legacygb.com",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.75"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "3.13.4"
+          ],
+          [
+            "3",
+            "Happy Elementor Addons",
+            "To Version",
+            "3.8.4 "
+          ]
+        ]
+      },
+      {
+        "title": "https://theelizajane.com",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "All In One WP Security",
+            "To Version",
+            "5.1.9"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.75"
+          ],
+          [
+            "3",
+            "Broken Link Checker",
+            "To Version",
+            "2.1.0"
+          ]
+        ]
+      },
+      {
+        "title": "https://drbillcarroll.com",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version"
+          ],
+          [
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "3",
+            "",
+            "To Version"
+          ]
+        ]
+      },
+      {
+        "title": "Format of Sheet",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "1",
+            "",
+            "To Version"
+          ],
+          [
+            "2",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "3",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "3",
+            "",
+            "To Version"
+          ]
+        ]
+      }
+    ]
+  },
+  "1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY": {
+    "label": "RM Maintenance (existing)",
+    "tabs": [
+      {
+        "title": "Website List",
+        "headers": [
+          "Note:",
+          "",
+          "This is the form testing email's template: \"TEST TEST TEST Please confirm receipt by emailing support@cogwheelmarketing.com\""
+        ],
+        "sample": [
+          [
+            "",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Website URL",
+            "Maintenance Task ClickUp Link",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23",
+            "July 23",
+            "Augus 23",
+            "September 23"
+          ],
+          [
+            "Active",
+            "Wordpress",
+            "RM",
+            "taion@razibmarketing.net,medul@razibmarketing.net",
+            "",
+            "razibmarketing.com",
+            "https://app.clickup.com/t/868e2028e",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup"
+          ],
+          [
+            "Active",
+            "Wordpress",
+            "RM",
+            "taion@razibmarketing.net,medul@razibmarketing.net",
+            "",
+            "https://groundupmusicfestival.com/",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup",
+            "Updated & Backup"
+          ]
+        ]
+      },
+      {
+        "title": "Update List template",
+        "headers": [
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version"
+          ],
+          [
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "3",
+            "",
+            "To Version"
+          ]
+        ]
+      },
+      {
+        "title": "https://groundupmusicfestival.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Gsc",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "3.28.4",
+            "",
+            "2026-10-13",
+            "Done",
+            "Done",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor Pro",
+            "To Version",
+            "3.28.3"
+          ],
+          [
+            "Other"
+          ]
+        ]
+      },
+      {
+        "title": "http://razibmarketing.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9",
+            "",
+            "2027-07-26",
+            "Done",
+            "Done",
+            "N/A",
+            "Done"
+          ],
+          [
+            "2",
+            "Disable Comments",
+            "To Version",
+            "2.9.0"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://mdmhotelsusa.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.102",
+            "",
+            "2028-02-17",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.4.0 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "3.35.2 "
+          ]
+        ]
+      },
+      {
+        "title": "https://hotelbschool.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "BuddyBoss Platform",
+            "To Version",
+            "  2.6.60",
+            "",
+            "",
+            "N/A",
+            "N/A",
+            "N/A"
+          ],
+          [
+            "2",
+            "BuddyBoss Platform Pro",
+            "To Version",
+            "2.5.70"
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            " 3.23.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://womenintravelthrive.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2026-10-11",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ]
+        ]
+      },
+      {
+        "title": "https://cowboytechhub.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2028-02-17",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.4"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            " 4.2.2"
+          ]
+        ]
+      },
+      {
+        "title": "https://mountainmanoutdoors.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "01-13-2025",
+            "",
+            "2026-01-29",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ]
+        ]
+      },
+      {
+        "title": "https://margatemasjid.org",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version",
+            "",
+            "",
+            "2027-04-25",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "Other"
+          ]
+        ]
+      },
+      {
+        "title": "https://www.zwibak.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done"
+        ],
+        "sample": [
+          [
+            "07-02-2024"
+          ],
+          [],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "This box on the Home page has moved to left in tab device"
+          ]
+        ]
+      },
+      {
+        "title": "https://rev-mm.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.8 ",
+            "",
+            "",
+            "2026-09-09",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Compliance by Hu-manity.co",
+            "To Version",
+            "3.1.9 "
+          ]
+        ]
+      },
+      {
+        "title": "https://miamikdistribution.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "Other",
+            "",
+            "",
+            "",
+            "",
+            "2026-06-25",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "Updated",
+            "",
+            "To Version"
+          ],
+          [
+            "Backup",
+            "Created Backup on 11-04-25"
+          ]
+        ]
+      },
+      {
+        "title": "https://wcbbqcompany.com",
+        "headers": [
+          "QA test, Responsive test and Form Test Done",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "11-29-2024",
+            "2025-07-18",
+            "Done",
+            "Done",
+            "N/A",
+            "Needs Improvement"
+          ],
+          [],
+          []
+        ]
+      },
+      {
+        "title": "https://hotelsheldon.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GSC Check",
+          "GTM Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11",
+            "",
+            "2026-12-30",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 "
+          ],
+          [
+            "3",
+            "Elementor",
+            "To Version",
+            "4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://amarvacation.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Editor Tools",
+            "To Version",
+            "5.10.0 ",
+            "",
+            "2026-11-10",
+            "Done",
+            "Has Issues",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Contact Form 7",
+            "To Version",
+            " 6.1.7"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            " 3.5.5"
+          ]
+        ]
+      },
+      {
+        "title": "https://theguildhotel.com/",
+        "headers": [
+          " Plugins Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "",
+            "",
+            "2027-12-08",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version"
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version"
+          ]
+        ]
+      },
+      {
+        "title": "https://grangerhotel.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.6 ",
+            "",
+            "2027-01-08",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.107"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.3 "
+          ]
+        ]
+      },
+      {
+        "title": "https://duneclimbinn.com",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Elementor",
+            "To Version",
+            "4.2.3 ",
+            "",
+            "2028-03-22",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "FluentSMTP",
+            "To Version",
+            "2.3.1 "
+          ],
+          [
+            "3",
+            "Hostinger Tools",
+            "To Version",
+            "3.0.77 "
+          ]
+        ]
+      },
+      {
+        "title": "https://elevatebyhvmg.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            " 6.8.9",
+            "",
+            "",
+            "2026-07-16",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.11"
+          ],
+          [
+            "3",
+            "Elementor ",
+            "To Version",
+            " 4.2.4"
+          ]
+        ]
+      },
+      {
+        "title": "https://tanresorts.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.8.9 ",
+            "",
+            "2027-04-10",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.4 "
+          ],
+          [
+            "3",
+            "Elementor Pro",
+            "To Version",
+            "4.2.3"
+          ]
+        ]
+      },
+      {
+        "title": "https://insidertravelforwomen.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.5.5 ",
+            "",
+            "2028-05-27",
+            "Done",
+            "Done",
+            "Done",
+            "Done"
+          ],
+          [
+            "2",
+            "Elementor",
+            "To Version",
+            "4.2.3 "
+          ],
+          [
+            "3",
+            "LiteSpeed Cache",
+            "To Version",
+            "7.9"
+          ]
+        ]
+      },
+      {
+        "title": "https://warautospa.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "All-in-One WP Migration",
+            "To Version",
+            "7.97",
+            "2025-08-07",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "Bookly",
+            "To Version",
+            "25"
+          ],
+          [
+            "3",
+            "CookieYes | GDPR Cookie Consent",
+            "To Version",
+            "3.3.1 "
+          ]
+        ]
+      },
+      {
+        "title": "http://bhospitalityadvisors.com/",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "Domain Expire Date",
+          "GA4 Check",
+          "GTM Check",
+          "GSC Check",
+          "Speed Test"
+        ],
+        "sample": [
+          [
+            "1",
+            "Advanced Custom Fields",
+            "To Version",
+            "6.5.0",
+            "2026-06-05",
+            "Done",
+            "Done",
+            "Done",
+            "Needs Improvement"
+          ],
+          [
+            "2",
+            "All-in-One WP Migration and Backup",
+            "To Version",
+            "7.98"
+          ],
+          [
+            "3",
+            "Ally - Web Accessibility & Usability",
+            "To Version",
+            "3.6.0"
+          ]
+        ]
+      },
+      {
+        "title": "Format of Sheet",
+        "headers": [
+          "Plugin Updated",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "Plugin Updated"
+        ],
+        "sample": [
+          [
+            "1",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "1",
+            "",
+            "To Version"
+          ],
+          [
+            "2",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "2",
+            "",
+            "To Version"
+          ],
+          [
+            "3",
+            "",
+            "To Version",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "3",
+            "",
+            "To Version"
+          ]
+        ]
+      }
+    ]
+  }
+}

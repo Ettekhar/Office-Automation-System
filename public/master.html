@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Automation — Master Dashboard</title>
+  <meta name="description" content="Master control dashboard for managing website maintenance, daily reviews, domain expiry, and team task distribution." />
+  <link rel="stylesheet" href="/master.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LANDING SCREEN (role + user selector)
+════════════════════════════════════════════════════════ -->
+<div id="landing-screen">
+  <div class="landing-card">
+    <div class="landing-logo">⚡</div>
+    <h1 class="landing-title">Office Automation</h1>
+    <p class="landing-sub">Master Dashboard — Select your role to continue</p>
+
+    <div class="landing-label">Your Role</div>
+    <select id="role-select" class="landing-select">
+      <option value="user">👤 User / Technician</option>
+      <option value="admin">🔑 Admin</option>
+      <option value="superadmin">👑 Superadmin</option>
+    </select>
+
+    <div id="user-select-wrap">
+      <div class="landing-label">Your Name</div>
+      <select id="user-name-select" class="landing-select">
+        <option value="">Loading users...</option>
+      </select>
+    </div>
+
+    <button class="btn-enter" id="enter-btn">Enter Dashboard →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN APP SHELL (hidden until role is chosen)
+════════════════════════════════════════════════════════ -->
+<div id="app-shell" class="hidden">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚡</div>
+      <span>OA Dashboard</span>
+    </div>
+
+    <div class="sidebar-nav" id="sidebar-nav">
+      <!-- Populated by JS based on role -->
+    </div>
+
+    <div class="sidebar-footer" id="sidebar-footer">
+      <!-- Role + user shown here -->
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main-area">
+    <header id="top-header">
+      <div>
+        <div class="header-title" id="page-title">Dashboard</div>
+        <div class="header-subtitle" id="page-subtitle"></div>
+      </div>
+      <div class="header-controls">
+        <button class="btn btn-ghost btn-sm" id="refresh-btn">
+          🔄 Refresh
+        </button>
+        <button class="btn btn-ghost btn-sm" id="switch-role-btn">
+          ⬅ Switch Role
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div>Loading dashboard...</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="m-toast-container"></div>
+
+<script src="/master-app.js"></script>
+</body>
+</html>
