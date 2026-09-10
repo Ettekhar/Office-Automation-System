@@ -1099,33 +1099,67 @@ function dedupeSignoff(html) {
 /**
  * Find what the user ADDED between the original and edited HTML.
  *
- * PRIMARY strategy — "Best Regards" anchor:
- *   Since users almost always insert content just before "Best regards",
- *   we find the LAST occurrence of that line in both versions (the real
- *   sign-off, not an accidental match inside the user's own new text) and
- *   compare what sits before it. This is immune to CRLF/LF differences,
- *   minor whitespace changes, and to the user's addition itself containing
- *   the phrase "Best regards".
+ * EMAIL STRUCTURE:
+ *   [Header/intro]
+ *   [Dynamic plugin table — fetched from Google Sheets]
+ *   <<< custom injection goes here >>>
+ *   [Functionality Checks paragraph]   ← static footer starts here
+ *   [Responsiveness paragraph]
+ *   [Forms paragraph]
+ *   [Everything is running smoothly paragraph]
+ *   [Best Regards]
  *
- * FALLBACK — character diff with sanity check:
- *   Used when "Best regards" isn't found. Normalises line endings first,
- *   then does longest-common-prefix + longest-common-suffix. If the
- *   computed "injection" is > 60 % of the original (a sign the diff went
- *   wrong), we return null rather than duplicating the whole email.
+ * PRIMARY strategy — "Functionality Checks" anchor:
+ *   The static footer always starts with "Functionality Checks".
+ *   We compare what sits BEFORE it in both the original and edited HTML.
+ *   Whatever the user added between the dynamic table and that line = the
+ *   custom injection. The table itself is excluded from comparison entirely.
+ *
+ * FALLBACK — "Best Regards" anchor (lastMatch):
+ *   Used when "Functionality Checks" isn't found.
  *
  * Returns { injectedHtml, anchor } or null.
  */
 function extractCustomInjection(originalHtml, editedHtml) {
   if (!originalHtml || !editedHtml) return null;
 
-  // Normalise line-endings so CRLF (Windows) vs LF (Unix) never breaks the diff
   const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const orig = norm(originalHtml);
   const edit = norm(editedHtml);
-
   if (orig === edit) return null;
 
-  // ── Primary: use the LAST "Best Regards" as the split-point ─────────────
+  // ── Primary: "Functionality Checks" is the split point ──────────────────
+  // This text is static and always comes right after the dynamic table,
+  // so it's the cleanest boundary between "sheet data" and "user edits".
+  const fcRe = /Functionality\s+Checks/i;
+  const origFcIdx = orig.search(fcRe);
+  const editFcIdx = edit.search(fcRe);
+
+  if (origFcIdx > 0 && editFcIdx > 0) {
+    // Grab everything BEFORE the footer in each version
+    const origBeforeFc = orig.slice(0, origFcIdx);
+    const editBeforeFc = edit.slice(0, editFcIdx);
+
+    // Common prefix = shared header + table (identical in both)
+    let pre = 0;
+    const minLen = Math.min(origBeforeFc.length, editBeforeFc.length);
+    while (pre < minLen && origBeforeFc[pre] === editBeforeFc[pre]) pre++;
+
+    const injectedHtml = editBeforeFc.slice(pre).trim();
+
+    if (injectedHtml && injectedHtml.length < orig.length * 0.5) {
+      // Anchor = the opening tag + "Functionality Checks" from the original
+      // (used to find the re-injection point in fresh HTML)
+      const anchorMatch = orig.slice(origFcIdx - 10, origFcIdx + 60).match(/<[^>]*>\s*Functionality/);
+      const anchor = anchorMatch
+        ? orig.slice(origFcIdx - 10 + anchorMatch.index, origFcIdx + 60)
+        : orig.slice(origFcIdx, origFcIdx + 60);
+      return { injectedHtml, anchor };
+    }
+    return null; // nothing was added (or something went wrong)
+  }
+
+  // ── Fallback: LAST "Best Regards" as split-point ────────────────────────
   const brRe = /(<[^>]*>)?\s*Best\s+[Rr]egards/gi;
   const origBr = lastMatch(orig, brRe);
   const editBr = lastMatch(edit, brRe);
@@ -1134,75 +1168,44 @@ function extractCustomInjection(originalHtml, editedHtml) {
     const origBeforeBr = orig.slice(0, origBr.index);
     const editBeforeBr = edit.slice(0, editBr.index);
 
-    // Find the common prefix up to the BR section
     let pre = 0;
     const minLen = Math.min(origBeforeBr.length, editBeforeBr.length);
     while (pre < minLen && origBeforeBr[pre] === editBeforeBr[pre]) pre++;
 
     let injectedHtml = editBeforeBr.slice(pre).trim();
-
-    // Safety net: if the user's own addition ends with its own sign-off
-    // (e.g. they typed "...thanks, Best Regards," under the new paragraph),
-    // strip it here — the real anchor below already supplies the actual
-    // template signature, so keeping this would duplicate it on every
-    // future refresh.
+    // Strip any accidental trailing sign-off from the captured injection
     injectedHtml = injectedHtml.replace(/(<[^>]*>)?\s*Best\s+[Rr]egards,?\s*$/i, '').trim();
 
-    if (injectedHtml) {
-      // anchor = the exact "Best regards" tag sequence from the original
-      const anchor = origBr.match;
-      return { injectedHtml, anchor };
+    if (injectedHtml && injectedHtml.length < orig.length * 0.6) {
+      return { injectedHtml, anchor: origBr.match };
     }
-    return null; // nothing was added before Best Regards
+    return null;
   }
 
-  // ── Fallback: normalised character-level diff ────────────────────────────
-  let pre = 0;
-  const minLen = Math.min(orig.length, edit.length);
-  while (pre < minLen && orig[pre] === edit[pre]) pre++;
-
-  let suf = 0;
-  while (
-    suf < orig.length - pre &&
-    suf < edit.length - pre &&
-    orig[orig.length - 1 - suf] === edit[edit.length - 1 - suf]
-  ) suf++;
-
-  let injectedHtml = edit.slice(pre, edit.length - suf).trim();
-
-  // Sanity check: if the "injection" is > 60 % of the original something went
-  // wrong (e.g. the whole email body was captured). Return null in that case.
-  if (!injectedHtml || injectedHtml.length > orig.length * 0.6) return null;
-
-  const anchor = suf > 0
-    ? orig.slice(orig.length - suf, orig.length - suf + 200).trim()
-    : '';
-
-  return { injectedHtml, anchor };
+  return null;
 }
 
 /**
  * Re-insert injectedHtml into freshHtml at the right position.
  *
- * 1. Try the stored anchor text (exact substring match).
- * 2. Fall back to injecting before the LAST "Best regards" block.
- * 3. Last resort: inject before </body>, or append.
+ * Injection order (first match wins):
+ *   1. Exact stored anchor text
+ *   2. Before "Functionality Checks" paragraph (primary injection point)
+ *   3. Before last "Best Regards"
+ *   4. Before </body>, or append
  *
- * A final dedupeSignoff() pass runs on whichever path was taken, so a
- * duplicated sign-off can never make it into the merged HTML even if
- * something upstream produced an unexpected anchor/injection pair.
+ * dedupeSignoff() runs as a final safety net.
  */
 function reapplyInjection(freshHtml, injectedHtml, anchor) {
   if (!freshHtml || !injectedHtml) return freshHtml;
 
-  // Normalise before searching
   const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const fresh = norm(freshHtml);
-  const inj = injectedHtml.trim();
+  const inj   = injectedHtml.trim();
 
   let merged = null;
 
-  // 1. Exact anchor match
+  // 1. Exact anchor match (fastest, most precise)
   if (anchor) {
     const idx = fresh.indexOf(anchor);
     if (idx !== -1) {
@@ -1210,7 +1213,18 @@ function reapplyInjection(freshHtml, injectedHtml, anchor) {
     }
   }
 
-  // 2. Best Regards fallback — use the LAST occurrence, the real signature line
+  // 2. "Functionality Checks" — inject right before the static footer
+  if (!merged) {
+    const fcIdx = fresh.search(/Functionality\s+Checks/i);
+    if (fcIdx !== -1) {
+      // Step back to the opening tag that wraps "Functionality Checks"
+      const tagStart = fresh.lastIndexOf('<', fcIdx);
+      const pos = tagStart !== -1 ? tagStart : fcIdx;
+      merged = fresh.slice(0, pos) + '\n' + inj + '\n' + fresh.slice(pos);
+    }
+  }
+
+  // 3. Last "Best Regards" fallback
   if (!merged) {
     const brMatch = lastMatch(fresh, /(<[^>]*>)?\s*Best\s+[Rr]egards/gi);
     if (brMatch) {
@@ -1218,7 +1232,7 @@ function reapplyInjection(freshHtml, injectedHtml, anchor) {
     }
   }
 
-  // 3. Last resort
+  // 4. Last resort
   if (!merged) {
     const bodyClose = fresh.lastIndexOf('</body>');
     merged = bodyClose !== -1
@@ -1226,9 +1240,10 @@ function reapplyInjection(freshHtml, injectedHtml, anchor) {
       : fresh + '\n' + inj;
   }
 
-  // Defensive net: collapse any adjacent duplicate sign-offs
+  // Defensive: collapse any duplicate sign-offs
   return dedupeSignoff(merged);
 }
+
 
 
 
