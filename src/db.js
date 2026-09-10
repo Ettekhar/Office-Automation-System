@@ -29,6 +29,17 @@ export function dbWrite(name, data) {
 // ─── Timestamp ───────────────────────────────────────────────────────────────
 const now = () => new Date().toISOString();
 
+// ─── Normalize helper ────────────────────────────────────────────────────────
+// Old data format may be object (keyed by user name) instead of array.
+function ensureArray(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const flat = Object.values(data).flat();
+    return Array.isArray(flat) ? flat : [];
+  }
+  return [];
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -101,16 +112,7 @@ export function assignUsersToSite(siteId, userIds) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DAILY REVIEW ROWS (per-user, per-site records)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Normalize helper — old format may be object instead of array
-function ensureArray(data) {
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object') {
-    // Flatten object of arrays (old per-user keyed format)
-    const flat = Object.values(data).flat();
-    return Array.isArray(flat) ? flat : [];
-  }
-  return [];
-}
+
 
 export function getDailyReview(filter = {}) {
   let rows = ensureArray(dbRead('daily-review'));

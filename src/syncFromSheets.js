@@ -430,28 +430,52 @@ export async function syncAll() {
   report('Starting full sync…', 1);
   const start = Date.now();
 
+  let userMap = {};
+  let sites = [];
+  let drRows = [];
+  let tasks = [];
+  let props = [];
+  let devProjects = [];
+
   // Step 1: Users
-  const userMap = seedUsers();
+  try {
+    userMap = seedUsers();
+  } catch (e) { console.error('[sync] STEP 1 (seedUsers) FAILED:', e); report('⚠ Users failed: ' + e.message, 3); }
 
   // Step 2: Sites (CW + RM)
-  const sites = await importSites();
+  try {
+    report('Importing sites from CW + RM…', 5);
+    sites = await importSites();
+    report(`Sites imported: ${sites.length}`, 20);
+  } catch (e) { console.error('[sync] STEP 2 (importSites) FAILED:', e); report('⚠ Sites failed: ' + e.message, 20); }
 
   // Step 3: Merge domain expiry into sites
-  await mergeDomains(sites);
+  try {
+    await mergeDomains(sites);
+  } catch (e) { console.error('[sync] STEP 3 (mergeDomains) FAILED:', e); report('⚠ Domain merge failed: ' + e.message, 25); }
 
   // Step 4: Daily review + assign users to sites
-  const drRows = await importDailyReview(sites, userMap);
+  try {
+    drRows = await importDailyReview(sites, userMap);
+  } catch (e) { console.error('[sync] STEP 4 (importDailyReview) FAILED:', e); report('⚠ Daily review failed: ' + e.message, 50); }
 
   // Step 5: Tasks
-  const tasks = await importTasks(sites, userMap);
+  try {
+    tasks = await importTasks(sites, userMap);
+  } catch (e) { console.error('[sync] STEP 5 (importTasks) FAILED:', e); report('⚠ Tasks failed: ' + e.message, 60); }
 
   // Step 6: Properties
-  const props = await importProperties(userMap);
+  try {
+    props = await importProperties(userMap);
+  } catch (e) { console.error('[sync] STEP 6 (importProperties) FAILED:', e); report('⚠ Properties failed: ' + e.message, 75); }
 
   // Step 7: Dev projects
-  const devProjects = await importDevProjects();
+  try {
+    devProjects = await importDevProjects();
+  } catch (e) { console.error('[sync] STEP 7 (importDevProjects) FAILED:', e); report('⚠ Dev projects failed: ' + e.message, 90); }
 
-  // Persist everything
+  // Persist everything (even partial)
+  report('Saving to local database…', 95);
   setSites(sites);
   setDailyReview(drRows);
   setTasks(tasks);
