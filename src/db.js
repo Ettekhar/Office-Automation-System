@@ -32,7 +32,7 @@ const now = () => new Date().toISOString();
 // ═══════════════════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
-export function getUsers() { return dbRead('users') || []; }
+export function getUsers() { return ensureArray(dbRead('users')); }
 export function setUsers(data) { dbWrite('users', data); }
 
 export function getUserById(id) { return getUsers().find(u => u.id === id) || null; }
@@ -69,7 +69,7 @@ export function deleteUser(id) {
 // SITES (merged from CW/RM + Domain Expiry + Daily Review assignments)
 // ═══════════════════════════════════════════════════════════════════════════════
 export function getSites(filter = {}) {
-  let sites = dbRead('sites') || [];
+  let sites = ensureArray(dbRead('sites'));
   if (filter.account) sites = sites.filter(s => s.account === filter.account);
   if (filter.userId) sites = sites.filter(s => s.assignedUsers?.includes(filter.userId));
   return sites;
@@ -101,14 +101,25 @@ export function assignUsersToSite(siteId, userIds) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DAILY REVIEW ROWS (per-user, per-site records)
 // ═══════════════════════════════════════════════════════════════════════════════
+// Normalize helper — old format may be object instead of array
+function ensureArray(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    // Flatten object of arrays (old per-user keyed format)
+    const flat = Object.values(data).flat();
+    return Array.isArray(flat) ? flat : [];
+  }
+  return [];
+}
+
 export function getDailyReview(filter = {}) {
-  let rows = dbRead('daily-review') || [];
+  let rows = ensureArray(dbRead('daily-review'));
   if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
   if (filter.siteId) rows = rows.filter(r => r.siteId === filter.siteId);
   if (filter.userName) {
     const u = getUserByName(filter.userName);
     if (u) rows = rows.filter(r => r.userId === u.id);
-    else rows = [];
+    else rows = rows.filter(r => (r.userName||'').toLowerCase() === filter.userName.toLowerCase());
   }
   return rows;
 }
@@ -133,7 +144,7 @@ export function updateDailyReviewRow(rowId, updates) {
 // TASKS
 // ═══════════════════════════════════════════════════════════════════════════════
 export function getTasks(filter = {}) {
-  let tasks = dbRead('tasks') || [];
+  let tasks = ensureArray(dbRead('tasks'));
   if (filter.assigneeId) tasks = tasks.filter(t => t.assigneeId === filter.assigneeId);
   if (filter.siteId) tasks = tasks.filter(t => t.siteId === filter.siteId);
   if (filter.status) tasks = tasks.filter(t => t.status === filter.status);
@@ -173,7 +184,7 @@ export function deleteTask(id) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROPERTIES
 // ═══════════════════════════════════════════════════════════════════════════════
-export function getProperties() { return dbRead('properties') || []; }
+export function getProperties() { return ensureArray(dbRead('properties')); }
 export function setProperties(data) { dbWrite('properties', data); }
 
 export function updateProperty(id, updates) {
@@ -192,7 +203,7 @@ export function deleteProperty(id) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // DEV PROJECTS
 // ═══════════════════════════════════════════════════════════════════════════════
-export function getDevProjects() { return dbRead('dev-projects') || []; }
+export function getDevProjects() { return ensureArray(dbRead('dev-projects')); }
 export function setDevProjects(data) { dbWrite('dev-projects', data); }
 
 export function updateDevProjectItem(projectId, itemIdx, updates) {
@@ -219,26 +230,27 @@ export function isInitialised() {
 export function getDbStats() {
   const meta = getMeta();
   const users = getUsers();
-  const sites = dbRead('sites') || [];
-  const tasks = dbRead('tasks') || [];
-  const dr = dbRead('daily-review') || [];
-  const props = dbRead('properties') || [];
+  const sites = ensureArray(dbRead('sites'));
+  const tasks = ensureArray(dbRead('tasks'));
+  const dr    = ensureArray(dbRead('daily-review'));
+  const props = ensureArray(dbRead('properties'));
 
   const drCompleted = dr.filter(r => r.maintenanceStatus === 'completed').length;
-  const drTotal = dr.filter(r => r.maintenanceStatus).length;
+  const drTotal     = dr.filter(r => r.maintenanceStatus).length;
 
   return {
-    lastSync: meta.lastSync,
-    syncDuration: meta.syncDuration,
-    totalUsers: users.length,
-    totalSites: sites.length,
-    totalTasks: tasks.length,
-    totalDailyRows: dr.length,
+    lastSync:      meta.lastSync,
+    syncDuration:  meta.syncDuration,
+    totalUsers:    users.length,
+    totalSites:    sites.length,
+    totalTasks:    tasks.length,
+    totalDailyRows:dr.length,
+    totalDomains:  sites.filter(s => s.domainExpiry).length,
     totalProperties: props.length,
     urgentDomains: sites.filter(s => s.daysLeft !== null && s.daysLeft <= 30).length,
-    onlineSites: sites.filter(s => s.uptimeStatus === 'online').length,
-    offlineSites: sites.filter(s => s.uptimeStatus === 'offline').length,
+    onlineSites:   sites.filter(s => s.uptimeStatus === 'online').length,
+    offlineSites:  sites.filter(s => s.uptimeStatus === 'offline').length,
     completionPct: drTotal > 0 ? Math.round(drCompleted / drTotal * 100) : 0,
-    initialised: isInitialised(),
+    initialised:   isInitialised(),
   };
 }
