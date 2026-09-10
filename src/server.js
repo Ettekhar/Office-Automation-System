@@ -488,8 +488,8 @@ const server = http.createServer(async (req, res) => {
 
     // Static Files
     let filePath = path.join(PUBLIC_DIR,
-      pathname === '/'        ? 'index.html'  :
-      pathname === '/master'  ? 'master.html' :
+      (pathname === '/' || pathname === '/index.html' || pathname === '/master' || pathname === '/master.html' || pathname === '/dashboard') ? 'master.html' :
+      (pathname === '/mailer' || pathname === '/mailer.html') ? 'index.html' :
       pathname
     );
     if (!filePath.startsWith(PUBLIC_DIR)) {

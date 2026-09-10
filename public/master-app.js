@@ -6,7 +6,9 @@ const S = {
   userName: null,
   view: null,
   users: [],          // cached user list
+  tableMode: 'smart', // 'smart'|'full'
 };
+try { S.tableMode = localStorage.getItem('officeos_table_mode') || 'smart'; } catch {}
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -181,38 +183,137 @@ $('logout-btn').addEventListener('click', () => {
   appShell.classList.add('hidden');
   landing.classList.remove('hidden');
 });
+const savedSidebar = localStorage.getItem('officeos_sidebar_collapsed');
+if (savedSidebar === 'true' || (savedSidebar === null && window.innerWidth < 1350)) {
+  appShell.classList.add('sidebar-collapsed');
+}
 $('sidebar-toggle').addEventListener('click', () => {
-  appShell.classList.toggle('sidebar-collapsed');
+  const isCollapsed = appShell.classList.toggle('sidebar-collapsed');
+  try { localStorage.setItem('officeos_sidebar_collapsed', isCollapsed); } catch {}
 });
+
+// ─── Command Palette Setup ───────────────────────────────────────────────────
+function initCommandPalette() {
+  const overlay = $('cmd-overlay');
+  const trigger = $('cmd-palette-trigger');
+  const input = $('cmd-input');
+  const results = $('cmd-results');
+  if (!overlay) return;
+
+  function open() {
+    overlay.classList.remove('hidden');
+    input.value = '';
+    input.focus();
+    renderResults('');
+  }
+  function close() { overlay.classList.add('hidden'); }
+
+  if (trigger) trigger.addEventListener('click', open);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  window.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      open();
+    }
+    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+      close();
+    }
+  });
+
+  input.addEventListener('input', e => renderResults(e.target.value));
+
+  async function renderResults(query) {
+    const q = (query || '').toLowerCase().trim();
+    let items = [];
+
+    // Quick navigation commands
+    const navItems = [
+      { type: 'View', title: '🌐 My Assigned Sites', action: () => navigate('my-sites') },
+      { type: 'View', title: '✅ My Assigned Tasks', action: () => navigate('my-tasks') },
+      { type: 'View', title: '📊 Overview Dashboard', action: () => navigate('overview') },
+      { type: 'View', title: '👥 Team Progress Tracker', action: () => navigate('all-users') },
+      { type: 'View', title: '🌐 All Sites Directory', action: () => navigate('sites') },
+      { type: 'View', title: '📅 Domain Expiry Tracker', action: () => navigate('domain-expiry') },
+      { type: 'View', title: '💓 Live Uptime Monitor', action: () => navigate('uptime') },
+      { type: 'View', title: '🔄 Sync from Google Sheets', action: () => navigate('sync') },
+      { type: 'View', title: '✉️ Send Email Reports', action: () => navigate('send-emails') },
+    ];
+
+    if (!q) {
+      items = navItems.slice(0, 6);
+    } else {
+      items = navItems.filter(n => n.title.toLowerCase().includes(q));
+      // Search sites if loaded
+      try {
+        const { sites } = await GET('/api/master/sites');
+        const matchedSites = (sites || []).filter(s => (s.url||'').toLowerCase().includes(q) || (s.company||'').toLowerCase().includes(q)).slice(0, 6);
+        matchedSites.forEach(s => {
+          items.push({
+            type: 'Website',
+            title: `${s.url} (${s.company || s.account || 'CW'})`,
+            action: () => { window.open(s.url, '_blank'); close(); }
+          });
+        });
+      } catch {}
+    }
+
+    results.innerHTML = items.map((item, idx) => `
+      <div class="cmd-item" data-idx="${idx}">
+        <span class="cmd-item-title">${esc(item.title)}</span>
+        <span class="cmd-item-meta">${esc(item.type)}</span>
+      </div>
+    `).join('') || '<div style="padding:20px;text-align:center;color:var(--text-muted)">No matching results</div>';
+
+    results.querySelectorAll('.cmd-item').forEach((el, idx) => {
+      el.addEventListener('click', () => {
+        close();
+        if (items[idx]?.action) items[idx].action();
+      });
+    });
+  }
+}
 
 // ─── LANDING ──────────────────────────────────────────────────────────────────
 async function initLanding() {
+  initCommandPalette();
+
   const defaultNames = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif'];
   const nameSelect = $('user-name-select');
-  // Populate with defaults first so Enter always works
   nameSelect.innerHTML = defaultNames.map(n => `<option value="">${n}</option>`).join('');
 
-  // Hide name select for non-user roles initially (superadmin default)
-  $('user-select-wrap').classList.add('hidden');
-
-  $('role-select').addEventListener('change', e => {
-    $('user-select-wrap').classList.toggle('hidden', e.target.value !== 'user');
+  // Handle role cards clicking
+  document.querySelectorAll('.role-card').forEach(rc => {
+    rc.addEventListener('click', () => {
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+      rc.classList.add('active');
+      const role = rc.dataset.role;
+      $('role-select').value = role;
+      $('user-select-wrap').classList.toggle('hidden', role !== 'user');
+    });
   });
 
-  const statusEl = $('landing-status');
+  // Restore saved session if available
+  try {
+    const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
+    if (saved.role) {
+      const targetCard = document.querySelector(`.role-card[data-role="${saved.role}"]`);
+      if (targetCard) targetCard.click();
+    }
+  } catch {}
 
-  // Try loading db status
+  const statusEl = $('landing-status');
   try {
     const st = await GET('/api/master/db-status');
     if (!st.initialised) {
       statusEl.innerHTML = `<div class="status-pill warn">⚠️ <span><strong>First-time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import data.</span></div>`;
     } else {
       const ago = st.lastSync ? Math.round((Date.now() - new Date(st.lastSync)) / 60000) : null;
-      statusEl.innerHTML = `<div class="status-pill ok">✅ <span>${st.totalSites} sites · ${st.totalDomains||0} domains${ago!==null?` · synced ${ago}m ago`:''}</span></div>`;
+      statusEl.innerHTML = `<div class="status-pill ok">⚡ <span><strong>${st.totalSites} Sites</strong> · ${st.totalDomains||0} Domains${ago!==null?` · Synced ${ago}m ago`:''}</span></div>`;
     }
   } catch {}
 
-  // Load real user names separately so a db-status failure doesn't block this
+  // Load real users
   try {
     const { users } = await GET('/api/master/users');
     if (users && users.length > 0) {
@@ -229,11 +330,12 @@ async function initLanding() {
       S.userName = nameOpt ? nameOpt.text : defaultNames[0];
       S.userId   = nameOpt ? (nameOpt.value || null) : null;
     } else {
-      // Admin / Superadmin — pick their own name from the list if possible
       const nameOpt = nameSelect.options[nameSelect.selectedIndex];
       S.userName = nameOpt ? nameOpt.text : (role === 'admin' ? 'Admin' : 'Superadmin');
       S.userId   = nameOpt ? (nameOpt.value || null) : null;
     }
+    // Save session
+    try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
     enterApp();
   });
 }
@@ -244,8 +346,28 @@ function enterApp() {
 
   // Set sidebar user info
   $('user-name-display').textContent = S.role === 'user' ? S.userName : (S.role === 'admin' ? 'Admin' : 'Superadmin');
-  $('user-role-display').textContent = S.role;
+  $('user-role-display').textContent = S.role.toUpperCase();
   $('user-avatar').textContent = (S.userName || S.role)[0].toUpperCase();
+
+  // Topbar quick role switcher
+  document.querySelectorAll('.role-pill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === S.role);
+    btn.addEventListener('click', () => {
+      const newRole = btn.dataset.role;
+      if (newRole === S.role) return;
+      S.role = newRole;
+      $('user-role-display').textContent = newRole.toUpperCase();
+      document.querySelectorAll('.role-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.role === newRole));
+      buildNav(newRole);
+      const defaultViews = { user: 'my-sites', admin: 'overview', superadmin: 'overview' };
+      navigate(defaultViews[newRole] || 'overview');
+      toast(`Switched to ${newRole} workspace`, 'info');
+    });
+  });
+
+  // Quick sync sidebar button
+  const qSync = $('quick-sync-btn');
+  if (qSync) qSync.addEventListener('click', () => navigate('sync'));
 
   buildNav(S.role);
 
@@ -267,7 +389,7 @@ function enterApp() {
 // VIEW: MY SITES (User)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewMySites() {
-  setPage('My Sites', `Logged in as ${S.userName}`);
+  setPage('My Sites', `Assigned checklist for ${S.userName}`);
 
   let rows = [];
   try {
@@ -276,79 +398,157 @@ async function viewMySites() {
   } catch (e) { toast(e.message, 'error'); }
 
   const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
+  const inProgress = rows.filter(r => r.maintenanceStatus === 'in_progress').length;
+  const pending = rows.filter(r => !['completed','in_progress'].includes(r.maintenanceStatus)).length;
   const pct = rows.length ? Math.round(completed / rows.length * 100) : 0;
+  const isSmart = S.tableMode !== 'full';
 
   mainEl.innerHTML = `
     <div class="fade-in">
       <div class="stat-grid">
         <div class="stat-card accent"><div class="stat-value">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
         <div class="stat-card success"><div class="stat-value">${completed}</div><div class="stat-label">Completed</div></div>
-        <div class="stat-card warning"><div class="stat-value">${rows.filter(r=>r.maintenanceStatus==='in_progress').length}</div><div class="stat-label">In Progress</div></div>
-        <div class="stat-card danger"><div class="stat-value">${rows.filter(r=>!['completed','in_progress'].includes(r.maintenanceStatus)).length}</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card warning"><div class="stat-value">${inProgress}</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card danger"><div class="stat-value">${pending}</div><div class="stat-label">Pending Review</div></div>
       </div>
+
       <div class="card">
         <div class="card-header">
           <span class="card-title">📋 Daily Maintenance Checklist</span>
           <div class="card-actions">
-            <span style="font-size:12px;color:var(--text-muted)">${pct}% complete</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
             <div class="progress-wrap" style="width:120px"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <div class="view-mode-toggle" id="table-mode-toggle">
+              <button class="btn btn-sm mode-btn ${isSmart?'active':''}" data-mode="smart" title="Smart Fit 100vw - No horizontal scroll">⚡ Smart Fit</button>
+              <button class="btn btn-sm mode-btn ${!isSmart?'active':''}" data-mode="full" title="Spreadsheet mode with all 14 columns">📋 Full Spread</button>
+            </div>
+            <button id="export-csv-btn" class="btn btn-secondary btn-sm" title="Export this checklist to CSV">
+              📥 Export CSV
+            </button>
           </div>
         </div>
-        <div class="toolbar" style="padding:12px 16px 0">
-          <div class="search-wrap">
+
+        <div class="toolbar" style="padding:14px 18px 0;gap:10px">
+          <div class="search-wrap" style="flex:1;max-width:320px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input id="site-search" class="search-input" placeholder="Search sites…">
+            <input id="site-search" class="search-input" placeholder="Search URL, ClickUp, notes…">
           </div>
-          <select id="site-filter" class="filter-select">
-            <option value="">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="in_progress">In Progress</option>
-            <option value="todo">To Do</option>
-            <option value="pending">Pending</option>
-          </select>
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="quick-filter-chips">
+            <button class="btn btn-secondary btn-sm chip-btn active" data-filter="">All (${rows.length})</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="completed">Completed (${completed})</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="in_progress">In Progress (${inProgress})</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="pending">Pending (${pending})</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="cw">CW</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="rm">RM</button>
+          </div>
         </div>
+
         <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>#</th>
-              <th>Website URL</th>
-              <th>Company</th>
-              <th>Maintenance</th>
-              <th>Maintenance Report Sent</th>
-              <th>ClickUp Link</th>
-              <th>GA4 Report</th>
-              <th>Newsletter Mail</th>
-              <th>Form Submission Mail</th>
-              <th>Client Response</th>
-              <th>Booking Engine</th>
-              <th>UPTimeRobot Monitoring</th>
-              <th>Cloudflare issues</th>
-              <th>Actions</th>
-            </tr></thead>
+          <table class="${isSmart ? 'table-smart-fit' : 'table-full-spread'}">
+            <thead>
+              ${isSmart ? `
+                <tr>
+                  <th style="width:36px">#</th>
+                  <th>Website &amp; Account</th>
+                  <th style="width:175px">Maintenance &amp; Report</th>
+                  <th style="width:125px">Tasks &amp; Links</th>
+                  <th>Integrations</th>
+                  <th style="width:110px">Monitoring</th>
+                  <th style="width:95px">Response</th>
+                  <th style="width:80px;text-align:right">Actions</th>
+                </tr>
+              ` : `
+                <tr>
+                  <th>#</th>
+                  <th>Website URL</th>
+                  <th>Company</th>
+                  <th>Maintenance</th>
+                  <th>Report Sent</th>
+                  <th>ClickUp Link</th>
+                  <th>GA4 Report</th>
+                  <th>Newsletter Mail</th>
+                  <th>Form Submission Mail</th>
+                  <th>Client Response</th>
+                  <th>Booking Engine</th>
+                  <th>UPTimeRobot</th>
+                  <th>Cloudflare</th>
+                  <th>Actions</th>
+                </tr>
+              `}
+            </thead>
             <tbody id="sites-tbody">
-              ${rows.map((r,i) => siteRow(r, i)).join('')}
+              ${rows.map((r,i) => siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}
             </tbody>
           </table>
         </div>
       </div>
     </div>`;
 
-  // Search + filter
+  // Search + Filter Chips
   const tbody = $('sites-tbody');
   const allRows = [...tbody.querySelectorAll('tr')];
-  function filterRows() {
-    const q = $('site-search').value.toLowerCase();
-    const f = $('site-filter').value;
+  let activeFilter = '';
+
+  function applyFilter() {
+    const q = ($('site-search').value || '').toLowerCase().trim();
     allRows.forEach(tr => {
+      // If it's a detail row, toggle based on parent row
+      if (tr.classList.contains('detail-accordion-row')) {
+        const parentId = tr.dataset.parentId;
+        const parentTr = tbody.querySelector(`tr[data-id="${parentId}"]:not(.detail-accordion-row)`);
+        if (parentTr && parentTr.classList.contains('hidden')) {
+          tr.classList.add('hidden');
+        }
+        return;
+      }
+
       const url = tr.dataset.url || '';
       const status = tr.dataset.status || '';
-      tr.classList.toggle('hidden',
-        (q && !url.includes(q)) || (f && status !== f)
-      );
+      const text = tr.innerText.toLowerCase();
+
+      let matchFilter = true;
+      if (activeFilter === 'completed') matchFilter = status === 'completed';
+      else if (activeFilter === 'in_progress') matchFilter = status === 'in_progress';
+      else if (activeFilter === 'pending') matchFilter = !['completed','in_progress'].includes(status);
+      else if (activeFilter === 'cw') matchFilter = text.includes('cw');
+      else if (activeFilter === 'rm') matchFilter = text.includes('rm');
+
+      const matchQuery = !q || url.includes(q) || text.includes(q);
+      const isVisible = matchFilter && matchQuery;
+      tr.classList.toggle('hidden', !isVisible);
+
+      // Hide corresponding detail row if parent is hidden
+      const rowId = tr.dataset.id;
+      const detailRow = $(`detail-row-${rowId}`);
+      if (detailRow && !isVisible) detailRow.classList.add('hidden');
     });
   }
-  $('site-search').addEventListener('input', filterRows);
-  $('site-filter').addEventListener('change', filterRows);
+
+  $('site-search').addEventListener('input', applyFilter);
+
+  document.querySelectorAll('.chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('btn-primary', 'active'));
+      btn.classList.add('btn-primary', 'active');
+      activeFilter = btn.dataset.filter;
+      applyFilter();
+    });
+  });
+
+  // Mode switcher (Smart Fit vs Full Spread)
+  document.querySelectorAll('#table-mode-toggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      S.tableMode = mode;
+      try { localStorage.setItem('officeos_table_mode', mode); } catch {}
+      viewMySites();
+    });
+  });
+
+  // Export CSV
+  $('export-csv-btn').addEventListener('click', () => {
+    exportChecklistCsv(rows, `Daily_Maintenance_${S.userName}_${new Date().toISOString().slice(0,10)}.csv`);
+  });
 
   // Status dropdown auto-save
   tbody.querySelectorAll('.status-select').forEach(sel => {
@@ -366,16 +566,109 @@ async function viewMySites() {
     });
   });
 
+  // Quick 1-click toggle for Report Sent
+  tbody.querySelectorAll('.btn-report-toggle').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const { rowId, status } = btn.dataset;
+      const newStatus = status === 'sent' ? 'no' : 'sent';
+      const newRaw = newStatus === 'sent' ? 'Yes' : 'No';
+      try {
+        await PUT(`/api/master/daily-review/${rowId}`, {
+          reportSentStatus: newStatus,
+          reportSentRaw: newRaw
+        });
+        btn.dataset.status = newStatus;
+        btn.className = `btn-report-toggle ${newStatus === 'sent' ? 'sent' : 'pending'}`;
+        btn.textContent = newStatus === 'sent' ? '✉️ Sent' : '✉️ No';
+        toast(`Report marked ${newRaw}`, 'success');
+      } catch (err) { toast(err.message, 'error'); }
+    });
+  });
+
+  // Toggle detail accordion
+  tbody.querySelectorAll('.toggle-detail-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const detailRow = $(`detail-row-${id}`);
+      const parentTr = tbody.querySelector(`tr[data-id="${id}"]:not(.detail-accordion-row)`);
+      if (detailRow) {
+        const isHidden = detailRow.classList.contains('hidden');
+        detailRow.classList.toggle('hidden', !isHidden);
+        if (parentTr) parentTr.classList.toggle('active-row', isHidden);
+        btn.textContent = isHidden ? '🔼' : '👁️';
+      }
+    });
+  });
+
+  // Click on row to toggle detail accordion
+  tbody.querySelectorAll('tr.smart-row').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      if (['A', 'BUTTON', 'SELECT', 'INPUT'].includes(e.target.tagName) || e.target.closest('button, a, select, input')) return;
+      const id = tr.dataset.id;
+      const detailRow = $(`detail-row-${id}`);
+      const toggleBtn = tr.querySelector('.toggle-detail-btn');
+      if (detailRow) {
+        const isHidden = detailRow.classList.contains('hidden');
+        detailRow.classList.toggle('hidden', !isHidden);
+        tr.classList.toggle('active-row', isHidden);
+        if (toggleBtn) toggleBtn.textContent = isHidden ? '🔼' : '👁️';
+      }
+    });
+  });
+
   // Edit row buttons
   tbody.querySelectorAll('.edit-dr-row-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const r = rows.find(x => x.id === btn.dataset.id);
       if (r) editDailyReviewRowModal(r, () => viewMySites());
     });
   });
 }
 
-function siteRow(r, i) {
+function exportChecklistCsv(rows, filename) {
+  const headers = [
+    '#', 'Website URL', 'Company', 'Maintenance', 'Maintenance Report Sent',
+    'ClickUp Link', 'GA4 Report', 'Newsletter Mail', 'Form Submission Mail',
+    'Client Response', 'Booking Engine', 'UPTimeRobot Monitoring', 'Cloudflare issues'
+  ];
+
+  const lines = [headers.map(h => `"${h}"`).join(',')];
+
+  rows.forEach((r, idx) => {
+    const row = [
+      idx + 1,
+      r.siteUrl || '',
+      r.company || '',
+      r.maintenanceRaw || r.maintenanceStatus || '',
+      r.reportSentRaw || r.reportSentStatus || '',
+      r.clickupLink || '',
+      r.ga4 || '',
+      r.newsletterMail || '',
+      r.formSubmissionMail || '',
+      r.clientResponse || '',
+      r.bookingLink || '',
+      r.uptimeRobot || '',
+      r.cloudflare || ''
+    ];
+    lines.push(row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+  });
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📥 Checklist exported to CSV', 'success');
+}
+
+function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   const maintOpts = ['Completed','In Progress','To Do','Pending'].map(o =>
     `<option ${r.maintenanceRaw===o?'selected':''}>${o}</option>`).join('');
   const sentOpts = ['Yes','No','To Do'].map(o =>
@@ -442,6 +735,91 @@ function siteRow(r, i) {
 
   const co = (r.company || 'CW').trim();
 
+  if (mode === 'smart') {
+    return `
+      <tr class="smart-row" data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+        <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
+        <td class="url-cell">
+          <div class="site-main-cell">
+            <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
+              ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
+            </a>
+            <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'}">${esc(co)}</span>
+          </div>
+        </td>
+        <td>
+          <div class="status-cell-grp">
+            <select class="status-select select-maint-compact" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select>
+            <button class="btn-report-toggle ${r.reportSentStatus==='sent'?'sent':'pending'}" data-row-id="${r.id}" data-status="${r.reportSentStatus}" title="Click to toggle Report Sent">
+              ${r.reportSentStatus==='sent'?'✉️ Sent':'✉️ No'}
+            </button>
+          </div>
+        </td>
+        <td>
+          <div class="quick-links-grp">
+            ${cuLink !== '<span class="dim-dash">—</span>' ? cuLink : ''}
+            ${bookHtml !== '<span class="dim-dash">—</span>' ? bookHtml : ''}
+            ${cuLink === '<span class="dim-dash">—</span>' && bookHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
+          </div>
+        </td>
+        <td>
+          <div class="integrations-pill-grp">
+            ${ga4Html !== '<span class="dim-dash">—</span>' ? ga4Html : ''}
+            ${newsHtml !== '<span class="dim-dash">—</span>' ? newsHtml : ''}
+            ${formHtml !== '<span class="dim-dash">—</span>' ? formHtml : ''}
+            ${ga4Html === '<span class="dim-dash">—</span>' && newsHtml === '<span class="dim-dash">—</span>' && formHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
+          </div>
+        </td>
+        <td>
+          <div class="health-cell-grp">
+            ${uptimeHtml}
+            ${cfHtml}
+          </div>
+        </td>
+        <td>${respHtml}</td>
+        <td style="text-align:right">
+          <div class="actions-grp" style="justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm toggle-detail-btn" data-id="${r.id}" title="Toggle all 12 details">👁️</button>
+            <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit row">✏️</button>
+          </div>
+        </td>
+      </tr>
+      <tr class="detail-accordion-row hidden" id="detail-row-${r.id}" data-parent-id="${r.id}">
+        <td colspan="8">
+          <div class="row-detail-bento">
+            <div class="detail-bento-card">
+              <div class="dbc-head">🌐 Website &amp; Account</div>
+              <div class="dbc-row"><span class="dbc-lbl">Full URL:</span> <a href="${esc(r.siteUrl)}" target="_blank" class="dbc-val">${esc(r.siteUrl)} ↗</a></div>
+              <div class="dbc-row"><span class="dbc-lbl">Company:</span> <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'}">${esc(co)} Maintenance</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">ClickUp:</span> ${r.clickupLink ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup">⚡ View Task ↗</a>` : '<span class="dim-dash">—</span>'}</div>
+            </div>
+            <div class="detail-bento-card">
+              <div class="dbc-head">🛠️ Review &amp; Report</div>
+              <div class="dbc-row"><span class="dbc-lbl">Maintenance:</span> <span class="badge badge-${r.maintenanceStatus==='completed'?'success':r.maintenanceStatus==='in_progress'?'info':'warning'}">${esc(r.maintenanceRaw || r.maintenanceStatus || 'Pending')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">Report Sent:</span> <span class="badge badge-${r.reportSentStatus==='sent'?'success':'dim'}">${esc(r.reportSentRaw || r.reportSentStatus || 'No')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">Client Response:</span> <span class="dbc-val">${esc(r.clientResponse || '—')}</span></div>
+            </div>
+            <div class="detail-bento-card">
+              <div class="dbc-head">📈 Analytics &amp; Comms</div>
+              <div class="dbc-row"><span class="dbc-lbl">GA4 Status:</span> <span class="dbc-val">${esc(r.ga4 || 'No GA4 Tag')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">Newsletter:</span> <span class="dbc-val">${esc(r.newsletterMail || '—')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">Form Mail:</span> <span class="dbc-val" title="${esc(r.formSubmissionMail)}">${esc(r.formSubmissionMail || '—')}</span></div>
+            </div>
+            <div class="detail-bento-card">
+              <div class="dbc-head">🛡️ Health &amp; Booking</div>
+              <div class="dbc-row"><span class="dbc-lbl">Booking Engine:</span> ${r.bookingLink ? `<a href="${esc(r.bookingLink)}" target="_blank" class="btn-booking">🍽️ Booking ↗</a>` : '<span class="dim-dash">—</span>'}</div>
+              <div class="dbc-row"><span class="dbc-lbl">Uptime Robot:</span> ${uptimeHtml}</div>
+              <div class="dbc-row"><span class="dbc-lbl">Cloudflare:</span> ${cfHtml}</div>
+              <div style="margin-top:6px;display:flex;justify-content:flex-end">
+                <button class="btn btn-secondary btn-sm edit-dr-row-btn" data-id="${r.id}">✏️ Edit All 12 Fields</button>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  // Full spreadsheet mode
   return `
     <tr data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
       <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
@@ -571,7 +949,7 @@ async function viewMyTasks() {
       <div class="card">
         <div class="card-header"><span class="card-title">📋 Assigned Tasks</span></div>
         <div class="table-wrap">
-          <table>
+          <table class="table-smart-fit">
             <thead><tr><th>Task</th><th>Site</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th></tr></thead>
             <tbody>${tasks.length ? tasks.map(t => `
               <tr>
@@ -672,38 +1050,68 @@ async function viewAllUsers() {
     try {
       const { rows } = await GET(`/api/master/daily-review?userId=${userId}&user=${encodeURIComponent(userName)}`);
       const u = summary.find(x=>x.userId===userId)||{};
+      const isSmart = S.tableMode !== 'full';
       panel.innerHTML = `
         <div class="card">
           <div class="card-header">
             <span class="card-title">🌐 ${esc(userName)}'s Assigned Sites (${rows.length})</span>
-            <div style="display:flex;align-items:center;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <span style="font-size:12px;color:var(--text-muted)">${u.pct||0}% complete</span>
               <div class="progress-wrap" style="width:100px"><div class="progress-fill" style="width:${u.pct||0}%"></div></div>
+              <div class="view-mode-toggle" id="user-table-mode-toggle">
+                <button class="btn btn-sm mode-btn ${isSmart?'active':''}" data-mode="smart" title="Smart Fit 100vw - No horizontal scroll">⚡ Smart Fit</button>
+                <button class="btn btn-sm mode-btn ${!isSmart?'active':''}" data-mode="full" title="Spreadsheet mode">📋 Full Spread</button>
+              </div>
               <button class="btn btn-secondary btn-sm" id="btn-assign-sites-to-user">➕ Assign Websites</button>
             </div>
           </div>
           <div class="table-wrap">
-            <table>
-              <thead><tr>
-                <th>#</th>
-                <th>Website URL</th>
-                <th>Company</th>
-                <th>Maintenance</th>
-                <th>Report Sent</th>
-                <th>ClickUp Link</th>
-                <th>GA4 Report</th>
-                <th>Newsletter Mail</th>
-                <th>Form Submission Mail</th>
-                <th>Client Response</th>
-                <th>Booking Engine</th>
-                <th>UPTimeRobot</th>
-                <th>Cloudflare</th>
-                <th>Actions</th>
-              </tr></thead>
-              <tbody>${rows.map((r,i) => siteRow(r, i)).join('')}</tbody>
+            <table class="${isSmart ? 'table-smart-fit' : 'table-full-spread'}">
+              <thead>
+                ${isSmart ? `
+                  <tr>
+                    <th style="width:36px">#</th>
+                    <th>Website &amp; Account</th>
+                    <th style="width:175px">Maintenance &amp; Report</th>
+                    <th style="width:125px">Tasks &amp; Links</th>
+                    <th>Integrations</th>
+                    <th style="width:110px">Monitoring</th>
+                    <th style="width:95px">Response</th>
+                    <th style="width:80px;text-align:right">Actions</th>
+                  </tr>
+                ` : `
+                  <tr>
+                    <th>#</th>
+                    <th>Website URL</th>
+                    <th>Company</th>
+                    <th>Maintenance</th>
+                    <th>Report Sent</th>
+                    <th>ClickUp Link</th>
+                    <th>GA4 Report</th>
+                    <th>Newsletter Mail</th>
+                    <th>Form Submission Mail</th>
+                    <th>Client Response</th>
+                    <th>Booking Engine</th>
+                    <th>UPTimeRobot</th>
+                    <th>Cloudflare</th>
+                    <th>Actions</th>
+                  </tr>
+                `}
+              </thead>
+              <tbody id="user-sites-tbody">${rows.map((r,i) => siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}</tbody>
             </table>
           </div>
         </div>`;
+
+      // Mode toggle
+      panel.querySelectorAll('#user-table-mode-toggle .mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.dataset.mode;
+          S.tableMode = mode;
+          try { localStorage.setItem('officeos_table_mode', mode); } catch {}
+          loadUser(userId, userName);
+        });
+      });
 
       // Wire up Assign Websites button
       const assignBtn = $('btn-assign-sites-to-user');
@@ -715,9 +1123,62 @@ async function viewAllUsers() {
 
       // Wire up edit buttons
       panel.querySelectorAll('.edit-dr-row-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const r = rows.find(x => x.id === btn.dataset.id);
           if (r) editDailyReviewRowModal(r, () => loadUser(userId, userName));
+        });
+      });
+
+      // Quick 1-click toggle for Report Sent
+      panel.querySelectorAll('.btn-report-toggle').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const { rowId, status } = btn.dataset;
+          const newStatus = status === 'sent' ? 'no' : 'sent';
+          const newRaw = newStatus === 'sent' ? 'Yes' : 'No';
+          try {
+            await PUT(`/api/master/daily-review/${rowId}`, {
+              reportSentStatus: newStatus,
+              reportSentRaw: newRaw
+            });
+            btn.dataset.status = newStatus;
+            btn.className = `btn-report-toggle ${newStatus === 'sent' ? 'sent' : 'pending'}`;
+            btn.textContent = newStatus === 'sent' ? '✉️ Sent' : '✉️ No';
+            toast(`Report marked ${newRaw}`, 'success');
+          } catch (err) { toast(err.message, 'error'); }
+        });
+      });
+
+      // Toggle detail accordion
+      panel.querySelectorAll('.toggle-detail-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          const detailRow = $(`detail-row-${id}`);
+          const parentTr = panel.querySelector(`tr[data-id="${id}"]:not(.detail-accordion-row)`);
+          if (detailRow) {
+            const isHidden = detailRow.classList.contains('hidden');
+            detailRow.classList.toggle('hidden', !isHidden);
+            if (parentTr) parentTr.classList.toggle('active-row', isHidden);
+            btn.textContent = isHidden ? '🔼' : '👁️';
+          }
+        });
+      });
+
+      // Click on smart-row to toggle detail accordion
+      panel.querySelectorAll('tr.smart-row').forEach(tr => {
+        tr.addEventListener('click', (e) => {
+          if (['A', 'BUTTON', 'SELECT', 'INPUT'].includes(e.target.tagName) || e.target.closest('button, a, select, input')) return;
+          const id = tr.dataset.id;
+          const detailRow = $(`detail-row-${id}`);
+          const toggleBtn = tr.querySelector('.toggle-detail-btn');
+          if (detailRow) {
+            const isHidden = detailRow.classList.contains('hidden');
+            detailRow.classList.toggle('hidden', !isHidden);
+            tr.classList.toggle('active-row', isHidden);
+            if (toggleBtn) toggleBtn.textContent = isHidden ? '🔼' : '👁️';
+          }
         });
       });
 
@@ -775,8 +1236,8 @@ async function viewSites() {
           </div>
         </div>
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>URL</th><th>Account</th><th>Company</th><th>CMS</th><th>A/C Manager</th><th>Domain Expiry</th><th>Latest Maint.</th><th>Uptime</th><th>Assignees</th><th>Actions</th></tr></thead>
+          <table class="table-smart-fit">
+            <thead><tr><th>Website</th><th>Account</th><th>Company</th><th>CMS</th><th>A/C Manager</th><th>Domain Expiry</th><th>Latest Maint.</th><th>Uptime</th><th>Assignees</th><th>Actions</th></tr></thead>
             <tbody id="sites-tbody">
               ${sites.map(s => siteFullRow(s)).join('')}
             </tbody>
@@ -1060,7 +1521,7 @@ async function viewTasks() {
       <div class="card">
         <div class="card-header"><span class="card-title">📋 Tasks (${tasks.length})</span></div>
         <div class="table-wrap">
-          <table>
+          <table class="table-smart-fit">
             <thead><tr><th>Task</th><th>Site</th><th>Assignee</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th><th>Actions</th></tr></thead>
             <tbody id="tasks-tbody">
               ${tasks.map(t => taskRow(t)).join('')}
@@ -1210,7 +1671,7 @@ async function viewDomainExpiry() {
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title">📅 All Domains</span></div>
-        <div class="table-wrap"><table>
+        <div class="table-wrap"><table class="table-smart-fit">
           <thead><tr><th>URL</th><th>Account</th><th>Company</th><th>A/C Manager</th><th>CMS</th><th>Expiry Date</th><th>Status</th></tr></thead>
           <tbody>
             ${domains.map(d => `<tr>
@@ -1341,7 +1802,7 @@ async function viewProperties() {
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title">🏢 Properties (${properties.length})</span></div>
-        <div class="table-wrap"><table>
+        <div class="table-wrap"><table class="table-smart-fit">
           <thead><tr><th>Property</th><th>URL</th><th>Type</th><th>Status</th><th>SEO</th><th>H&amp;M</th><th>SEO Assignee</th><th>Web Assignee</th><th>Actions</th></tr></thead>
           <tbody id="prop-tbody">
             ${properties.map(p=>`

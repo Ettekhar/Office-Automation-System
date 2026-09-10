@@ -3,94 +3,169 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Office Automation Dashboard</title>
-  <meta name="description" content="Centralized management dashboard for website maintenance, tasks, domain tracking and team coordination.">
+  <title>OfficeOS — Modern Enterprise Automation Platform</title>
+  <meta name="description" content="State-of-the-art centralized management dashboard for website maintenance, tasks, domain tracking, and team coordination.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/master.css">
 </head>
 <body>
 
-<!-- ░░ LANDING SCREEN ░░ -->
+<!-- ░░ LANDING / ROLE PORTAL ░░ -->
 <div id="landing-screen">
   <div class="landing-bg">
     <div class="landing-glow g1"></div>
     <div class="landing-glow g2"></div>
     <div class="landing-glow g3"></div>
+    <div class="landing-grid-overlay"></div>
   </div>
   <div class="landing-card">
-    <div class="landing-logo">
-      <span class="logo-icon">⚡</span>
-      <span class="logo-text">OfficeOS</span>
+    <div class="landing-header">
+      <div class="landing-logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">OfficeOS</span>
+        <span class="version-tag">v2.4 PRO</span>
+      </div>
+      <h1 class="landing-title">Enterprise Operations<br><span class="gradient-text">Unified Dashboard</span></h1>
+      <p class="landing-sub">Select your workspace role and team profile to enter your personalized dashboard</p>
     </div>
-    <h1 class="landing-title">Office Automation<br><span class="gradient-text">Dashboard</span></h1>
-    <p class="landing-sub">Select your role and name to enter your personalized workspace</p>
+
     <div id="landing-status"></div>
+
     <div class="landing-form">
       <div class="form-group">
-        <label class="form-label">Access Level</label>
-        <select id="role-select" class="form-select">
-          <option value="user">👤  User</option>
-          <option value="admin">🔑  Admin</option>
-          <option value="superadmin">👑  Superadmin</option>
+        <label class="form-label">Select Workspace Role</label>
+        <div class="role-cards-grid" id="role-cards">
+          <div class="role-card active" data-role="user">
+            <div class="rc-icon">👤</div>
+            <div class="rc-info">
+              <div class="rc-title">Team Member</div>
+              <div class="rc-desc">Daily checklist &amp; assigned tasks</div>
+            </div>
+          </div>
+          <div class="role-card" data-role="admin">
+            <div class="rc-icon">🔑</div>
+            <div class="rc-info">
+              <div class="rc-title">Operations Admin</div>
+              <div class="rc-desc">Manage sites &amp; team progress</div>
+            </div>
+          </div>
+          <div class="role-card" data-role="superadmin">
+            <div class="rc-icon">👑</div>
+            <div class="rc-info">
+              <div class="rc-title">Superadmin</div>
+              <div class="rc-desc">Full system access &amp; sheet sync</div>
+            </div>
+          </div>
+        </div>
+        <select id="role-select" class="form-select hidden">
+          <option value="user" selected>user</option>
+          <option value="admin">admin</option>
+          <option value="superadmin">superadmin</option>
         </select>
       </div>
+
       <div class="form-group" id="user-select-wrap">
-        <label class="form-label">Your Name</label>
-        <select id="user-name-select" class="form-select">
-          <option>Loading…</option>
-        </select>
+        <label class="form-label">Team Profile</label>
+        <div class="select-wrapper">
+          <select id="user-name-select" class="form-select">
+            <option>Loading profiles…</option>
+          </select>
+        </div>
       </div>
+
       <button id="enter-btn" class="btn-enter">
-        <span>Enter Dashboard</span>
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span>Enter Workspace</span>
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
+    </div>
+
+    <div class="landing-footer-note">
+      <span>🔒 Secure End-to-End Enterprise Sync</span>
+      <span>•</span>
+      <span>6 Connected Sheets</span>
     </div>
   </div>
 </div>
 
-<!-- ░░ APP SHELL ░░ -->
+<!-- ░░ MAIN APP SHELL ░░ -->
 <div id="app-shell" class="hidden">
 
   <!-- Sidebar -->
   <aside id="sidebar">
     <div class="sidebar-header">
-      <span class="logo-icon sm">⚡</span>
-      <span class="sidebar-brand">OfficeOS</span>
-      <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse">‹</button>
+      <div class="brand-badge">
+        <span class="logo-icon sm">⚡</span>
+        <div class="brand-meta">
+          <span class="sidebar-brand">OfficeOS</span>
+          <span class="sidebar-sub">Operations Suite</span>
+        </div>
+      </div>
+      <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse sidebar">‹</button>
     </div>
 
-    <div class="sidebar-user">
-      <div class="user-avatar" id="user-avatar">T</div>
+    <div class="sidebar-user-card" id="sidebar-user-card">
+      <div class="user-avatar-wrap">
+        <div class="user-avatar" id="user-avatar">T</div>
+        <span class="avatar-status-dot online"></span>
+      </div>
       <div class="user-info">
         <div class="user-name" id="user-name-display">User</div>
-        <div class="user-role" id="user-role-display">user</div>
+        <div class="user-role-badge" id="user-role-display">USER</div>
       </div>
     </div>
 
     <nav id="sidebar-nav" class="sidebar-nav"></nav>
 
     <div class="sidebar-footer">
-      <button id="logout-btn" class="btn-sidebar-footer">
-        <span class="nav-icon">↩</span>
-        <span class="nav-label">Switch Role</span>
-      </button>
+      <div class="sidebar-quick-actions">
+        <button id="quick-sync-btn" class="btn-sidebar-action" title="Sync Google Sheets">
+          <span>🔄</span>
+          <span class="action-label">Quick Sync</span>
+        </button>
+        <button id="logout-btn" class="btn-sidebar-action" title="Switch user or role">
+          <span>↩</span>
+          <span class="action-label">Switch Role</span>
+        </button>
+      </div>
     </div>
   </aside>
 
-  <!-- Main -->
+  <!-- Main Content Wrap -->
   <div class="main-wrap">
+    <!-- Top Navigation Bar -->
     <header class="top-bar">
       <div class="top-bar-left">
-        <h1 id="page-title" class="page-title">Dashboard</h1>
-        <span id="page-subtitle" class="page-subtitle"></span>
+        <div class="page-title-wrap">
+          <h1 id="page-title" class="page-title">Dashboard</h1>
+          <span id="page-subtitle" class="page-subtitle"></span>
+        </div>
       </div>
+
+      <!-- Quick Command Bar Search -->
+      <div class="top-bar-center">
+        <div class="quick-search-trigger" id="cmd-palette-trigger">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span class="search-placeholder">Quick search websites, tasks, team...</span>
+          <kbd class="search-kbd">Ctrl K</kbd>
+        </div>
+      </div>
+
       <div class="top-bar-right">
+        <!-- Quick Role Switcher Buttons -->
+        <div class="quick-role-switcher" id="quick-role-switcher">
+          <button class="role-pill-btn" data-role="user" title="Switch to User view">👤 User</button>
+          <button class="role-pill-btn" data-role="admin" title="Switch to Admin view">🔑 Admin</button>
+          <button class="role-pill-btn" data-role="superadmin" title="Switch to Superadmin view">👑 Superadmin</button>
+        </div>
+
         <div id="sync-status" class="sync-badge hidden">
           <span class="sync-dot"></span>
-          <span id="sync-status-text">Synced just now</span>
+          <span id="sync-status-text">Synced</span>
         </div>
-        <button id="refresh-btn" class="btn-icon" title="Refresh data">
+
+        <button id="refresh-btn" class="btn-icon" title="Refresh live data">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         </button>
       </div>
@@ -100,7 +175,19 @@
   </div>
 </div>
 
-<!-- ░░ MODAL ░░ -->
+<!-- ░░ COMMAND PALETTE MODAL ░░ -->
+<div id="cmd-overlay" class="modal-overlay hidden">
+  <div class="cmd-box">
+    <div class="cmd-input-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="cmd-input" placeholder="Type a website URL, task, team member, or command..." autocomplete="off">
+      <span class="cmd-esc-hint">ESC to close</span>
+    </div>
+    <div id="cmd-results" class="cmd-results"></div>
+  </div>
+</div>
+
+<!-- ░░ GENERAL PURPOSE MODAL ░░ -->
 <div id="modal-overlay" class="modal-overlay hidden">
   <div id="modal-box" class="modal-box">
     <div class="modal-header">
@@ -112,9 +199,10 @@
   </div>
 </div>
 
-<!-- ░░ TOAST ░░ -->
+<!-- ░░ TOAST CONTAINER ░░ -->
 <div id="toast-container" class="toast-container"></div>
 
 <script src="/master-app.js"></script>
 </body>
 </html>
+
