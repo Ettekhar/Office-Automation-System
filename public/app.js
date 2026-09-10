@@ -276,7 +276,7 @@ function populateWorkspaceSelect() {
 function populateMonthSelect() {
   if (!currentOverview) return;
   monthSelect.innerHTML = '';
-  
+
   for (const m of currentOverview.availableMonths) {
     const opt = document.createElement('option');
     opt.value = m;
@@ -427,12 +427,12 @@ function renderSitesTable() {
         statusBadge = `<span class="badge badge-no_tab">No Tab</span>`;
       }
 
-      const editedBadge = preview && preview.isCustomEdited 
-        ? `<span class="tag tag-edited" title="Custom edits saved">✏️ Edited</span>` 
+      const editedBadge = preview && preview.isCustomEdited
+        ? `<span class="tag tag-edited" title="Custom edits saved">✏️ Edited</span>`
         : '';
 
-      const monthStatusDisplay = site.monthCell 
-        ? `<strong>${escapeHtml(site.monthCell)}</strong>` 
+      const monthStatusDisplay = site.monthCell
+        ? `<strong>${escapeHtml(site.monthCell)}</strong>`
         : '<span style="color:var(--text-subtle);">&mdash;</span>';
 
       const acctClass = (site.account || 'cw').toLowerCase();
@@ -455,15 +455,15 @@ function renderSitesTable() {
           <td class="col-month">${monthStatusDisplay}</td>
           <td class="col-contacts">
             <div class="contacts-wrapper">
-              ${site.contacts.length > 0 
-                ? site.contacts.map(c => `<div class="contact-email">${escapeHtml(c)}</div>`).join('') 
-                : '<span style="color:var(--text-subtle); font-size:11px;">(None)</span>'}
+              ${site.contacts.length > 0
+          ? site.contacts.map(c => `<div class="contact-email">${escapeHtml(c)}</div>`).join('')
+          : '<span style="color:var(--text-subtle); font-size:11px;">(None)</span>'}
             </div>
           </td>
           <td class="col-tab">
-            ${site.matchedTab 
-              ? `<span class="tag tag-tab" title="${escapeHtml(site.matchedTab)}">${escapeHtml(site.matchedTab.slice(0, 24))}${site.matchedTab.length > 24 ? '...' : ''}</span>` 
-              : '<span style="color:var(--text-subtle); font-size:11px;">(No tab)</span>'}
+            ${site.matchedTab
+          ? `<span class="tag tag-tab" title="${escapeHtml(site.matchedTab)}">${escapeHtml(site.matchedTab.slice(0, 24))}${site.matchedTab.length > 24 ? '...' : ''}</span>`
+          : '<span style="color:var(--text-subtle); font-size:11px;">(No tab)</span>'}
           </td>
           <td class="col-meta">
             <div style="font-size:12px;">${escapeHtml(site.cms || '&mdash;')}</div>
@@ -546,7 +546,7 @@ async function openPreviewModal(websiteUrl, account = null) {
     editSubjectInput.value = '';
     rawHtmlTextarea.value = '';
     previewIframe.srcdoc = '<p style="font-family:sans-serif;padding:20px;color:#666;">Rendering live email preview from Google Sheet...</p>';
-    
+
     switchEditorTab('visual');
     previewModal.classList.remove('hidden');
 
@@ -567,7 +567,7 @@ async function openPreviewModal(websiteUrl, account = null) {
 
     currentPreviewSite = previewData;
     modalSiteTitle.textContent = `Report: ${previewData.websiteUrl}`;
-    
+
     const acctKey = previewData.account || 'CW';
     modalAccountTag.textContent = `${acctKey} (${previewData.fromEmail || 'SMTP'})`;
     modalAccountTag.className = `tag tag-account ${acctKey.toLowerCase()}`;
@@ -862,7 +862,7 @@ sendSelectedBtn.addEventListener('click', async () => {
           preview.isCustomEdited = false;
           generatedPreviews.set(url, preview);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     if (preview) selectedPreviews.push(preview);
   }
@@ -979,7 +979,7 @@ function renderHistoryTable() {
 
   historyTableBody.innerHTML = sentHistory
     .map((item) => {
-      const badge = item.status === 'sent' 
+      const badge = item.status === 'sent'
         ? (item.isDryRun ? '<span class="badge badge-in_progress">📝 Dry Run</span>' : '<span class="badge badge-sent">✅ Delivered</span>')
         : '<span class="badge badge-failed">❌ Failed</span>';
 
@@ -1067,13 +1067,45 @@ let refreshInProgress = false;
 
 // ─── Smart merge helpers ──────────────────────────────────────────────────────
 
+// Find the LAST match of a global regex in a string. Returns {index, match} or null.
+// Used instead of String#search() (which only ever returns the FIRST match) so
+// that when a user's own added paragraph happens to contain the phrase
+// "Best regards" (e.g. they typed a personal sign-off), we still anchor on the
+// real template signature line rather than the one buried in their edit.
+function lastMatch(str, globalRe) {
+  let m, last = null;
+  const re = new RegExp(globalRe.source, globalRe.flags.includes('g') ? globalRe.flags : globalRe.flags + 'g');
+  while ((m = re.exec(str)) !== null) {
+    last = { index: m.index, match: m[0] };
+    if (m.index === re.lastIndex) re.lastIndex++; // avoid infinite loop on zero-length match
+  }
+  return last;
+}
+
+// Collapse two (or more) sign-offs that end up adjacent to each other, e.g.
+// "...here.\n\nBest Regards,\n\nBest Regards," -> "...here.\n\nBest Regards,"
+// This is a defensive last line of protection inside reapplyInjection() so
+// that even in an edge case we haven't anticipated, a duplicated "Best
+// Regards," can never survive into the merged HTML.
+function dedupeSignoff(html) {
+  const dupeRe = /((?:<[^>]*>)?\s*Best\s+[Rr]egards,?\s*)(?:\s|<br\s*\/?>|<\/?p>)*\1/i;
+  let out = html;
+  for (let i = 0; i < 3 && dupeRe.test(out); i++) {
+    out = out.replace(dupeRe, '$1');
+  }
+  return out;
+}
+
 /**
  * Find what the user ADDED between the original and edited HTML.
  *
  * PRIMARY strategy — "Best Regards" anchor:
  *   Since users almost always insert content just before "Best regards",
- *   we find that line in both versions and compare what sits before it.
- *   This is immune to CRLF/LF differences and minor whitespace changes.
+ *   we find the LAST occurrence of that line in both versions (the real
+ *   sign-off, not an accidental match inside the user's own new text) and
+ *   compare what sits before it. This is immune to CRLF/LF differences,
+ *   minor whitespace changes, and to the user's addition itself containing
+ *   the phrase "Best regards".
  *
  * FALLBACK — character diff with sanity check:
  *   Used when "Best regards" isn't found. Normalises line endings first,
@@ -1093,25 +1125,32 @@ function extractCustomInjection(originalHtml, editedHtml) {
 
   if (orig === edit) return null;
 
-  // ── Primary: use "Best Regards" as the split-point ──────────────────────
-  const brRe = /(<[^>]*>)?\s*Best\s+[Rr]egards/;
-  const origBrIdx = orig.search(brRe);
-  const editBrIdx = edit.search(brRe);
+  // ── Primary: use the LAST "Best Regards" as the split-point ─────────────
+  const brRe = /(<[^>]*>)?\s*Best\s+[Rr]egards/gi;
+  const origBr = lastMatch(orig, brRe);
+  const editBr = lastMatch(edit, brRe);
 
-  if (origBrIdx > 0 && editBrIdx > 0) {
-    const origBeforeBr = orig.slice(0, origBrIdx);
-    const editBeforeBr = edit.slice(0, editBrIdx);
+  if (origBr && editBr) {
+    const origBeforeBr = orig.slice(0, origBr.index);
+    const editBeforeBr = edit.slice(0, editBr.index);
 
     // Find the common prefix up to the BR section
     let pre = 0;
     const minLen = Math.min(origBeforeBr.length, editBeforeBr.length);
     while (pre < minLen && origBeforeBr[pre] === editBeforeBr[pre]) pre++;
 
-    const injectedHtml = editBeforeBr.slice(pre).trim();
+    let injectedHtml = editBeforeBr.slice(pre).trim();
+
+    // Safety net: if the user's own addition ends with its own sign-off
+    // (e.g. they typed "...thanks, Best Regards," under the new paragraph),
+    // strip it here — the real anchor below already supplies the actual
+    // template signature, so keeping this would duplicate it on every
+    // future refresh.
+    injectedHtml = injectedHtml.replace(/(<[^>]*>)?\s*Best\s+[Rr]egards,?\s*$/i, '').trim();
+
     if (injectedHtml) {
       // anchor = the exact "Best regards" tag sequence from the original
-      const anchorMatch = orig.slice(origBrIdx).match(brRe);
-      const anchor = anchorMatch ? anchorMatch[0] : '';
+      const anchor = origBr.match;
       return { injectedHtml, anchor };
     }
     return null; // nothing was added before Best Regards
@@ -1129,7 +1168,7 @@ function extractCustomInjection(originalHtml, editedHtml) {
     orig[orig.length - 1 - suf] === edit[edit.length - 1 - suf]
   ) suf++;
 
-  const injectedHtml = edit.slice(pre, edit.length - suf).trim();
+  let injectedHtml = edit.slice(pre, edit.length - suf).trim();
 
   // Sanity check: if the "injection" is > 60 % of the original something went
   // wrong (e.g. the whole email body was captured). Return null in that case.
@@ -1146,8 +1185,12 @@ function extractCustomInjection(originalHtml, editedHtml) {
  * Re-insert injectedHtml into freshHtml at the right position.
  *
  * 1. Try the stored anchor text (exact substring match).
- * 2. Fall back to injecting before the "Best regards" block.
+ * 2. Fall back to injecting before the LAST "Best regards" block.
  * 3. Last resort: inject before </body>, or append.
+ *
+ * A final dedupeSignoff() pass runs on whichever path was taken, so a
+ * duplicated sign-off can never make it into the merged HTML even if
+ * something upstream produced an unexpected anchor/injection pair.
  */
 function reapplyInjection(freshHtml, injectedHtml, anchor) {
   if (!freshHtml || !injectedHtml) return freshHtml;
@@ -1155,27 +1198,36 @@ function reapplyInjection(freshHtml, injectedHtml, anchor) {
   // Normalise before searching
   const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const fresh = norm(freshHtml);
-  const inj   = injectedHtml.trim();
+  const inj = injectedHtml.trim();
+
+  let merged = null;
 
   // 1. Exact anchor match
   if (anchor) {
     const idx = fresh.indexOf(anchor);
     if (idx !== -1) {
-      return fresh.slice(0, idx) + '\n' + inj + '\n' + fresh.slice(idx);
+      merged = fresh.slice(0, idx) + '\n' + inj + '\n' + fresh.slice(idx);
     }
   }
 
-  // 2. Best Regards fallback (primary injection point for this workflow)
-  const brMatch = fresh.match(/(<[^>]*>)?\s*Best\s+[Rr]egards/);
-  if (brMatch) {
-    const pos = fresh.indexOf(brMatch[0]);
-    return fresh.slice(0, pos) + '\n' + inj + '\n' + fresh.slice(pos);
+  // 2. Best Regards fallback — use the LAST occurrence, the real signature line
+  if (!merged) {
+    const brMatch = lastMatch(fresh, /(<[^>]*>)?\s*Best\s+[Rr]egards/gi);
+    if (brMatch) {
+      merged = fresh.slice(0, brMatch.index) + '\n' + inj + '\n' + fresh.slice(brMatch.index);
+    }
   }
 
   // 3. Last resort
-  const bodyClose = fresh.lastIndexOf('</body>');
-  if (bodyClose !== -1) return fresh.slice(0, bodyClose) + '\n' + inj + '\n' + fresh.slice(bodyClose);
-  return fresh + '\n' + inj;
+  if (!merged) {
+    const bodyClose = fresh.lastIndexOf('</body>');
+    merged = bodyClose !== -1
+      ? fresh.slice(0, bodyClose) + '\n' + inj + '\n' + fresh.slice(bodyClose)
+      : fresh + '\n' + inj;
+  }
+
+  // Defensive net: collapse any adjacent duplicate sign-offs
+  return dedupeSignoff(merged);
 }
 
 
@@ -1195,7 +1247,7 @@ async function doRefresh(keepEdits = false) {
     refreshBtn.innerHTML = REFRESH_BTN_LOADING_HTML;
 
     // Always invalidate the server-side Sheets cache so fresh data comes from Google
-    await fetch('/api/cache/invalidate', { method: 'POST' }).catch(() => {});
+    await fetch('/api/cache/invalidate', { method: 'POST' }).catch(() => { });
 
     if (keepEdits) {
       // Collect customized previews before clearing
@@ -1338,4 +1390,3 @@ function escapeHtml(str) {
 // Initial Load
 fetchAccounts();
 loadOverview();
-
