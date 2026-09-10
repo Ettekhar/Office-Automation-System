@@ -1068,26 +1068,60 @@ let refreshInProgress = false;
 // ─── Smart merge helpers ──────────────────────────────────────────────────────
 
 /**
- * Find what the user ADDED to originalHtml to produce editedHtml.
- * Uses the longest-common-prefix + longest-common-suffix method so the
- * "injected" slice is the minimal edit between the two strings.
+ * Find what the user ADDED between the original and edited HTML.
  *
- * Returns { injectedHtml, anchor } where anchor is the first 200 chars
- * of the common suffix — used to find the re-injection point in new HTML.
- * Returns null if the two strings are identical.
+ * PRIMARY strategy — "Best Regards" anchor:
+ *   Since users almost always insert content just before "Best regards",
+ *   we find that line in both versions and compare what sits before it.
+ *   This is immune to CRLF/LF differences and minor whitespace changes.
+ *
+ * FALLBACK — character diff with sanity check:
+ *   Used when "Best regards" isn't found. Normalises line endings first,
+ *   then does longest-common-prefix + longest-common-suffix. If the
+ *   computed "injection" is > 60 % of the original (a sign the diff went
+ *   wrong), we return null rather than duplicating the whole email.
+ *
+ * Returns { injectedHtml, anchor } or null.
  */
 function extractCustomInjection(originalHtml, editedHtml) {
-  if (!originalHtml || !editedHtml || originalHtml === editedHtml) return null;
+  if (!originalHtml || !editedHtml) return null;
 
-  const orig = originalHtml;
-  const edit = editedHtml;
+  // Normalise line-endings so CRLF (Windows) vs LF (Unix) never breaks the diff
+  const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const orig = norm(originalHtml);
+  const edit = norm(editedHtml);
 
-  // Find common prefix length
+  if (orig === edit) return null;
+
+  // ── Primary: use "Best Regards" as the split-point ──────────────────────
+  const brRe = /(<[^>]*>)?\s*Best\s+[Rr]egards/;
+  const origBrIdx = orig.search(brRe);
+  const editBrIdx = edit.search(brRe);
+
+  if (origBrIdx > 0 && editBrIdx > 0) {
+    const origBeforeBr = orig.slice(0, origBrIdx);
+    const editBeforeBr = edit.slice(0, editBrIdx);
+
+    // Find the common prefix up to the BR section
+    let pre = 0;
+    const minLen = Math.min(origBeforeBr.length, editBeforeBr.length);
+    while (pre < minLen && origBeforeBr[pre] === editBeforeBr[pre]) pre++;
+
+    const injectedHtml = editBeforeBr.slice(pre).trim();
+    if (injectedHtml) {
+      // anchor = the exact "Best regards" tag sequence from the original
+      const anchorMatch = orig.slice(origBrIdx).match(brRe);
+      const anchor = anchorMatch ? anchorMatch[0] : '';
+      return { injectedHtml, anchor };
+    }
+    return null; // nothing was added before Best Regards
+  }
+
+  // ── Fallback: normalised character-level diff ────────────────────────────
   let pre = 0;
   const minLen = Math.min(orig.length, edit.length);
   while (pre < minLen && orig[pre] === edit[pre]) pre++;
 
-  // Find common suffix length (must not overlap prefix)
   let suf = 0;
   while (
     suf < orig.length - pre &&
@@ -1095,43 +1129,56 @@ function extractCustomInjection(originalHtml, editedHtml) {
     orig[orig.length - 1 - suf] === edit[edit.length - 1 - suf]
   ) suf++;
 
-  const injectedHtml = edit.slice(pre, edit.length - suf);
-  // Anchor: first 200 chars of the common suffix (the text that immediately
-  // follows the injection in the original — we'll search for this in fresh HTML)
+  const injectedHtml = edit.slice(pre, edit.length - suf).trim();
+
+  // Sanity check: if the "injection" is > 60 % of the original something went
+  // wrong (e.g. the whole email body was captured). Return null in that case.
+  if (!injectedHtml || injectedHtml.length > orig.length * 0.6) return null;
+
   const anchor = suf > 0
     ? orig.slice(orig.length - suf, orig.length - suf + 200).trim()
     : '';
 
-  return injectedHtml ? { injectedHtml, anchor } : null;
+  return { injectedHtml, anchor };
 }
 
 /**
- * Re-insert injectedHtml into freshHtml at the position identified by anchor.
- * Falls back to finding "Best regards" if anchor is not found in fresh HTML.
+ * Re-insert injectedHtml into freshHtml at the right position.
+ *
+ * 1. Try the stored anchor text (exact substring match).
+ * 2. Fall back to injecting before the "Best regards" block.
+ * 3. Last resort: inject before </body>, or append.
  */
 function reapplyInjection(freshHtml, injectedHtml, anchor) {
   if (!freshHtml || !injectedHtml) return freshHtml;
 
-  // Try the exact anchor first
+  // Normalise before searching
+  const norm = (s) => s.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const fresh = norm(freshHtml);
+  const inj   = injectedHtml.trim();
+
+  // 1. Exact anchor match
   if (anchor) {
-    const idx = freshHtml.indexOf(anchor);
+    const idx = fresh.indexOf(anchor);
     if (idx !== -1) {
-      return freshHtml.slice(0, idx) + injectedHtml + freshHtml.slice(idx);
+      return fresh.slice(0, idx) + '\n' + inj + '\n' + fresh.slice(idx);
     }
   }
 
-  // Fallback: inject before the "Best regards" block
-  const brMatch = freshHtml.match(/<[^>]*>\s*Best\s+regards/i);
+  // 2. Best Regards fallback (primary injection point for this workflow)
+  const brMatch = fresh.match(/(<[^>]*>)?\s*Best\s+[Rr]egards/);
   if (brMatch) {
-    const pos = freshHtml.indexOf(brMatch[0]);
-    return freshHtml.slice(0, pos) + injectedHtml + freshHtml.slice(pos);
+    const pos = fresh.indexOf(brMatch[0]);
+    return fresh.slice(0, pos) + '\n' + inj + '\n' + fresh.slice(pos);
   }
 
-  // Last resort: inject before </body> or append
-  const bodyClose = freshHtml.lastIndexOf('</body>');
-  if (bodyClose !== -1) return freshHtml.slice(0, bodyClose) + injectedHtml + freshHtml.slice(bodyClose);
-  return freshHtml + injectedHtml;
+  // 3. Last resort
+  const bodyClose = fresh.lastIndexOf('</body>');
+  if (bodyClose !== -1) return fresh.slice(0, bodyClose) + '\n' + inj + '\n' + fresh.slice(bodyClose);
+  return fresh + '\n' + inj;
 }
+
+
 
 /**
  * Core refresh logic.
