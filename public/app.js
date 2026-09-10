@@ -561,6 +561,7 @@ async function openPreviewModal(websiteUrl, account = null) {
       }
       previewData = await res.json();
       previewData.isCustomEdited = false;
+      previewData.baseHtml = previewData.html; // store original for smart merge on refresh
       generatedPreviews.set(websiteUrl, previewData);
     }
 
@@ -629,14 +630,25 @@ modalSaveCustomBtn.addEventListener('click', () => {
   const subject = editSubjectInput.value.trim();
   const html = rawHtmlTextarea.value.trim() || currentPreviewSite.html;
 
+  // Extract what was added/changed vs the original sheet HTML so we can
+  // re-apply it automatically after a refresh (smart merge).
+  const injection = extractCustomInjection(
+    currentPreviewSite.baseHtml || currentPreviewSite.html,
+    html
+  );
+
   currentPreviewSite.contacts = toRecipients;
   currentPreviewSite.subject = subject;
   currentPreviewSite.html = html;
   currentPreviewSite.isCustomEdited = true;
+  if (injection) {
+    currentPreviewSite.customInjection = injection.injectedHtml;
+    currentPreviewSite.injectionAnchor = injection.anchor;
+  }
 
   generatedPreviews.set(currentPreviewSite.websiteUrl, currentPreviewSite);
   modalEditedTag.classList.remove('hidden');
-  showToast('Custom changes saved for this report! It will be used when sending.');
+  showToast('Custom changes saved! Will be re-applied automatically after refresh.');
   renderSitesTable();
 });
 
@@ -1053,9 +1065,79 @@ const REFRESH_BTN_LOADING_HTML = `
 // Guard: prevent stacking multiple refresh cycles from rapid button clicks
 let refreshInProgress = false;
 
+// ─── Smart merge helpers ──────────────────────────────────────────────────────
+
 /**
- * Core refresh logic. 
- * keepEdits=true  → preserve customized previews, only reload stats/list from Sheets
+ * Find what the user ADDED to originalHtml to produce editedHtml.
+ * Uses the longest-common-prefix + longest-common-suffix method so the
+ * "injected" slice is the minimal edit between the two strings.
+ *
+ * Returns { injectedHtml, anchor } where anchor is the first 200 chars
+ * of the common suffix — used to find the re-injection point in new HTML.
+ * Returns null if the two strings are identical.
+ */
+function extractCustomInjection(originalHtml, editedHtml) {
+  if (!originalHtml || !editedHtml || originalHtml === editedHtml) return null;
+
+  const orig = originalHtml;
+  const edit = editedHtml;
+
+  // Find common prefix length
+  let pre = 0;
+  const minLen = Math.min(orig.length, edit.length);
+  while (pre < minLen && orig[pre] === edit[pre]) pre++;
+
+  // Find common suffix length (must not overlap prefix)
+  let suf = 0;
+  while (
+    suf < orig.length - pre &&
+    suf < edit.length - pre &&
+    orig[orig.length - 1 - suf] === edit[edit.length - 1 - suf]
+  ) suf++;
+
+  const injectedHtml = edit.slice(pre, edit.length - suf);
+  // Anchor: first 200 chars of the common suffix (the text that immediately
+  // follows the injection in the original — we'll search for this in fresh HTML)
+  const anchor = suf > 0
+    ? orig.slice(orig.length - suf, orig.length - suf + 200).trim()
+    : '';
+
+  return injectedHtml ? { injectedHtml, anchor } : null;
+}
+
+/**
+ * Re-insert injectedHtml into freshHtml at the position identified by anchor.
+ * Falls back to finding "Best regards" if anchor is not found in fresh HTML.
+ */
+function reapplyInjection(freshHtml, injectedHtml, anchor) {
+  if (!freshHtml || !injectedHtml) return freshHtml;
+
+  // Try the exact anchor first
+  if (anchor) {
+    const idx = freshHtml.indexOf(anchor);
+    if (idx !== -1) {
+      return freshHtml.slice(0, idx) + injectedHtml + freshHtml.slice(idx);
+    }
+  }
+
+  // Fallback: inject before the "Best regards" block
+  const brMatch = freshHtml.match(/<[^>]*>\s*Best\s+regards/i);
+  if (brMatch) {
+    const pos = freshHtml.indexOf(brMatch[0]);
+    return freshHtml.slice(0, pos) + injectedHtml + freshHtml.slice(pos);
+  }
+
+  // Last resort: inject before </body> or append
+  const bodyClose = freshHtml.lastIndexOf('</body>');
+  if (bodyClose !== -1) return freshHtml.slice(0, bodyClose) + injectedHtml + freshHtml.slice(bodyClose);
+  return freshHtml + injectedHtml;
+}
+
+/**
+ * Core refresh logic.
+ * keepEdits=true  → re-fetch fresh email HTML from Sheets for each customized
+ *                   site, then re-inject the stored custom block at the same
+ *                   position. Latest sheet data + your edits = merged result.
  * keepEdits=false → full reset: clear everything including custom edits
  */
 async function doRefresh(keepEdits = false) {
@@ -1069,17 +1151,67 @@ async function doRefresh(keepEdits = false) {
     await fetch('/api/cache/invalidate', { method: 'POST' }).catch(() => {});
 
     if (keepEdits) {
-      // Smart merge: remove only un-edited previews; keep customized ones
+      // Collect customized previews before clearing
+      const customized = [];
       for (const [url, preview] of generatedPreviews.entries()) {
-        if (!preview.isCustomEdited) {
-          generatedPreviews.delete(url);
+        if (preview.isCustomEdited) {
+          customized.push({ url, preview });
+        }
+        generatedPreviews.delete(url); // clear all; will re-populate below
+      }
+
+      // Reload the overview (fresh data from Sheets)
+      await loadOverview(monthSelect.value || null, selectedAccount);
+
+      // Re-fetch fresh email HTML for each customized site and re-inject edits
+      let mergedCount = 0;
+      for (const { url, preview } of customized) {
+        try {
+          const month = currentOverview?.selectedMonth?.name || monthSelect?.value || '';
+          const acctParam = preview.account ? `&account=${encodeURIComponent(preview.account)}` : '';
+          const res = await fetch(
+            `/api/preview?websiteUrl=${encodeURIComponent(url)}&month=${encodeURIComponent(month)}${acctParam}`
+          );
+          if (!res.ok) throw new Error('fetch failed');
+          const freshData = await res.json();
+
+          // Re-apply the stored custom injection into fresh HTML
+          let mergedHtml = freshData.html;
+          if (preview.customInjection) {
+            mergedHtml = reapplyInjection(freshData.html, preview.customInjection, preview.injectionAnchor);
+          } else {
+            // No structured injection stored → keep the old custom HTML as-is
+            mergedHtml = preview.html;
+          }
+
+          freshData.html = mergedHtml;
+          freshData.baseHtml = freshData.html; // update base to new sheet content
+          freshData.isCustomEdited = true;
+          freshData.customInjection = preview.customInjection;
+          freshData.injectionAnchor = preview.injectionAnchor;
+
+          // Preserve custom subject / recipients if they were user-modified
+          if (preview.subject && preview.subject !== freshData.subject) {
+            freshData.subject = preview.subject;
+          }
+          const origContacts = Array.isArray(preview.contacts) ? preview.contacts.join(',') : preview.contacts;
+          const freshContacts = Array.isArray(freshData.contacts) ? freshData.contacts.join(',') : freshData.contacts;
+          if (origContacts !== freshContacts && preview.contacts?.length) {
+            freshData.contacts = preview.contacts;
+          }
+
+          generatedPreviews.set(url, freshData);
+          mergedCount++;
+        } catch (_) {
+          // If re-fetch fails, fall back to keeping the old custom version
+          generatedPreviews.set(url, preview);
+          mergedCount++;
         }
       }
-      const keptCount = generatedPreviews.size;
-      await loadOverview(monthSelect.value || null, selectedAccount);
+
       showToast(
-        keptCount > 0
-          ? `Refreshed! Kept ${keptCount} customized email(s) intact.`
+        mergedCount > 0
+          ? `Refreshed with latest sheet data. ${mergedCount} custom edit(s) re-applied.`
           : 'Data refreshed from Google Sheets!',
         'success'
       );
