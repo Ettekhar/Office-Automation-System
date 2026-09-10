@@ -2,6 +2,8 @@
  * masterApi.js
  * Server-side data aggregation for the Master Office Automation Dashboard.
  * Pulls from all 6 Google Sheets and normalises into clean JSON structures.
+ *
+ * getTabValues signature: getTabValues(tabName, range?, spreadsheetId?)
  */
 
 import { getTabValues, listTabTitles } from './sheets.js';
@@ -16,7 +18,8 @@ const SHEETS = {
   RM_MAINTENANCE:    '1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY',
 };
 
-// Users that have tabs in the Daily Review sheet
+const RANGE = 'A1:ZZ2000';
+
 export const DAILY_REVIEW_USERS = [
   'Toufiq', 'Sabbir', 'Taion', 'Medul', 'Saiful', 'Tarikul', 'Roeich', 'Asif'
 ];
@@ -42,11 +45,9 @@ function normaliseStatus(raw) {
 }
 
 // ─── Daily Review ─────────────────────────────────────────────────────────────
-/**
- * Get one user's daily review rows (their tab in the Daily Review sheet).
- */
 export async function getDailyReviewForUser(userName) {
-  const rows = await getTabValues(SHEETS.DAILY_REVIEW, userName);
+  // getTabValues(tabName, range, spreadsheetId)
+  const rows = await getTabValues(userName, RANGE, SHEETS.DAILY_REVIEW);
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0] || [];
@@ -63,7 +64,7 @@ export async function getDailyReviewForUser(userName) {
 
   return rows.slice(1).map((r, i) => {
     const url = (r[urlCol] || r[0] || '').trim();
-    if (!url || url.startsWith('http') === false && url.length < 5) return null;
+    if (!url || url.length < 5) return null;
     return {
       rowIndex: i + 2,
       url: url.replace(/^\s+/, ''),
@@ -82,24 +83,15 @@ export async function getDailyReviewForUser(userName) {
   }).filter(Boolean);
 }
 
-/**
- * Get all users' daily review data in one call.
- */
 export async function getAllDailyReview() {
   const result = {};
   for (const user of DAILY_REVIEW_USERS) {
-    try {
-      result[user] = await getDailyReviewForUser(user);
-    } catch {
-      result[user] = [];
-    }
+    try { result[user] = await getDailyReviewForUser(user); }
+    catch { result[user] = []; }
   }
   return result;
 }
 
-/**
- * Summary stats per user for the admin overview.
- */
 export async function getDailyReviewSummary() {
   const all = await getAllDailyReview();
   return Object.entries(all).map(([user, sites]) => ({
@@ -108,13 +100,13 @@ export async function getDailyReviewSummary() {
     completed: sites.filter(s => s.maintenance === 'completed').length,
     inProgress: sites.filter(s => s.maintenance === 'in_progress').length,
     pending: sites.filter(s => !['completed', 'in_progress'].includes(s.maintenance)).length,
-    reportSent: sites.filter(s => s.reportSent === 'sent' || s.reportSentRaw?.toLowerCase() === 'yes').length,
+    reportSent: sites.filter(s => s.reportSentRaw?.toLowerCase() === 'yes').length,
   }));
 }
 
 // ─── Domain Expiration ────────────────────────────────────────────────────────
 export async function getDomainExpiry() {
-  const rows = await getTabValues(SHEETS.MASTER_TRACKER, 'Domain Expiration Sheet');
+  const rows = await getTabValues('Domain Expiration Sheet', RANGE, SHEETS.MASTER_TRACKER);
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0] || [];
@@ -132,8 +124,7 @@ export async function getDomainExpiry() {
     const expiry = r[expiryCol] || '';
     const expiryDate = expiry ? new Date(expiry) : null;
     const daysLeft = expiryDate && !isNaN(expiryDate)
-      ? Math.ceil((expiryDate - new Date()) / 86400000)
-      : null;
+      ? Math.ceil((expiryDate - new Date()) / 86400000) : null;
     return {
       status: r[statusCol] || '',
       cms: r[cmsCol] || '',
@@ -149,9 +140,9 @@ export async function getDomainExpiry() {
   }).filter(Boolean);
 }
 
-// ─── Distribution / Work Sheet ───────────────────────────────────────────────
+// ─── Distribution / Work Sheet ────────────────────────────────────────────────
 export async function getDistributionSheet() {
-  const rows = await getTabValues(SHEETS.MASTER_TRACKER, 'Distribution and Work Sheet');
+  const rows = await getTabValues('Distribution and Work Sheet', RANGE, SHEETS.MASTER_TRACKER);
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0] || [];
@@ -181,7 +172,7 @@ export async function getDistributionSheet() {
 
 // ─── Task Load ────────────────────────────────────────────────────────────────
 export async function getTaskLoad() {
-  const rows = await getTabValues(SHEETS.MASTER_TRACKER, 'Task Load & Dependancy Solver');
+  const rows = await getTabValues('Task Load & Dependancy Solver', RANGE, SHEETS.MASTER_TRACKER);
   if (!rows || rows.length < 2) return [];
 
   return rows.slice(1).map(r => {
@@ -196,9 +187,9 @@ export async function getTaskLoad() {
   }).filter(Boolean);
 }
 
-// ─── Property Registry ───────────────────────────────────────────────────────
+// ─── Property Registry ────────────────────────────────────────────────────────
 export async function getPropertyRegistry() {
-  const rows = await getTabValues(SHEETS.PROPERTY_REGISTRY, 'Sheet1');
+  const rows = await getTabValues('Sheet1', RANGE, SHEETS.PROPERTY_REGISTRY);
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0] || [];
@@ -235,7 +226,7 @@ export async function getDevTracker() {
 
   for (const tab of tabs) {
     try {
-      const rows = await getTabValues(SHEETS.DEV_TRACKER, tab);
+      const rows = await getTabValues(tab, RANGE, SHEETS.DEV_TRACKER);
       if (!rows || rows.length < 2) continue;
 
       const headers = rows[0] || [];
@@ -257,9 +248,7 @@ export async function getDevTracker() {
         };
       }).filter(Boolean);
 
-      if (items.length) {
-        result.push({ project: tab, items });
-      }
+      if (items.length) result.push({ project: tab, items });
     } catch { /* skip inaccessible tabs */ }
   }
   return result;
@@ -268,22 +257,21 @@ export async function getDevTracker() {
 // ─── Maintenance Overview (CW + RM Website Lists) ────────────────────────────
 export async function getMaintenanceOverview() {
   const processSheet = async (sheetId, account) => {
-    const rows = await getTabValues(sheetId, 'Website List');
+    const rows = await getTabValues('Website List', RANGE, sheetId);
     if (!rows || rows.length < 3) return [];
 
     // Row 0 = note row, Row 1 = actual headers, Row 2+ = data
     const headers = rows[1] || [];
-    const noteCol  = 0;
+    const urlCol   = headerIndex(headers, 'website url');
     const cmsCol   = headerIndex(headers, 'cms');
     const compCol  = headerIndex(headers, 'company');
-    const urlCol   = headerIndex(headers, 'website url');
     const cuCol    = headerIndex(headers, 'maintenance task clickup');
     const reportCol= headerIndex(headers, 'maintenance report url');
     const backupCol= headerIndex(headers, 'backup url');
 
-    // Find the most recent month column (after backup col)
+    // Find the last month column (after index 9)
     const monthCols = headers.reduce((acc, h, i) => {
-      if (h && /[a-z]+ \d{2,4}/i.test(h) && i > 5) acc.push({ i, label: h });
+      if (h && /[a-z]+ \d{2,4}/i.test(h) && i > 9) acc.push({ i, label: h });
       return acc;
     }, []);
     const latestMonth = monthCols[monthCols.length - 1];
@@ -293,7 +281,7 @@ export async function getMaintenanceOverview() {
       if (!url.trim()) return null;
       return {
         account,
-        status: r[noteCol] || 'Active',
+        status: r[0] || 'Active',
         cms: r[cmsCol] || '',
         company: r[compCol] || '',
         url: url.trim(),
@@ -310,6 +298,5 @@ export async function getMaintenanceOverview() {
     processSheet(SHEETS.CW_MAINTENANCE, 'CW'),
     processSheet(SHEETS.RM_MAINTENANCE, 'RM'),
   ]);
-
   return [...cw, ...rm];
 }
