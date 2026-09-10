@@ -87,7 +87,7 @@ function now() { return new Date().toISOString(); }
 // ─── Step 1: Seed Users ───────────────────────────────────────────────────────
 function seedUsers() {
   report('Seeding users…', 2);
-  const existing = getUsers();
+  const existing = getUsers().filter(u => u && u.name);
   const existingMap = Object.fromEntries(existing.map(u => [u.name.toLowerCase(), u]));
 
   const merged = DEFAULT_USERS.map(du => {

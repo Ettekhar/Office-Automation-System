@@ -1,0 +1,656 @@
+[
+  {
+    "id": "5f0d6760-82b4-4bae-8575-5eedbfeb91fb",
+    "project": "AnsAngel coalition",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://ansangelscoalition.com/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "2026-08-07",
+        "notes": "Blog page , single blog page , Program page created",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://ansangelscoalition.com/moochies-story/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "2026-08-11",
+        "notes": "Updated some images what client gave us..all of them are team\nmember photos\n",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 2,
+        "url": "https://ansangelscoalition.com/about-us/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 3,
+        "url": "https://ansangelscoalition.com/donate/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 4,
+        "url": "https://ansangelscoalition.com/how-to-qualify/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 5,
+        "url": "https://ansangelscoalition.com/service-dogs-available/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 6,
+        "url": "https://ansangelscoalition.com/visual-impairment-service-dogs/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 7,
+        "url": "https://ansangelscoalition.com/psychiatric-service-dogs/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 8,
+        "url": "https://ansangelscoalition.com/our-team/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 9,
+        "url": "https://ansangelscoalition.com/mobility-support-service-dog/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 10,
+        "url": "https://ansangelscoalition.com/multi-purpose-service-dogs/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 11,
+        "url": "https://ansangelscoalition.com/contact-us/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 12,
+        "url": "https://ansangelscoalition.com/2024/09/12/what-can-service-dogs-do-for-you/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 13,
+        "url": "https://ansangelscoalition.com/year-end-2025/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      },
+      {
+        "idx": 14,
+        "url": "https://ansangelscoalition.com/2025-donations-landing/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.445Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:52.445Z"
+  },
+  {
+    "id": "78789e5c-6496-4d99-adcf-b9ade84e4130",
+    "project": "Nines Hotel",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://www.thenines.com/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "2026-08-04",
+        "notes": "Completed the remaining content updates in the document.\nAddressed the recent feedback related to image changes across the website plugins.\nUpdated the History page slider section.\nThe History page slider is still using dummy data.\nWe need to request the content and corresponding images for each year to replace the dummy data.\nSome of the Events are added as client requested",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://www.thenines.com/amenities/",
+        "status": "Completed",
+        "feedbackUrl": "https://docs.google.com/document/d/1cn0I6Js509w6bETodUz_a0UZzbXqOldMrCjmcdEOTVM/edit?pli=1&tab=t.0#heading=h.6fwf6gxl58vz",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 2,
+        "url": "https://www.thenines.com/accommodations/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 3,
+        "url": "https://www.thenines.com/accommodations/deluxe-room/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 4,
+        "url": "https://www.thenines.com/accommodations/meier-frank-suite/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 5,
+        "url": "https://www.thenines.com/accommodations/one-bedroom-suite/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 6,
+        "url": "https://www.thenines.com/accommodations/superior-room/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 7,
+        "url": "https://www.thenines.com/accommodations/the-nines-suite/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 8,
+        "url": "https://www.thenines.com/dining/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 9,
+        "url": "https://www.thenines.com/dining/departure-restaurant/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 10,
+        "url": "https://www.thenines.com/dining/in-room-dining/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 11,
+        "url": "https://www.thenines.com/dining/urban-farmer-restaurant/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 12,
+        "url": "https://www.thenines.com/meetings/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 13,
+        "url": "https://www.thenines.com/weddings-celebrations/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 14,
+        "url": "https://www.thenines.com/offers-packages/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 15,
+        "url": "https://www.thenines.com/offers-packages/advanced-purchase-package/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-2 URL",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 16,
+        "url": "https://www.thenines.com/offers-packages/elevate-your-experience/",
+        "status": "Completed",
+        "feedbackUrl": "https://docs.google.com/document/d/1MFQysdFuDeUpgd_0uBR97I8hq_xhpbNcK656mNtA-nQ/edit?tab=t.0",
+        "date": "2026-08-02",
+        "notes": "Completed some remain content updates",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 17,
+        "url": "https://www.thenines.com/offers-packages/exclusive-aaa-member-rates/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 18,
+        "url": "https://www.thenines.com/offers-packages/linger-longer-package/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 19,
+        "url": "https://www.thenines.com/offers-packages/oregon-washington-residents-offer/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 20,
+        "url": "https://www.thenines.com/offers-packages/portland-parking-package/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 21,
+        "url": "https://www.thenines.com/offers-packages/stay-for-breakfast/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 22,
+        "url": "https://www.thenines.com/offers-packages/sunday-night-arrival/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 23,
+        "url": "https://www.thenines.com/the-history-of-the-nines/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 24,
+        "url": "https://www.thenines.com/experience-portland/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 25,
+        "url": "https://www.thenines.com/events-calendar/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 26,
+        "url": "https://www.thenines.com/events-calendar/kentucky-derby-churchill-nines/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 27,
+        "url": "https://www.thenines.com/gallery/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 28,
+        "url": "https://www.thenines.com/website-accessibility-statement/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 29,
+        "url": "https://www.thenines.com/frequently-asked-questions/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 31,
+        "url": "https://www.thenines.com/blog",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      },
+      {
+        "idx": 32,
+        "url": "https://www.thenines.com/art/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:52.872Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:52.872Z"
+  },
+  {
+    "id": "e54d860c-c660-416d-8dce-c54969204a1f",
+    "project": "Sara Paris  Booth ",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://sgpbco.com/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "2026-08-04",
+        "notes": "1. are updating the cta button for each Homes property page with CPT- in progress. 2. we will also add a short code for displaying Images on the homes single page - TO DO",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://sgpbco.com/about/",
+        "status": "Completed",
+        "feedbackUrl": "https://docs.google.com/document/d/1spCuYsydkyH1rZnx8PJYLSx_4_cAWZ9Y/edit",
+        "date": "2026-08-05",
+        "notes": "1. added custom  scf field for the cta section to the bottom for each homes 2. custom  gallery for the homes 3. responsive issues fixed",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      },
+      {
+        "idx": 2,
+        "url": "https://sgpbco.com/studio/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "2026-08-06",
+        "notes": "1. TO DO - Data Entry : Homes page",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      },
+      {
+        "idx": 3,
+        "url": "https://sgpbco.com/journal/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      },
+      {
+        "idx": 4,
+        "url": "https://sgpbco.com/privacy-policy/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      },
+      {
+        "idx": 5,
+        "url": "https://sgpbco.com/accessibility/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.430Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:53.430Z"
+  },
+  {
+    "id": "3ba0c589-d91e-404a-be69-0aa291fa3fab",
+    "project": "Bunting& Murray Construction",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/about-us/",
+        "status": "Completed",
+        "feedbackUrl": "\n\n\n\n\n\nhttps://docs.google.com/spreadsheets/d/1ePma_uymuypov6hL3qA-Pv6EoQ6KHQZc/edit?gid=1840994945#gid=1840994945",
+        "date": "28/08/26",
+        "notes": "Worked on the new feedback.. almost complete but there is some dependency..need images of Coleman Bunting,  Justin Morgan .. all other are commented in the given sheet.... Also Client asked to removed some section to the homepage...Need To verify them before removing the homepage sections.",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 2,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/services/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "29/08/26",
+        "notes": "Feedback Completed",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 3,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/service/excavation-dirt-work/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 4,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/projects/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 5,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/project/freeman-arts-pavilion/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 6,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/career/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 7,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/career/concrete-finisher/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 8,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/contact-us/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 9,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/privacy-policy/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      },
+      {
+        "idx": 10,
+        "url": "https://lightcoral-dolphin-755291.hostingersite.com/terms-condition/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:53.798Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:53.798Z"
+  },
+  {
+    "id": "e21a7722-ec47-45db-99c1-d130d6330584",
+    "project": "The House",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://thehouse.cogwheelmarketing.site/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "03/09/26",
+        "notes": "The House Homepage email feedback completed",
+        "updatedAt": "2026-09-10T19:27:54.173Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://thehouse.cogwheelmarketing.site/home-2/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:54.173Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:54.174Z"
+  },
+  {
+    "id": "b5332fff-c36e-49ca-a4a2-f2778563ae10",
+    "project": "Reitz Union",
+    "items": [
+      {
+        "idx": 0,
+        "url": "https://thereitzunion.cogwheelmarketing.com/",
+        "status": "Completed",
+        "feedbackUrl": "Feedback-1 URL",
+        "date": "2026-08-28",
+        "notes": "Changes all given images & some feedbacks from siana in homepage 1 and home page 2",
+        "updatedAt": "2026-09-10T19:27:54.717Z"
+      },
+      {
+        "idx": 1,
+        "url": "https://thereitzunion.cogwheelmarketing.com/home-2/",
+        "status": "Completed",
+        "feedbackUrl": "",
+        "date": "",
+        "notes": "",
+        "updatedAt": "2026-09-10T19:27:54.717Z"
+      }
+    ],
+    "updatedAt": "2026-09-10T19:27:54.717Z"
+  }
+]
