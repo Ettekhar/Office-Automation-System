@@ -369,13 +369,6 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
         error: err.message,
       });
     }
-
-    // Pace API calls: 300ms between reads to stay within Google's 60 req/min
-    // quota on first run. Cached reads skip the API entirely so this delay
-    // only applies to the very first "Generate All" call per session.
-    if (i < readySites.length - 1) {
-      await new Promise((r) => setTimeout(r, 300));
-    }
   }
 
   return {

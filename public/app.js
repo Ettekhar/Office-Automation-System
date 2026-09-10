@@ -1050,12 +1050,17 @@ const REFRESH_BTN_LOADING_HTML = `
   </svg>
   Refreshing...`;
 
+// Guard: prevent stacking multiple refresh cycles from rapid button clicks
+let refreshInProgress = false;
+
 /**
  * Core refresh logic. 
  * keepEdits=true  → preserve customized previews, only reload stats/list from Sheets
  * keepEdits=false → full reset: clear everything including custom edits
  */
 async function doRefresh(keepEdits = false) {
+  if (refreshInProgress) return;
+  refreshInProgress = true;
   try {
     refreshBtn.disabled = true;
     refreshBtn.innerHTML = REFRESH_BTN_LOADING_HTML;
@@ -1090,6 +1095,7 @@ async function doRefresh(keepEdits = false) {
   } catch (err) {
     showToast(`Refresh failed: ${err.message}`, 'error');
   } finally {
+    refreshInProgress = false;
     refreshBtn.disabled = false;
     refreshBtn.innerHTML = REFRESH_BTN_DEFAULT_HTML;
     if (refreshConfirmModal) refreshConfirmModal.classList.add('hidden');
@@ -1098,6 +1104,9 @@ async function doRefresh(keepEdits = false) {
 
 // --- Refresh Button click — show modal if edited previews exist ---
 refreshBtn.addEventListener('click', () => {
+  // Block if a refresh is already running
+  if (refreshInProgress) return;
+
   const editedPreviews = [...generatedPreviews.values()].filter((p) => p.isCustomEdited);
 
   if (editedPreviews.length > 0) {
