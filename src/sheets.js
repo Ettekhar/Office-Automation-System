@@ -31,6 +31,40 @@ export async function getSheetsClient() {
   return sheetsClient;
 }
 
+/**
+ * Retry helper with exponential back-off.
+ *
+ * When Google returns a 429 (rate limit) we wait and retry automatically
+ * so callers never see the error.  Default: up to 5 retries, starting at
+ * 2 seconds and doubling each time (2 → 4 → 8 → 16 → 32 s).
+ */
+async function withRetry(fn, maxRetries = 5, baseDelayMs = 2000) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const is429 =
+        err?.status === 429 ||
+        err?.code === 429 ||
+        (err?.errors && err.errors.some((e) => e.reason === 'rateLimitExceeded')) ||
+        String(err?.message || '').toLowerCase().includes('quota');
+
+      if (!is429 || attempt === maxRetries) {
+        throw err;
+      }
+
+      const delay = baseDelayMs * Math.pow(2, attempt);
+      console.warn(
+        `[sheets] 429 Rate limit hit. Retry ${attempt + 1}/${maxRetries} in ${delay / 1000}s...`
+      );
+      await new Promise((r) => setTimeout(r, delay));
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 /** Returns an array of every tab (sheet) title in the spreadsheet. */
 export async function listTabTitles(spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
@@ -42,9 +76,11 @@ export async function listTabTitles(spreadsheetId = null) {
     return cached;
   }
 
-  // --- API call ---
+  // --- API call with retry ---
   const sheets = await getSheetsClient();
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: targetId });
+  const meta = await withRetry(() =>
+    sheets.spreadsheets.get({ spreadsheetId: targetId })
+  );
   const titles = meta.data.sheets.map((s) => s.properties.title);
 
   cacheSet(cacheKey, titles);
@@ -62,13 +98,15 @@ export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId =
     return cached;
   }
 
-  // --- API call ---
+  // --- API call with retry ---
   const sheets = await getSheetsClient();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: targetId,
-    range: `'${tabName}'!${range}`,
-    valueRenderOption: 'FORMATTED_VALUE',
-  });
+  const res = await withRetry(() =>
+    sheets.spreadsheets.values.get({
+      spreadsheetId: targetId,
+      range: `'${tabName}'!${range}`,
+      valueRenderOption: 'FORMATTED_VALUE',
+    })
+  );
   const values = res.data.values || [];
 
   cacheSet(cacheKey, values);

@@ -318,6 +318,12 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
 
 /**
  * Generate previews for all ready sites in one call.
+ *
+ * On the first run (cold cache) each site's report tab is fetched from
+ * Google Sheets sequentially with a small pacing delay so we never burst
+ * more than ~3 requests/second (well under the 60 req/min quota).
+ * On subsequent runs within the cache TTL every read is served from
+ * memory — no API calls are made and generation is near-instant.
  */
 export async function generateAllPreviews(requestedMonth = null, accountKey = 'all') {
   const overview = await getOverviewData(requestedMonth, accountKey);
@@ -325,7 +331,8 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
   const previews = [];
   const errors = [];
 
-  for (const site of readySites) {
+  for (let i = 0; i < readySites.length; i++) {
+    const site = readySites[i];
     try {
       const siteAcct = getAccountConfig(site.account);
       const reportRows = await getTabValues(site.matchedTab, 'A1:D200', siteAcct.spreadsheetId);
@@ -362,6 +369,13 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
         error: err.message,
       });
     }
+
+    // Pace API calls: 300ms between reads to stay within Google's 60 req/min
+    // quota on first run. Cached reads skip the API entirely so this delay
+    // only applies to the very first "Generate All" call per session.
+    if (i < readySites.length - 1) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
   }
 
   return {
@@ -373,6 +387,7 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
     errors,
   };
 }
+
 
 /**
  * Send an email for a single site (with optional recipient/subject/html override and accountKey).
