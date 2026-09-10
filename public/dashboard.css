@@ -1518,3 +1518,106 @@ input:checked + .slider:before {
   opacity: 0.65;
 }
 
+/* ============================================================
+   REFRESH CONFIRM MODAL
+   ============================================================ */
+.refresh-confirm-modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.refresh-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.refresh-edited-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.refresh-modal-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.refresh-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.refresh-option-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.refresh-option-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.refresh-option-card input[type="radio"] {
+  margin-top: 3px;
+  accent-color: var(--accent-primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.refresh-option-card:has(input:checked) {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.refresh-option-body {
+  flex: 1;
+}
+
+.refresh-option-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.refresh-option-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+

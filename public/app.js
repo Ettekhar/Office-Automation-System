@@ -1028,42 +1028,112 @@ monthSelect.addEventListener('change', () => {
   loadOverview(selected, selectedAccount);
 });
 
-// --- Refresh Button (clears server-side Sheets cache + reloads) ---
-refreshBtn.addEventListener('click', async () => {
+// --- Refresh Modal Elements ---
+const refreshConfirmModal = document.getElementById('refreshConfirmModal');
+const confirmRefreshBtn = document.getElementById('confirmRefreshBtn');
+const cancelRefreshBtn = document.getElementById('cancelRefreshBtn');
+const refreshEditedCount = document.getElementById('refreshEditedCount');
+
+const REFRESH_BTN_DEFAULT_HTML = `
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+  </svg>
+  Refresh`;
+
+const REFRESH_BTN_LOADING_HTML = `
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <polyline points="1 20 1 14 7 14"></polyline>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+  </svg>
+  Refreshing...`;
+
+/**
+ * Core refresh logic. 
+ * keepEdits=true  → preserve customized previews, only reload stats/list from Sheets
+ * keepEdits=false → full reset: clear everything including custom edits
+ */
+async function doRefresh(keepEdits = false) {
   try {
     refreshBtn.disabled = true;
-    refreshBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
-        <polyline points="23 4 23 10 17 10"></polyline>
-        <polyline points="1 20 1 14 7 14"></polyline>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-      </svg>
-      Refreshing...`;
+    refreshBtn.innerHTML = REFRESH_BTN_LOADING_HTML;
 
-    // Invalidate server-side Sheets cache so fresh data is fetched from Google
+    // Always invalidate the server-side Sheets cache so fresh data comes from Google
     await fetch('/api/cache/invalidate', { method: 'POST' }).catch(() => {});
 
-    // Also clear client-side generated previews so they re-fetch fresh data
-    generatedPreviews.clear();
-    selectedSites.clear();
-    batchStatusBanner.classList.add('hidden');
-    updateActionButtons();
-
-    await loadOverview(monthSelect.value || null, selectedAccount);
-    showToast('Data refreshed from Google Sheets!', 'success');
+    if (keepEdits) {
+      // Smart merge: remove only un-edited previews; keep customized ones
+      for (const [url, preview] of generatedPreviews.entries()) {
+        if (!preview.isCustomEdited) {
+          generatedPreviews.delete(url);
+        }
+      }
+      const keptCount = generatedPreviews.size;
+      await loadOverview(monthSelect.value || null, selectedAccount);
+      showToast(
+        keptCount > 0
+          ? `Refreshed! Kept ${keptCount} customized email(s) intact.`
+          : 'Data refreshed from Google Sheets!',
+        'success'
+      );
+    } else {
+      // Full reset
+      generatedPreviews.clear();
+      selectedSites.clear();
+      batchStatusBanner.classList.add('hidden');
+      updateActionButtons();
+      await loadOverview(monthSelect.value || null, selectedAccount);
+      showToast('Full refresh complete — all previews reset.', 'success');
+    }
   } catch (err) {
     showToast(`Refresh failed: ${err.message}`, 'error');
   } finally {
     refreshBtn.disabled = false;
-    refreshBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 4 23 10 17 10"></polyline>
-        <polyline points="1 20 1 14 7 14"></polyline>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-      </svg>
-      Refresh`;
+    refreshBtn.innerHTML = REFRESH_BTN_DEFAULT_HTML;
+    if (refreshConfirmModal) refreshConfirmModal.classList.add('hidden');
+  }
+}
+
+// --- Refresh Button click — show modal if edited previews exist ---
+refreshBtn.addEventListener('click', () => {
+  const editedPreviews = [...generatedPreviews.values()].filter((p) => p.isCustomEdited);
+
+  if (editedPreviews.length > 0) {
+    // Show the choice modal
+    if (refreshEditedCount) refreshEditedCount.textContent = editedPreviews.length;
+    // Default to "keep" selection
+    const keepRadio = refreshConfirmModal.querySelector('input[value="keep"]');
+    if (keepRadio) keepRadio.checked = true;
+    refreshConfirmModal.classList.remove('hidden');
+  } else {
+    // No edits — just refresh immediately without asking
+    doRefresh(false);
   }
 });
+
+// --- Confirm Refresh Modal handlers ---
+if (confirmRefreshBtn) {
+  confirmRefreshBtn.addEventListener('click', () => {
+    const selected = refreshConfirmModal.querySelector('input[name="refreshMode"]:checked');
+    const keepEdits = selected ? selected.value === 'keep' : true;
+    doRefresh(keepEdits);
+  });
+}
+
+if (cancelRefreshBtn) {
+  cancelRefreshBtn.addEventListener('click', () => {
+    refreshConfirmModal.classList.add('hidden');
+  });
+}
+
+// Close refresh modal on backdrop click
+if (refreshConfirmModal) {
+  refreshConfirmModal.addEventListener('click', (e) => {
+    if (e.target === refreshConfirmModal) refreshConfirmModal.classList.add('hidden');
+  });
+}
 
 // --- Close Modals ---
 closeModalBtn.addEventListener('click', () => previewModal.classList.add('hidden'));
