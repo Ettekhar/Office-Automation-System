@@ -1,0 +1,1906 @@
+{
+  "tasks": [
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868ha7561",
+      "website": "Hotel Dela Poste",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868ha80f6",
+      "website": "Project Farmhouse",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": "Nicole"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hawmp3",
+      "website": "Apple Valley Restaurant",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hauggy",
+      "website": "Hotel Sheldon",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Mohammed Razib"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h6tkmg",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hauggy",
+      "website": "Hotel Sheldon",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Mohammed Razib"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868cfhzcm",
+      "website": "Maison Metier",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hauggy",
+      "website": "Hotel Sheldon",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Mohammed Razib"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hae2er",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": "Mohammed Razib"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hcjfwbv",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h467xp",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hcjf9t",
+      "website": "La Fonda Santafe",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h16zgf",
+      "website": "Arrive Austin",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hcdznh",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h92w81",
+      "website": "Hotel Dela Poste",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hcggaw",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hcg0qe",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "On Hold",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h6qdvm",
+      "website": "The Grand Hotel Golf Resort & SPA",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h1fdhx",
+      "website": "Curtis Denver (Sage)",
+      "taskType": "SEO",
+      "assignee": "Tarikul Islam",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h1eyzc",
+      "website": "The Alexandrian",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868gzft8n",
+      "website": "Morrison House",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868gmp7a3",
+      "website": "Hotel Perla",
+      "taskType": "SEO",
+      "assignee": "Asif Mahmud",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868gmn7kh",
+      "website": "The Nines Portland (Sage)",
+      "taskType": "SEO",
+      "assignee": "Asif Mahmud",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h16g3w",
+      "website": "Arrive Albuquerque (Palisociety)",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868cfhgqc",
+      "website": "The Barnett",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868cfhgq1",
+      "website": "The Barnett",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868gxrxu3",
+      "website": "Craftsman Inn",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hc6t34",
+      "website": "Toasted Barrell",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h64ex0",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h1xdhb",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h64gxr",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h64c2u",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h1x9mc",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868gwv4ap",
+      "website": "WCBBQ",
+      "taskType": "SEO",
+      "assignee": "Asif Mahmud",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hevcnz",
+      "website": "The Barnett",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hepd1h",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hez61t",
+      "website": "Rahman Fitness",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h7ncdh",
+      "website": "Divi Site Fixing",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Nahid Jubail Medul",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hf4zqt",
+      "website": "Cogwheel marketing",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Asif Mahmud",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868g4nen4",
+      "website": "Granger Hotel",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Sezan Ahmed",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "fixed"
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h7ncdh",
+      "website": "All DIVI Site",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Nahid Jubail Medul",
+      "status": "In Progress",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868h1x9mc",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868g9w6ey",
+      "website": "Soprana Restaurant",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868g9w48c",
+      "website": "Montford Restaurant",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hfwdm7",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "",
+      "clickupLink": "https://app.clickup.com/t/868hfnrbt",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "On Hold",
+      "priority": "Low",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Schema, Sitemap & Navigation optimization",
+      "clickupLink": "https://app.clickup.com/t/868e0d5da",
+      "website": "Hotel La Jolla",
+      "taskType": "SEO",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "Super Urgent",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Add redirect",
+      "clickupLink": "https://app.clickup.com/t/868hhay8b",
+      "website": "Cogwheel marketing",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Delphi Form Integration",
+      "clickupLink": "https://app.clickup.com/t/868hha0uj",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-17T06:43:34-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hh5144",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "Internal Review",
+      "priority": "Medium",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Identify & Fix Broken Links",
+      "clickupLink": "https://app.clickup.com/t/868ggn846",
+      "website": "The Raphael Hotel",
+      "taskType": "SEO",
+      "assignee": "Asif Mahmud",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Remove Hearts A Flutter:",
+      "clickupLink": "https://app.clickup.com/t/868hhpm38",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "Nicole"
+    },
+    {
+      "taskName": "The Guild Fitness Center Update",
+      "clickupLink": "https://app.clickup.com/t/868hjjfn2",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-18T07:03:00-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hhnb22",
+      "website": "New Castle",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-20T07:56:38-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hjpg24",
+      "website": "Salon Salon Nola",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "The Guild Website Updates",
+      "clickupLink": "https://app.clickup.com/t/868hjkg79",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "October Retreat Page - Insider Women",
+      "clickupLink": "https://app.clickup.com/t/868hka6km",
+      "website": "Insider Travel For Women",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-20T22:13:40+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hjyvy3",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Action Required – Adopt Consent Mode for UET",
+      "clickupLink": "https://app.clickup.com/t/868hkb6p5",
+      "website": "Maison Metier\nPinon Court Santa Fe\nThe Barnett\nThe Winslow - Oklahoma City, OK\nThe Winslow - Winslow, AZ",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "In Progress",
+      "priority": "High",
+      "accountManager": "Kylie"
+    },
+    {
+      "taskName": "Newsletter Landing Page",
+      "clickupLink": "https://app.clickup.com/t/868hhn0f9",
+      "website": "Pinon Court",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Members on Buyer Seller Advisory page",
+      "clickupLink": "https://app.clickup.com/t/868hkprvd",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Super Urgent",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Walter O’Connell profile link issue",
+      "clickupLink": "https://app.clickup.com/t/868hkpnrj",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Super Urgent",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Members Brand Service Page",
+      "clickupLink": "https://app.clickup.com/t/868hkpgfr",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Super Urgent",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-24T12:16:11-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hm7w6t",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-24T19:23:04+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hm80pq",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-24T20:53:34+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hma88a",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Pets Data ",
+      "clickupLink": "https://app.clickup.com/t/868hhn4wg",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "To Do",
+      "priority": "Medium",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Conversion Tracking",
+      "clickupLink": "https://app.clickup.com/t/868hmbfbt",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "To Do",
+      "priority": "Low",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868h22xjt",
+      "website": "Hotel Fauchere",
+      "taskType": "SEO",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Super Urgent",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868h22tkt",
+      "website": "Tom Quick Inn",
+      "taskType": "SEO",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Super Urgent",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868h172yc",
+      "website": "Arrive Wilmington (Palisociety)",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "To Do",
+      "priority": "Super Urgent",
+      "accountManager": "TJ Wilson"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868h172w4",
+      "website": "Arrive Memphis (Palisociety)",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "On Hold",
+      "priority": "Super Urgent",
+      "accountManager": "TJ Wilson"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868h170n5",
+      "website": "Arrive Palm Springs (Palisociety)",
+      "taskType": "SEO",
+      "assignee": "Asif Mahmud",
+      "status": "To Do",
+      "priority": "Super Urgent",
+      "accountManager": "TJ Wilson"
+    },
+    {
+      "taskName": "Vanity website tracking ID for Morrison House",
+      "clickupLink": "https://app.clickup.com/t/868hmmj1b",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-25T16:33:04+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hmp3eb",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "Client Review",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-25T17:08:34+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hmptpy",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "To Do",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-24T12:16:11-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hm7w6t",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-25T17:52:46+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hmqupn",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Super Urgent",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Website Issues - Form and Text",
+      "clickupLink": "https://app.clickup.com/t/868hmx0af",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "Super Urgent",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-02-26T14:14:00-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hne361",
+      "website": "The Barnett",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-26T21:51:26+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hnevb4",
+      "website": "The Barnett",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Audit Website Caching/Speed & Optimization",
+      "clickupLink": "https://app.clickup.com/t/868fbexv6",
+      "website": "Governor's Inn ND",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "Mohammed Razib"
+    },
+    {
+      "taskName": "\tThe Guild Hotel Website",
+      "clickupLink": "https://app.clickup.com/t/868hdkq8n",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "\tThe Guild Hotel Website",
+      "clickupLink": "https://app.clickup.com/t/868hdkq8n",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Asif Mahmud",
+      "status": "Completed",
+      "priority": "Low",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-25T13:38:31+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hmjvcf",
+      "website": "New Castle",
+      "taskType": "Website Update",
+      "assignee": "Md Atiar Rahman Ovi",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Add Spring Offer",
+      "clickupLink": "https://app.clickup.com/t/868hfwdm7",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Remove \"Aristides\"",
+      "clickupLink": "https://app.clickup.com/t/868hmcgwe",
+      "website": "Wilson Arkansas",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-26T21:51:26+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hnevb4 ",
+      "website": "The Barnett",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Add Group and Meetings Tab under the Offers Menu",
+      "clickupLink": "https://app.clickup.com/t/868hjrrfk",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Find & Fix Orphaned Pages",
+      "clickupLink": "https://app.clickup.com/t/868g9w6em",
+      "website": "Sopranarooftop Restaurant ",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Find & Fix Crawl Errors",
+      "clickupLink": "https://app.clickup.com/t/868g9w494",
+      "website": "Montford Restaurant",
+      "taskType": "SEO",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-25T17:08:34+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hmptpy",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Guild Hotel March Updates and feedbacks 1",
+      "clickupLink": "https://app.clickup.com/t/868hpfa0d",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Error Page",
+      "clickupLink": "https://app.clickup.com/t/868hqfx68",
+      "website": "Cogwheel Marketing",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-03-02T21:55:01+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hpu8jn",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Update Contact number",
+      "clickupLink": "https://app.clickup.com/t/868hr1tx4",
+      "website": "Atlantic Hotel Group",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Copyright Update on Dr Bill Carroll",
+      "clickupLink": "https://app.clickup.com/t/868hr2q72",
+      "website": "Dr Bill Carroll",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-02-26T14:14:00-07:00",
+      "clickupLink": "https://app.clickup.com/t/868hne361",
+      "website": "Maison Metier",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Audit Website Caching/Speed & Optimization",
+      "clickupLink": "https://app.clickup.com/t/868h22tp0",
+      "website": "Tom Quick INN",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Internal Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Hotel de la Poste Vanity Website Tracking ID",
+      "clickupLink": "https://app.clickup.com/t/868hr88ke",
+      "website": "Hotel Dela Poste",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Hotel Perla Vanity Website Tracking ID",
+      "clickupLink": "https://app.clickup.com/t/868hmmbjf",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Audit Website Caching/Speed & Optimization",
+      "clickupLink": "https://app.clickup.com/t/868gmp7b6",
+      "website": "Hotel Perla",
+      "taskType": "SEO",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-09T23:31:14+00:00",
+      "clickupLink": "https://app.clickup.com/t/868htzeq4",
+      "website": "Upside West village",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": "None"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-09T23:29:54+00:00",
+      "clickupLink": "https://app.clickup.com/t/868htze8m",
+      "website": "Free Ride up town",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "New Dinner/Cocktail Menu",
+      "clickupLink": "https://app.clickup.com/t/868hurncg",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Granger Hotel Photoshoot FAQ Change in Granger and Guild",
+      "clickupLink": "https://app.clickup.com/t/868hurncz",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Granger Hotel Photoshoot FAQ Change in Granger and Guild",
+      "clickupLink": "https://app.clickup.com/t/868hurncz",
+      "website": "Granger Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Updated Solana Coffee Menu Granger Website",
+      "clickupLink": "https://app.clickup.com/t/868hv058x",
+      "website": "Granger Hotel",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "Medium",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Change Header Navigation Menu Suggestions",
+      "clickupLink": "https://app.clickup.com/t/868hdx1bc",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Update Scheduling Link",
+      "clickupLink": "https://app.clickup.com/t/868huax73",
+      "website": "Cogwheel Marketing",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Home Page Offers",
+      "clickupLink": "https://app.clickup.com/t/868hvw8pf",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Cookie Consent",
+      "clickupLink": "https://app.clickup.com/t/868hv3jav",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Video Updates on DR Bill Carroll",
+      "clickupLink": "https://app.clickup.com/t/868hvxjmn",
+      "website": "Dr Bill Carroll",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Stephine"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-09T23:29:54+00:00",
+      "clickupLink": "https://app.clickup.com/t/868htze8m",
+      "website": "Free Ride up town",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "High",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Search Console Audit & Fix",
+      "clickupLink": "https://app.clickup.com/t/868gmp7bh",
+      "website": "Hotel Perla",
+      "taskType": "SEO",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Breakfast & Drinks Menu Updates on Free Ride Up Town",
+      "clickupLink": "https://app.clickup.com/t/868hwe2hh",
+      "website": "Free Ride up town",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Update Tracking Code Per Hilton",
+      "clickupLink": "https://app.clickup.com/t/868hw7ve7",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Quote Request-Add Gallery Page",
+      "clickupLink": "https://app.clickup.com/t/868hw1p95",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "To Do",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Photoshoot FAQ Change Guild and Granger",
+      "clickupLink": "https://app.clickup.com/t/868hx5vtp",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Grant Client CMS Access",
+      "clickupLink": "https://app.clickup.com/t/868hxctdr",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-03-23T12:48:14-06:00",
+      "clickupLink": "https://app.clickup.com/t/868hznfbb",
+      "website": "Maison Metier",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-19T18:48:56+00:00",
+      "clickupLink": "https://app.clickup.com/t/868hygu61",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Local Area Page Update",
+      "clickupLink": "https://app.clickup.com/t/868j175kb",
+      "website": "Winslow",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Breakfast & Drinks Menu Updates on Free Ride Up Town",
+      "clickupLink": "https://app.clickup.com/t/868hwe2hh",
+      "website": "Free Ride up town",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "High",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Update Contact Information on Accessibility Page",
+      "clickupLink": "https://app.clickup.com/t/868j0n9f4",
+      "website": "Winslow",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Guild Hotel Zuma page finalization",
+      "clickupLink": "https://app.clickup.com/t/868j1fbph",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Instagram Feed Widget- Morrison House",
+      "clickupLink": "https://app.clickup.com/t/868hv241r",
+      "website": "Morrison House",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Remove Winter Getaway",
+      "clickupLink": "https://app.clickup.com/t/868j17gbp",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": " Yolanda"
+    },
+    {
+      "taskName": "Remove Stay & Play Golf Package",
+      "clickupLink": "https://app.clickup.com/t/868j17eec",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Press Page Addition",
+      "clickupLink": "https://app.clickup.com/t/868j19qwm",
+      "website": "Bentley Legacy",
+      "taskType": "New Landing Page",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "High",
+      "accountManager": "Madison"
+    },
+    {
+      "taskName": "Update F&B FAQ Structure",
+      "clickupLink": "https://app.clickup.com/t/868j15euq",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-26T09:44:38-06:00",
+      "clickupLink": "https://app.clickup.com/t/868j157k6",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-03-24T14:54:24-06:00",
+      "clickupLink": "https://app.clickup.com/t/868j0b87p",
+      "website": "The Barnett",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "LLM Txt Generation / Update",
+      "clickupLink": "https://app.clickup.com/t/868hwe9kt",
+      "website": "Hotel La Jolla",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-03-30T14:40:07-06:00",
+      "clickupLink": "https://app.clickup.com/t/868j2e32b",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Update Images",
+      "clickupLink": "https://app.clickup.com/t/868j1rejn",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Chatham Lodging 2FA Acess",
+      "clickupLink": "https://app.clickup.com/t/868j3wz5e",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Content Update",
+      "clickupLink": "https://app.clickup.com/t/868j3cg19",
+      "website": "Chatham Lodging Trust",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "April Zuma Page New Feedbacks",
+      "clickupLink": "https://app.clickup.com/t/868j3x6mv",
+      "website": "The Guild Hotel",
+      "taskType": "New Landing Page",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-04-02T12:30:09-06:00",
+      "clickupLink": "https://app.clickup.com/t/868j43w0y",
+      "website": "Milford Hospitality Group",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "ADA Compliance Report Fixes",
+      "clickupLink": "https://app.clickup.com/t/868j48d1d",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Raphael News & Press Page updates April",
+      "clickupLink": "https://app.clickup.com/t/868j6cj40",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Add Content Object - The Raphael",
+      "clickupLink": "https://app.clickup.com/t/868j673ut",
+      "website": "Raphael Hotel",
+      "taskType": "SEO",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Create Inter-Page Links - The Raphael",
+      "clickupLink": "https://app.clickup.com/t/868j66vxv",
+      "website": "Raphael Hotel",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Implement New Meta Titles/Descriptions - The Raphael",
+      "clickupLink": "https://app.clickup.com/t/868j66uhj",
+      "website": "Raphael Hotel",
+      "taskType": "SEO",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Implement SEO Content Audit Updates - The Raphael",
+      "clickupLink": "https://app.clickup.com/t/868j66ycv",
+      "website": "Raphael Hotel",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Sienna"
+    },
+    {
+      "taskName": "Audit Website Caching/Speed & Optimization",
+      "clickupLink": "https://app.clickup.com/t/868g9w491",
+      "website": "Montford Restaurant",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Guild Hotel Zuma page finalization",
+      "clickupLink": "https://app.clickup.com/t/868j1fbph",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "April Zuma Page New Feedbacks",
+      "clickupLink": "https://app.clickup.com/t/868j3x6mv",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Local Area Page Update",
+      "clickupLink": "https://app.clickup.com/t/868j175kb",
+      "website": "Winslow",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Raphael Hotel Menu Updates",
+      "clickupLink": "https://app.clickup.com/t/868j6w3hf",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "SEMrush Issue",
+      "clickupLink": "https://app.clickup.com/t/868hu6wa0",
+      "website": "Hotel Fauchere",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "Title/Meta Description Optimization",
+      "clickupLink": "https://app.clickup.com/t/868h22xky",
+      "website": "Hotel Fauchere",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Internal Review",
+      "priority": "",
+      "accountManager": "Jacob"
+    },
+    {
+      "taskName": "Image Optimization for SEO",
+      "clickupLink": "https://app.clickup.com/t/868e0d53z",
+      "website": "Hotel La Jolla",
+      "taskType": "SEO",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Service Page Formatting is Messed Up",
+      "clickupLink": "https://app.clickup.com/t/868j7n0dc",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Create \"categories\" on Offers Page",
+      "clickupLink": "https://app.clickup.com/t/868j6xwxr",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "In Progress",
+      "priority": "",
+      "accountManager": "Sonya"
+    },
+    {
+      "taskName": "Update Homepage Copy",
+      "clickupLink": "https://app.clickup.com/t/868j9wjab",
+      "website": "Maison Metier",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Add FAQ to Sea & Sky Page",
+      "clickupLink": "https://app.clickup.com/t/868j89buh",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "SEMrush Issue",
+      "clickupLink": "https://app.clickup.com/t/868hu6wa0",
+      "website": "Hotel Fauchere",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "In Progress",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "URL Slug Changes?",
+      "clickupLink": "https://app.clickup.com/t/868ja8u2e",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Issues (Non Billable)",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "2026 Legacy Members",
+      "clickupLink": "https://app.clickup.com/t/868egbzyy",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Log files for CHC",
+      "clickupLink": "https://app.clickup.com/t/868ja0qx9",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Schema, Sitemap & Navigation optimization",
+      "clickupLink": "https://app.clickup.com/t/868g9w4ad",
+      "website": "Montford Restaurant",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Website Updates",
+      "clickupLink": "https://app.clickup.com/t/868j9qyme",
+      "website": "Senza Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "In Progress",
+      "priority": "",
+      "accountManager": "Sonya"
+    },
+    {
+      "taskName": "Service Pages Assignments",
+      "clickupLink": "https://app.clickup.com/t/868j6m6de",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Raphael Hotel Restaurant Hours update",
+      "clickupLink": "https://app.clickup.com/t/868jbpqwt",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Upload Clear SEO Optimized Image",
+      "clickupLink": "https://app.clickup.com/t/868gwv4a7",
+      "website": "West Coast BBQ ",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Credentials to edit site",
+      "clickupLink": "https://app.clickup.com/t/868jbruu4",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Changes are not displaying",
+      "clickupLink": "https://app.clickup.com/t/868jbu31a",
+      "website": "Cayuga Hospitality",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yana"
+    },
+    {
+      "taskName": "Image Optimization ",
+      "clickupLink": "https://app.clickup.com/t/868j7v3ep",
+      "website": "Winslow Hotels",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Internal Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-04-23T13:36:28-06:00",
+      "clickupLink": "https://app.clickup.com/t/868jceqnr",
+      "website": "Hotel Perla",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Add and Remove Content on Activities Page",
+      "clickupLink": "https://app.clickup.com/t/868jbe44d",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yolanda Tates"
+    },
+    {
+      "taskName": "Form Submission - #2026-04-22T16:16:06-06:00",
+      "clickupLink": "https://app.clickup.com/t/868jc2t7h",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "In Progress",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Form Submission - #2026-04-22T16:13:02-06:00",
+      "clickupLink": "https://app.clickup.com/t/868jc2qw4",
+      "website": "Hotel La Jolla",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "To Do",
+      "priority": "",
+      "accountManager": "Holly"
+    },
+    {
+      "taskName": "Remove AA Meeting Copy from the website",
+      "clickupLink": "https://app.clickup.com/t/868jcjga1",
+      "website": "Hotel Fauchere",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Interpage Linking & Duplicate Content Audit",
+      "clickupLink": "https://app.clickup.com/t/868gzft95",
+      "website": "Morrison House",
+      "taskType": "SEO",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Upside Website Menu Error",
+      "clickupLink": "https://app.clickup.com/t/868je3nvu",
+      "website": "Upside West village",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Form Submission - #2026-04-17T08:57:08-06:00",
+      "clickupLink": "https://app.clickup.com/t/868ja6vmj",
+      "website": "HQ Dallas Rooftop ",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Menu Live On Raphael Hotel",
+      "clickupLink": "https://app.clickup.com/t/868jeq9u8",
+      "website": "Raphael Hotel",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Add and Remove Content on Golf & Activities Page",
+      "clickupLink": "https://app.clickup.com/t/868jefjn4",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yolanda Tates"
+    },
+    {
+      "taskName": "Grant Client Access to Wordpress Site",
+      "clickupLink": "https://app.clickup.com/t/868jefmkf",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Nahid Jubail Medul",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": "Yolanda Tates"
+    },
+    {
+      "taskName": "Add Summer Escape Offer to Website",
+      "clickupLink": "https://app.clickup.com/t/868jetvwj",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Sezan Ahmed",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": "Yolanda Tates"
+    },
+    {
+      "taskName": "SEMrush Issue",
+      "clickupLink": "https://app.clickup.com/t/868j9nh9v",
+      "website": "Hotel Perla",
+      "taskType": "SEO",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Please remove peloton bikes on the site",
+      "clickupLink": "https://app.clickup.com/t/868jeq88n",
+      "website": "The Guild Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Hotel Sheldon increasing our member discount",
+      "clickupLink": "https://app.clickup.com/t/868jeq9qe",
+      "website": "Hotel Sheldon",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Completed",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Grant Client Admin Access to WordPress Site",
+      "clickupLink": "https://app.clickup.com/t/868jewrve",
+      "website": "The Louis Hotel",
+      "taskType": "Website Update",
+      "assignee": "Tarikul Islam",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    },
+    {
+      "taskName": "Troubleshoot: Dining Page Image & Copy Not Updating on Live Site",
+      "clickupLink": "https://app.clickup.com/t/868jgvpyw",
+      "website": "Hotel Teatro",
+      "taskType": "Website Update",
+      "assignee": "Toufiq Islam Swoad",
+      "status": "Client Review",
+      "priority": "",
+      "accountManager": ""
+    }
+  ],
+  "taskLoad": [
+    {
+      "member": "Sezan Ahmed",
+      "taskCount": 2,
+      "taskLink": "https://app.clickup.com/t/868hmmj1b"
+    },
+    {
+      "member": "Md Atiar Rahman Ovi",
+      "taskCount": 0,
+      "taskLink": ""
+    },
+    {
+      "member": "Asif Mahmud",
+      "taskCount": 1,
+      "taskLink": ""
+    },
+    {
+      "member": "Tarikul Islam",
+      "taskCount": 0,
+      "taskLink": ""
+    },
+    {
+      "member": "Nahid Jubail Medul",
+      "taskCount": 0,
+      "taskLink": ""
+    },
+    {
+      "member": "Toufiq Islam Swoad",
+      "taskCount": 1,
+      "taskLink": ""
+    }
+  ]
+}

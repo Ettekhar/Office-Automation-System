@@ -1,126 +1,244 @@
 /**
- * db.js — Local JSON file database
- * Stores all imported sheet data as JSON files in data/
- * All dashboard reads/writes go through this module (zero Sheets API calls).
+ * db.js — Relational JSON file database
+ * Unified model: Users, Sites, Tasks, DailyReview, Properties, DevProjects
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.resolve(__dirname, '../data');
-
-// Ensure data directory exists
+export const DATA_DIR = path.resolve(__dirname, '../data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const COLLECTIONS = ['sites', 'daily-review', 'domains', 'distribution', 'properties', 'dev-tracker', 'meta', 'users'];
+export const uuid = () => crypto.randomUUID();
 
-// ─── Low-level read/write ─────────────────────────────────────────────────────
-function filePath(name) {
-  return path.join(DATA_DIR, `${name}.json`);
-}
+// ─── Low-level I/O ───────────────────────────────────────────────────────────
+function fp(name) { return path.join(DATA_DIR, `${name}.json`); }
 
 export function dbRead(name) {
-  const fp = filePath(name);
-  if (!fs.existsSync(fp)) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
+  try { return fs.existsSync(fp(name)) ? JSON.parse(fs.readFileSync(fp(name), 'utf8')) : null; }
   catch { return null; }
 }
 
 export function dbWrite(name, data) {
-  fs.writeFileSync(filePath(name), JSON.stringify(data, null, 2), 'utf8');
+  fs.writeFileSync(fp(name), JSON.stringify(data, null, 2), 'utf8');
 }
 
-// ─── Meta ─────────────────────────────────────────────────────────────────────
-export function getMeta() {
-  return dbRead('meta') || { lastSync: null, version: 0 };
+// ─── Timestamp ───────────────────────────────────────────────────────────────
+const now = () => new Date().toISOString();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getUsers() { return dbRead('users') || []; }
+export function setUsers(data) { dbWrite('users', data); }
+
+export function getUserById(id) { return getUsers().find(u => u.id === id) || null; }
+export function getUserByName(name) {
+  const n = name?.toLowerCase().trim();
+  return getUsers().find(u => u.name.toLowerCase() === n) || null;
 }
 
-export function setMeta(updates) {
-  dbWrite('meta', { ...getMeta(), ...updates });
+export function createUser({ name, role = 'user', email = '' }) {
+  const users = getUsers();
+  if (users.find(u => u.name.toLowerCase() === name.toLowerCase()))
+    throw new Error(`User "${name}" already exists`);
+  const user = { id: uuid(), name, role, email, createdAt: now(), updatedAt: now() };
+  users.push(user);
+  setUsers(users);
+  return user;
 }
 
-// ─── Sites (CW + RM maintenance website list) ─────────────────────────────────
-export function getSites(account = null) {
-  const all = dbRead('sites') || [];
-  return account ? all.filter(s => s.account === account) : all;
+export function updateUser(id, updates) {
+  const users = getUsers();
+  const idx = users.findIndex(u => u.id === id);
+  if (idx === -1) throw new Error(`User not found: ${id}`);
+  users[idx] = { ...users[idx], ...updates, updatedAt: now() };
+  setUsers(users);
+  return users[idx];
 }
 
+export function deleteUser(id) {
+  const users = getUsers().filter(u => u.id !== id);
+  setUsers(users);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SITES (merged from CW/RM + Domain Expiry + Daily Review assignments)
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getSites(filter = {}) {
+  let sites = dbRead('sites') || [];
+  if (filter.account) sites = sites.filter(s => s.account === filter.account);
+  if (filter.userId) sites = sites.filter(s => s.assignedUsers?.includes(filter.userId));
+  return sites;
+}
 export function setSites(data) { dbWrite('sites', data); }
 
-export function updateSite(url, updates) {
-  const sites = getSites();
-  const idx = sites.findIndex(s => s.url === url);
-  if (idx === -1) throw new Error(`Site not found: ${url}`);
-  sites[idx] = { ...sites[idx], ...updates, updatedAt: new Date().toISOString() };
+export function getSiteByUrl(url) {
+  const u = url?.toLowerCase().trim();
+  return (dbRead('sites') || []).find(s => s.url?.toLowerCase() === u) || null;
+}
+
+export function getSiteById(id) {
+  return (dbRead('sites') || []).find(s => s.id === id) || null;
+}
+
+export function updateSite(id, updates) {
+  const sites = dbRead('sites') || [];
+  const idx = sites.findIndex(s => s.id === id);
+  if (idx === -1) throw new Error(`Site not found: ${id}`);
+  sites[idx] = { ...sites[idx], ...updates, updatedAt: now() };
   setSites(sites);
   return sites[idx];
 }
 
-// ─── Daily Review (per user) ──────────────────────────────────────────────────
-export function getDailyReview(user = null) {
-  const all = dbRead('daily-review') || {};
-  return user ? (all[user] || []) : all;
+export function assignUsersToSite(siteId, userIds) {
+  return updateSite(siteId, { assignedUsers: userIds });
 }
 
-export function setDailyReview(data) { dbWrite('daily-review', data); }
+// ═══════════════════════════════════════════════════════════════════════════════
+// DAILY REVIEW ROWS (per-user, per-site records)
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getDailyReview(filter = {}) {
+  let rows = dbRead('daily-review') || [];
+  if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
+  if (filter.siteId) rows = rows.filter(r => r.siteId === filter.siteId);
+  if (filter.userName) {
+    const u = getUserByName(filter.userName);
+    if (u) rows = rows.filter(r => r.userId === u.id);
+    else rows = [];
+  }
+  return rows;
+}
+export function setDailyReview(rows) { dbWrite('daily-review', rows); }
 
-export function updateDailyReviewRow(user, rowUrl, updates) {
-  const all = getDailyReview();
-  if (!all[user]) throw new Error(`User not found: ${user}`);
-  const idx = all[user].findIndex(s => s.url === rowUrl);
-  if (idx === -1) throw new Error(`Site not found for user ${user}: ${rowUrl}`);
-  all[user][idx] = { ...all[user][idx], ...updates, updatedAt: new Date().toISOString() };
-  setDailyReview(all);
-  return all[user][idx];
+export function getDailyReviewByUser(userName) {
+  const user = getUserByName(userName);
+  if (!user) return [];
+  return getDailyReview({ userId: user.id });
 }
 
-// ─── Domains ──────────────────────────────────────────────────────────────────
-export function getDomains() { return dbRead('domains') || []; }
-export function setDomains(data) { dbWrite('domains', data); }
+export function updateDailyReviewRow(rowId, updates) {
+  const rows = dbRead('daily-review') || [];
+  const idx = rows.findIndex(r => r.id === rowId);
+  if (idx === -1) throw new Error(`Daily review row not found: ${rowId}`);
+  rows[idx] = { ...rows[idx], ...updates, updatedAt: now() };
+  setDailyReview(rows);
+  return rows[idx];
+}
 
-// ─── Distribution ─────────────────────────────────────────────────────────────
-export function getDistribution() { return dbRead('distribution') || { tasks: [], taskLoad: [] }; }
-export function setDistribution(data) { dbWrite('distribution', data); }
+// ═══════════════════════════════════════════════════════════════════════════════
+// TASKS
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getTasks(filter = {}) {
+  let tasks = dbRead('tasks') || [];
+  if (filter.assigneeId) tasks = tasks.filter(t => t.assigneeId === filter.assigneeId);
+  if (filter.siteId) tasks = tasks.filter(t => t.siteId === filter.siteId);
+  if (filter.status) tasks = tasks.filter(t => t.status === filter.status);
+  return tasks;
+}
+export function setTasks(data) { dbWrite('tasks', data); }
 
-// ─── Properties ───────────────────────────────────────────────────────────────
+export function getTaskById(id) { return (dbRead('tasks') || []).find(t => t.id === id) || null; }
+
+export function createTask({ taskName, siteUrl, siteId, assigneeId, assigneeName,
+  taskType = '', status = 'todo', priority = 'medium', clickupLink = '',
+  accountManager = '', deadline = '', notes = '' }) {
+  const tasks = dbRead('tasks') || [];
+  const task = {
+    id: uuid(), taskName, siteUrl, siteId, assigneeId, assigneeName,
+    taskType, status, priority, clickupLink, accountManager, deadline, notes,
+    createdAt: now(), updatedAt: now(),
+  };
+  tasks.push(task);
+  setTasks(tasks);
+  return task;
+}
+
+export function updateTask(id, updates) {
+  const tasks = dbRead('tasks') || [];
+  const idx = tasks.findIndex(t => t.id === id);
+  if (idx === -1) throw new Error(`Task not found: ${id}`);
+  tasks[idx] = { ...tasks[idx], ...updates, updatedAt: now() };
+  setTasks(tasks);
+  return tasks[idx];
+}
+
+export function deleteTask(id) {
+  setTasks((dbRead('tasks') || []).filter(t => t.id !== id));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROPERTIES
+// ═══════════════════════════════════════════════════════════════════════════════
 export function getProperties() { return dbRead('properties') || []; }
 export function setProperties(data) { dbWrite('properties', data); }
 
-export function updateProperty(url, updates) {
-  const props = getProperties();
-  const idx = props.findIndex(p => p.url === url);
-  if (idx === -1) throw new Error(`Property not found: ${url}`);
-  props[idx] = { ...props[idx], ...updates, updatedAt: new Date().toISOString() };
+export function updateProperty(id, updates) {
+  const props = dbRead('properties') || [];
+  const idx = props.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error(`Property not found: ${id}`);
+  props[idx] = { ...props[idx], ...updates, updatedAt: now() };
   setProperties(props);
   return props[idx];
 }
 
-// ─── Dev Tracker ──────────────────────────────────────────────────────────────
-export function getDevTracker() { return dbRead('dev-tracker') || []; }
-export function setDevTracker(data) { dbWrite('dev-tracker', data); }
+export function deleteProperty(id) {
+  setProperties((dbRead('properties') || []).filter(p => p.id !== id));
+}
 
-// ─── Users ────────────────────────────────────────────────────────────────────
-export function getUsers() { return dbRead('users') || []; }
-export function setUsers(data) { dbWrite('users', data); }
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEV PROJECTS
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getDevProjects() { return dbRead('dev-projects') || []; }
+export function setDevProjects(data) { dbWrite('dev-projects', data); }
 
-// ─── Status check ─────────────────────────────────────────────────────────────
+export function updateDevProjectItem(projectId, itemIdx, updates) {
+  const projs = dbRead('dev-projects') || [];
+  const pIdx = projs.findIndex(p => p.id === projectId);
+  if (pIdx === -1) throw new Error(`Project not found: ${projectId}`);
+  if (!projs[pIdx].items[itemIdx]) throw new Error(`Item not found: ${itemIdx}`);
+  projs[pIdx].items[itemIdx] = { ...projs[pIdx].items[itemIdx], ...updates, updatedAt: now() };
+  setDevProjects(projs);
+  return projs[pIdx];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// META & STATS
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getMeta() { return dbRead('meta') || { lastSync: null, version: 0 }; }
+export function setMeta(updates) { dbWrite('meta', { ...getMeta(), ...updates }); }
+
 export function isInitialised() {
-  return COLLECTIONS.filter(c => c !== 'meta').every(c => fs.existsSync(filePath(c)));
+  return ['users', 'sites', 'daily-review', 'tasks', 'properties', 'dev-projects']
+    .every(c => fs.existsSync(fp(c)));
 }
 
 export function getDbStats() {
   const meta = getMeta();
-  const sites = getSites();
-  const dr = getDailyReview();
-  const domains = getDomains();
+  const users = getUsers();
+  const sites = dbRead('sites') || [];
+  const tasks = dbRead('tasks') || [];
+  const dr = dbRead('daily-review') || [];
+  const props = dbRead('properties') || [];
+
+  const drCompleted = dr.filter(r => r.maintenanceStatus === 'completed').length;
+  const drTotal = dr.filter(r => r.maintenanceStatus).length;
+
   return {
     lastSync: meta.lastSync,
+    syncDuration: meta.syncDuration,
+    totalUsers: users.length,
     totalSites: sites.length,
-    totalDomains: domains.length,
-    users: Object.keys(dr),
-    totalUserSites: Object.values(dr).reduce((a, v) => a + v.length, 0),
+    totalTasks: tasks.length,
+    totalDailyRows: dr.length,
+    totalProperties: props.length,
+    urgentDomains: sites.filter(s => s.daysLeft !== null && s.daysLeft <= 30).length,
+    onlineSites: sites.filter(s => s.uptimeStatus === 'online').length,
+    offlineSites: sites.filter(s => s.uptimeStatus === 'offline').length,
+    completionPct: drTotal > 0 ? Math.round(drCompleted / drTotal * 100) : 0,
     initialised: isInitialised(),
   };
 }

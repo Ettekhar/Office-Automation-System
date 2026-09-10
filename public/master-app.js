@@ -1,296 +1,303 @@
-/**
- * master-app.js
- * SPA logic for the Master Office Automation Dashboard.
- * Three role-based views: User, Admin, Superadmin.
- */
-
 'use strict';
-
-// ─── State ────────────────────────────────────────────────────────────────────
-const state = {
-  role: null,       // 'user' | 'admin' | 'superadmin'
-  user: null,       // selected user name (for 'user' role)
-  currentView: null,
-  cache: {},        // { [key]: { data, ts } }
-  CACHE_TTL: 5 * 60 * 1000,
+// ─── State ───────────────────────────────────────────────────────────────────
+const S = {
+  role: null,         // 'user'|'admin'|'superadmin'
+  userId: null,
+  userName: null,
+  view: null,
+  users: [],          // cached user list
 };
 
-// ─── DOM refs ─────────────────────────────────────────────────────────────────
+// ─── DOM ──────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
-const landingScreen   = $('landing-screen');
-const appShell        = $('app-shell');
-const roleSelect      = $('role-select');
-const userNameSelect  = $('user-name-select');
-const userSelectWrap  = $('user-select-wrap');
-const enterBtn        = $('enter-btn');
-const sidebarNav      = $('sidebar-nav');
-const sidebarFooter   = $('sidebar-footer');
-const pageTitle       = $('page-title');
-const pageSubtitle    = $('page-subtitle');
-const mainContent     = $('main-content');
-const refreshBtn      = $('refresh-btn');
-const switchRoleBtn   = $('switch-role-btn');
+const landing  = $('landing-screen');
+const appShell = $('app-shell');
+const mainEl   = $('main-content');
+const pageTitleEl    = $('page-title');
+const pageSubtitleEl = $('page-subtitle');
+const sidebarNavEl   = $('sidebar-nav');
 
-// ─── Nav Configs ──────────────────────────────────────────────────────────────
-const NAV = {
-  user: [
-    { id: 'my-sites',   icon: '🌐', label: 'My Sites' },
-    { id: 'send-email-user', icon: '✉️', label: 'Send Email' },
-  ],
-  admin: [
-    { id: 'admin-overview', icon: '📊', label: 'Overview' },
-    { id: 'all-users',      icon: '👥', label: 'All Users' },
-    { id: 'domain-expiry',  icon: '📅', label: 'Domain Expiry' },
-    { id: 'distribution',   icon: '📋', label: 'Task Distribution' },
-    { id: 'maint-overview', icon: '🔧', label: 'Maintenance Status' },
-    { id: 'send-email-admin', icon: '✉️', label: 'Send Emails' },
-    { id: 'sync-data',      icon: '🔄', label: 'Sync from Sheets' },
-  ],
-  superadmin: [
-    { id: 'sa-overview',    icon: '🏠', label: 'Overview' },
-    { id: 'all-users',      icon: '👥', label: 'All Users' },
-    { id: 'domain-expiry',  icon: '📅', label: 'Domain Expiry' },
-    { id: 'distribution',   icon: '📋', label: 'Task Distribution' },
-    { id: 'maint-overview', icon: '🔧', label: 'Maintenance Status' },
-    { id: 'dev-tracker',    icon: '💻', label: 'Dev Tracker' },
-    { id: 'properties',     icon: '🏢', label: 'Property Registry' },
-    { id: 'send-email-admin', icon: '✉️', label: 'Send Emails' },
-    { id: 'sync-data',      icon: '🔄', label: 'Sync from Sheets' },
-  ],
-};
-
-// ─── Utilities ────────────────────────────────────────────────────────────────
-function toast(msg, type = 'info') {
-  const el = document.createElement('div');
-  el.className = `m-toast ${type}`;
-  el.textContent = msg;
-  $('m-toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
-}
-
-function loading(msg = 'Loading...') {
-  mainContent.innerHTML = `
-    <div class="loading-state fade-in">
-      <div class="spinner"></div>
-      <div>${msg}</div>
-    </div>`;
-}
-
-function empty(msg, icon = '📭') {
-  return `<div class="empty-state"><div class="empty-icon">${icon}</div><div>${msg}</div></div>`;
-}
-
-async function apiFetch(url, opts = {}) {
-  const key = url + JSON.stringify(opts);
-  if (!opts.noCache && state.cache[key] && Date.now() - state.cache[key].ts < state.CACHE_TTL) {
-    return state.cache[key].data;
-  }
-  const res = await fetch(url, opts);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  const data = await res.json();
-  if (!opts.noCache) state.cache[key] = { data, ts: Date.now() };
+// ─── API ──────────────────────────────────────────────────────────────────────
+async function api(url, opts = {}) {
+  const r = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
   return data;
 }
+const GET    = url => api(url);
+const POST   = (url, body) => api(url, { method: 'POST', body: JSON.stringify(body) });
+const PUT    = (url, body) => api(url, { method: 'PUT',  body: JSON.stringify(body) });
+const DELETE = url => api(url, { method: 'DELETE' });
 
-function invalidateCache() { state.cache = {}; }
+// ─── HTML escape ──────────────────────────────────────────────────────────────
+const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-function escHtml(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info', duration = 3500) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  $('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), duration);
 }
 
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function openModal(title, bodyHtml, buttons = []) {
+  $('modal-title').textContent = title;
+  $('modal-body').innerHTML = bodyHtml;
+  const footer = $('modal-footer');
+  footer.innerHTML = '';
+  buttons.forEach(({ label, cls = 'btn btn-primary', id, onClick }) => {
+    const btn = document.createElement('button');
+    btn.className = cls; btn.textContent = label;
+    if (id) btn.id = id;
+    if (onClick) btn.addEventListener('click', onClick);
+    footer.appendChild(btn);
+  });
+  $('modal-overlay').classList.remove('hidden');
+}
+function closeModal() { $('modal-overlay').classList.add('hidden'); }
+$('modal-close').addEventListener('click', closeModal);
+$('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
+
+// ─── Page header ─────────────────────────────────────────────────────────────
+function setPage(title, subtitle = '') {
+  pageTitleEl.textContent = title;
+  pageSubtitleEl.textContent = subtitle;
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+function uptimeDot(status) {
+  const labels = { online: '🟢 Online', offline: '🔴 Offline', unknown: '⚪ Unknown' };
+  return `<span class="uptime-dot ${status || 'unknown'}">${labels[status] || 'Unknown'}</span>`;
+}
 function statusBadge(s) {
   const map = {
-    completed: ['badge-completed','✅ Completed'],
-    in_progress: ['badge-in_progress','⏳ In Progress'],
-    todo: ['badge-todo','📌 To Do'],
-    pending: ['badge-pending','— Pending'],
-    sent: ['badge-sent','📨 Sent'],
-    no: ['badge-pending','✗ No'],
+    completed:'success', in_progress:'info', todo:'warning', pending:'dim',
+    sent:'success', 'no':'danger',
   };
-  const [cls, label] = map[s] || ['badge-pending', escHtml(s) || '—'];
-  return `<span class="badge ${cls}">${label}</span>`;
+  const cls = map[s?.toLowerCase()] || 'dim';
+  return `<span class="badge badge-${cls}">${esc(s||'—')}</span>`;
+}
+function domainBadge(days) {
+  if (days === null || days === undefined) return '<span class="badge badge-dim">Unknown</span>';
+  if (days <= 0)  return `<span class="badge badge-danger">Expired</span>`;
+  if (days <= 30) return `<span class="badge badge-danger">${days}d left</span>`;
+  if (days <= 90) return `<span class="badge badge-warning">${days}d left</span>`;
+  return `<span class="badge badge-success">${days}d left</span>`;
+}
+function priorityBadge(p) {
+  const map = { high:'danger', medium:'warning', low:'dim' };
+  return `<span class="badge badge-${map[p?.toLowerCase()]||'dim'}">${esc(p||'—')}</span>`;
 }
 
-function daysLeftBadge(days) {
-  if (days === null) return '<span class="text-muted">—</span>';
-  if (days <= 0)  return `<span class="badge badge-urgent">⚠️ Expired</span>`;
-  if (days <= 30) return `<span class="badge badge-urgent">🔴 ${days}d left</span>`;
-  if (days <= 90) return `<span class="badge badge-warning">🟡 ${days}d left</span>`;
-  return `<span class="badge badge-ok">🟢 ${days}d left</span>`;
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function userOptions(selectedId = '') {
+  return S.users.map(u => `<option value="${u.id}" ${u.id===selectedId?'selected':''}>${esc(u.name)} (${u.role})</option>`).join('');
+}
+function shortUrl(url, max = 38) {
+  const s = (url||'').replace(/^https?:\/\//, '').replace(/^www\./, '');
+  return s.length > max ? s.slice(0, max) + '…' : s;
 }
 
-// ─── Landing ──────────────────────────────────────────────────────────────────
-async function initLanding() {
-  const defaultUsers = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif'];
-  userNameSelect.innerHTML = defaultUsers.map(u => `<option value="${u}">${u}</option>`).join('');
+// ─── Sidebar Nav ──────────────────────────────────────────────────────────────
+const NAV = {
+  user: [
+    { id:'my-sites',   icon:'🌐', label:'My Sites' },
+    { id:'my-tasks',   icon:'✅', label:'My Tasks' },
+  ],
+  admin: [
+    { id:'overview',      icon:'📊', label:'Overview' },
+    { id:'all-users',     icon:'👥', label:'Team Progress' },
+    { id:'sites',         icon:'🌐', label:'All Sites' },
+    { id:'tasks',         icon:'📋', label:'Tasks' },
+    { id:'domain-expiry', icon:'📅', label:'Domain Expiry' },
+    { id:'uptime',        icon:'💓', label:'Uptime Monitor' },
+    { id:'send-emails',   icon:'✉️', label:'Send Emails' },
+  ],
+  superadmin: [
+    { id:'overview',      icon:'📊', label:'Overview' },
+    { id:'all-users',     icon:'👥', label:'Team Progress' },
+    { id:'sites',         icon:'🌐', label:'All Sites' },
+    { id:'tasks',         icon:'📋', label:'Tasks' },
+    { id:'domain-expiry', icon:'📅', label:'Domain Expiry' },
+    { id:'uptime',        icon:'💓', label:'Uptime Monitor' },
+    { id:'properties',    icon:'🏢', label:'Property Registry' },
+    { id:'dev-projects',  icon:'💻', label:'Dev Tracker' },
+    { id:'user-mgmt',     icon:'⚙️',  label:'User Management' },
+    { id:'send-emails',   icon:'✉️', label:'Send Emails' },
+    { id:'sync',          icon:'🔄', label:'Sync from Sheets' },
+  ],
+};
 
-  // Check if local DB is initialised
-  try {
-    const status = await apiFetch('/api/master/db-status', { noCache: true });
-    if (!status.initialised) {
-      const warn = document.createElement('div');
-      warn.style.cssText = 'background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24';
-      warn.innerHTML = '⚠️ <strong>First time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import all data.';
-      document.querySelector('.landing-card').insertBefore(warn, document.querySelector('.btn-enter'));
-    } else {
-      const syncAgo = status.lastSync ? Math.round((Date.now() - new Date(status.lastSync)) / 60000) : null;
-      const info = document.createElement('div');
-      info.style.cssText = 'background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#34d399';
-      info.textContent = `✅ Data ready · ${status.totalSites} sites · ${status.totalDomains} domains${syncAgo !== null ? ` · synced ${syncAgo}m ago` : ''}`;
-      document.querySelector('.landing-card').insertBefore(info, document.querySelector('.btn-enter'));
-    }
-  } catch {}
-
-  roleSelect.addEventListener('change', () => {
-    userSelectWrap.classList.toggle('hidden', roleSelect.value !== 'user');
-  });
-  userSelectWrap.classList.remove('hidden');
-}
-
-enterBtn.addEventListener('click', () => {
-  state.role = roleSelect.value;
-  state.user = roleSelect.value === 'user' ? userNameSelect.value : null;
-  landingScreen.classList.add('hidden');
-  appShell.classList.remove('hidden');
-  buildSidebar();
-  const firstView = NAV[state.role][0].id;
-  navigateTo(firstView);
-});
-
-switchRoleBtn.addEventListener('click', () => {
-  invalidateCache();
-  appShell.classList.add('hidden');
-  landingScreen.classList.remove('hidden');
-});
-
-refreshBtn.addEventListener('click', () => {
-  invalidateCache();
-  navigateTo(state.currentView);
-  toast('Data refreshed', 'success');
-});
-
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-function buildSidebar() {
-  const items = NAV[state.role] || [];
-  const roleLabel = { user: '👤 User', admin: '🔑 Admin', superadmin: '👑 Superadmin' }[state.role];
-
-  sidebarNav.innerHTML = items.map(n => `
-    <div class="nav-item" data-view="${n.id}">
+function buildNav(role) {
+  const items = NAV[role] || [];
+  sidebarNavEl.innerHTML = items.map(n => `
+    <div class="nav-item" data-view="${n.id}" id="nav-${n.id}">
       <span class="nav-icon">${n.icon}</span>
-      <span>${n.label}</span>
+      <span class="nav-label">${esc(n.label)}</span>
     </div>`).join('');
-
-  sidebarFooter.innerHTML = `
-    <div style="font-weight:600;color:var(--text-muted);margin-bottom:4px">${roleLabel}</div>
-    ${state.user ? `<div style="color:var(--accent-2)">${state.user}</div>` : ''}
-  `;
-
-  sidebarNav.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => navigateTo(el.dataset.view));
+  sidebarNavEl.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.view));
   });
 }
 
 function setActiveNav(viewId) {
-  sidebarNav.querySelectorAll('.nav-item').forEach(el => {
+  sidebarNavEl.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.view === viewId);
   });
 }
 
-// ─── Router ───────────────────────────────────────────────────────────────────
-async function navigateTo(viewId) {
-  state.currentView = viewId;
+// ─── Navigation ───────────────────────────────────────────────────────────────
+const viewFns = {
+  'my-sites':     viewMySites,
+  'my-tasks':     viewMyTasks,
+  'overview':     viewOverview,
+  'all-users':    viewAllUsers,
+  'sites':        viewSites,
+  'tasks':        viewTasks,
+  'domain-expiry':viewDomainExpiry,
+  'uptime':       viewUptime,
+  'properties':   viewProperties,
+  'dev-projects': viewDevProjects,
+  'user-mgmt':    viewUserMgmt,
+  'send-emails':  viewSendEmails,
+  'sync':         viewSync,
+};
+
+function navigate(viewId) {
+  S.view = viewId;
   setActiveNav(viewId);
-
-  const views = {
-    'my-sites':        renderMySites,
-    'send-email-user': renderSendEmailsLink,
-    'admin-overview':  renderAdminOverview,
-    'sa-overview':     renderAdminOverview,
-    'all-users':       renderAllUsers,
-    'domain-expiry':   renderDomainExpiry,
-    'distribution':    renderDistribution,
-    'maint-overview':  renderMaintenanceOverview,
-    'dev-tracker':     renderDevTracker,
-    'properties':      renderProperties,
-    'send-email-admin':renderSendEmailsLink,
-    'sync-data':       renderSync,
-  };
-
-  const fn = views[viewId];
-  if (!fn) { mainContent.innerHTML = `<div class="empty-state">View not found: ${viewId}</div>`; return; }
-
-  loading();
-  try { await fn(); }
-  catch (err) {
-    mainContent.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">⚠️</div>
-      <div style="color:var(--danger)">${escHtml(err.message)}</div>
-    </div>`;
-    toast(err.message, 'error');
-  }
+  mainEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+  const fn = viewFns[viewId];
+  if (fn) fn(); else mainEl.innerHTML = '<div class="empty-state"><p>View not found</p></div>';
 }
 
-// ─── VIEW: My Sites ───────────────────────────────────────────────────────────
-async function renderMySites() {
-  pageTitle.textContent = `My Sites`;
-  pageSubtitle.textContent = `${state.user}'s Daily Review`;
+$('refresh-btn').addEventListener('click', () => { if (S.view) navigate(S.view); });
+$('logout-btn').addEventListener('click', () => {
+  appShell.classList.add('hidden');
+  landing.classList.remove('hidden');
+});
+$('sidebar-toggle').addEventListener('click', () => {
+  appShell.classList.toggle('sidebar-collapsed');
+});
 
-  const { sites } = await apiFetch(`/api/master/daily-review?user=${encodeURIComponent(state.user)}`);
+// ─── LANDING ──────────────────────────────────────────────────────────────────
+async function initLanding() {
+  const defaultNames = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif'];
+  const nameSelect = $('user-name-select');
+  nameSelect.innerHTML = defaultNames.map(n => `<option>${n}</option>`).join('');
 
-  if (!sites.length) { mainContent.innerHTML = empty('No sites assigned to you yet.', '📭'); return; }
+  $('role-select').addEventListener('change', e => {
+    $('user-select-wrap').classList.toggle('hidden', e.target.value !== 'user');
+  });
 
-  const completed = sites.filter(s => s.maintenance === 'completed').length;
-  const inProgress = sites.filter(s => s.maintenance === 'in_progress').length;
-  const pending = sites.length - completed - inProgress;
-  const pct = Math.round((completed / sites.length) * 100);
+  // DB status badge
+  try {
+    const st = await GET('/api/master/db-status');
+    const statusEl = $('landing-status');
+    if (!st.initialised) {
+      statusEl.innerHTML = `<div class="status-pill warn">⚠️ <span><strong>First-time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import data.</span></div>`;
+    } else {
+      const ago = st.lastSync ? Math.round((Date.now() - new Date(st.lastSync)) / 60000) : null;
+      statusEl.innerHTML = `<div class="status-pill ok">✅ <span>${st.totalSites} sites · ${st.totalDomains} domains${ago!==null?` · synced ${ago}m ago`:''}</span></div>`;
+    }
+    // Load real user names
+    const { users } = await GET('/api/master/users');
+    S.users = users;
+    nameSelect.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  } catch {}
 
-  mainContent.innerHTML = `
+  $('enter-btn').addEventListener('click', () => {
+    const role = $('role-select').value;
+    const nameOpt = nameSelect.options[nameSelect.selectedIndex];
+    S.role = role;
+    S.userName = nameOpt.text;
+    S.userId = nameOpt.value || null;
+    enterApp();
+  });
+}
+
+function enterApp() {
+  landing.classList.add('hidden');
+  appShell.classList.remove('hidden');
+
+  // Set sidebar user info
+  $('user-name-display').textContent = S.role === 'user' ? S.userName : (S.role === 'admin' ? 'Admin' : 'Superadmin');
+  $('user-role-display').textContent = S.role;
+  $('user-avatar').textContent = (S.userName || S.role)[0].toUpperCase();
+
+  buildNav(S.role);
+
+  // Show sync-status if synced
+  GET('/api/master/db-status').then(st => {
+    if (st.lastSync) {
+      $('sync-status').classList.remove('hidden');
+      const ago = Math.round((Date.now() - new Date(st.lastSync)) / 60000);
+      $('sync-status-text').textContent = ago < 1 ? 'Synced just now' : `Synced ${ago}m ago`;
+    }
+  }).catch(() => {});
+
+  // Default view
+  const defaultViews = { user: 'my-sites', admin: 'overview', superadmin: 'overview' };
+  navigate(defaultViews[S.role] || 'overview');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: MY SITES (User)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewMySites() {
+  setPage('My Sites', `Logged in as ${S.userName}`);
+
+  let rows = [];
+  try {
+    const data = await GET(`/api/master/daily-review?userId=${S.userId}&user=${encodeURIComponent(S.userName)}`);
+    rows = data.rows || [];
+  } catch (e) { toast(e.message, 'error'); }
+
+  const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
+  const pct = rows.length ? Math.round(completed / rows.length * 100) : 0;
+
+  mainEl.innerHTML = `
     <div class="fade-in">
       <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${sites.length}</div><div class="stat-label">Total Sites</div></div>
-        <div class="stat-card green"><div class="stat-value">${completed}</div><div class="stat-label">Completed</div></div>
-        <div class="stat-card yellow"><div class="stat-value">${inProgress}</div><div class="stat-label">In Progress</div></div>
-        <div class="stat-card blue"><div class="stat-value">${pending}</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card accent"><div class="stat-value">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
+        <div class="stat-card success"><div class="stat-value">${completed}</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card warning"><div class="stat-value">${rows.filter(r=>r.maintenanceStatus==='in_progress').length}</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card danger"><div class="stat-value">${rows.filter(r=>!['completed','in_progress'].includes(r.maintenanceStatus)).length}</div><div class="stat-label">Pending</div></div>
       </div>
-
-      <div class="section-card">
-        <div class="section-header">
-          <span class="section-title">Today's Progress</span>
-          <span class="section-subtitle">${pct}% complete</span>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Daily Maintenance Checklist</span>
+          <div class="card-actions">
+            <span style="font-size:12px;color:var(--text-muted)">${pct}% complete</span>
+            <div class="progress-wrap" style="width:120px"><div class="progress-fill" style="width:${pct}%"></div></div>
+          </div>
         </div>
-        <div class="progress-bar-wrap" style="margin-bottom:24px">
-          <div class="progress-bar-fill" style="width:${pct}%"></div>
-        </div>
-
-        <div class="filter-row">
-          <input class="search-input" id="sites-search" placeholder="🔍 Search websites..." />
-          <select class="status-select" id="sites-filter">
+        <div class="toolbar" style="padding:12px 16px 0">
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input id="site-search" class="search-input" placeholder="Search sites…">
+          </div>
+          <select id="site-filter" class="filter-select">
             <option value="">All Status</option>
             <option value="completed">Completed</option>
             <option value="in_progress">In Progress</option>
+            <option value="todo">To Do</option>
             <option value="pending">Pending</option>
           </select>
         </div>
-
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Website</th>
-                <th>Company</th>
-                <th>Maintenance</th>
-                <th>Report Sent</th>
-                <th>GA4</th>
-                <th>Cloudflare</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>#</th><th>Website</th><th>Account</th><th>Maintenance</th><th>Report Sent</th>
+              <th>GA4</th><th>Cloudflare</th><th>Uptime</th><th>Links</th>
+            </tr></thead>
             <tbody id="sites-tbody">
-              ${sites.map((s, i) => renderSiteRow(s, i, state.user)).join('')}
+              ${rows.map((r,i) => siteRow(r, i)).join('')}
             </tbody>
           </table>
         </div>
@@ -299,393 +306,855 @@ async function renderMySites() {
 
   // Search + filter
   const tbody = $('sites-tbody');
-  const searchInput = $('sites-search');
-  const filterSelect = $('sites-filter');
-
-  function filterTable() {
-    const q = searchInput.value.toLowerCase();
-    const f = filterSelect.value;
-    tbody.querySelectorAll('tr').forEach(tr => {
+  const allRows = [...tbody.querySelectorAll('tr')];
+  function filterRows() {
+    const q = $('site-search').value.toLowerCase();
+    const f = $('site-filter').value;
+    allRows.forEach(tr => {
       const url = tr.dataset.url || '';
       const status = tr.dataset.status || '';
-      const matchQ = !q || url.includes(q);
-      const matchF = !f || status === f;
-      tr.style.display = matchQ && matchF ? '' : 'none';
+      tr.classList.toggle('hidden',
+        (q && !url.includes(q)) || (f && status !== f)
+      );
     });
   }
+  $('site-search').addEventListener('input', filterRows);
+  $('site-filter').addEventListener('change', filterRows);
 
-  searchInput.addEventListener('input', filterTable);
-  filterSelect.addEventListener('change', filterTable);
-
-  // Status update listeners — saves to local DB
+  // Status selects
   tbody.querySelectorAll('.status-select').forEach(sel => {
     sel.addEventListener('change', async e => {
-      const { siteUrl, field } = e.target.dataset;
+      const { rowId, field } = e.target.dataset;
       const value = e.target.value;
-      const updates = { [field + 'Raw']: value, [field]: value.toLowerCase().replace(' ', '_') };
+      const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','Yes':'sent','No':'no' };
       try {
-        await apiFetch('/api/master/update-row', {
-          method: 'POST',
-          noCache: true,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: state.user, url: siteUrl, updates }),
+        await PUT(`/api/master/daily-review/${rowId}`, {
+          [field]: normMap[value] || value,
+          [field + 'Raw']: value,
         });
-        toast(`Updated to "${value}"`, 'success');
-        invalidateCache();
-      } catch (err) {
-        toast(`Failed: ${err.message}`, 'error');
-      }
+        toast('Status updated', 'success');
+      } catch (err) { toast(err.message, 'error'); }
     });
   });
 }
 
-function renderSiteRow(s, i, user) {
-  const statusOpts = ['Completed', 'In Progress', 'To Do', 'Pending'].map(o =>
-    `<option value="${o}" ${s.maintenanceRaw === o ? 'selected' : ''}>${o}</option>`
-  ).join('');
-  const reportOpts = ['Yes', 'No', 'To Do'].map(o =>
-    `<option value="${o}" ${s.reportSentRaw === o ? 'selected' : ''}>${o}</option>`
-  ).join('');
-
+function siteRow(r, i) {
+  const maintOpts = ['Completed','In Progress','To Do','Pending'].map(o =>
+    `<option ${r.maintenanceRaw===o?'selected':''}>${o}</option>`).join('');
+  const sentOpts = ['Yes','No','To Do'].map(o =>
+    `<option ${r.reportSentRaw===o?'selected':''}>${o}</option>`).join('');
   return `
-    <tr data-url="${escHtml(s.url.toLowerCase())}" data-status="${s.maintenance}">
-      <td style="color:var(--text-dim)">${i + 1}</td>
-      <td class="url-cell"><a href="${escHtml(s.url)}" target="_blank">${escHtml(s.url.replace(/^https?:\/\//, '').slice(0,40))}</a></td>
-      <td><span class="badge ${s.company === 'CW' ? 'badge-todo' : 'badge-pending'}">${escHtml(s.company)}</span></td>
+    <tr data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}">
+      <td style="color:var(--text-dim)">${i+1}</td>
+      <td class="url-cell"><a href="${esc(r.siteUrl)}" target="_blank" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))}</a></td>
+      <td><span class="badge badge-${r.maintenanceRaw?.includes('CW')||r.company==='CW'?'cw':'rm'}">${esc(r.company||'—')}</span></td>
+      <td><select class="status-select" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
+      <td><select class="status-select" data-row-id="${r.id}" data-field="reportSentStatus">${sentOpts}</select></td>
+      <td style="font-size:11px;color:var(--text-muted)">${esc(r.ga4||'—')}</td>
+      <td>${r.cloudflare==='No'||!r.cloudflare?'<span class="badge badge-success">✓</span>':'<span class="badge badge-warning">Issue</span>'}</td>
+      <td>${uptimeDot('unknown')}</td>
       <td>
-        <select class="status-select" data-site-url="${escHtml(s.url)}" data-field="maintenance">
-          ${statusOpts}
-        </select>
-      </td>
-      <td>
-        <select class="status-select" data-site-url="${escHtml(s.url)}" data-field="reportSent">
-          ${reportOpts}
-        </select>
-      </td>
-      <td style="font-size:12px;color:var(--text-muted)">${escHtml(s.ga4 || '—')}</td>
-      <td style="font-size:12px">${s.cloudflare === 'No' ? '<span class="text-success">✓</span>' : escHtml(s.cloudflare || '—')}</td>
-      <td>
-        ${s.clickupLink ? `<a class="btn btn-ghost btn-sm" href="${escHtml(s.clickupLink)}" target="_blank">ClickUp</a>` : ''}
-        ${s.bookingLink ? `<a class="btn btn-ghost btn-sm" href="${escHtml(s.bookingLink)}" target="_blank">Booking</a>` : ''}
+        ${r.clickupLink?`<a class="btn btn-ghost btn-sm" href="${esc(r.clickupLink)}" target="_blank">ClickUp</a>`:''}
+        ${r.bookingLink?`<a class="btn btn-ghost btn-sm" href="${esc(r.bookingLink)}" target="_blank">Booking</a>`:''}
       </td>
     </tr>`;
 }
 
-// ─── VIEW: Admin Overview ─────────────────────────────────────────────────────
-async function renderAdminOverview() {
-  pageTitle.textContent = 'Overview';
-  pageSubtitle.textContent = 'Team progress at a glance';
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: MY TASKS (User)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewMyTasks() {
+  setPage('My Tasks');
+  let tasks = [];
+  try {
+    const data = await GET(`/api/master/tasks${S.userId ? `?assigneeId=${S.userId}` : ''}`);
+    tasks = data.tasks || [];
+  } catch (e) { toast(e.message, 'error'); }
 
-  const [{ summary }, { domains }] = await Promise.all([
-    apiFetch('/api/master/summary'),
-    apiFetch('/api/master/domain-expiry'),
-  ]);
-
-  const totalSites = summary.reduce((a, u) => a + u.total, 0);
-  const totalCompleted = summary.reduce((a, u) => a + u.completed, 0);
-  const totalReports = summary.reduce((a, u) => a + u.reportSent, 0);
-  const urgentDomains = domains.filter(d => d.urgent).length;
-  const overallPct = totalSites ? Math.round((totalCompleted / totalSites) * 100) : 0;
-
-  mainContent.innerHTML = `
+  mainEl.innerHTML = `
     <div class="fade-in">
-      <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${totalSites}</div><div class="stat-label">Total Sites</div><div class="stat-sub">Across all users</div></div>
-        <div class="stat-card green"><div class="stat-value">${totalCompleted}</div><div class="stat-label">Completed</div><div class="stat-sub">${overallPct}% done</div></div>
-        <div class="stat-card blue"><div class="stat-value">${totalReports}</div><div class="stat-label">Reports Sent</div></div>
-        <div class="stat-card red"><div class="stat-value">${urgentDomains}</div><div class="stat-label">Urgent Domains</div><div class="stat-sub">Expiring ≤30 days</div></div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-header">
-          <span class="section-title">Overall Progress</span>
-          <span class="section-subtitle">${overallPct}% complete</span>
-        </div>
-        <div class="progress-bar-wrap" style="margin-bottom:24px">
-          <div class="progress-bar-fill" style="width:${overallPct}%"></div>
-        </div>
-
-        <div class="user-grid">
-          ${summary.map(u => {
-            const pct = u.total ? Math.round((u.completed / u.total) * 100) : 0;
-            return `
-              <div class="user-card" onclick="navigateTo('all-users')">
-                <div class="user-avatar">${u.user[0]}</div>
-                <div class="user-name">${u.user}</div>
-                <div class="user-stats">${u.completed}/${u.total} completed · ${u.reportSent} reports sent</div>
-                <div class="user-progress">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:4px">
-                    <span>Progress</span><span>${pct}%</span>
-                  </div>
-                  <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>
-      </div>
-
-      ${urgentDomains > 0 ? `
-      <div class="section-card" style="border-color:rgba(248,113,113,.3)">
-        <div class="section-header">
-          <span class="section-title" style="color:var(--danger)">⚠️ Urgent Domain Expirations</span>
-          <span class="section-subtitle">${urgentDomains} expiring within 30 days</span>
-        </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Website</th><th>Company</th><th>A/C Manager</th><th>Days Left</th></tr></thead>
-          <tbody>
-            ${domains.filter(d => d.urgent).map(d => `
+      <div class="card">
+        <div class="card-header"><span class="card-title">📋 Assigned Tasks</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Task</th><th>Site</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th></tr></thead>
+            <tbody>${tasks.length ? tasks.map(t => `
               <tr>
-                <td class="url-cell"><a href="https://${escHtml(d.url)}" target="_blank">${escHtml(d.url)}</a></td>
-                <td>${escHtml(d.company)}</td>
-                <td>${escHtml(d.accountManager)}</td>
-                <td>${daysLeftBadge(d.daysLeft)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>` : ''}
+                <td style="font-weight:500">${esc(t.taskName)}</td>
+                <td class="url-cell"><a href="${esc(t.siteUrl)}" target="_blank">${esc(shortUrl(t.siteUrl))}</a></td>
+                <td>${esc(t.taskType||'—')}</td>
+                <td>${priorityBadge(t.priority)}</td>
+                <td>${statusBadge(t.status)}</td>
+                <td>${t.clickupLink?`<a class="btn btn-ghost btn-sm" href="${esc(t.clickupLink)}" target="_blank">Open</a>`:'—'}</td>
+              </tr>`).join('') : '<tr><td colspan="6" class="empty-state" style="text-align:center;padding:32px">No tasks assigned</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
 }
 
-// ─── VIEW: All Users ──────────────────────────────────────────────────────────
-async function renderAllUsers() {
-  pageTitle.textContent = 'All Users';
-  pageSubtitle.textContent = 'Detailed view per technician';
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: OVERVIEW (Admin/Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewOverview() {
+  setPage('Overview', 'Team-wide snapshot');
+  let stats = {}, summary = [];
+  try {
+    [stats, { summary }] = await Promise.all([
+      GET('/api/master/stats'),
+      GET('/api/master/summary'),
+    ]);
+  } catch (e) { toast(e.message, 'error'); }
 
-  const allData = await apiFetch('/api/master/daily-review-all');
+  const totalSites = summary.reduce((a,u) => a+u.total, 0);
+  const totalDone  = summary.reduce((a,u) => a+u.completed, 0);
+  const overallPct = totalSites ? Math.round(totalDone/totalSites*100) : 0;
 
-  const userNames = Object.keys(allData);
-
-  mainContent.innerHTML = `
-    <div class="fade-in">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        ${userNames.map(u => `<button class="btn btn-ghost" id="tab-${u}" onclick="showUserDetail('${u}')">${u}</button>`).join('')}
-      </div>
-      <div id="user-detail-area"></div>
-    </div>`;
-
-  window._allUsersData = allData;
-  showUserDetail(userNames[0]);
-}
-
-window.showUserDetail = function(user) {
-  document.querySelectorAll('[id^="tab-"]').forEach(b => b.classList.remove('btn-primary'));
-  const tab = $(`tab-${user}`);
-  if (tab) { tab.classList.remove('btn-ghost'); tab.classList.add('btn-primary'); }
-
-  const sites = window._allUsersData[user] || [];
-  const area = $('user-detail-area');
-  if (!sites.length) { area.innerHTML = empty(`No sites found for ${user}`); return; }
-
-  area.innerHTML = `
-    <div class="section-card">
-      <div class="section-header">
-        <span class="section-title">${user}'s Sites (${sites.length})</span>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>#</th><th>Website</th><th>Company</th><th>Maintenance</th><th>Report Sent</th><th>GA4</th><th>ClickUp</th></tr></thead>
-        <tbody>
-          ${sites.map((s, i) => `
-            <tr>
-              <td style="color:var(--text-dim)">${i + 1}</td>
-              <td class="url-cell"><a href="${escHtml(s.url)}" target="_blank">${escHtml(s.url.replace(/^https?:\/\//, '').slice(0,40))}</a></td>
-              <td><span class="badge ${s.company === 'CW' ? 'badge-todo' : 'badge-pending'}">${escHtml(s.company)}</span></td>
-              <td>${statusBadge(s.maintenance)}</td>
-              <td>${s.reportSentRaw?.toLowerCase() === 'yes' ? '<span class="badge badge-sent">✅ Sent</span>' : '<span class="badge badge-pending">✗ No</span>'}</td>
-              <td style="font-size:12px;color:var(--text-muted)">${escHtml(s.ga4 || '—')}</td>
-              <td>${s.clickupLink ? `<a class="btn btn-ghost btn-sm" href="${escHtml(s.clickupLink)}" target="_blank">↗</a>` : '—'}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>`;
-};
-
-// ─── VIEW: Domain Expiry ──────────────────────────────────────────────────────
-async function renderDomainExpiry() {
-  pageTitle.textContent = 'Domain Expiration';
-  pageSubtitle.textContent = 'All tracked domains sorted by urgency';
-
-  const { domains } = await apiFetch('/api/master/domain-expiry');
-  domains.sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999));
-
-  const urgent = domains.filter(d => d.urgent).length;
-  const warning = domains.filter(d => d.warning).length;
-
-  mainContent.innerHTML = `
+  mainEl.innerHTML = `
     <div class="fade-in">
       <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${domains.length}</div><div class="stat-label">Total Domains</div></div>
-        <div class="stat-card red"><div class="stat-value">${urgent}</div><div class="stat-label">Urgent (≤30d)</div></div>
-        <div class="stat-card yellow"><div class="stat-value">${warning}</div><div class="stat-label">Warning (≤90d)</div></div>
-        <div class="stat-card green"><div class="stat-value">${domains.length - urgent - warning}</div><div class="stat-label">OK</div></div>
+        <div class="stat-card accent"><div class="stat-value">${stats.totalSites||0}</div><div class="stat-label">Total Sites</div></div>
+        <div class="stat-card success"><div class="stat-value">${overallPct}%</div><div class="stat-label">Today's Completion</div></div>
+        <div class="stat-card ${stats.urgentDomains>0?'danger':'success'}"><div class="stat-value">${stats.urgentDomains||0}</div><div class="stat-label">Urgent Domains (≤30d)</div></div>
+        <div class="stat-card info"><div class="stat-value">${stats.totalTasks||0}</div><div class="stat-label">Open Tasks</div></div>
+        <div class="stat-card success"><div class="stat-value">${stats.onlineSites||0}</div><div class="stat-label">Sites Online</div></div>
+        <div class="stat-card ${stats.offlineSites>0?'danger':'dim'}"><div class="stat-value">${stats.offlineSites||0}</div><div class="stat-label">Sites Offline</div></div>
       </div>
 
-      <div class="section-card">
-        <div class="section-header">
-          <span class="section-title">All Domains</span>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">👥 Team Progress Today</span>
+          <div class="card-actions">
+            <span style="font-size:12px;color:var(--text-muted)">${totalDone}/${totalSites} sites completed</span>
+          </div>
         </div>
-        <div class="filter-row">
-          <input class="search-input" id="domain-search" placeholder="🔍 Search domain..." />
-          <select class="status-select" id="domain-filter" style="max-width:200px">
-            <option value="">All</option>
-            <option value="urgent">Urgent (≤30d)</option>
-            <option value="warning">Warning (≤90d)</option>
-            <option value="ok">OK</option>
-          </select>
-        </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Status</th><th>Website</th><th>Company</th><th>A/C Manager</th><th>CMS</th><th>Expiry Date</th><th>Days Left</th></tr></thead>
-          <tbody id="domain-tbody">
-            ${domains.map(d => {
-              const urgency = d.urgent ? 'urgent' : d.warning ? 'warning' : 'ok';
-              return `<tr data-url="${escHtml((d.url || '').toLowerCase())}" data-urgency="${urgency}">
-                <td><span class="badge ${d.status === 'Active' ? 'badge-completed' : 'badge-pending'}">${escHtml(d.status)}</span></td>
-                <td class="url-cell"><a href="https://${escHtml(d.url)}" target="_blank">${escHtml(d.url)}</a></td>
-                <td>${escHtml(d.company)}</td>
-                <td>${escHtml(d.accountManager)}</td>
-                <td style="font-size:12px;color:var(--text-muted)">${escHtml(d.cms)}</td>
-                <td style="font-size:12px">${escHtml(d.expiryDate)}</td>
-                <td>${daysLeftBadge(d.daysLeft)}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table></div>
-      </div>
-    </div>`;
-
-  $('domain-search').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase();
-    const f = $('domain-filter').value;
-    $('domain-tbody').querySelectorAll('tr').forEach(tr => {
-      const url = tr.dataset.url || '';
-      const urgency = tr.dataset.urgency || '';
-      tr.style.display = ((!q || url.includes(q)) && (!f || urgency === f)) ? '' : 'none';
-    });
-  });
-  $('domain-filter').addEventListener('change', e => e.target.dispatchEvent(new Event('change')) || $('domain-search').dispatchEvent(new Event('input')));
-}
-
-// ─── VIEW: Distribution ───────────────────────────────────────────────────────
-async function renderDistribution() {
-  pageTitle.textContent = 'Task Distribution';
-  pageSubtitle.textContent = 'Assignments from Distribution & Work Sheet';
-
-  const { tasks, taskLoad } = await apiFetch('/api/master/distribution');
-
-  const statusCounts = {};
-  tasks.forEach(t => { statusCounts[t.status] = (statusCounts[t.status] || 0) + 1; });
-
-  mainContent.innerHTML = `
-    <div class="fade-in">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-
-        <div class="section-card" style="margin-bottom:0">
-          <div class="section-header"><span class="section-title">👥 Task Load</span></div>
-          <div class="table-wrap"><table>
-            <thead><tr><th>Team Member</th><th>Tasks On Hand</th><th>Details</th></tr></thead>
-            <tbody>
-              ${taskLoad.map(m => `
-                <tr>
-                  <td><strong>${escHtml(m.member)}</strong></td>
-                  <td><span class="badge ${m.taskCount > 5 ? 'badge-urgent' : m.taskCount > 2 ? 'badge-warning' : 'badge-completed'}">${m.taskCount}</span></td>
-                  <td>${m.taskLink ? `<a class="btn btn-ghost btn-sm" href="${escHtml(m.taskLink)}" target="_blank">↗ View</a>` : '—'}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table></div>
-        </div>
-
-        <div class="section-card" style="margin-bottom:0">
-          <div class="section-header"><span class="section-title">📊 Status Breakdown</span></div>
-          ${Object.entries(statusCounts).map(([s, c]) => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-              <span>${escHtml(s) || '(blank)'}</span>
-              <span class="badge badge-todo">${c}</span>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+          ${summary.filter(u=>u.total>0).map(u => `
+            <div class="user-progress-card">
+              <div class="upc-top">
+                <span class="upc-name">${esc(u.user)}</span>
+                <span class="upc-pct">${u.pct}%</span>
+              </div>
+              <div class="progress-wrap" style="margin-bottom:8px"><div class="progress-fill" style="width:${u.pct}%"></div></div>
+              <div class="upc-meta">
+                <span>✅ ${u.completed} done</span>
+                <span>🔄 ${u.inProgress} in progress</span>
+                <span>📧 ${u.reportSent} sent</span>
+              </div>
             </div>`).join('')}
         </div>
       </div>
+    </div>`;
+}
 
-      <div class="section-card">
-        <div class="section-header"><span class="section-title">All Tasks (${tasks.length})</span></div>
-        <div class="filter-row">
-          <input class="search-input" id="dist-search" placeholder="🔍 Search website or task..." />
-          <select class="status-select" id="dist-assignee" style="max-width:160px">
-            <option value="">All Assignees</option>
-            ${[...new Set(tasks.map(t => t.assignee).filter(Boolean))].map(a => `<option value="${a}">${a}</option>`).join('')}
-          </select>
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: ALL USERS (Admin/Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewAllUsers() {
+  setPage('Team Progress', 'Click a user to see their sites');
+  let summary = [];
+  try { ({ summary } = await GET('/api/master/summary')); } catch (e) { toast(e.message,'error'); }
+
+  const tabs = summary.filter(u=>u.total>0);
+  if (!tabs.length) { mainEl.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No data synced yet.</p></div>`; return; }
+
+  const firstUser = tabs[0];
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        ${tabs.map((u,i) => `
+          <button class="btn ${i===0?'btn-primary':'btn-secondary'} user-tab-btn" data-uid="${u.userId}" data-uname="${esc(u.user)}">
+            ${esc(u.user)} <span class="badge badge-${u.pct>=100?'success':u.pct>50?'info':'warning'}">${u.pct}%</span>
+          </button>`).join('')}
+      </div>
+      <div id="user-sites-panel"></div>
+    </div>`;
+
+  async function loadUser(userId, userName) {
+    const panel = $('user-sites-panel');
+    panel.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+    try {
+      const { rows } = await GET(`/api/master/daily-review?userId=${userId}&user=${encodeURIComponent(userName)}`);
+      const u = summary.find(x=>x.userId===userId)||{};
+      panel.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🌐 ${esc(userName)}'s Sites (${rows.length})</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;color:var(--text-muted)">${u.pct||0}% complete</span>
+              <div class="progress-wrap" style="width:100px"><div class="progress-fill" style="width:${u.pct||0}%"></div></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Site</th><th>Account</th><th>Maintenance</th><th>Report Sent</th><th>GA4</th><th>Uptime</th></tr></thead>
+              <tbody>${rows.map((r,i)=>`
+                <tr>
+                  <td style="color:var(--text-dim)">${i+1}</td>
+                  <td class="url-cell"><a href="${esc(r.siteUrl)}" target="_blank">${esc(shortUrl(r.siteUrl))}</a></td>
+                  <td><span class="badge badge-${r.company==='CW'?'cw':'rm'}">${esc(r.company||'—')}</span></td>
+                  <td>${statusBadge(r.maintenanceStatus)}</td>
+                  <td>${r.reportSentRaw?.toLowerCase()==='yes'?'<span class="badge badge-success">✓ Sent</span>':'<span class="badge badge-dim">No</span>'}</td>
+                  <td style="font-size:11px;color:var(--text-muted)">${esc(r.ga4||'—')}</td>
+                  <td>${uptimeDot('unknown')}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    } catch (e) { panel.innerHTML = `<div class="empty-state"><p>${esc(e.message)}</p></div>`; }
+  }
+
+  mainEl.querySelectorAll('.user-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mainEl.querySelectorAll('.user-tab-btn').forEach(b => b.className = 'btn btn-secondary user-tab-btn');
+      btn.className = 'btn btn-primary user-tab-btn';
+      loadUser(btn.dataset.uid, btn.dataset.uname);
+    });
+  });
+  loadUser(firstUser.userId, firstUser.user);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: SITES (Admin/Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewSites() {
+  setPage('All Sites', 'CW + RM combined site list');
+  let sites = [];
+  try { ({ sites } = await GET('/api/master/sites')); } catch (e) { toast(e.message,'error'); }
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="site-search" class="search-input" placeholder="Search URL, company…">
         </div>
+        <select id="acct-filter" class="filter-select"><option value="">All Accounts</option><option value="CW">CW</option><option value="RM">RM</option></select>
+        <select id="uptime-filter" class="filter-select"><option value="">All Uptime</option><option value="online">Online</option><option value="offline">Offline</option><option value="unknown">Unknown</option></select>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🌐 Sites (${sites.length})</span>
+          <div class="card-actions">
+            <button class="btn btn-secondary btn-sm" id="check-uptime-btn">💓 Check Uptime</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>URL</th><th>Account</th><th>Company</th><th>CMS</th><th>A/C Manager</th><th>Domain Expiry</th><th>Latest Maint.</th><th>Uptime</th><th>Assignees</th><th>Actions</th></tr></thead>
+            <tbody id="sites-tbody">
+              ${sites.map(s => siteFullRow(s)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  // Filters
+  const tbody = $('sites-tbody');
+  const allRows = [...tbody.querySelectorAll('tr')];
+  function filter() {
+    const q = $('site-search').value.toLowerCase();
+    const a = $('acct-filter').value;
+    const u = $('uptime-filter').value;
+    allRows.forEach(tr => {
+      tr.classList.toggle('hidden',
+        (q && !tr.dataset.url?.includes(q) && !tr.dataset.company?.includes(q)) ||
+        (a && tr.dataset.account !== a) ||
+        (u && tr.dataset.uptime !== u)
+      );
+    });
+  }
+  $('site-search').addEventListener('input', filter);
+  $('acct-filter').addEventListener('change', filter);
+  $('uptime-filter').addEventListener('change', filter);
+
+  // Edit buttons
+  tbody.querySelectorAll('.edit-site-btn').forEach(btn => {
+    btn.addEventListener('click', () => editSiteModal(btn.dataset.id, sites.find(s=>s.id===btn.dataset.id)));
+  });
+
+  // Check uptime
+  $('check-uptime-btn').addEventListener('click', async () => {
+    toast('Checking all sites… this may take a few minutes', 'info', 10000);
+    try {
+      const r = await POST('/api/master/check-uptime', {});
+      toast(`✅ ${r.online} online, ${r.offline} offline`, 'success', 6000);
+      navigate('sites');
+    } catch (e) { toast(e.message, 'error'); }
+  });
+}
+
+function siteFullRow(s) {
+  const assigneeNames = (s.assignedUsers||[]).map(uid => {
+    const u = S.users.find(u => u.id === uid);
+    return u ? u.name : '?';
+  }).join(', ');
+  return `
+    <tr data-url="${esc((s.url||'').toLowerCase())}" data-account="${esc(s.account)}" data-company="${esc((s.company||'').toLowerCase())}" data-uptime="${esc(s.uptimeStatus||'unknown')}">
+      <td class="url-cell"><a href="${esc(s.url)}" target="_blank">${esc(shortUrl(s.url))}</a></td>
+      <td><span class="badge badge-${s.account==='CW'?'cw':'rm'}">${esc(s.account)}</span></td>
+      <td style="font-size:12px">${esc(s.company||'—')}</td>
+      <td style="font-size:12px">${esc(s.cms||'—')}</td>
+      <td style="font-size:12px">${esc(s.accountManager||'—')}</td>
+      <td>${domainBadge(s.daysLeft)}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${esc(s.latestMonthStatus||'—')}</td>
+      <td>${uptimeDot(s.uptimeStatus)}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${esc(assigneeNames||'Unassigned')}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm edit-site-btn" data-id="${s.id}">✏️ Edit</button>
+      </td>
+    </tr>`;
+}
+
+function editSiteModal(id, site) {
+  if (!site) return;
+  openModal(`Edit Site: ${shortUrl(site.url)}`,
+    `<div class="form-group"><label class="form-label">Company</label><input class="form-input" id="edit-company" value="${esc(site.company)}"></div>
+     <div class="form-group"><label class="form-label">A/C Manager</label><input class="form-input" id="edit-acm" value="${esc(site.accountManager)}"></div>
+     <div class="form-group"><label class="form-label">CMS</label><input class="form-input" id="edit-cms" value="${esc(site.cms)}"></div>
+     <div class="form-group"><label class="form-label">Status</label>
+       <select class="form-select" id="edit-status">
+         <option ${site.status==='Active'?'selected':''}>Active</option>
+         <option ${site.status==='Inactive'?'selected':''}>Inactive</option>
+       </select></div>
+     <div class="form-group"><label class="form-label">Assign Users</label>
+       <select class="form-select" id="edit-assignees" multiple size="5">
+         ${S.users.map(u=>`<option value="${u.id}" ${(site.assignedUsers||[]).includes(u.id)?'selected':''}>${esc(u.name)}</option>`).join('')}
+       </select>
+       <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Hold Ctrl/Cmd to select multiple</div>
+     </div>`,
+    [
+      { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+      { label: 'Save', cls: 'btn btn-primary', onClick: async () => {
+        const selected = [...$('edit-assignees').selectedOptions].map(o => o.value);
+        try {
+          await PUT(`/api/master/sites/${id}`, {
+            company: $('edit-company').value,
+            accountManager: $('edit-acm').value,
+            cms: $('edit-cms').value,
+            status: $('edit-status').value,
+            assignedUsers: selected,
+          });
+          toast('Site updated', 'success');
+          closeModal();
+          navigate('sites');
+        } catch (e) { toast(e.message, 'error'); }
+      }},
+    ]
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: TASKS (Admin/Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewTasks() {
+  setPage('Tasks', 'Manage and assign tasks');
+  let tasks = [];
+  try { ({ tasks } = await GET('/api/master/tasks')); } catch (e) { toast(e.message,'error'); }
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="task-search" class="search-input" placeholder="Search tasks…">
+        </div>
+        <select id="task-status-filter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="todo">To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="task-assignee-filter" class="filter-select">
+          <option value="">All Assignees</option>
+          ${S.users.map(u=>`<option value="${esc(u.name)}">${esc(u.name)}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" id="new-task-btn">+ New Task</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📋 Tasks (${tasks.length})</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Task</th><th>Site</th><th>Assignee</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th><th>Actions</th></tr></thead>
+            <tbody id="tasks-tbody">
+              ${tasks.map(t => taskRow(t)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  // Filters
+  const tbody = $('tasks-tbody');
+  const allRows = [...tbody.querySelectorAll('tr')];
+  function filterTasks() {
+    const q = $('task-search').value.toLowerCase();
+    const st = $('task-status-filter').value;
+    const as = $('task-assignee-filter').value;
+    allRows.forEach(tr => {
+      tr.classList.toggle('hidden',
+        (q && !tr.dataset.task?.includes(q) && !tr.dataset.site?.includes(q)) ||
+        (st && tr.dataset.status !== st) ||
+        (as && tr.dataset.assignee !== as)
+      );
+    });
+  }
+  $('task-search').addEventListener('input', filterTasks);
+  $('task-status-filter').addEventListener('change', filterTasks);
+  $('task-assignee-filter').addEventListener('change', filterTasks);
+
+  $('new-task-btn').addEventListener('click', () => newTaskModal());
+  tbody.querySelectorAll('.edit-task-btn').forEach(btn => {
+    btn.addEventListener('click', () => editTaskModal(btn.dataset.id, tasks.find(t=>t.id===btn.dataset.id)));
+  });
+  tbody.querySelectorAll('.del-task-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Delete this task?')) return;
+      try { await DELETE(`/api/master/tasks/${btn.dataset.id}`); toast('Deleted','success'); navigate('tasks'); }
+      catch (e) { toast(e.message,'error'); }
+    });
+  });
+  // Inline status change
+  tbody.querySelectorAll('.task-status-sel').forEach(sel => {
+    sel.addEventListener('change', async e => {
+      const id = e.target.dataset.id;
+      try { await PUT(`/api/master/tasks/${id}`, { status: e.target.value }); toast('Status updated','success'); }
+      catch (e2) { toast(e2.message,'error'); }
+    });
+  });
+}
+
+function taskRow(t) {
+  const statuses = ['todo','in_progress','completed'];
+  const opts = statuses.map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s.replace('_',' ')}</option>`).join('');
+  return `
+    <tr data-task="${esc((t.taskName||'').toLowerCase())}" data-site="${esc((t.siteUrl||'').toLowerCase())}" data-status="${esc(t.status)}" data-assignee="${esc(t.assigneeName)}">
+      <td style="font-weight:500;max-width:200px">${esc(t.taskName)}</td>
+      <td class="url-cell"><a href="${esc(t.siteUrl)}" target="_blank">${esc(shortUrl(t.siteUrl))}</a></td>
+      <td>${esc(t.assigneeName||'Unassigned')}</td>
+      <td style="font-size:12px">${esc(t.taskType||'—')}</td>
+      <td>${priorityBadge(t.priority)}</td>
+      <td><select class="task-status-sel status-select" data-id="${t.id}">${opts}</select></td>
+      <td>${t.clickupLink?`<a class="btn btn-ghost btn-sm" href="${esc(t.clickupLink)}" target="_blank">Open</a>`:'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm edit-task-btn" data-id="${t.id}">✏️</button>
+        <button class="btn btn-danger btn-sm del-task-btn" data-id="${t.id}">🗑</button>
+      </td>
+    </tr>`;
+}
+
+function taskModalBody(t = {}) {
+  return `
+    <div class="form-group"><label class="form-label">Task Name *</label><input class="form-input" id="t-name" value="${esc(t.taskName||'')}"></div>
+    <div class="form-group"><label class="form-label">Site URL</label><input class="form-input" id="t-site" value="${esc(t.siteUrl||'')}"></div>
+    <div class="form-group"><label class="form-label">Assignee</label>
+      <select class="form-select" id="t-assignee">
+        <option value="">Unassigned</option>
+        ${S.users.map(u=>`<option value="${u.id}" ${t.assigneeId===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label class="form-label">Task Type</label><input class="form-input" id="t-type" value="${esc(t.taskType||'')}"></div>
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="t-priority">
+          ${['high','medium','low'].map(p=>`<option ${t.priority===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">ClickUp Link</label><input class="form-input" id="t-clickup" value="${esc(t.clickupLink||'')}"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="t-notes">${esc(t.notes||'')}</textarea></div>`;
+}
+
+function gatherTask() {
+  const uid = $('t-assignee').value;
+  const u = S.users.find(x=>x.id===uid);
+  return {
+    taskName: $('t-name').value,
+    siteUrl: $('t-site').value,
+    assigneeId: uid || null,
+    assigneeName: u?.name || '',
+    taskType: $('t-type').value,
+    priority: $('t-priority').value,
+    clickupLink: $('t-clickup').value,
+    notes: $('t-notes').value,
+  };
+}
+
+function newTaskModal() {
+  openModal('New Task', taskModalBody(), [
+    { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+    { label:'Create', cls:'btn btn-primary', onClick: async () => {
+      const b = gatherTask();
+      if (!b.taskName) { toast('Task name required','error'); return; }
+      try { await POST('/api/master/tasks', b); toast('Task created','success'); closeModal(); navigate('tasks'); }
+      catch (e) { toast(e.message,'error'); }
+    }},
+  ]);
+}
+
+function editTaskModal(id, t) {
+  if (!t) return;
+  openModal('Edit Task', taskModalBody(t), [
+    { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+    { label:'Save', cls:'btn btn-primary', onClick: async () => {
+      try { await PUT(`/api/master/tasks/${id}`, gatherTask()); toast('Saved','success'); closeModal(); navigate('tasks'); }
+      catch (e) { toast(e.message,'error'); }
+    }},
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: DOMAIN EXPIRY
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewDomainExpiry() {
+  setPage('Domain Expiry', 'Sorted by urgency');
+  let domains = [];
+  try { ({ domains } = await GET('/api/master/domain-expiry')); } catch (e) { toast(e.message,'error'); }
+
+  const urgent  = domains.filter(d => d.urgent).length;
+  const warning = domains.filter(d => d.warning).length;
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="stat-grid">
+        <div class="stat-card danger"><div class="stat-value">${urgent}</div><div class="stat-label">Critical (≤30 days)</div></div>
+        <div class="stat-card warning"><div class="stat-value">${warning}</div><div class="stat-label">Warning (31–90 days)</div></div>
+        <div class="stat-card success"><div class="stat-value">${domains.length-urgent-warning}</div><div class="stat-label">Healthy (&gt;90 days)</div></div>
+        <div class="stat-card accent"><div class="stat-value">${domains.length}</div><div class="stat-label">Total Domains</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📅 All Domains</span></div>
         <div class="table-wrap"><table>
-          <thead><tr><th>Task</th><th>Website</th><th>Type</th><th>Assignee</th><th>Status</th><th>Priority</th><th>A/C Mgr</th><th>Link</th></tr></thead>
-          <tbody id="dist-tbody">
-            ${tasks.map(t => `
-              <tr data-q="${escHtml((t.taskName + t.website).toLowerCase())}" data-assignee="${escHtml(t.assignee)}">
-                <td style="max-width:180px;white-space:normal">${escHtml(t.taskName)}</td>
-                <td style="font-size:12px;color:var(--info)">${escHtml(t.website)}</td>
-                <td><span class="badge badge-todo" style="font-size:10px">${escHtml(t.taskType)}</span></td>
-                <td>${escHtml(t.assignee)}</td>
-                <td>${statusBadge(t.status.toLowerCase().replace(' ', '_')) || escHtml(t.status)}</td>
-                <td><span class="badge ${t.priority === 'High' ? 'badge-urgent' : t.priority === 'Medium' ? 'badge-warning' : 'badge-pending'}" style="font-size:10px">${escHtml(t.priority)}</span></td>
-                <td style="font-size:12px">${escHtml(t.accountManager)}</td>
-                <td>${t.clickupLink ? `<a class="btn btn-ghost btn-sm" href="${escHtml(t.clickupLink)}" target="_blank">↗</a>` : ''}</td>
+          <thead><tr><th>URL</th><th>Account</th><th>Company</th><th>A/C Manager</th><th>CMS</th><th>Expiry Date</th><th>Status</th></tr></thead>
+          <tbody>
+            ${domains.map(d => `<tr>
+              <td class="url-cell"><a href="${esc(d.url)}" target="_blank">${esc(shortUrl(d.url))}</a></td>
+              <td><span class="badge badge-${d.account==='CW'?'cw':'rm'}">${esc(d.account||'—')}</span></td>
+              <td style="font-size:12px">${esc(d.company||'—')}</td>
+              <td style="font-size:12px">${esc(d.accountManager||'—')}</td>
+              <td style="font-size:12px">${esc(d.cms||'—')}</td>
+              <td style="font-size:12px">${esc(d.expiryDate||'—')}</td>
+              <td>${domainBadge(d.daysLeft)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: UPTIME MONITOR
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewUptime() {
+  setPage('Uptime Monitor', 'Live site status');
+  let sites = [];
+  try { ({ sites } = await GET('/api/master/sites')); } catch (e) { toast(e.message,'error'); }
+
+  const online  = sites.filter(s=>s.uptimeStatus==='online').length;
+  const offline = sites.filter(s=>s.uptimeStatus==='offline').length;
+  const unknown = sites.filter(s=>s.uptimeStatus==='unknown').length;
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="stat-grid">
+        <div class="stat-card success"><div class="stat-value">${online}</div><div class="stat-label">🟢 Online</div></div>
+        <div class="stat-card danger"><div class="stat-value">${offline}</div><div class="stat-label">🔴 Offline</div></div>
+        <div class="stat-card dim"><div class="stat-value">${unknown}</div><div class="stat-label">⚪ Not Checked</div></div>
+        <div class="stat-card accent"><div class="stat-value">${sites.length}</div><div class="stat-label">Total Sites</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">💓 Site Availability</span>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-sm" id="check-all-btn">🔄 Check All Sites</button>
+            <div id="uptime-progress" class="hidden" style="font-size:12px;color:var(--text-muted)"></div>
+          </div>
+        </div>
+        <div id="uptime-results" class="card-body">
+          <div class="uptime-grid">
+            ${sites.map(s=>`
+              <div class="uptime-item ${s.uptimeStatus||'unknown'}" data-site-id="${s.id}">
+                ${uptimeDot(s.uptimeStatus)}
+                <span class="uptime-url" title="${esc(s.url)}">${esc(shortUrl(s.url,32))}</span>
+                ${s.uptimeResponseTime?`<span class="uptime-ms">${s.uptimeResponseTime}ms</span>`:''}
+                <button class="btn btn-ghost btn-sm check-one-btn" data-id="${s.id}" style="padding:2px 6px">↺</button>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Check all via SSE
+  $('check-all-btn').addEventListener('click', async () => {
+    const btn = $('check-all-btn');
+    const prog = $('uptime-progress');
+    btn.disabled = true; btn.textContent = '⏳ Checking…';
+    prog.classList.remove('hidden'); prog.textContent = '0 / ' + sites.length;
+    let done = 0;
+    try {
+      const resp = await fetch('/api/master/check-uptime', {
+        method: 'POST', headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
+      while (true) {
+        const { value, done: d } = await reader.read(); if (d) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const msg = JSON.parse(line.slice(6));
+            if (msg.url) {
+              done = msg.done;
+              prog.textContent = `${done} / ${msg.total}`;
+              // Update that site's row
+              const item = document.querySelector(`.uptime-item[data-site-id="${msg.url}"]`);
+              // We don't have id in msg, update by checking url — re-fetch handled by navigate
+            }
+            if (msg.complete) { toast(`✅ Done — ${done} sites checked`,'success',5000); navigate('uptime'); }
+          } catch {}
+        }
+      }
+    } catch (e) { toast(e.message,'error'); }
+    btn.disabled = false; btn.textContent = '🔄 Check All Sites';
+  });
+
+  // Check single
+  mainEl.querySelectorAll('.check-one-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.textContent = '⏳';
+      try {
+        const { result } = await POST('/api/master/check-uptime', { siteId: btn.dataset.id });
+        const item = btn.closest('.uptime-item');
+        item.className = `uptime-item ${result.status}`;
+        item.querySelector('.uptime-dot').className = `uptime-dot ${result.status}`;
+        item.querySelector('.uptime-dot').textContent = result.status==='online'?'🟢 Online':'🔴 Offline';
+        btn.textContent = '↺';
+        toast(`${result.status === 'online' ? '🟢 Online' : '🔴 Offline'}${result.responseTime?' · '+result.responseTime+'ms':''}`, result.status==='online'?'success':'error');
+      } catch (e) { toast(e.message,'error'); btn.textContent='↺'; }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: PROPERTY REGISTRY (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewProperties() {
+  setPage('Property Registry', 'RM Active Projects');
+  let properties = [];
+  try { ({ properties } = await GET('/api/master/properties')); } catch (e) { toast(e.message,'error'); }
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="prop-search" class="search-input" placeholder="Search properties…">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">🏢 Properties (${properties.length})</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Property</th><th>URL</th><th>Type</th><th>Status</th><th>SEO</th><th>H&amp;M</th><th>SEO Assignee</th><th>Web Assignee</th><th>Actions</th></tr></thead>
+          <tbody id="prop-tbody">
+            ${properties.map(p=>`
+              <tr data-name="${esc((p.name||'').toLowerCase())}">
+                <td style="font-weight:500">${esc(p.name||'—')}</td>
+                <td class="url-cell"><a href="${esc(p.url)}" target="_blank">${esc(shortUrl(p.url))}</a></td>
+                <td style="font-size:12px">${esc(p.type||'—')}</td>
+                <td><span class="badge badge-${p.status==='Active'?'success':'dim'}">${esc(p.status)}</span></td>
+                <td><span class="badge badge-${p.seo==='Yes'?'success':'dim'}">${esc(p.seo||'—')}</span></td>
+                <td><span class="badge badge-${p.hm==='Yes'?'success':'dim'}">${esc(p.hm||'—')}</span></td>
+                <td style="font-size:12px">${esc(p.seoAssignee||'—')}</td>
+                <td style="font-size:12px">${esc(p.webAssignee||'—')}</td>
+                <td><button class="btn btn-ghost btn-sm edit-prop-btn" data-id="${p.id}">✏️ Edit</button></td>
               </tr>`).join('')}
           </tbody>
         </table></div>
       </div>
     </div>`;
 
-  function filterDist() {
-    const q = $('dist-search').value.toLowerCase();
-    const a = $('dist-assignee').value;
-    $('dist-tbody').querySelectorAll('tr').forEach(tr => {
-      tr.style.display = ((!q || tr.dataset.q.includes(q)) && (!a || tr.dataset.assignee === a)) ? '' : 'none';
+  // Search
+  $('prop-search').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    [...$('prop-tbody').querySelectorAll('tr')].forEach(tr => tr.classList.toggle('hidden', q && !tr.dataset.name?.includes(q)));
+  });
+
+  // Edit
+  mainEl.querySelectorAll('.edit-prop-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prop = properties.find(p=>p.id===btn.dataset.id);
+      if (!prop) return;
+      openModal(`Edit: ${prop.name}`,
+        `<div class="form-group"><label class="form-label">Property Name</label><input class="form-input" id="p-name" value="${esc(prop.name)}"></div>
+         <div class="form-group"><label class="form-label">URL</label><input class="form-input" id="p-url" value="${esc(prop.url)}"></div>
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+           <div class="form-group"><label class="form-label">Type</label><input class="form-input" id="p-type" value="${esc(prop.type)}"></div>
+           <div class="form-group"><label class="form-label">Status</label>
+             <select class="form-select" id="p-status">
+               <option ${prop.status==='Active'?'selected':''}>Active</option>
+               <option ${prop.status==='Inactive'?'selected':''}>Inactive</option>
+             </select></div>
+         </div>
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+           <div class="form-group"><label class="form-label">SEO</label>
+             <select class="form-select" id="p-seo"><option ${prop.seo==='Yes'?'selected':''}>Yes</option><option ${prop.seo==='No'?'selected':''}>No</option></select></div>
+           <div class="form-group"><label class="form-label">H&M</label>
+             <select class="form-select" id="p-hm"><option ${prop.hm==='Yes'?'selected':''}>Yes</option><option ${prop.hm==='No'?'selected':''}>No</option></select></div>
+         </div>
+         <div class="form-group"><label class="form-label">SEO Assignee</label>
+           <select class="form-select" id="p-seo-assignee">
+             <option value="">— None —</option>
+             ${S.users.map(u=>`<option value="${u.name}" ${prop.seoAssignee===u.name?'selected':''}>${esc(u.name)}</option>`).join('')}
+           </select></div>
+         <div class="form-group"><label class="form-label">Web Assignee</label>
+           <select class="form-select" id="p-web-assignee">
+             <option value="">— None —</option>
+             ${S.users.map(u=>`<option value="${u.name}" ${prop.webAssignee===u.name?'selected':''}>${esc(u.name)}</option>`).join('')}
+           </select></div>`,
+        [
+          { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+          { label:'Save', cls:'btn btn-primary', onClick: async () => {
+            try {
+              const seoName = $('p-seo-assignee').value;
+              const webName = $('p-web-assignee').value;
+              const seoUser = S.users.find(u=>u.name===seoName);
+              const webUser = S.users.find(u=>u.name===webName);
+              await PUT(`/api/master/properties/${prop.id}`, {
+                name: $('p-name').value,
+                url: $('p-url').value,
+                type: $('p-type').value,
+                status: $('p-status').value,
+                seo: $('p-seo').value,
+                hm: $('p-hm').value,
+                seoAssignee: seoName,
+                seoAssigneeId: seoUser?.id||null,
+                webAssignee: webName,
+                webAssigneeId: webUser?.id||null,
+              });
+              toast('Property updated','success'); closeModal(); navigate('properties');
+            } catch (e) { toast(e.message,'error'); }
+          }},
+        ]
+      );
     });
-  }
-  $('dist-search').addEventListener('input', filterDist);
-  $('dist-assignee').addEventListener('change', filterDist);
+  });
 }
 
-// ─── VIEW: Maintenance Overview ───────────────────────────────────────────────
-async function renderMaintenanceOverview() {
-  pageTitle.textContent = 'Maintenance Status';
-  pageSubtitle.textContent = 'CW + RM site maintenance overview';
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: DEV TRACKER (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewDevProjects() {
+  setPage('Dev Tracker', 'Web development project status');
+  let projects = [];
+  try { ({ projects } = await GET('/api/master/dev-projects')); } catch (e) { toast(e.message,'error'); }
 
-  const { sites } = await apiFetch('/api/master/maintenance-overview');
+  if (!projects.length) { mainEl.innerHTML=`<div class="empty-state"><div class="empty-icon">💻</div><p>No dev projects. Sync from Sheets first.</p></div>`; return; }
 
-  const cw = sites.filter(s => s.account === 'CW');
-  const rm = sites.filter(s => s.account === 'RM');
-  const updated = sites.filter(s => s.latestMonthStatus?.toLowerCase().includes('updated'));
+  const tabs = projects.map(p=>p.project);
+  const first = projects[0];
 
-  mainContent.innerHTML = `
+  mainEl.innerHTML = `
     <div class="fade-in">
-      <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${sites.length}</div><div class="stat-label">Total Sites</div></div>
-        <div class="stat-card blue"><div class="stat-value">${cw.length}</div><div class="stat-label">CW Sites</div></div>
-        <div class="stat-card green"><div class="stat-value">${rm.length}</div><div class="stat-label">RM Sites</div></div>
-        <div class="stat-card green"><div class="stat-value">${updated.length}</div><div class="stat-label">Updated This Month</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        ${projects.map((p,i)=>`<button class="btn ${i===0?'btn-primary':'btn-secondary'} dev-tab-btn" data-idx="${i}">${esc(p.project)}</button>`).join('')}
       </div>
+      <div id="dev-panel"></div>
+    </div>`;
 
-      <div class="section-card">
-        <div class="section-header"><span class="section-title">All Sites</span></div>
-        <div class="filter-row">
-          <input class="search-input" id="maint-search" placeholder="🔍 Search URL..." />
-          <select class="status-select" id="maint-acct" style="max-width:140px">
-            <option value="">All Accounts</option>
-            <option value="CW">CW</option>
-            <option value="RM">RM</option>
-          </select>
+  function renderProject(proj, projIdx) {
+    $('dev-panel').innerHTML = `
+      <div class="card">
+        <div class="card-header"><span class="card-title">💻 ${esc(proj.project)}</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>URL / Page</th><th>Status</th><th>Date</th><th>Feedback</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${proj.items.map((item,itemIdx)=>`
+              <tr>
+                <td class="url-cell"><a href="${esc(item.url)}" target="_blank">${esc(shortUrl(item.url))}</a></td>
+                <td>${statusBadge(item.status)}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${esc(item.date||'—')}</td>
+                <td>${item.feedbackUrl?`<a class="btn btn-ghost btn-sm" href="${esc(item.feedbackUrl)}" target="_blank">View</a>`:'—'}</td>
+                <td style="font-size:11px;color:var(--text-muted);max-width:200px">${esc(item.notes||'—')}</td>
+                <td><button class="btn btn-ghost btn-sm edit-dev-btn" data-proj-id="${proj.id}" data-proj-idx="${projIdx}" data-item-idx="${itemIdx}">✏️</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+
+    $('dev-panel').querySelectorAll('.edit-dev-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = proj.items[parseInt(btn.dataset.itemIdx)];
+        openModal('Edit Dev Item',
+          `<div class="form-group"><label class="form-label">Status</label>
+             <select class="form-select" id="di-status">
+               ${['todo','in_progress','completed','review','blocked'].map(s=>`<option ${item.status===s?'selected':''}>${s}</option>`).join('')}
+             </select></div>
+           <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="di-notes">${esc(item.notes||'')}</textarea></div>
+           <div class="form-group"><label class="form-label">Feedback URL</label><input class="form-input" id="di-fb" value="${esc(item.feedbackUrl||'')}"></div>`,
+          [
+            { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+            { label:'Save', cls:'btn btn-primary', onClick: async () => {
+              try {
+                await PUT(`/api/master/dev-projects/${btn.dataset.projId}/items/${btn.dataset.itemIdx}`, {
+                  status: $('di-status').value, notes: $('di-notes').value, feedbackUrl: $('di-fb').value,
+                });
+                toast('Saved','success'); closeModal();
+                const updated = await GET('/api/master/dev-projects');
+                renderProject(updated.projects.find(p=>p.id===btn.dataset.projId)||proj, projIdx);
+              } catch (e) { toast(e.message,'error'); }
+            }},
+          ]
+        );
+      });
+    });
+  }
+
+  renderProject(first, 0);
+  mainEl.querySelectorAll('.dev-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mainEl.querySelectorAll('.dev-tab-btn').forEach(b=>b.className='btn btn-secondary dev-tab-btn');
+      btn.className='btn btn-primary dev-tab-btn';
+      renderProject(projects[parseInt(btn.dataset.idx)], parseInt(btn.dataset.idx));
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: USER MANAGEMENT (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewUserMgmt() {
+  setPage('User Management', 'Create, edit, and manage team members');
+  let users = [];
+  try { ({ users } = await GET('/api/master/users')); S.users = users; } catch (e) { toast(e.message,'error'); }
+
+  mainEl.innerHTML = `
+    <div class="fade-in">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">⚙️ Team Members (${users.length})</span>
+          <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>Account</th><th>Status</th><th>Website URL</th><th>CMS</th><th>Latest Month</th><th>Monthly Status</th><th>Links</th></tr></thead>
-          <tbody id="maint-tbody">
-            ${sites.map(s => `
-              <tr data-url="${escHtml(s.url.toLowerCase())}" data-acct="${s.account}">
-                <td><span class="badge ${s.account === 'CW' ? 'badge-todo' : 'badge-pending'}">${s.account}</span></td>
-                <td><span class="badge ${s.status === 'Active' ? 'badge-completed' : 'badge-pending'}" style="font-size:10px">${escHtml(s.status)}</span></td>
-                <td class="url-cell"><a href="https://${escHtml(s.url)}" target="_blank">${escHtml(s.url.slice(0,45))}</a></td>
-                <td style="font-size:12px;color:var(--text-muted)">${escHtml(s.cms)}</td>
-                <td style="font-size:11px;color:var(--text-dim)">${escHtml(s.latestMonth)}</td>
-                <td>${s.latestMonthStatus ? `<span class="badge ${s.latestMonthStatus.toLowerCase().includes('updated') ? 'badge-completed' : s.latestMonthStatus.toLowerCase().includes('progress') ? 'badge-in_progress' : 'badge-pending'}" style="font-size:10px">${escHtml(s.latestMonthStatus.slice(0,22))}</span>` : '—'}</td>
-                <td style="display:flex;gap:6px;flex-wrap:wrap">
-                  ${s.reportUrl ? `<a class="btn btn-ghost btn-sm" href="${escHtml(s.reportUrl)}" target="_blank">Report</a>` : ''}
-                  ${s.clickupUrl ? `<a class="btn btn-ghost btn-sm" href="${escHtml(s.clickupUrl)}" target="_blank">ClickUp</a>` : ''}
+          <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Sites Assigned</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${users.map(u=>`
+              <tr>
+                <td style="font-weight:600;display:flex;align-items:center;gap:8px">
+                  <div class="user-avatar" style="width:26px;height:26px;font-size:11px">${u.name[0].toUpperCase()}</div>
+                  ${esc(u.name)}
+                </td>
+                <td><span class="badge badge-${u.role==='superadmin'?'danger':u.role==='admin'?'warning':'info'}">${esc(u.role)}</span></td>
+                <td style="font-size:12px;color:var(--text-muted)">${esc(u.email||'—')}</td>
+                <td style="font-size:12px;color:var(--text-muted)">—</td>
+                <td style="font-size:11px;color:var(--text-dim)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                <td style="display:flex;gap:4px">
+                  <button class="btn btn-ghost btn-sm edit-user-btn" data-id="${u.id}">✏️ Edit</button>
+                  ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm del-user-btn" data-id="${u.id}">🗑</button>`:''}
                 </td>
               </tr>`).join('')}
           </tbody>
@@ -693,271 +1162,174 @@ async function renderMaintenanceOverview() {
       </div>
     </div>`;
 
-  function filterMaint() {
-    const q = $('maint-search').value.toLowerCase();
-    const a = $('maint-acct').value;
-    $('maint-tbody').querySelectorAll('tr').forEach(tr => {
-      tr.style.display = ((!q || tr.dataset.url.includes(q)) && (!a || tr.dataset.acct === a)) ? '' : 'none';
+  $('new-user-btn').addEventListener('click', () => {
+    openModal('Add Team Member',
+      `<div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="nu-name" placeholder="e.g. John Doe"></div>
+       <div class="form-group"><label class="form-label">Role</label>
+         <select class="form-select" id="nu-role">
+           <option value="user">User</option>
+           <option value="admin">Admin</option>
+           <option value="superadmin">Superadmin</option>
+         </select></div>
+       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nu-email" type="email" placeholder="optional"></div>`,
+      [
+        { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+        { label:'Create', cls:'btn btn-primary', onClick: async () => {
+          const name = $('nu-name').value.trim();
+          if (!name) { toast('Name required','error'); return; }
+          try {
+            const { user } = await POST('/api/master/users', { name, role: $('nu-role').value, email: $('nu-email').value });
+            S.users.push(user);
+            toast(`User "${name}" created`,'success'); closeModal(); navigate('user-mgmt');
+          } catch (e) { toast(e.message,'error'); }
+        }},
+      ]
+    );
+  });
+
+  mainEl.querySelectorAll('.edit-user-btn').forEach(btn => {
+    const user = users.find(u=>u.id===btn.dataset.id);
+    if (!user) return;
+    btn.addEventListener('click', () => {
+      openModal(`Edit: ${user.name}`,
+        `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="eu-name" value="${esc(user.name)}"></div>
+         <div class="form-group"><label class="form-label">Role</label>
+           <select class="form-select" id="eu-role">
+             <option value="user" ${user.role==='user'?'selected':''}>User</option>
+             <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
+             <option value="superadmin" ${user.role==='superadmin'?'selected':''}>Superadmin</option>
+           </select></div>
+         <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" type="email" value="${esc(user.email||'')}"></div>`,
+        [
+          { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+          { label:'Save', cls:'btn btn-primary', onClick: async () => {
+            try {
+              await PUT(`/api/master/users/${user.id}`, { name: $('eu-name').value, role: $('eu-role').value, email: $('eu-email').value });
+              toast('Updated','success'); closeModal(); navigate('user-mgmt');
+            } catch (e) { toast(e.message,'error'); }
+          }},
+        ]
+      );
     });
-  }
-  $('maint-search').addEventListener('input', filterMaint);
-  $('maint-acct').addEventListener('change', filterMaint);
-}
+  });
 
-// ─── VIEW: Dev Tracker ────────────────────────────────────────────────────────
-async function renderDevTracker() {
-  pageTitle.textContent = 'Dev Tracker';
-  pageSubtitle.textContent = 'Web development project status';
-
-  const { projects } = await apiFetch('/api/master/dev-tracker');
-  if (!projects.length) { mainContent.innerHTML = empty('No dev projects found.', '💻'); return; }
-
-  let activeProject = projects[0].project;
-
-  function renderProjectContent(projectName) {
-    const proj = projects.find(p => p.project === projectName);
-    if (!proj) return '';
-    const done = proj.items.filter(i => i.status?.toLowerCase().includes('completed')).length;
-    return `
-      <div class="section-card">
-        <div class="section-header">
-          <span class="section-title">${escHtml(proj.project)}</span>
-          <span class="section-subtitle">${done}/${proj.items.length} completed</span>
-        </div>
-        <div class="progress-bar-wrap" style="margin-bottom:20px">
-          <div class="progress-bar-fill" style="width:${proj.items.length ? Math.round(done/proj.items.length*100) : 0}%"></div>
-        </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>URL</th><th>Status</th><th>Date</th><th>Notes</th><th>Feedback</th></tr></thead>
-          <tbody>
-            ${proj.items.map(item => `
-              <tr>
-                <td class="url-cell" style="max-width:200px"><a href="${escHtml(item.url)}" target="_blank">${escHtml(item.url.replace(/^https?:\/\//,'').slice(0,40))}</a></td>
-                <td><span class="badge ${item.status?.toLowerCase().includes('completed') ? 'badge-completed' : 'badge-in_progress'}">${escHtml(item.status)}</span></td>
-                <td style="font-size:12px;color:var(--text-muted);white-space:nowrap">${escHtml(item.date)}</td>
-                <td style="font-size:12px;max-width:250px;white-space:normal">${escHtml((item.notes || '').slice(0,120))}${item.notes?.length > 120 ? '…' : ''}</td>
-                <td>${item.feedbackUrl && !item.feedbackUrl.includes('Feedback-1') ? `<a class="btn btn-ghost btn-sm" href="${escHtml(item.feedbackUrl)}" target="_blank">↗ Feedback</a>` : '—'}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>`;
-  }
-
-  mainContent.innerHTML = `
-    <div class="fade-in">
-      <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${projects.length}</div><div class="stat-label">Projects</div></div>
-        <div class="stat-card green"><div class="stat-value">${projects.reduce((a,p) => a + p.items.filter(i => i.status?.toLowerCase().includes('completed')).length, 0)}</div><div class="stat-label">Pages Done</div></div>
-        <div class="stat-card blue"><div class="stat-value">${projects.reduce((a,p) => a + p.items.length, 0)}</div><div class="stat-label">Total Pages</div></div>
-      </div>
-      <div class="project-tabs">
-        ${projects.map(p => `<div class="project-tab ${p.project === activeProject ? 'active' : ''}" data-proj="${escHtml(p.project)}">${escHtml(p.project)}</div>`).join('')}
-      </div>
-      <div id="dev-content">${renderProjectContent(activeProject)}</div>
-    </div>`;
-
-  mainContent.querySelectorAll('.project-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      mainContent.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      $('dev-content').innerHTML = renderProjectContent(tab.dataset.proj);
+  mainEl.querySelectorAll('.del-user-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const user = users.find(u=>u.id===btn.dataset.id);
+      if (!confirm(`Delete user "${user?.name}"?`)) return;
+      try { await DELETE(`/api/master/users/${btn.dataset.id}`); toast('Deleted','success'); navigate('user-mgmt'); }
+      catch (e) { toast(e.message,'error'); }
     });
   });
 }
 
-// ─── VIEW: Property Registry ──────────────────────────────────────────────────
-async function renderProperties() {
-  pageTitle.textContent = 'Property Registry';
-  pageSubtitle.textContent = 'All managed properties';
-
-  const { properties } = await apiFetch('/api/master/properties');
-
-  const active = properties.filter(p => p.status?.toLowerCase() === 'active');
-  const seo = properties.filter(p => p.seo?.toLowerCase() === 'yes');
-
-  mainContent.innerHTML = `
-    <div class="fade-in">
-      <div class="stat-grid">
-        <div class="stat-card purple"><div class="stat-value">${properties.length}</div><div class="stat-label">Total Properties</div></div>
-        <div class="stat-card green"><div class="stat-value">${active.length}</div><div class="stat-label">Active</div></div>
-        <div class="stat-card blue"><div class="stat-value">${seo.length}</div><div class="stat-label">With SEO</div></div>
-      </div>
-
-      <div class="section-card">
-        <div class="section-header"><span class="section-title">All Properties</span></div>
-        <div class="filter-row">
-          <input class="search-input" id="prop-search" placeholder="🔍 Search property..." />
-        </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Property Name</th><th>URL</th><th>Type</th><th>Status</th><th>SEO</th><th>H&M</th><th>SEO Task</th><th>Web Task</th></tr></thead>
-          <tbody id="prop-tbody">
-            ${properties.map(p => `
-              <tr data-q="${escHtml((p.name + p.url).toLowerCase())}">
-                <td style="font-weight:600">${escHtml(p.name)}</td>
-                <td class="url-cell"><a href="${escHtml(p.url)}" target="_blank">${escHtml(p.url.replace(/^https?:\/\//,'').slice(0,35))}</a></td>
-                <td style="font-size:12px;color:var(--text-muted)">${escHtml(p.type)}</td>
-                <td><span class="badge ${p.status?.toLowerCase() === 'active' ? 'badge-completed' : 'badge-pending'}">${escHtml(p.status)}</span></td>
-                <td><span class="badge ${p.seo?.toLowerCase() === 'yes' ? 'badge-completed' : 'badge-pending'}">${escHtml(p.seo || '—')}</span></td>
-                <td style="font-size:12px;color:var(--text-muted)">${escHtml(p.hm || '—')}</td>
-                <td style="font-size:12px;color:var(--text-muted);max-width:150px;white-space:normal">${escHtml(p.seoTask || '—')}</td>
-                <td style="font-size:12px;color:var(--text-muted);max-width:150px;white-space:normal">${escHtml(p.webTask || '—')}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
-    </div>`;
-
-  $('prop-search').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase();
-    $('prop-tbody').querySelectorAll('tr').forEach(tr => {
-      tr.style.display = !q || tr.dataset.q.includes(q) ? '' : 'none';
-    });
-  });
-}
-
-// ─── VIEW: Send Emails (link to existing dashboard) ───────────────────────────
-async function renderSendEmailsLink() {
-  pageTitle.textContent = 'Send Emails';
-  pageSubtitle.textContent = 'Launch the Maintenance Mailer';
-
-  mainContent.innerHTML = `
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: SEND EMAILS
+// ═══════════════════════════════════════════════════════════════════════════════
+function viewSendEmails() {
+  setPage('Send Emails', 'Maintenance mailer');
+  mainEl.innerHTML = `
     <div class="fade-in" style="max-width:500px;margin:60px auto;text-align:center">
       <div style="font-size:64px;margin-bottom:20px">✉️</div>
       <h2 style="font-size:22px;font-weight:700;margin-bottom:12px">Maintenance Email Sender</h2>
-      <p style="color:var(--text-muted);margin-bottom:32px">
-        The email dashboard lets you preview, customise, and send maintenance reports to all clients.
-      </p>
-      <a href="/" class="btn btn-primary" style="font-size:16px;padding:14px 32px">
-        Open Email Dashboard →
-      </a>
+      <p style="color:var(--text-muted);margin-bottom:32px">The email dashboard lets you preview, customise, and send maintenance reports to all clients.</p>
+      <a href="/" class="btn btn-primary" style="font-size:16px;padding:14px 32px">Open Email Dashboard →</a>
     </div>`;
 }
 
-// ─── VIEW: Sync from Sheets ────────────────────────────────────────────────────
-async function renderSync() {
-  pageTitle.textContent = 'Sync from Sheets';
-  pageSubtitle.textContent = 'Import latest data from all 6 Google Sheets';
-
-  // Check current DB status
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: SYNC FROM SHEETS (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewSync() {
+  setPage('Sync from Sheets', 'Import + merge all 6 Google Sheets');
   let status = {};
-  try { status = await apiFetch('/api/master/db-status', { noCache: true }); } catch {}
+  try { status = await GET('/api/master/db-status'); } catch {}
 
-  mainContent.innerHTML = `
-    <div class="fade-in" style="max-width:640px;margin:0 auto">
-      <div class="section-card">
-        <div class="section-header"><span class="section-title">📊 Current Database Status</span></div>
-        <div class="stat-grid" style="margin-bottom:0">
-          <div class="stat-card ${status.initialised ? 'green' : 'yellow'}">
-            <div class="stat-value">${status.totalSites || 0}</div>
-            <div class="stat-label">Sites (CW+RM)</div>
+  mainEl.innerHTML = `
+    <div class="fade-in" style="max-width:660px;margin:0 auto">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Database Status</span></div>
+        <div class="card-body">
+          <div class="stat-grid" style="margin-bottom:0">
+            <div class="stat-card ${status.initialised?'success':'warning'}">
+              <div class="stat-value">${status.totalSites||0}</div><div class="stat-label">Sites</div></div>
+            <div class="stat-card info">
+              <div class="stat-value">${status.totalDomains||0}</div><div class="stat-label">Domains</div></div>
+            <div class="stat-card accent">
+              <div class="stat-value">${status.totalTasks||0}</div><div class="stat-label">Tasks</div></div>
+            <div class="stat-card purple">
+              <div class="stat-value">${status.totalUsers||0}</div><div class="stat-label">Users</div></div>
           </div>
-          <div class="stat-card blue">
-            <div class="stat-value">${status.totalDomains || 0}</div>
-            <div class="stat-label">Domains tracked</div>
-          </div>
-          <div class="stat-card purple">
-            <div class="stat-value">${status.totalUserSites || 0}</div>
-            <div class="stat-label">User site rows</div>
-          </div>
-          <div class="stat-card ${status.initialised ? 'green' : 'red'}">
-            <div class="stat-value">${status.initialised ? '✓' : '✗'}</div>
-            <div class="stat-label">${status.initialised ? 'DB ready' : 'Needs sync'}</div>
-          </div>
+          ${status.lastSync?`<p style="margin-top:14px;font-size:12px;color:var(--text-muted)">Last synced: ${new Date(status.lastSync).toLocaleString()} (${status.syncDuration}s)</p>`:''}
         </div>
-        ${status.lastSync ? `<div style="margin-top:16px;font-size:12px;color:var(--text-muted)">Last synced: ${new Date(status.lastSync).toLocaleString()}</div>` : ''}
       </div>
 
-      <div class="section-card">
-        <div class="section-header"><span class="section-title">🔄 Sync All Sheets</span></div>
-        <p style="color:var(--text-muted);margin-bottom:20px;font-size:13px">
-          This will import data from all 6 Google Sheets into the local database.
-          Takes 2–4 minutes due to API rate limits. After sync, all dashboard views load instantly.
-        </p>
-        <div id="sync-progress" class="hidden" style="margin-bottom:20px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
-            <span id="sync-step">Starting…</span>
-            <span id="sync-pct">0%</span>
+      <div class="card">
+        <div class="card-header"><span class="card-title">🔄 Full Sync</span></div>
+        <div class="card-body">
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;line-height:1.7">
+            Imports from all 6 Google Sheets, <strong>merges relationships</strong> (sites ↔ users ↔ tasks ↔ domains),
+            and saves everything locally. Takes 2–4 minutes due to API rate limits.
+          </p>
+          <div id="sync-progress-wrap" class="hidden" style="margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
+              <span id="sync-step-text">Starting…</span>
+              <span id="sync-pct-text">0%</span>
+            </div>
+            <div class="sync-progress-bar"><div class="sync-progress-fill" id="sync-pct-bar" style="width:0%"></div></div>
+            <div class="sync-log" id="sync-log"></div>
           </div>
-          <div class="progress-bar-wrap" style="height:10px">
-            <div class="progress-bar-fill" id="sync-bar" style="width:0%;transition:width .3s ease"></div>
-          </div>
-          <div id="sync-log" style="margin-top:12px;font-size:11px;color:var(--text-dim);max-height:120px;overflow-y:auto"></div>
+          <div id="sync-result" class="hidden"></div>
+          <button class="btn btn-primary" id="sync-btn" style="padding:12px 28px;font-size:15px">🔄 Start Full Sync</button>
         </div>
-        <div id="sync-result" class="hidden"></div>
-        <button class="btn btn-primary" id="sync-btn" style="padding:12px 28px;font-size:15px">
-          🔄 Start Sync
-        </button>
       </div>
     </div>`;
 
   $('sync-btn').addEventListener('click', async () => {
     const btn = $('sync-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Syncing…';
-    $('sync-progress').classList.remove('hidden');
+    btn.disabled = true; btn.textContent = '⏳ Syncing…';
+    $('sync-progress-wrap').classList.remove('hidden');
     $('sync-result').classList.add('hidden');
-
-    const bar = $('sync-bar');
-    const step = $('sync-step');
-    const pct  = $('sync-pct');
-    const log  = $('sync-log');
-
+    const bar = $('sync-pct-bar'), step = $('sync-step-text'), pct = $('sync-pct-text'), log = $('sync-log');
     try {
-      const evtSource = new EventSource('/api/master/sync-sse');
-      // We'll use fetch with EventSource workaround via POST + SSE
-      // Actually trigger sync via POST with Accept: text/event-stream
-      const response = await fetch('/api/master/sync', {
-        method: 'POST',
-        headers: { Accept: 'text/event-stream' },
-      });
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-
+      const resp = await fetch('/api/master/sync', { method:'POST', headers:{ Accept:'text/event-stream', 'Content-Type':'application/json' }, body:'{}' });
+      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop();
+        const { value, done } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream:true });
+        const lines = buf.split('\n'); buf = lines.pop();
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           try {
             const msg = JSON.parse(line.slice(6));
             if (msg.step) {
-              step.textContent = msg.step;
-              pct.textContent = `${msg.pct}%`;
-              bar.style.width = `${msg.pct}%`;
-              const entry = document.createElement('div');
-              entry.textContent = `${msg.pct}% — ${msg.step}`;
-              log.appendChild(entry);
-              log.scrollTop = log.scrollHeight;
+              step.textContent = msg.step; pct.textContent = `${msg.pct}%`; bar.style.width = `${msg.pct}%`;
+              const e = document.createElement('div'); e.textContent = `${msg.pct}% — ${msg.step}`;
+              log.appendChild(e); log.scrollTop = log.scrollHeight;
             }
             if (msg.done) {
-              bar.style.width = '100%';
-              pct.textContent = '100%';
-              step.textContent = `✅ Done in ${msg.elapsed}s`;
+              bar.style.width = '100%'; pct.textContent = '100%';
               $('sync-result').classList.remove('hidden');
+              const c = msg.counts||{};
               $('sync-result').innerHTML = `
-                <div style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:16px;color:var(--success);font-size:14px;font-weight:600">
-                  ✅ Sync complete in ${msg.elapsed}s — all data imported!<br>
-                  <span style="font-size:12px;font-weight:400;color:var(--text-muted)">Navigate to any view to see the data.</span>
+                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:16px;color:var(--success);font-size:13px">
+                  ✅ Sync complete in ${msg.elapsed}s<br>
+                  <span style="color:var(--text-muted);font-size:12px">
+                    ${c.sites||0} sites · ${c.dailyReviewRows||0} daily rows · ${c.tasks||0} tasks · ${c.properties||0} properties · ${c.devProjects||0} dev projects
+                  </span>
                 </div>`;
-              invalidateCache();
-              btn.textContent = '🔄 Sync Again';
-              btn.disabled = false;
+              btn.textContent = '🔄 Sync Again'; btn.disabled = false;
+              $('sync-status').classList.remove('hidden'); $('sync-status-text').textContent = 'Synced just now';
             }
             if (msg.error) throw new Error(msg.error);
           } catch {}
         }
       }
-    } catch (err) {
+    } catch (e) {
       $('sync-result').classList.remove('hidden');
-      $('sync-result').innerHTML = `<div style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:16px;color:var(--danger)">${escHtml(err.message)}</div>`;
-      btn.textContent = '🔄 Retry Sync';
-      btn.disabled = false;
-      toast(err.message, 'error');
+      $('sync-result').innerHTML = `<div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:16px;color:var(--danger)">${esc(e.message)}</div>`;
+      btn.textContent = '🔄 Retry Sync'; btn.disabled = false;
+      toast(e.message, 'error');
     }
   });
 }

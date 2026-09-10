@@ -1,90 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Office Automation — Master Dashboard</title>
-  <meta name="description" content="Master control dashboard for managing website maintenance, daily reviews, domain expiry, and team task distribution." />
-  <link rel="stylesheet" href="/master.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Automation Dashboard</title>
+  <meta name="description" content="Centralized management dashboard for website maintenance, tasks, domain tracking and team coordination.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/master.css">
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════
-     LANDING SCREEN (role + user selector)
-════════════════════════════════════════════════════════ -->
+<!-- ░░ LANDING SCREEN ░░ -->
 <div id="landing-screen">
+  <div class="landing-bg">
+    <div class="landing-glow g1"></div>
+    <div class="landing-glow g2"></div>
+    <div class="landing-glow g3"></div>
+  </div>
   <div class="landing-card">
-    <div class="landing-logo">⚡</div>
-    <h1 class="landing-title">Office Automation</h1>
-    <p class="landing-sub">Master Dashboard — Select your role to continue</p>
-
-    <div class="landing-label">Your Role</div>
-    <select id="role-select" class="landing-select">
-      <option value="user">👤 User / Technician</option>
-      <option value="admin">🔑 Admin</option>
-      <option value="superadmin">👑 Superadmin</option>
-    </select>
-
-    <div id="user-select-wrap">
-      <div class="landing-label">Your Name</div>
-      <select id="user-name-select" class="landing-select">
-        <option value="">Loading users...</option>
-      </select>
+    <div class="landing-logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">OfficeOS</span>
     </div>
-
-    <button class="btn-enter" id="enter-btn">Enter Dashboard →</button>
+    <h1 class="landing-title">Office Automation<br><span class="gradient-text">Dashboard</span></h1>
+    <p class="landing-sub">Select your role and name to enter your personalized workspace</p>
+    <div id="landing-status"></div>
+    <div class="landing-form">
+      <div class="form-group">
+        <label class="form-label">Access Level</label>
+        <select id="role-select" class="form-select">
+          <option value="user">👤  User</option>
+          <option value="admin">🔑  Admin</option>
+          <option value="superadmin">👑  Superadmin</option>
+        </select>
+      </div>
+      <div class="form-group" id="user-select-wrap">
+        <label class="form-label">Your Name</label>
+        <select id="user-name-select" class="form-select">
+          <option>Loading…</option>
+        </select>
+      </div>
+      <button id="enter-btn" class="btn-enter">
+        <span>Enter Dashboard</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     MAIN APP SHELL (hidden until role is chosen)
-════════════════════════════════════════════════════════ -->
+<!-- ░░ APP SHELL ░░ -->
 <div id="app-shell" class="hidden">
 
   <!-- Sidebar -->
-  <nav id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">⚡</div>
-      <span>OA Dashboard</span>
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <span class="logo-icon sm">⚡</span>
+      <span class="sidebar-brand">OfficeOS</span>
+      <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse">‹</button>
     </div>
 
-    <div class="sidebar-nav" id="sidebar-nav">
-      <!-- Populated by JS based on role -->
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar">T</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name-display">User</div>
+        <div class="user-role" id="user-role-display">user</div>
+      </div>
     </div>
 
-    <div class="sidebar-footer" id="sidebar-footer">
-      <!-- Role + user shown here -->
+    <nav id="sidebar-nav" class="sidebar-nav"></nav>
+
+    <div class="sidebar-footer">
+      <button id="logout-btn" class="btn-sidebar-footer">
+        <span class="nav-icon">↩</span>
+        <span class="nav-label">Switch Role</span>
+      </button>
     </div>
-  </nav>
+  </aside>
 
   <!-- Main -->
-  <div id="main-area">
-    <header id="top-header">
-      <div>
-        <div class="header-title" id="page-title">Dashboard</div>
-        <div class="header-subtitle" id="page-subtitle"></div>
+  <div class="main-wrap">
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <h1 id="page-title" class="page-title">Dashboard</h1>
+        <span id="page-subtitle" class="page-subtitle"></span>
       </div>
-      <div class="header-controls">
-        <button class="btn btn-ghost btn-sm" id="refresh-btn">
-          🔄 Refresh
-        </button>
-        <button class="btn btn-ghost btn-sm" id="switch-role-btn">
-          ⬅ Switch Role
+      <div class="top-bar-right">
+        <div id="sync-status" class="sync-badge hidden">
+          <span class="sync-dot"></span>
+          <span id="sync-status-text">Synced just now</span>
+        </div>
+        <button id="refresh-btn" class="btn-icon" title="Refresh data">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         </button>
       </div>
     </header>
 
-    <main id="main-content">
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <div>Loading dashboard...</div>
-      </div>
-    </main>
+    <main id="main-content" class="main-content"></main>
   </div>
 </div>
 
-<!-- Toast container -->
-<div id="m-toast-container"></div>
+<!-- ░░ MODAL ░░ -->
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div id="modal-box" class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title" class="modal-title">Modal</h3>
+      <button id="modal-close" class="modal-close">✕</button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+    <div id="modal-footer" class="modal-footer"></div>
+  </div>
+</div>
+
+<!-- ░░ TOAST ░░ -->
+<div id="toast-container" class="toast-container"></div>
 
 <script src="/master-app.js"></script>
 </body>

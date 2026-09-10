@@ -1,17 +1,25 @@
 /**
- * syncFromSheets.js
- * One-shot import: reads all 6 Google Sheets and writes to local JSON database.
- * Called by POST /api/master/sync — no other code path hits the Sheets API.
+ * syncFromSheets.js — imports all 6 sheets, merges into relational DB
+ *
+ * Merge logic:
+ *  1. Seed users from DAILY_REVIEW_USERS list (preserve roles if users already exist)
+ *  2. Import sites from CW+RM "Website List" tabs → base site records
+ *  3. Import Domain Expiry Sheet → merge into sites by URL similarity
+ *  4. Import each user's Daily Review tab → create DailyReview rows, assign users to sites
+ *  5. Import Distribution sheet → create Task records linked to sites + users
+ *  6. Import Property Registry → create Property records linked to users
+ *  7. Import Dev Tracker tabs → create DevProject records
  */
 
 import { getTabValues, listTabTitles } from './sheets.js';
 import {
-  setSites, setDailyReview, setDomains,
-  setDistribution, setProperties, setDevTracker,
-  setUsers, setMeta,
+  uuid, setUsers, setSites, setDailyReview, setTasks, setProperties, setDevProjects, setMeta,
+  getUsers, dbRead, dbWrite,
 } from './db.js';
 
-const SHEETS = {
+const RANGE = 'A1:ZZ2000';
+
+const SHEET_IDS = {
   MASTER_TRACKER:    '1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU',
   DAILY_REVIEW:      '1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs',
   PROPERTY_REGISTRY: '1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY',
@@ -20,22 +28,42 @@ const SHEETS = {
   RM_MAINTENANCE:    '1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY',
 };
 
-const RANGE = 'A1:ZZ2000';
+export const DEFAULT_USERS = [
+  { name: 'Toufiq',  role: 'superadmin', email: '' },
+  { name: 'Sabbir',  role: 'user', email: '' },
+  { name: 'Taion',   role: 'user', email: '' },
+  { name: 'Medul',   role: 'user', email: '' },
+  { name: 'Saiful',  role: 'user', email: '' },
+  { name: 'Tarikul', role: 'user', email: '' },
+  { name: 'Roeich',  role: 'user', email: '' },
+  { name: 'Asif',    role: 'user', email: '' },
+];
 
-const USERS = ['Toufiq', 'Sabbir', 'Taion', 'Medul', 'Saiful', 'Tarikul', 'Roeich', 'Asif'];
-
-// Progress callback type: (step: string, pct: number) => void
 let _progress = null;
 export function onProgress(fn) { _progress = fn; }
-function report(step, pct) { if (_progress) _progress(step, pct); console.log(`[sync] ${pct}% — ${step}`); }
+function report(step, pct) {
+  if (_progress) _progress(step, pct);
+  console.log(`[sync] ${pct}% — ${step}`);
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function headerIndex(headers, ...candidates) {
+function hi(headers, ...candidates) {
   for (const c of candidates) {
     const i = headers.findIndex(h => h && h.toLowerCase().includes(c.toLowerCase()));
     if (i !== -1) return i;
   }
   return -1;
+}
+
+function normUrl(raw) {
+  if (!raw) return '';
+  return raw.trim().toLowerCase().replace(/\/+$/, '');
+}
+
+function urlMatch(a, b) {
+  const clean = u => (u || '').toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '').trim();
+  return clean(a) === clean(b);
 }
 
 function normStatus(raw) {
@@ -44,9 +72,7 @@ function normStatus(raw) {
   if (s.includes('completed') || s.includes('updated & backup') || s.includes('updated and backup')) return 'completed';
   if (s.includes('in progress')) return 'in_progress';
   if (s.includes('to do') || s.includes('todo')) return 'todo';
-  if (s.includes('yes') || s.includes('sent')) return 'sent';
-  if (s.includes('no')) return 'no';
-  return raw.trim();
+  return s;
 }
 
 function daysUntil(dateStr) {
@@ -56,244 +82,61 @@ function daysUntil(dateStr) {
   return Math.ceil((d - new Date()) / 86400000);
 }
 
-// ─── 1. Daily Review (per-user tabs) ─────────────────────────────────────────
-async function syncDailyReview() {
-  report('Syncing daily review…', 10);
-  const result = {};
-  for (let i = 0; i < USERS.length; i++) {
-    const user = USERS[i];
-    try {
-      const rows = await getTabValues(user, RANGE, SHEETS.DAILY_REVIEW);
-      if (!rows || rows.length < 2) { result[user] = []; continue; }
+function now() { return new Date().toISOString(); }
 
-      const h = rows[0];
-      const urlCol   = headerIndex(h, 'website url', 'website', ' ');
-      const coCol    = headerIndex(h, 'company');
-      const maintCol = headerIndex(h, 'maintenance');
-      const sentCol  = headerIndex(h, 'maintenance report sent', 'report sent');
-      const ga4Col   = headerIndex(h, 'ga4');
-      const newsCol  = headerIndex(h, 'newsletter');
-      const formCol  = headerIndex(h, 'form submission');
-      const bookCol  = headerIndex(h, 'booking', 'reservation');
-      const cfCol    = headerIndex(h, 'cloudflare');
-      const cuCol    = headerIndex(h, 'clickup');
-      const respCol  = headerIndex(h, 'client response', 'smtp');
-      const uptimeCol= headerIndex(h, 'uptime', 'uptimerobot');
+// ─── Step 1: Seed Users ───────────────────────────────────────────────────────
+function seedUsers() {
+  report('Seeding users…', 2);
+  const existing = getUsers();
+  const existingMap = Object.fromEntries(existing.map(u => [u.name.toLowerCase(), u]));
 
-      result[user] = rows.slice(1).map((r, idx) => {
-        const url = (r[urlCol] || r[0] || '').trim();
-        if (!url || url.length < 5 || !/^https?:\/\/|^www\./i.test(url)) return null;
-        const maintRaw = r[maintCol] || '';
-        const sentRaw  = r[sentCol] || '';
-        return {
-          rowIndex: idx + 2,
-          url,
-          company: r[coCol] || '',
-          maintenance: normStatus(maintRaw),
-          maintenanceRaw: maintRaw,
-          reportSent: normStatus(sentRaw),
-          reportSentRaw: sentRaw,
-          ga4: r[ga4Col] || '',
-          newsletterMail: r[newsCol] || '',
-          formSubmissionMail: r[formCol] || '',
-          bookingLink: r[bookCol] || '',
-          cloudflare: r[cfCol] || '',
-          clickupLink: r[cuCol] || '',
-          clientResponse: r[respCol] || '',
-          uptimeRobot: r[uptimeCol] || '',
-          user,
-        };
-      }).filter(Boolean);
-    } catch (e) {
-      console.error(`[sync] daily-review ${user} failed:`, e.message);
-      result[user] = [];
+  const merged = DEFAULT_USERS.map(du => {
+    const ex = existingMap[du.name.toLowerCase()];
+    if (ex) {
+      // Preserve existing role unless it was set to a higher level
+      return { ...ex, email: ex.email || du.email };
     }
-    report(`Daily review: ${user}`, 10 + Math.round((i + 1) / USERS.length * 20));
-  }
-  setDailyReview(result);
-  setUsers(USERS);
-  report('Daily review done', 30);
+    return { id: uuid(), name: du.name, role: du.role, email: du.email, createdAt: now(), updatedAt: now() };
+  });
+
+  setUsers(merged);
+  return Object.fromEntries(merged.map(u => [u.name.toLowerCase(), u]));
 }
 
-// ─── 2. Domain Expiration ─────────────────────────────────────────────────────
-async function syncDomains() {
-  report('Syncing domain expiry…', 31);
-  try {
-    const rows = await getTabValues('Domain Expiration Sheet', RANGE, SHEETS.MASTER_TRACKER);
-    if (!rows || rows.length < 2) { setDomains([]); return; }
-    const h = rows[0];
-    const statusCol  = headerIndex(h, 'status', ' ');
-    const cmsCol     = headerIndex(h, 'cms');
-    const companyCol = headerIndex(h, 'company');
-    const contactCol = headerIndex(h, 'contact');
-    const acmCol     = headerIndex(h, 'a/c manager', 'account manager');
-    const urlCol     = headerIndex(h, 'website url', 'website');
-    const expiryCol  = headerIndex(h, 'domain expiry', 'domain expire', 'expiry');
+// ─── Step 2: Import Sites from CW + RM Website Lists ─────────────────────────
+async function importSites() {
+  report('Importing CW sites…', 5);
+  const sites = [];
 
-    const domains = rows.slice(1).map(r => {
-      const url = (r[urlCol] || '').trim();
-      if (!url) return null;
-      const expiry = r[expiryCol] || '';
-      const days = daysUntil(expiry);
-      return {
-        status: r[statusCol] || 'Active',
-        cms: r[cmsCol] || '',
-        company: r[companyCol] || '',
-        contact: r[contactCol] || '',
-        accountManager: r[acmCol] || '',
-        url,
-        expiryDate: expiry,
-        daysLeft: days,
-        urgent: days !== null && days <= 30,
-        warning: days !== null && days > 30 && days <= 90,
-      };
-    }).filter(Boolean);
-    setDomains(domains);
-  } catch (e) { console.error('[sync] domains failed:', e.message); }
-  report('Domains done', 40);
-}
-
-// ─── 3. Distribution + Task Load ─────────────────────────────────────────────
-async function syncDistribution() {
-  report('Syncing task distribution…', 41);
-  try {
-    const [taskRows, loadRows] = await Promise.all([
-      getTabValues('Distribution and Work Sheet', RANGE, SHEETS.MASTER_TRACKER),
-      getTabValues('Task Load & Dependancy Solver', RANGE, SHEETS.MASTER_TRACKER),
-    ]);
-
-    const h = (taskRows || [])[0] || [];
-    const taskCol    = headerIndex(h, 'task name');
-    const cuCol      = headerIndex(h, 'clickup');
-    const webCol     = headerIndex(h, 'website');
-    const typeCol    = headerIndex(h, 'task type');
-    const assigneeCol= headerIndex(h, 'assignee');
-    const statusCol  = headerIndex(h, 'status');
-    const prioCol    = headerIndex(h, 'priority');
-    const acmCol     = headerIndex(h, 'account manager');
-
-    const tasks = (taskRows || []).slice(1).map(r => {
-      if (!r[webCol]?.trim() && !r[taskCol]?.trim()) return null;
-      return {
-        taskName: r[taskCol] || '',
-        clickupLink: r[cuCol] || '',
-        website: r[webCol] || '',
-        taskType: r[typeCol] || '',
-        assignee: r[assigneeCol] || '',
-        status: r[statusCol] || '',
-        priority: r[prioCol] || '',
-        accountManager: r[acmCol] || '',
-      };
-    }).filter(Boolean);
-
-    const taskLoad = (loadRows || []).slice(1).map(r => {
-      const member = (r[0] || '').trim();
-      if (!member) return null;
-      return { member, taskCount: parseInt(r[1] || '0', 10) || 0, taskLink: r[3] || '' };
-    }).filter(Boolean);
-
-    setDistribution({ tasks, taskLoad });
-  } catch (e) { console.error('[sync] distribution failed:', e.message); }
-  report('Distribution done', 55);
-}
-
-// ─── 4. Property Registry ─────────────────────────────────────────────────────
-async function syncProperties() {
-  report('Syncing property registry…', 56);
-  try {
-    const rows = await getTabValues('Sheet1', RANGE, SHEETS.PROPERTY_REGISTRY);
-    if (!rows || rows.length < 2) { setProperties([]); return; }
-    const h = rows[0];
-    const nameCol    = headerIndex(h, 'property name');
-    const urlCol     = headerIndex(h, 'property url', 'url');
-    const typeCol    = headerIndex(h, 'property type', 'type');
-    const statusCol  = headerIndex(h, 'stauts', 'status');
-    const seoCol     = headerIndex(h, 'seo');
-    const hmCol      = headerIndex(h, 'h&m', 'h&amp;m');
-    const seoTaskCol = headerIndex(h, 'task assigned to seo');
-    const webTaskCol = headerIndex(h, 'task assigned to web');
-
-    const props = rows.slice(1).map(r => {
-      const name = (r[nameCol] || '').trim();
-      const url  = (r[urlCol] || '').trim();
-      if (!name && !url) return null;
-      return {
-        name, url,
-        type: r[typeCol] || '',
-        status: r[statusCol] || '',
-        seo: r[seoCol] || '',
-        hm: r[hmCol] || '',
-        seoAssignee: r[seoTaskCol] || '',
-        webAssignee: r[webTaskCol] || '',
-      };
-    }).filter(Boolean);
-    setProperties(props);
-  } catch (e) { console.error('[sync] properties failed:', e.message); }
-  report('Properties done', 65);
-}
-
-// ─── 5. Dev Tracker ───────────────────────────────────────────────────────────
-async function syncDevTracker() {
-  report('Syncing dev tracker…', 66);
-  try {
-    const tabs = await listTabTitles(SHEETS.DEV_TRACKER);
-    const projects = [];
-    for (const tab of tabs) {
-      try {
-        const rows = await getTabValues(tab, RANGE, SHEETS.DEV_TRACKER);
-        if (!rows || rows.length < 2) continue;
-        const h = rows[0];
-        const urlCol    = headerIndex(h, 'url');
-        const statusCol = headerIndex(h, 'status');
-        const fbCol     = headerIndex(h, 'feedback', 'feedbacks');
-        const dateCol   = headerIndex(h, 'date');
-        const noteCol   = headerIndex(h, 'note', 'updates');
-
-        const items = rows.slice(1).map(r => {
-          const url = (r[urlCol] || '').trim();
-          if (!url) return null;
-          return { url, status: r[statusCol] || '', feedbackUrl: r[fbCol] || '', date: r[dateCol] || '', notes: r[noteCol] || '' };
-        }).filter(Boolean);
-
-        if (items.length) projects.push({ project: tab, items });
-      } catch {}
-    }
-    setDevTracker(projects);
-  } catch (e) { console.error('[sync] dev-tracker failed:', e.message); }
-  report('Dev tracker done', 80);
-}
-
-// ─── 6. CW + RM Maintenance Website Lists ────────────────────────────────────
-async function syncSites() {
-  report('Syncing CW + RM site lists…', 81);
-  const processSheet = async (sheetId, account) => {
+  const processSheet = async (sheetId, account, progressStart) => {
     const rows = await getTabValues('Website List', RANGE, sheetId);
-    if (!rows || rows.length < 3) return [];
-    // Row[0] is a note row, Row[1] has real headers
-    const h = rows[1] || [];
-    const urlCol    = headerIndex(h, 'website url');
-    const cmsCol    = headerIndex(h, 'cms');
-    const compCol   = headerIndex(h, 'company');
-    const contCol   = headerIndex(h, 'contact');
-    const acmCol    = headerIndex(h, 'a/c manager', 'account manager');
-    const noteCol   = headerIndex(h, 'note');
-    const cuCol     = headerIndex(h, 'maintenance task clickup');
-    const reportCol = headerIndex(h, 'maintenance report url');
-    const backupCol = headerIndex(h, 'backup url');
+    if (!rows || rows.length < 3) return;
 
-    // Collect all month columns (index > 9, header matches "Month YY/YYYY")
+    const h = rows[1] || []; // Row 0 = note, Row 1 = headers
+    const urlCol    = hi(h, 'website url');
+    const cmsCol    = hi(h, 'cms');
+    const compCol   = hi(h, 'company');
+    const contCol   = hi(h, 'contact');
+    const acmCol    = hi(h, 'a/c manager', 'account manager');
+    const noteCol   = hi(h, 'note');
+    const cuCol     = hi(h, 'maintenance task clickup');
+    const reportCol = hi(h, 'maintenance report url');
+    const backupCol = hi(h, 'backup url');
+
     const monthCols = h.reduce((acc, col, i) => {
       if (col && /[a-z]+ \d{2,4}/i.test(col) && i > 9) acc.push({ i, label: col });
       return acc;
     }, []);
     const latestMonth = monthCols[monthCols.length - 1];
 
-    return rows.slice(2).map(r => {
+    rows.slice(2).forEach(r => {
       const url = (r[urlCol] || '').trim();
-      if (!url) return null;
-      return {
-        account, url,
-        status: r[0] || 'Active',
+      if (!url) return;
+      sites.push({
+        id: uuid(),
+        url,
+        account,
+        status: (r[0] || 'Active').trim(),
         cms: r[cmsCol] || '',
         company: r[compCol] || account,
         contact: r[contCol] || '',
@@ -305,18 +148,281 @@ async function syncSites() {
         latestMonth: latestMonth?.label || '',
         latestMonthStatus: latestMonth ? (r[latestMonth.i] || '') : '',
         monthlyHistory: monthCols.map(mc => ({ month: mc.label, status: r[mc.i] || '' })),
-      };
-    }).filter(Boolean);
+        // Will be filled in later steps:
+        domainExpiry: '', daysLeft: null,
+        assignedUsers: [],
+        uptimeStatus: 'unknown', lastUptimeCheck: null,
+        createdAt: now(), updatedAt: now(),
+      });
+    });
+    report(`Imported ${account} sites (${sites.filter(s => s.account === account).length})`, progressStart);
   };
 
+  await processSheet(SHEET_IDS.CW_MAINTENANCE, 'CW', 10);
+  report('Importing RM sites…', 12);
+  await processSheet(SHEET_IDS.RM_MAINTENANCE, 'RM', 15);
+  return sites;
+}
+
+// ─── Step 3: Merge Domain Expiry into Sites ───────────────────────────────────
+async function mergeDomains(sites) {
+  report('Merging domain expiry…', 18);
   try {
-    const [cw, rm] = await Promise.all([
-      processSheet(SHEETS.CW_MAINTENANCE, 'CW'),
-      processSheet(SHEETS.RM_MAINTENANCE, 'RM'),
-    ]);
-    setSites([...cw, ...rm]);
-  } catch (e) { console.error('[sync] sites failed:', e.message); }
-  report('Sites done', 95);
+    const rows = await getTabValues('Domain Expiration Sheet', RANGE, SHEET_IDS.MASTER_TRACKER);
+    if (!rows || rows.length < 2) return;
+    const h = rows[0];
+    const urlCol    = hi(h, 'website url', 'website');
+    const expiryCol = hi(h, 'domain expiry', 'domain expire', 'expiry');
+    const acmCol    = hi(h, 'a/c manager', 'account manager');
+    const compCol   = hi(h, 'company');
+    const cmsCol    = hi(h, 'cms');
+    const contCol   = hi(h, 'contact');
+
+    rows.slice(1).forEach(r => {
+      const domainUrl = (r[urlCol] || '').trim();
+      if (!domainUrl) return;
+      const expiry = r[expiryCol] || '';
+      const days = daysUntil(expiry);
+
+      // Match to existing site by URL similarity
+      const site = sites.find(s => urlMatch(s.url, domainUrl));
+      if (site) {
+        site.domainExpiry = expiry;
+        site.daysLeft = days;
+        if (!site.accountManager) site.accountManager = r[acmCol] || '';
+        if (!site.contact) site.contact = r[contCol] || '';
+        if (!site.cms) site.cms = r[cmsCol] || '';
+        if (!site.company) site.company = r[compCol] || '';
+      }
+      // Domain entry may not have a matching site (new site not yet in maint list) — skip
+    });
+  } catch (e) { console.error('[sync] domain merge failed:', e.message); }
+  report('Domain expiry merged', 22);
+}
+
+// ─── Step 4: Import Daily Review + Assign Users to Sites ─────────────────────
+async function importDailyReview(sites, userMap) {
+  report('Importing daily review…', 25);
+  const drRows = [];
+  const users = DEFAULT_USERS.map(du => ({
+    ...du, ...Object.values(userMap).find(u => u.name.toLowerCase() === du.name.toLowerCase()),
+  }));
+
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    const dbUser = userMap[user.name.toLowerCase()];
+    if (!dbUser) continue;
+
+    try {
+      const rows = await getTabValues(user.name, RANGE, SHEET_IDS.DAILY_REVIEW);
+      if (!rows || rows.length < 2) continue;
+
+      const h = rows[0];
+      const urlCol   = hi(h, 'website url', 'website');
+      const coCol    = hi(h, 'company');
+      const maintCol = hi(h, 'maintenance');
+      const sentCol  = hi(h, 'maintenance report sent', 'report sent');
+      const ga4Col   = hi(h, 'ga4');
+      const newsCol  = hi(h, 'newsletter');
+      const formCol  = hi(h, 'form submission');
+      const bookCol  = hi(h, 'booking', 'reservation');
+      const cfCol    = hi(h, 'cloudflare');
+      const cuCol    = hi(h, 'clickup');
+      const respCol  = hi(h, 'client response', 'smtp');
+      const uptimeCol= hi(h, 'uptime', 'uptimerobot');
+
+      rows.slice(1).forEach((r, rowIdx) => {
+        const rawUrl = (r[urlCol] || r[0] || '').trim();
+        if (!rawUrl || rawUrl.length < 5 || !/^https?:\/\/|^www\./i.test(rawUrl)) return;
+
+        // Find or create the site record
+        let site = sites.find(s => urlMatch(s.url, rawUrl));
+        if (!site) {
+          // Site in daily review but not in maintenance lists — add it
+          site = {
+            id: uuid(),
+            url: rawUrl,
+            account: (r[coCol] || '').trim() || 'Unknown',
+            status: 'Active',
+            cms: '', company: r[coCol] || '', contact: '', accountManager: '',
+            note: '', clickupUrl: r[cuCol] || '', reportUrl: '', backupUrl: '',
+            latestMonth: '', latestMonthStatus: '', monthlyHistory: [],
+            domainExpiry: '', daysLeft: null,
+            assignedUsers: [],
+            uptimeStatus: 'unknown', lastUptimeCheck: null,
+            createdAt: now(), updatedAt: now(),
+          };
+          sites.push(site);
+        }
+
+        // Assign user to this site
+        if (!site.assignedUsers.includes(dbUser.id)) {
+          site.assignedUsers.push(dbUser.id);
+        }
+
+        const maintRaw = r[maintCol] || '';
+        const sentRaw  = r[sentCol] || '';
+
+        drRows.push({
+          id: uuid(),
+          userId: dbUser.id,
+          userName: dbUser.name,
+          siteId: site.id,
+          siteUrl: site.url,
+          rowIndex: rowIdx + 2, // 1-indexed + header
+          maintenanceStatus: normStatus(maintRaw),
+          maintenanceRaw: maintRaw,
+          reportSentStatus: normStatus(sentRaw),
+          reportSentRaw: sentRaw,
+          ga4: r[ga4Col] || '',
+          newsletterMail: r[newsCol] || '',
+          formSubmissionMail: r[formCol] || '',
+          bookingLink: r[bookCol] || '',
+          cloudflare: r[cfCol] || '',
+          clickupLink: r[cuCol] || '',
+          clientResponse: r[respCol] || '',
+          uptimeRobot: r[uptimeCol] || '',
+          createdAt: now(), updatedAt: now(),
+        });
+      });
+    } catch (e) {
+      console.error(`[sync] daily-review ${user.name} failed:`, e.message);
+    }
+    report(`Daily review: ${user.name}`, 25 + Math.round((i + 1) / users.length * 25));
+  }
+
+  return drRows;
+}
+
+// ─── Step 5: Import Tasks from Distribution Sheet ─────────────────────────────
+async function importTasks(sites, userMap) {
+  report('Importing tasks…', 52);
+  const tasks = [];
+  try {
+    const rows = await getTabValues('Distribution and Work Sheet', RANGE, SHEET_IDS.MASTER_TRACKER);
+    if (!rows || rows.length < 2) return tasks;
+
+    const h = rows[0];
+    const taskCol    = hi(h, 'task name');
+    const cuCol      = hi(h, 'clickup');
+    const webCol     = hi(h, 'website');
+    const typeCol    = hi(h, 'task type');
+    const assigneeCol= hi(h, 'assignee');
+    const statusCol  = hi(h, 'status');
+    const prioCol    = hi(h, 'priority');
+    const acmCol     = hi(h, 'account manager');
+
+    rows.slice(1).forEach(r => {
+      const website = (r[webCol] || '').trim();
+      const taskName = (r[taskCol] || '').trim();
+      if (!website && !taskName) return;
+
+      const assigneeName = (r[assigneeCol] || '').trim();
+      const dbUser = userMap[assigneeName.toLowerCase()];
+      const site = sites.find(s => urlMatch(s.url, website));
+
+      tasks.push({
+        id: uuid(),
+        taskName,
+        siteUrl: website,
+        siteId: site?.id || null,
+        assigneeId: dbUser?.id || null,
+        assigneeName,
+        taskType: r[typeCol] || '',
+        status: r[statusCol] || 'todo',
+        priority: r[prioCol] || 'medium',
+        clickupLink: r[cuCol] || '',
+        accountManager: r[acmCol] || '',
+        deadline: '',
+        notes: '',
+        createdAt: now(), updatedAt: now(),
+      });
+    });
+  } catch (e) { console.error('[sync] tasks failed:', e.message); }
+  report('Tasks imported', 60);
+  return tasks;
+}
+
+// ─── Step 6: Import Properties ────────────────────────────────────────────────
+async function importProperties(userMap) {
+  report('Importing properties…', 62);
+  const props = [];
+  try {
+    const rows = await getTabValues('Sheet1', RANGE, SHEET_IDS.PROPERTY_REGISTRY);
+    if (!rows || rows.length < 2) return props;
+    const h = rows[0];
+    const nameCol    = hi(h, 'property name');
+    const urlCol     = hi(h, 'property url', 'url');
+    const typeCol    = hi(h, 'property type', 'type');
+    const statusCol  = hi(h, 'stauts', 'status');
+    const seoCol     = hi(h, 'seo');
+    const hmCol      = hi(h, 'h&m', 'h&amp;m');
+    const seoTaskCol = hi(h, 'task assigned to seo');
+    const webTaskCol = hi(h, 'task assigned to web');
+
+    rows.slice(1).forEach(r => {
+      const name = (r[nameCol] || '').trim();
+      const url  = (r[urlCol] || '').trim();
+      if (!name && !url) return;
+
+      const seoName = (r[seoTaskCol] || '').trim();
+      const webName = (r[webTaskCol] || '').trim();
+
+      props.push({
+        id: uuid(),
+        name, url,
+        type: r[typeCol] || '',
+        status: r[statusCol] || 'Active',
+        seo: r[seoCol] || '',
+        hm: r[hmCol] || '',
+        seoAssignee: seoName,
+        seoAssigneeId: userMap[seoName.toLowerCase()]?.id || null,
+        webAssignee: webName,
+        webAssigneeId: userMap[webName.toLowerCase()]?.id || null,
+        createdAt: now(), updatedAt: now(),
+      });
+    });
+  } catch (e) { console.error('[sync] properties failed:', e.message); }
+  report('Properties imported', 72);
+  return props;
+}
+
+// ─── Step 7: Import Dev Tracker ───────────────────────────────────────────────
+async function importDevProjects() {
+  report('Importing dev projects…', 74);
+  const projects = [];
+  try {
+    const tabs = await listTabTitles(SHEET_IDS.DEV_TRACKER);
+    for (const tab of tabs) {
+      try {
+        const rows = await getTabValues(tab, RANGE, SHEET_IDS.DEV_TRACKER);
+        if (!rows || rows.length < 2) continue;
+        const h = rows[0];
+        const urlCol    = hi(h, 'url');
+        const statusCol = hi(h, 'status');
+        const fbCol     = hi(h, 'feedback', 'feedbacks');
+        const dateCol   = hi(h, 'date');
+        const noteCol   = hi(h, 'note', 'updates');
+
+        const items = rows.slice(1).map((r, idx) => {
+          const url = (r[urlCol] || '').trim();
+          if (!url) return null;
+          return {
+            idx,
+            url, status: r[statusCol] || '',
+            feedbackUrl: r[fbCol] || '',
+            date: r[dateCol] || '',
+            notes: r[noteCol] || '',
+            updatedAt: now(),
+          };
+        }).filter(Boolean);
+
+        if (items.length) projects.push({ id: uuid(), project: tab, items, updatedAt: now() });
+      } catch {}
+    }
+  } catch (e) { console.error('[sync] dev-projects failed:', e.message); }
+  report('Dev projects imported', 90);
+  return projects;
 }
 
 // ─── Main sync entry point ────────────────────────────────────────────────────
@@ -324,15 +430,47 @@ export async function syncAll() {
   report('Starting full sync…', 1);
   const start = Date.now();
 
-  await syncDailyReview();
-  await syncDomains();
-  await syncDistribution();
-  await syncProperties();
-  await syncDevTracker();
-  await syncSites();
+  // Step 1: Users
+  const userMap = seedUsers();
+
+  // Step 2: Sites (CW + RM)
+  const sites = await importSites();
+
+  // Step 3: Merge domain expiry into sites
+  await mergeDomains(sites);
+
+  // Step 4: Daily review + assign users to sites
+  const drRows = await importDailyReview(sites, userMap);
+
+  // Step 5: Tasks
+  const tasks = await importTasks(sites, userMap);
+
+  // Step 6: Properties
+  const props = await importProperties(userMap);
+
+  // Step 7: Dev projects
+  const devProjects = await importDevProjects();
+
+  // Persist everything
+  setSites(sites);
+  setDailyReview(drRows);
+  setTasks(tasks);
+  setProperties(props);
+  setDevProjects(devProjects);
 
   const elapsed = Math.round((Date.now() - start) / 1000);
   setMeta({ lastSync: new Date().toISOString(), syncDuration: elapsed });
+
   report(`Sync complete in ${elapsed}s`, 100);
-  return { ok: true, elapsed };
+  return {
+    ok: true, elapsed,
+    counts: {
+      users: Object.keys(userMap).length,
+      sites: sites.length,
+      dailyReviewRows: drRows.length,
+      tasks: tasks.length,
+      properties: props.length,
+      devProjects: devProjects.length,
+    },
+  };
 }

@@ -205,169 +205,274 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // Master Dashboard API routes  (/api/master/*)
-    // All reads → local JSON (data/*.json), no Sheets API on reads.
-    // POST /api/master/sync → triggers full import from all 6 sheets.
+    // Master Dashboard API  — full CRUD, relational model
     // ═══════════════════════════════════════════════════════════
     if (pathname.startsWith('/api/master/')) {
       const db = await import('./db.js');
-      const {
-        DAILY_REVIEW_USERS,
-        getDailyReviewForUser,
-        getDailyReviewSummary,
-        getAllDailyReview,
-        getDomainExpiry,
-        getDistributionSheet,
-        getPropertyRegistry,
-        getDevTrackerData,
-        getMaintenanceOverview,
-        getDashboardStats,
-      } = await import('./masterApi.js');
 
-      // ── GET /api/master/db-status ─────────────────────────────
+      // Helper: parse body, send JSON
+      const body  = async () => (method === 'GET' ? {} : await parseBody(req));
+      const ok    = (data) => sendJson(res, 200, data);
+      const err   = (code, msg) => { sendJson(res, code, { error: msg }); };
+
+      // ── DB Status & Stats ─────────────────────────────────────
       if (pathname === '/api/master/db-status' && method === 'GET') {
-        sendJson(res, 200, db.getDbStats());
-        return;
+        return ok(db.getDbStats());
+      }
+      if (pathname === '/api/master/stats' && method === 'GET') {
+        return ok(db.getDbStats());
       }
 
-      // ── POST /api/master/sync — full import from all 6 sheets ─
+      // ── SYNC (Superadmin) ─────────────────────────────────────
       if (pathname === '/api/master/sync' && method === 'POST') {
-        // Stream progress via SSE if requested, otherwise plain JSON
         const isSSE = req.headers.accept?.includes('text/event-stream');
         if (isSSE) {
           res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*',
-            Connection: 'keep-alive',
+            'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*', Connection: 'keep-alive',
           });
           const { syncAll, onProgress } = await import('./syncFromSheets.js');
           onProgress((step, pct) => res.write(`data: ${JSON.stringify({ step, pct })}\n\n`));
           try {
             const result = await syncAll();
             res.write(`data: ${JSON.stringify({ done: true, ...result })}\n\n`);
-          } catch (err) {
-            res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-          }
-          res.end();
-        } else {
-          const { syncAll } = await import('./syncFromSheets.js');
-          try {
-            const result = await syncAll();
-            sendJson(res, 200, result);
-          } catch (err) {
-            sendJson(res, 500, { error: err.message });
-          }
+          } catch (e) { res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`); }
+          return res.end();
         }
-        return;
+        const { syncAll } = await import('./syncFromSheets.js');
+        try { return ok(await syncAll()); }
+        catch (e) { return err(500, e.message); }
       }
 
-      // ── GET /api/master/stats ─────────────────────────────────
-      if (pathname === '/api/master/stats' && method === 'GET') {
-        sendJson(res, 200, getDashboardStats());
-        return;
-      }
-
-      // ── GET /api/master/users ─────────────────────────────────
+      // ── USERS ──────────────────────────────────────────────────
+      // GET /api/master/users
       if (pathname === '/api/master/users' && method === 'GET') {
-        sendJson(res, 200, { users: DAILY_REVIEW_USERS });
-        return;
+        return ok({ users: db.getUsers() });
+      }
+      // POST /api/master/users  (superadmin)
+      if (pathname === '/api/master/users' && method === 'POST') {
+        const b = await body();
+        if (!b.name) return err(400, 'name required');
+        try { return ok({ user: db.createUser(b) }); }
+        catch (e) { return err(400, e.message); }
+      }
+      // PUT /api/master/users/:id  (superadmin)
+      if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ user: db.updateUser(id, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+      // DELETE /api/master/users/:id  (superadmin)
+      if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        db.deleteUser(id);
+        return ok({ success: true });
       }
 
-      // ── GET /api/master/daily-review?user=X ──────────────────
+      // ── SITES ──────────────────────────────────────────────────
+      // GET /api/master/sites?userId=&account=
+      if (pathname === '/api/master/sites' && method === 'GET') {
+        const userId  = reqUrl.searchParams.get('userId');
+        const account = reqUrl.searchParams.get('account');
+        return ok({ sites: db.getSites({ userId, account }) });
+      }
+      // PUT /api/master/sites/:id  (admin+)
+      if (/^\/api\/master\/sites\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ site: db.updateSite(id, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+      // POST /api/master/sites/:id/assign — assign users to a site (admin+)
+      if (/^\/api\/master\/sites\/([^/]+)\/assign$/.test(pathname) && method === 'POST') {
+        const id = pathname.split('/')[4];
+        const b = await body();
+        if (!Array.isArray(b.userIds)) return err(400, 'userIds array required');
+        try { return ok({ site: db.assignUsersToSite(id, b.userIds) }); }
+        catch (e) { return err(404, e.message); }
+      }
+
+      // ── DAILY REVIEW ───────────────────────────────────────────
+      // GET /api/master/daily-review?userId=&userName=
       if (pathname === '/api/master/daily-review' && method === 'GET') {
-        const user = reqUrl.searchParams.get('user');
-        if (!user) { sendJson(res, 400, { error: 'user param required' }); return; }
-        sendJson(res, 200, { user, sites: getDailyReviewForUser(user) });
-        return;
+        const userId   = reqUrl.searchParams.get('userId');
+        const userName = reqUrl.searchParams.get('user') || reqUrl.searchParams.get('userName');
+        return ok({ rows: db.getDailyReview({ userId, userName }) });
       }
-
-      // ── GET /api/master/daily-review-all ─────────────────────
+      // GET /api/master/daily-review-all
       if (pathname === '/api/master/daily-review-all' && method === 'GET') {
-        sendJson(res, 200, getAllDailyReview());
-        return;
+        const rows = db.getDailyReview();
+        // Group by userName
+        const byUser = {};
+        rows.forEach(r => { (byUser[r.userName] = byUser[r.userName] || []).push(r); });
+        return ok(byUser);
       }
-
-      // ── GET /api/master/summary ───────────────────────────────
+      // GET /api/master/summary — per-user completion stats
       if (pathname === '/api/master/summary' && method === 'GET') {
-        sendJson(res, 200, { summary: getDailyReviewSummary() });
-        return;
+        const rows = db.getDailyReview();
+        const users = db.getUsers();
+        const summary = users.map(u => {
+          const uRows = rows.filter(r => r.userId === u.id);
+          const completed = uRows.filter(r => r.maintenanceStatus === 'completed').length;
+          return {
+            userId: u.id, user: u.name, role: u.role,
+            total: uRows.length,
+            completed,
+            inProgress: uRows.filter(r => r.maintenanceStatus === 'in_progress').length,
+            pending: uRows.filter(r => !['completed','in_progress'].includes(r.maintenanceStatus)).length,
+            reportSent: uRows.filter(r => r.reportSentRaw?.toLowerCase() === 'yes').length,
+            pct: uRows.length ? Math.round(completed / uRows.length * 100) : 0,
+          };
+        });
+        return ok({ summary });
+      }
+      // PUT /api/master/daily-review/:id  (user: their own row)
+      if (/^\/api\/master\/daily-review\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ row: db.updateDailyReviewRow(id, b) }); }
+        catch (e) { return err(404, e.message); }
       }
 
-      // ── POST /api/master/update-row — update a daily review row locally ──
-      if (pathname === '/api/master/update-row' && method === 'POST') {
-        const body = await parseBody(req);
-        const { user, url, updates } = body;
-        if (!user || !url || !updates) {
-          sendJson(res, 400, { error: 'user, url, updates required' });
-          return;
+      // ── TASKS ──────────────────────────────────────────────────
+      // GET /api/master/tasks?assigneeId=&status=
+      if (pathname === '/api/master/tasks' && method === 'GET') {
+        const filter = {
+          assigneeId: reqUrl.searchParams.get('assigneeId') || undefined,
+          status:     reqUrl.searchParams.get('status') || undefined,
+        };
+        return ok({ tasks: db.getTasks(filter) });
+      }
+      // POST /api/master/tasks  (admin+)
+      if (pathname === '/api/master/tasks' && method === 'POST') {
+        const b = await body();
+        if (!b.taskName) return err(400, 'taskName required');
+        // Resolve siteId from siteUrl if provided
+        if (b.siteUrl && !b.siteId) {
+          const site = db.getSiteByUrl(b.siteUrl);
+          b.siteId = site?.id || null;
         }
-        try {
-          const updated = db.updateDailyReviewRow(user, url, updates);
-          sendJson(res, 200, { success: true, row: updated });
-        } catch (err) {
-          sendJson(res, 500, { error: err.message });
+        // Resolve assigneeId from assigneeName if provided
+        if (b.assigneeName && !b.assigneeId) {
+          const user = db.getUserByName(b.assigneeName);
+          b.assigneeId = user?.id || null;
         }
-        return;
+        return ok({ task: db.createTask(b) });
+      }
+      // PUT /api/master/tasks/:id  (admin+)
+      if (/^\/api\/master\/tasks\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ task: db.updateTask(id, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+      // DELETE /api/master/tasks/:id  (admin+)
+      if (/^\/api\/master\/tasks\/([^/]+)$/.test(pathname) && method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        db.deleteTask(id);
+        return ok({ success: true });
       }
 
-      // ── GET /api/master/domain-expiry ─────────────────────────
-      if (pathname === '/api/master/domain-expiry' && method === 'GET') {
-        sendJson(res, 200, { domains: getDomainExpiry() });
-        return;
-      }
-
-      // ── GET /api/master/distribution ──────────────────────────
-      if (pathname === '/api/master/distribution' && method === 'GET') {
-        const { tasks, taskLoad } = getDistributionSheet();
-        sendJson(res, 200, { tasks, taskLoad });
-        return;
-      }
-
-      // ── GET /api/master/dev-tracker ───────────────────────────
-      if (pathname === '/api/master/dev-tracker' && method === 'GET') {
-        sendJson(res, 200, { projects: getDevTrackerData() });
-        return;
-      }
-
-      // ── GET /api/master/properties ────────────────────────────
+      // ── PROPERTIES ─────────────────────────────────────────────
+      // GET /api/master/properties
       if (pathname === '/api/master/properties' && method === 'GET') {
-        sendJson(res, 200, { properties: getPropertyRegistry() });
-        return;
+        return ok({ properties: db.getProperties() });
+      }
+      // PUT /api/master/properties/:id  (superadmin)
+      if (/^\/api\/master\/properties\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ property: db.updateProperty(id, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+      // DELETE /api/master/properties/:id  (superadmin)
+      if (/^\/api\/master\/properties\/([^/]+)$/.test(pathname) && method === 'DELETE') {
+        db.deleteProperty(pathname.split('/').pop());
+        return ok({ success: true });
       }
 
-      // ── POST /api/master/update-property ─────────────────────
-      if (pathname === '/api/master/update-property' && method === 'POST') {
-        const body = await parseBody(req);
-        const { url, updates } = body;
-        if (!url || !updates) { sendJson(res, 400, { error: 'url, updates required' }); return; }
-        try {
-          const updated = db.updateProperty(url, updates);
-          sendJson(res, 200, { success: true, property: updated });
-        } catch (err) {
-          sendJson(res, 500, { error: err.message });
+      // ── DEV PROJECTS ───────────────────────────────────────────
+      // GET /api/master/dev-projects
+      if (pathname === '/api/master/dev-projects' && method === 'GET') {
+        return ok({ projects: db.getDevProjects() });
+      }
+      // PUT /api/master/dev-projects/:id/items/:idx  (superadmin)
+      if (/^\/api\/master\/dev-projects\/[^/]+\/items\/\d+$/.test(pathname) && method === 'PUT') {
+        const parts = pathname.split('/');
+        const projId = parts[4];
+        const itemIdx = parseInt(parts[6], 10);
+        const b = await body();
+        try { return ok({ project: db.updateDevProjectItem(projId, itemIdx, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+
+      // ── DOMAIN EXPIRY (read from sites) ────────────────────────
+      if (pathname === '/api/master/domain-expiry' && method === 'GET') {
+        const sites = db.getSites().filter(s => s.domainExpiry);
+        const domains = sites.map(s => ({
+          siteId: s.id, url: s.url, company: s.company, account: s.account,
+          accountManager: s.accountManager, contact: s.contact, cms: s.cms,
+          expiryDate: s.domainExpiry, daysLeft: s.daysLeft,
+          urgent: s.daysLeft !== null && s.daysLeft <= 30,
+          warning: s.daysLeft !== null && s.daysLeft > 30 && s.daysLeft <= 90,
+        }));
+        domains.sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999));
+        return ok({ domains });
+      }
+
+      // ── UPTIME CHECK ───────────────────────────────────────────
+      // POST /api/master/check-uptime  body: { siteId? } (all if omitted)
+      if (pathname === '/api/master/check-uptime' && method === 'POST') {
+        const b = await body();
+        const { checkSite, checkSitesBatch } = await import('./uptime.js');
+        const sites = db.getSites();
+
+        if (b.siteId) {
+          const site = db.getSiteById(b.siteId);
+          if (!site) return err(404, 'Site not found');
+          const result = await checkSite(site.url);
+          const updated = db.updateSite(site.id, {
+            uptimeStatus: result.status,
+            uptimeStatusCode: result.statusCode,
+            uptimeResponseTime: result.responseTime,
+            lastUptimeCheck: result.checkedAt,
+          });
+          return ok({ site: updated, result });
         }
-        return;
-      }
 
-      // ── GET /api/master/maintenance-overview ──────────────────
-      if (pathname === '/api/master/maintenance-overview' && method === 'GET') {
-        sendJson(res, 200, { sites: getMaintenanceOverview() });
-        return;
-      }
-
-      // ── POST /api/master/update-site ──────────────────────────
-      if (pathname === '/api/master/update-site' && method === 'POST') {
-        const body = await parseBody(req);
-        const { url, updates } = body;
-        if (!url || !updates) { sendJson(res, 400, { error: 'url, updates required' }); return; }
-        try {
-          const updated = db.updateSite(url, updates);
-          sendJson(res, 200, { success: true, site: updated });
-        } catch (err) {
-          sendJson(res, 500, { error: err.message });
+        // Check all (stream progress via SSE)
+        const isSSE = req.headers.accept?.includes('text/event-stream');
+        if (isSSE) {
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*', Connection: 'keep-alive',
+          });
+          let done = 0;
+          await checkSitesBatch(sites.map(s => s.url), (url, result) => {
+            const site = sites.find(s => s.url === url);
+            if (site) {
+              db.updateSite(site.id, {
+                uptimeStatus: result.status,
+                uptimeStatusCode: result.statusCode,
+                uptimeResponseTime: result.responseTime,
+                lastUptimeCheck: result.checkedAt,
+              });
+            }
+            done++;
+            res.write(`data: ${JSON.stringify({ url, result, done, total: sites.length })}\n\n`);
+          });
+          res.write(`data: ${JSON.stringify({ complete: true, total: sites.length })}\n\n`);
+          return res.end();
         }
-        return;
+        // Non-SSE: just run and return summary
+        await checkSitesBatch(sites.map(s => s.url), (url, result) => {
+          const site = sites.find(s => s.url === url);
+          if (site) db.updateSite(site.id, { uptimeStatus: result.status, lastUptimeCheck: result.checkedAt });
+        });
+        const updated = db.getSites();
+        return ok({ online: updated.filter(s => s.uptimeStatus === 'online').length,
+          offline: updated.filter(s => s.uptimeStatus === 'offline').length });
       }
 
       sendJson(res, 404, { error: 'Master API route not found' });
