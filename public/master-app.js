@@ -189,34 +189,51 @@ $('sidebar-toggle').addEventListener('click', () => {
 async function initLanding() {
   const defaultNames = ['Toufiq','Sabbir','Taion','Medul','Saiful','Tarikul','Roeich','Asif'];
   const nameSelect = $('user-name-select');
-  nameSelect.innerHTML = defaultNames.map(n => `<option>${n}</option>`).join('');
+  // Populate with defaults first so Enter always works
+  nameSelect.innerHTML = defaultNames.map(n => `<option value="">${n}</option>`).join('');
+
+  // Hide name select for non-user roles initially (superadmin default)
+  $('user-select-wrap').classList.add('hidden');
 
   $('role-select').addEventListener('change', e => {
     $('user-select-wrap').classList.toggle('hidden', e.target.value !== 'user');
   });
 
-  // DB status badge
+  const statusEl = $('landing-status');
+
+  // Try loading db status
   try {
     const st = await GET('/api/master/db-status');
-    const statusEl = $('landing-status');
     if (!st.initialised) {
       statusEl.innerHTML = `<div class="status-pill warn">⚠️ <span><strong>First-time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import data.</span></div>`;
     } else {
       const ago = st.lastSync ? Math.round((Date.now() - new Date(st.lastSync)) / 60000) : null;
-      statusEl.innerHTML = `<div class="status-pill ok">✅ <span>${st.totalSites} sites · ${st.totalDomains} domains${ago!==null?` · synced ${ago}m ago`:''}</span></div>`;
+      statusEl.innerHTML = `<div class="status-pill ok">✅ <span>${st.totalSites} sites · ${st.totalDomains||0} domains${ago!==null?` · synced ${ago}m ago`:''}</span></div>`;
     }
-    // Load real user names
+  } catch {}
+
+  // Load real user names separately so a db-status failure doesn't block this
+  try {
     const { users } = await GET('/api/master/users');
-    S.users = users;
-    nameSelect.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+    if (users && users.length > 0) {
+      S.users = users;
+      nameSelect.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+    }
   } catch {}
 
   $('enter-btn').addEventListener('click', () => {
     const role = $('role-select').value;
-    const nameOpt = nameSelect.options[nameSelect.selectedIndex];
     S.role = role;
-    S.userName = nameOpt.text;
-    S.userId = nameOpt.value || null;
+    if (role === 'user') {
+      const nameOpt = nameSelect.options[nameSelect.selectedIndex];
+      S.userName = nameOpt ? nameOpt.text : defaultNames[0];
+      S.userId   = nameOpt ? (nameOpt.value || null) : null;
+    } else {
+      // Admin / Superadmin — pick their own name from the list if possible
+      const nameOpt = nameSelect.options[nameSelect.selectedIndex];
+      S.userName = nameOpt ? nameOpt.text : (role === 'admin' ? 'Admin' : 'Superadmin');
+      S.userId   = nameOpt ? (nameOpt.value || null) : null;
+    }
     enterApp();
   });
 }

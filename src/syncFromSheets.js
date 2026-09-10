@@ -210,7 +210,7 @@ async function importDailyReview(sites, userMap) {
   report('Importing daily review…', 25);
   const drRows = [];
   const users = DEFAULT_USERS.map(du => ({
-    ...du, ...Object.values(userMap).find(u => u.name.toLowerCase() === du.name.toLowerCase()),
+    ...du, ...(Object.values(userMap).find(u => u?.name?.toLowerCase() === du.name.toLowerCase()) || {}),
   }));
 
   for (let i = 0; i < users.length; i++) {
