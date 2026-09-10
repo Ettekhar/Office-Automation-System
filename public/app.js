@@ -1028,9 +1028,41 @@ monthSelect.addEventListener('change', () => {
   loadOverview(selected, selectedAccount);
 });
 
-// --- Refresh Button ---
-refreshBtn.addEventListener('click', () => {
-  loadOverview(monthSelect.value || null, selectedAccount);
+// --- Refresh Button (clears server-side Sheets cache + reloads) ---
+refreshBtn.addEventListener('click', async () => {
+  try {
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Refreshing...`;
+
+    // Invalidate server-side Sheets cache so fresh data is fetched from Google
+    await fetch('/api/cache/invalidate', { method: 'POST' }).catch(() => {});
+
+    // Also clear client-side generated previews so they re-fetch fresh data
+    generatedPreviews.clear();
+    selectedSites.clear();
+    batchStatusBanner.classList.add('hidden');
+    updateActionButtons();
+
+    await loadOverview(monthSelect.value || null, selectedAccount);
+    showToast('Data refreshed from Google Sheets!', 'success');
+  } catch (err) {
+    showToast(`Refresh failed: ${err.message}`, 'error');
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Refresh`;
+  }
 });
 
 // --- Close Modals ---

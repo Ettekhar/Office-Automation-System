@@ -8,6 +8,7 @@ import {
   generateAllPreviews,
   sendSingleEmail,
 } from './dashboardApi.js';
+import { invalidateCache, getCacheStatus } from './sheetsCache.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -187,6 +188,19 @@ const server = http.createServer(async (req, res) => {
       }
 
       sendJson(res, 200, { success: true, results });
+      return;
+    }
+
+    // API Route: Cache status
+    if (pathname === '/api/cache/status' && method === 'GET') {
+      sendJson(res, 200, getCacheStatus());
+      return;
+    }
+
+    // API Route: Invalidate cache (force fresh fetch from Sheets on next request)
+    if (pathname === '/api/cache/invalidate' && method === 'POST') {
+      invalidateCache();
+      sendJson(res, 200, { success: true, message: 'Cache cleared. Next request will fetch fresh data from Google Sheets.' });
       return;
     }
 

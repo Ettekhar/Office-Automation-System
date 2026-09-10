@@ -2,6 +2,12 @@ import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import fs from 'fs';
 import { config } from './config.js';
+import {
+  cacheGet,
+  cacheSet,
+  tabTitlesCacheKey,
+  tabValuesCacheKey,
+} from './sheetsCache.js';
 
 let sheetsClient = null;
 
@@ -28,20 +34,43 @@ export async function getSheetsClient() {
 /** Returns an array of every tab (sheet) title in the spreadsheet. */
 export async function listTabTitles(spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
+
+  // --- Cache check ---
+  const cacheKey = tabTitlesCacheKey(targetId);
+  const cached = cacheGet(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  // --- API call ---
   const sheets = await getSheetsClient();
   const meta = await sheets.spreadsheets.get({ spreadsheetId: targetId });
-  return meta.data.sheets.map((s) => s.properties.title);
+  const titles = meta.data.sheets.map((s) => s.properties.title);
+
+  cacheSet(cacheKey, titles);
+  return titles;
 }
 
 /** Returns the full 2D array of values for a given tab (raw strings). */
 export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
+
+  // --- Cache check ---
+  const cacheKey = tabValuesCacheKey(targetId, tabName, range);
+  const cached = cacheGet(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  // --- API call ---
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: targetId,
     range: `'${tabName}'!${range}`,
     valueRenderOption: 'FORMATTED_VALUE',
   });
-  return res.data.values || [];
-}
+  const values = res.data.values || [];
 
+  cacheSet(cacheKey, values);
+  return values;
+}
