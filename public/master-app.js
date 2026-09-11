@@ -180,6 +180,7 @@ function navigate(viewId) {
 }
 
 $('refresh-btn').addEventListener('click', () => { if (S.view) navigate(S.view); });
+$('notice-board-top-btn')?.addEventListener('click', () => openNoticeBoardModal());
 $('logout-btn').addEventListener('click', () => {
   appShell.classList.add('hidden');
   landing.classList.remove('hidden');
@@ -388,15 +389,556 @@ function enterApp() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// NOTICE BOARD & PINNED ANNOUNCEMENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+async function getNoticeBannerHtml() {
+  try {
+    const { notices } = await GET('/api/master/notices');
+    if (!notices || !notices.length) return '';
+    const pinned = notices.find(n => n.pinned) || notices[0];
+    if (!pinned) return '';
+    return `
+      <div class="pinned-notice-banner" id="pinned-notice-banner">
+        <div class="pnb-left">
+          <div class="pnb-icon">📌</div>
+          <div class="pnb-content">
+            <div class="pnb-title">
+              <span>${esc(pinned.title)}</span>
+              ${pinned.authorName ? `<span style="font-size:11px;font-weight:400;color:var(--text-dim)">• posted by ${esc(pinned.authorName)}</span>` : ''}
+            </div>
+            <div class="pnb-text">${esc(pinned.content)}</div>
+          </div>
+        </div>
+        <div class="pnb-actions">
+          ${pinned.link ? `<a href="${esc(pinned.link)}" target="_blank" class="btn-notice-meet">${esc(pinned.linkLabel || 'Join Meeting ↗')}</a>` : ''}
+          <button class="btn btn-ghost btn-sm btn-open-notices" title="View all team notices">📢 Board</button>
+        </div>
+      </div>`;
+  } catch {
+    return '';
+  }
+}
+
+async function openNoticeBoardModal() {
+  let notices = [];
+  try {
+    const res = await GET('/api/master/notices');
+    notices = res.notices || [];
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+
+  const canManage = ['admin', 'superadmin'].includes(S.role);
+
+  const noticesListHtml = notices.length ? notices.map(n => `
+    <div style="background:var(--bg-surface-2);border:1px solid ${n.pinned ? 'rgba(99,102,241,0.5)' : 'var(--border)'};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;position:relative;${n.pinned ? 'box-shadow:0 0 16px rgba(99,102,241,0.15)' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${n.pinned ? '<span class="badge badge-accent" style="font-size:10.5px">📌 Pinned</span>' : ''}
+          <strong style="font-size:14px;color:#fff">${esc(n.title)}</strong>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim)">${n.authorName ? esc(n.authorName) + ' • ' : ''}${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ''}</div>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;line-height:1.5">${esc(n.content)}</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div>
+          ${n.link ? `<a href="${esc(n.link)}" target="_blank" class="btn-notice-meet" style="font-size:11.5px;padding:4px 12px">${esc(n.linkLabel || 'Open Link ↗')}</a>` : ''}
+        </div>
+        ${canManage ? `
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm toggle-pin-btn" data-id="${n.id}" data-pinned="${!n.pinned}" title="${n.pinned ? 'Unpin notice' : 'Pin to top banner'}">
+              ${n.pinned ? '📍 Unpin' : '📌 Pin'}
+            </button>
+            <button class="btn btn-ghost btn-sm edit-notice-btn" data-id="${n.id}" title="Edit notice">✏️</button>
+            <button class="btn btn-danger btn-sm del-notice-btn" data-id="${n.id}" title="Delete notice">🗑</button>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="empty-icon">📢</div><p>No notices posted yet.</p></div>';
+
+  openModal(
+    '📢 Team Notice Board',
+    `
+    <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12.5px;color:var(--text-muted)">Important announcements and quick links for the entire team.</div>
+      ${canManage ? '<button class="btn btn-primary btn-sm" id="btn-create-notice">+ Post Notice</button>' : ''}
+    </div>
+    <div id="notices-modal-list" style="max-height:60vh;overflow-y:auto;padding-right:4px">
+      ${noticesListHtml}
+    </div>
+    `,
+    [{ label: 'Close', cls: 'btn btn-secondary', onClick: closeModal }]
+  );
+
+  const modalList = $('notices-modal-list');
+  if (!modalList) return;
+
+  if (canManage) {
+    $('btn-create-notice')?.addEventListener('click', () => {
+      openModal('Post New Notice',
+        `
+        <div class="form-group"><label class="form-label">Notice Title *</label><input class="form-input" id="nn-title" placeholder="e.g. Daily Standup Google Meet"></div>
+        <div class="form-group"><label class="form-label">Details / Message</label><textarea class="form-textarea" id="nn-content" placeholder="e.g. Join the team every morning at 10:00 AM..."></textarea></div>
+        <div class="form-group"><label class="form-label">Link URL (Optional, e.g. Meet link)</label><input class="form-input" id="nn-link" placeholder="https://meet.google.com/xyz"></div>
+        <div class="form-group"><label class="form-label">Link Button Label</label><input class="form-input" id="nn-label" placeholder="e.g. Join Google Meet ↗" value="Join Google Meet ↗"></div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:10px">
+          <input type="checkbox" id="nn-pin" checked style="width:16px;height:16px;accent-color:var(--accent)">
+          <label for="nn-pin" class="form-label" style="margin:0;cursor:pointer">📌 Pin to top of dashboard</label>
+        </div>
+        `,
+        [
+          { label: 'Cancel', cls: 'btn btn-secondary', onClick: openNoticeBoardModal },
+          { label: 'Publish Notice', cls: 'btn btn-primary', onClick: async () => {
+            const title = $('nn-title').value.trim();
+            if (!title) { toast('Title required', 'error'); return; }
+            try {
+              await POST('/api/master/notices', {
+                title,
+                content: $('nn-content').value.trim(),
+                link: $('nn-link').value.trim(),
+                linkLabel: $('nn-label').value.trim(),
+                pinned: $('nn-pin').checked,
+                authorName: S.userName || 'Admin',
+                authorRole: S.role || 'admin',
+              });
+              toast('Notice published!', 'success');
+              openNoticeBoardModal();
+              if (S.view) navigate(S.view);
+            } catch (e) { toast(e.message, 'error'); }
+          }}
+        ]
+      );
+    });
+
+    modalList.querySelectorAll('.toggle-pin-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const targetPinned = btn.dataset.pinned === 'true';
+        try {
+          await PUT(`/api/master/notices/${id}`, { pinned: targetPinned });
+          toast(targetPinned ? 'Notice pinned to top!' : 'Notice unpinned', 'success');
+          openNoticeBoardModal();
+          if (S.view) navigate(S.view);
+        } catch (e) { toast(e.message, 'error'); }
+      });
+    });
+
+    modalList.querySelectorAll('.del-notice-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this notice?')) return;
+        try {
+          await DELETE(`/api/master/notices/${btn.dataset.id}`);
+          toast('Notice deleted', 'success');
+          openNoticeBoardModal();
+          if (S.view) navigate(S.view);
+        } catch (e) { toast(e.message, 'error'); }
+      });
+    });
+
+    modalList.querySelectorAll('.edit-notice-btn').forEach(btn => {
+      const notice = notices.find(n => n.id === btn.dataset.id);
+      if (!notice) return;
+      btn.addEventListener('click', () => {
+        openModal(`Edit: ${notice.title}`,
+          `
+          <div class="form-group"><label class="form-label">Notice Title *</label><input class="form-input" id="en-title" value="${esc(notice.title)}"></div>
+          <div class="form-group"><label class="form-label">Details / Message</label><textarea class="form-textarea" id="en-content">${esc(notice.content || '')}</textarea></div>
+          <div class="form-group"><label class="form-label">Link URL</label><input class="form-input" id="en-link" value="${esc(notice.link || '')}"></div>
+          <div class="form-group"><label class="form-label">Link Button Label</label><input class="form-input" id="en-label" value="${esc(notice.linkLabel || '')}"></div>
+          <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:10px">
+            <input type="checkbox" id="en-pin" ${notice.pinned ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--accent)">
+            <label for="en-pin" class="form-label" style="margin:0;cursor:pointer">📌 Pin to top of dashboard</label>
+          </div>
+          `,
+          [
+            { label: 'Cancel', cls: 'btn btn-secondary', onClick: openNoticeBoardModal },
+            { label: 'Save Changes', cls: 'btn btn-primary', onClick: async () => {
+              try {
+                await PUT(`/api/master/notices/${notice.id}`, {
+                  title: $('en-title').value.trim(),
+                  content: $('en-content').value.trim(),
+                  link: $('en-link').value.trim(),
+                  linkLabel: $('en-label').value.trim(),
+                  pinned: $('en-pin').checked,
+                });
+                toast('Notice updated', 'success');
+                openNoticeBoardModal();
+                if (S.view) navigate(S.view);
+              } catch (e) { toast(e.message, 'error'); }
+            }}
+          ]
+        );
+      });
+    });
+  }
+}
+
+// ─── Shared Checklist Table Interactivity (Quick Uptime, Bulk Edit, Live Stats) ───
+function initChecklistTable(containerEl, isUserView = false, activeUserId = null) {
+  // 1. Recalculate stats helper
+  function recalcStats() {
+    const rows = containerEl.querySelectorAll('tr.smart-row, tr[data-status]:not(.smart-row):not(.detail-accordion-row)');
+    let comp = 0, inProg = 0, pending = 0, total = rows.length;
+    rows.forEach(r => {
+      const s = r.dataset.status;
+      if (s === 'completed') comp++;
+      else if (s === 'in_progress') inProg++;
+      else pending++;
+    });
+    const pct = total ? Math.round(comp / total * 100) : 0;
+
+    // Update stat cards
+    const cEl = $('stat-completed'); if (cEl) cEl.textContent = comp;
+    const ipEl = $('stat-inprogress'); if (ipEl) ipEl.textContent = inProg;
+    const pEl = $('stat-pending'); if (pEl) pEl.textContent = pending;
+
+    // Update progress text & fill
+    containerEl.querySelectorAll('.completion-pct-text').forEach(el => el.textContent = `${pct}% Completed`);
+    containerEl.querySelectorAll('.user-pct-text').forEach(el => el.textContent = `${pct}% complete`);
+    containerEl.querySelectorAll('.completion-progress-fill, .user-progress-fill').forEach(el => el.style.width = `${pct}%`);
+
+    // If active user tab is open on Team Progress, update tab badge
+    if (activeUserId) {
+      const tabBtn = document.querySelector(`.user-tab-btn[data-uid="${activeUserId}"]`);
+      if (tabBtn) {
+        const badge = tabBtn.querySelector('.badge');
+        if (badge) {
+          badge.textContent = `${pct}%`;
+          badge.className = `badge badge-${pct >= 100 ? 'success' : (pct > 50 ? 'info' : 'warning')}`;
+        }
+      }
+    }
+  }
+
+  // 2. Quick Uptime Check button listener
+  containerEl.querySelectorAll('.btn-uptime-check').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      btn.classList.add('spinning');
+      try {
+        const resp = await POST('/api/master/check-uptime', {
+          rowId: btn.dataset.rowId,
+          url: btn.dataset.siteUrl,
+          siteId: btn.dataset.siteId || undefined,
+        });
+        btn.classList.remove('spinning');
+        const isUp = resp.result?.status === 'online';
+        const dot = document.getElementById(`live-dot-${btn.dataset.rowId}`);
+        if (dot) {
+          dot.className = `live-status-dot ${isUp ? 'online' : 'offline'}`;
+          dot.title = isUp ? `Website Online & Active (${resp.result?.responseTime || 0}ms)` : 'Website Down / Offline';
+        }
+        toast(`${isUp ? '🟢 Online' : '🔴 Offline'} — ${shortUrl(btn.dataset.siteUrl, 24)}${resp.result?.responseTime ? ' (' + resp.result.responseTime + 'ms)' : ''}`, isUp ? 'success' : 'error');
+      } catch (err) {
+        btn.classList.remove('spinning');
+        toast(err.message, 'error');
+      }
+    });
+  });
+
+  // 3. Status change listener for live stat recalculation
+  containerEl.querySelectorAll('.select-maint-compact, .select-maint').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const row = sel.closest('tr');
+      if (row) row.dataset.status = sel.value;
+      recalcStats();
+    });
+  });
+
+  // 4. Bulk Edit Dock functionality
+  const dock = containerEl.querySelector('#bulk-dock') || $('bulk-dock');
+  const countEl = containerEl.querySelector('#bulk-selected-count') || $('bulk-selected-count');
+  const selectAll = containerEl.querySelector('.select-all-checkbox');
+  const rowCheckboxes = containerEl.querySelectorAll('.row-checkbox');
+
+  function updateDock() {
+    const checked = containerEl.querySelectorAll('.row-checkbox:checked');
+    if (countEl) countEl.textContent = checked.length;
+    if (dock) {
+      if (checked.length > 0) dock.classList.remove('hidden');
+      else dock.classList.add('hidden');
+    }
+    if (selectAll) {
+      selectAll.checked = rowCheckboxes.length > 0 && checked.length === rowCheckboxes.length;
+      selectAll.indeterminate = checked.length > 0 && checked.length < rowCheckboxes.length;
+    }
+  }
+
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      rowCheckboxes.forEach(cb => {
+        const tr = cb.closest('tr');
+        if (tr && !tr.classList.contains('hidden')) cb.checked = selectAll.checked;
+      });
+      updateDock();
+    });
+  }
+
+  rowCheckboxes.forEach(cb => {
+    cb.addEventListener('change', updateDock);
+  });
+
+  const clearBtn = containerEl.querySelector('#btn-clear-selection') || $('btn-clear-selection');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      rowCheckboxes.forEach(cb => cb.checked = false);
+      updateDock();
+    });
+  }
+
+  const applyBtn = containerEl.querySelector('#btn-apply-bulk') || $('btn-apply-bulk');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', async () => {
+      const checked = [...containerEl.querySelectorAll('.row-checkbox:checked')];
+      if (!checked.length) return;
+      const ids = checked.map(cb => cb.dataset.rowId);
+      const maintVal = ($('bulk-maint-status') || {}).value;
+      const reportVal = ($('bulk-report-status') || {}).value;
+      const ga4Val = ($('bulk-ga4-status') || {}).value;
+
+      if (!maintVal && !reportVal && !ga4Val) {
+        toast('Please select a Maintenance, Report, or GA4 status to apply', 'warning');
+        return;
+      }
+
+      const updates = {};
+      if (maintVal) {
+        updates.maintenanceStatus = maintVal;
+        updates.maintenanceRaw = maintVal === 'completed' ? 'Completed' : (maintVal === 'in_progress' ? 'In Progress' : 'To Do');
+      }
+      if (reportVal) {
+        updates.reportSentStatus = reportVal;
+        updates.reportSentRaw = reportVal === 'sent' ? 'Yes' : 'No';
+      }
+      if (ga4Val) {
+        updates.ga4 = ga4Val;
+      }
+
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Applying…';
+      try {
+        await POST('/api/master/daily-review/batch', { ids, updates });
+        ids.forEach(id => {
+          const row = containerEl.querySelector(`tr[data-id="${id}"]`);
+          if (row) {
+            if (updates.maintenanceStatus) {
+              row.dataset.status = updates.maintenanceStatus;
+              const sel = row.querySelector('.select-maint-compact, .select-maint');
+              if (sel) sel.value = updates.maintenanceStatus;
+            }
+            if (updates.reportSentStatus) {
+              const btn = row.querySelector('.btn-report-toggle');
+              if (btn) {
+                btn.className = `btn-report-toggle ${updates.reportSentStatus === 'sent' ? 'sent' : 'pending'}`;
+                btn.dataset.status = updates.reportSentStatus;
+                btn.textContent = updates.reportSentStatus === 'sent' ? '✓ Sent' : '✉ No';
+              }
+            }
+            if (updates.ga4) {
+              const ga4Sel = row.querySelector('.select-ga4-status');
+              if (ga4Sel) {
+                ga4Sel.value = updates.ga4;
+                ga4Sel.className = `select-ga4-status ${/no|n\/a/i.test(updates.ga4) ? 'val-dim' : ''}`;
+              }
+            }
+          }
+        });
+        toast(`Bulk updated ${ids.length} sites!`, 'success');
+        recalcStats();
+        rowCheckboxes.forEach(cb => cb.checked = false);
+        updateDock();
+      } catch (e) {
+        toast(e.message, 'error');
+      } finally {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply Updates';
+      }
+    });
+  }
+
+  const bulkUptimeBtn = containerEl.querySelector('#btn-bulk-uptime') || $('btn-bulk-uptime');
+  if (bulkUptimeBtn) {
+    bulkUptimeBtn.addEventListener('click', async () => {
+      const checked = [...containerEl.querySelectorAll('.row-checkbox:checked')];
+      if (!checked.length) return;
+      bulkUptimeBtn.disabled = true;
+      bulkUptimeBtn.textContent = `⏳ 0/${checked.length}`;
+      let done = 0;
+      for (const cb of checked) {
+        try {
+          const resp = await POST('/api/master/check-uptime', {
+            rowId: cb.dataset.rowId,
+            url: cb.dataset.url,
+          });
+          const isUp = resp.result?.status === 'online';
+          const dot = document.getElementById(`live-dot-${cb.dataset.rowId}`);
+          if (dot) {
+            dot.className = `live-status-dot ${isUp ? 'online' : 'offline'}`;
+            dot.title = isUp ? `Website Online & Active (${resp.result?.responseTime || 0}ms)` : 'Website Down / Offline';
+          }
+        } catch {}
+        done++;
+        bulkUptimeBtn.textContent = `⏳ ${done}/${checked.length}`;
+      }
+      toast(`Completed live uptime check for ${checked.length} sites`, 'success');
+      bulkUptimeBtn.disabled = false;
+      bulkUptimeBtn.textContent = '↺ Check Uptime';
+    });
+  }
+
+  // 5. GA4 inline status change listener
+  containerEl.querySelectorAll('.select-ga4-status').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const rowId = sel.dataset.rowId;
+      const value = sel.value;
+      sel.className = `select-ga4-status ${/no|n\/a/i.test(value) ? 'val-dim' : ''}`;
+      try {
+        await PUT(`/api/master/daily-review/${rowId}`, { ga4: value });
+        toast('GA4 status updated', 'success');
+      } catch (err) { toast(err.message, 'error'); }
+    });
+  });
+
+  // 6. Domain Expiry edit button listener
+  containerEl.querySelectorAll('.btn-edit-expiry').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const { siteId, url, current, rowId } = btn.dataset;
+      openExpiryEditModal({ siteId, siteUrl: url, currentDate: current, rowId }, () => {
+        if (isUserView) viewMySites();
+        else if (activeUserId) loadUser(activeUserId);
+      });
+    });
+  });
+
+  // 7. Domain Expiry approval actions (Admin / Superadmin)
+  containerEl.querySelectorAll('.btn-approve-expiry').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const reqId = btn.dataset.reqId;
+      try {
+        btn.disabled = true;
+        await POST(`/api/master/domain-expiry-requests/${reqId}/resolve`, {
+          action: 'approved',
+          resolvedBy: S.currentUser?.name || 'admin'
+        });
+        toast('Domain expiration date approved & applied!', 'success');
+        if (isUserView) viewMySites();
+        else if (activeUserId) loadUser(activeUserId);
+      } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  containerEl.querySelectorAll('.btn-reject-expiry').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const reqId = btn.dataset.reqId;
+      try {
+        btn.disabled = true;
+        await POST(`/api/master/domain-expiry-requests/${reqId}/resolve`, {
+          action: 'rejected',
+          resolvedBy: S.currentUser?.name || 'admin'
+        });
+        toast('Domain expiration date change rejected', 'info');
+        if (isUserView) viewMySites();
+        else if (activeUserId) loadUser(activeUserId);
+      } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  // 8. Open Notice Board listener
+  containerEl.querySelectorAll('.btn-open-notices').forEach(btn => {
+    btn.addEventListener('click', openNoticeBoardModal);
+  });
+}
+
+function openExpiryEditModal({ siteId, siteUrl, currentDate, rowId }, onSaved) {
+  const isAdminOrSuper = S.currentUser?.role === 'admin' || S.currentUser?.role === 'superadmin';
+  const cleanCurrent = currentDate ? currentDate.slice(0, 10) : '';
+
+  openModal(`Domain Expiry: ${shortUrl(siteUrl, 28)}`, `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;word-break:break-all">
+      Site: <a href="${esc(siteUrl)}" target="_blank" style="color:var(--accent-2)">${esc(siteUrl)} ↗</a>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label" style="font-size:12.5px;font-weight:700">Domain Expiration Date</label>
+      <input type="date" id="modal-expiry-date" class="form-input" value="${esc(cleanCurrent)}" style="background:var(--bg-surface-2);color:#fff" />
+      <div style="font-size:11.5px;color:var(--text-secondary);margin-top:6px">
+        ${isAdminOrSuper 
+          ? '⚡ As an Admin/Superadmin, changes apply immediately across the system.' 
+          : '⏳ As a Team Member, this change will be submitted to Admin/Superadmin for approval.'}
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="btn-submit-expiry-change">
+        ${isAdminOrSuper ? '✓ Save Expiry Date' : '📤 Submit for Approval'}
+      </button>
+    </div>
+  `);
+
+  const submitBtn = $('btn-submit-expiry-change');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      const newDate = ($('modal-expiry-date').value || '').trim();
+      if (!newDate) {
+        toast('Please choose a valid expiration date', 'warning');
+        return;
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving…';
+      try {
+        if (isAdminOrSuper) {
+          await POST('/api/master/domain-expiry-requests', {
+            siteId,
+            siteUrl,
+            requestedDate: newDate,
+            directApply: true,
+          });
+          toast('Domain expiration date updated!', 'success');
+        } else {
+          await POST('/api/master/domain-expiry-requests', {
+            siteId,
+            siteUrl,
+            requestedDate: newDate,
+            requestedBy: S.currentUser?.id || '',
+            requestedByName: S.currentUser?.name || 'User',
+          });
+          toast('Submitted to Admin/Superadmin for approval!', 'success');
+        }
+        closeModal();
+        if (onSaved) onSaved();
+      } catch (err) {
+        toast(err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = isAdminOrSuper ? '✓ Save Expiry Date' : '📤 Submit for Approval';
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: MY SITES (User)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewMySites() {
   setPage('My Sites', `Assigned checklist for ${S.userName}`);
 
   let rows = [];
+  let noticeBannerHtml = '';
   try {
-    const data = await GET(`/api/master/daily-review?userId=${S.userId}&user=${encodeURIComponent(S.userName)}`);
+    const [data, nHtml] = await Promise.all([
+      GET(`/api/master/daily-review?userId=${S.userId}&user=${encodeURIComponent(S.userName)}`),
+      getNoticeBannerHtml()
+    ]);
     rows = data.rows || [];
+    noticeBannerHtml = nHtml;
   } catch (e) { toast(e.message, 'error'); }
 
   const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
@@ -407,19 +949,20 @@ async function viewMySites() {
 
   mainEl.innerHTML = `
     <div class="fade-in">
+      ${noticeBannerHtml}
       <div class="stat-grid">
-        <div class="stat-card accent"><div class="stat-value">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
-        <div class="stat-card success"><div class="stat-value">${completed}</div><div class="stat-label">Completed</div></div>
-        <div class="stat-card warning"><div class="stat-value">${inProgress}</div><div class="stat-label">In Progress</div></div>
-        <div class="stat-card danger"><div class="stat-value">${pending}</div><div class="stat-label">Pending Review</div></div>
+        <div class="stat-card accent"><div class="stat-value" id="stat-total">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
+        <div class="stat-card success"><div class="stat-value" id="stat-completed">${completed}</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card warning"><div class="stat-value" id="stat-inprogress">${inProgress}</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card danger"><div class="stat-value" id="stat-pending">${pending}</div><div class="stat-label">Pending Review</div></div>
       </div>
 
       <div class="card">
         <div class="card-header">
           <span class="card-title">📋 Daily Maintenance Checklist</span>
           <div class="card-actions">
-            <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
-            <div class="progress-wrap" style="width:120px"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <span class="completion-pct-text" style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
+            <div class="progress-wrap" style="width:120px"><div class="progress-fill completion-progress-fill" style="width:${pct}%"></div></div>
             <div class="view-mode-toggle" id="table-mode-toggle">
               <button class="btn btn-sm mode-btn ${isSmart?'active':''}" data-mode="smart" title="Smart Fit 100vw - No horizontal scroll">⚡ Smart Fit</button>
               <button class="btn btn-sm mode-btn ${!isSmart?'active':''}" data-mode="full" title="Spreadsheet mode with all 14 columns">📋 Full Spread</button>
@@ -450,19 +993,21 @@ async function viewMySites() {
             <thead>
               ${isSmart ? `
                 <tr>
-                  <th class="col-idx">#</th>
-                  <th class="col-live" title="Website Online / Active Status">Live</th>
-                  <th class="col-type">Type</th>
-                  <th class="col-url">Website Account</th>
+                  <th class="col-select" style="text-align:center">
+                    <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
+                  </th>
+                  <th class="col-url">Website &amp; Account</th>
                   <th class="col-maint">Maintenance &amp; Report</th>
                   <th class="col-links">Tasks &amp; Links</th>
                   <th class="col-integ">Integrations</th>
                   <th class="col-resp">Response</th>
-                  <th class="col-actions">Actions</th>
+                  <th class="col-actions" style="text-align:right">Actions</th>
                 </tr>
               ` : `
                 <tr>
-                  <th>#</th>
+                  <th style="width:36px;text-align:center">
+                    <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
+                  </th>
                   <th>Website URL</th>
                   <th>Company</th>
                   <th>Maintenance</th>
@@ -473,7 +1018,7 @@ async function viewMySites() {
                   <th>Form Submission Mail</th>
                   <th>Client Response</th>
                   <th>Booking Engine</th>
-                  <th>UPTimeRobot</th>
+                  <th>Domain Expiry</th>
                   <th>Cloudflare</th>
                   <th>Actions</th>
                 </tr>
@@ -483,6 +1028,35 @@ async function viewMySites() {
               ${rows.map((r,i) => siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}
             </tbody>
           </table>
+        </div>
+
+        <!-- Bulk Edit Sticky Dock -->
+        <div class="bulk-dock hidden" id="bulk-dock">
+          <div class="bulk-dock-count"><span id="bulk-selected-count">0</span> sites selected</div>
+          <div class="bulk-dock-controls">
+            <select class="form-select select-sm" id="bulk-maint-status" style="width:130px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
+              <option value="">— Maintenance —</option>
+              <option value="completed">Completed</option>
+              <option value="in_progress">In Progress</option>
+              <option value="todo">To Do</option>
+            </select>
+            <select class="form-select select-sm" id="bulk-report-status" style="width:110px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
+              <option value="">— Report —</option>
+              <option value="sent">Sent (Yes)</option>
+              <option value="no">No</option>
+            </select>
+            <select class="form-select select-sm select-ga4-status" id="bulk-ga4-status" style="width:125px;border-radius:6px">
+              <option value="">— GA4 Status —</option>
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="No GA4 Tag">No GA4 Tag</option>
+              <option value="N/A">N/A</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="btn-apply-bulk">Apply Updates</button>
+            <button class="btn btn-secondary btn-sm" id="btn-bulk-uptime" title="Check uptime for all selected sites">↺ Check Uptime</button>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-selection" title="Clear selection">✕</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -629,6 +1203,8 @@ async function viewMySites() {
       if (r) editDailyReviewRowModal(r, () => viewMySites());
     });
   });
+
+  initChecklistTable(mainEl, true);
 }
 
 function exportChecklistCsv(rows, filename) {
@@ -682,16 +1258,17 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
     ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup" title="${esc(r.clickupLink)}">⚡ ClickUp</a>`
     : '<span class="dim-dash">—</span>';
 
-  // 2. GA4 Report
-  let ga4Html = '<span class="dim-dash">—</span>';
-  if (r.ga4) {
-    if (/^https?:\/\//i.test(r.ga4)) {
-      ga4Html = `<a href="${esc(r.ga4)}" target="_blank" class="btn btn-ghost btn-sm" style="font-size:11px">GA4 ↗</a>`;
-    } else {
-      const isDim = /no|n\/a/i.test(r.ga4);
-      ga4Html = `<span class="cell-text-badge ${isDim ? 'badge-dim' : 'badge-info'}" title="${esc(r.ga4)}">${esc(r.ga4)}</span>`;
-    }
-  }
+  // 2. GA4 Report (Interactive Status Dropdown matching custom design)
+  const ga4Options = ['Completed', 'In Progress', 'Pending', 'No GA4 Tag', 'N/A'];
+  const curGa4 = (r.ga4 || 'No GA4 Tag').trim();
+  const isCustomGa4 = curGa4 && !ga4Options.some(o => o.toLowerCase() === curGa4.toLowerCase());
+  const isDimGa4 = /no|n\/a/i.test(curGa4);
+  const ga4SelectHtml = `
+    <select class="select-ga4-status ${isDimGa4 ? 'val-dim' : ''}" data-row-id="${r.id}" title="GA4 Report Status">
+      ${ga4Options.map(o => `<option value="${o}" ${curGa4.toLowerCase() === o.toLowerCase() ? 'selected' : ''}>${o}</option>`).join('')}
+      ${isCustomGa4 ? `<option value="${esc(curGa4)}" selected>${esc(curGa4)}</option>` : ''}
+    </select>
+  `;
 
   // 3. Newsletter Mail
   let newsHtml = '<span class="dim-dash">—</span>';
@@ -726,9 +1303,54 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
     }
   }
 
-  // 7. UPTimeRobot Monitoring
-  const isUptimeYes = r.uptimeRobot && /yes/i.test(r.uptimeRobot);
-  const uptimeHtml = `<span class="badge ${isUptimeYes ? 'badge-success' : 'badge-dim'}">${isUptimeYes ? '🟢 Yes' : '⚪ No'}</span>`;
+  // 7. Domain Expiry (Replaces UptimeRobot column)
+  let expiryHtml = '<span class="dim-dash">—</span>';
+  const cleanExp = r.domainExpiry ? r.domainExpiry.slice(0, 10) : '';
+  if (r.domainExpiry) {
+    let daysBadge = '';
+    if (r.daysLeft !== null && r.daysLeft !== undefined) {
+      if (r.daysLeft <= 0) {
+        daysBadge = `<span class="badge-expiry-danger">EXPIRED</span>`;
+      } else if (r.daysLeft <= 30) {
+        daysBadge = `<span class="badge-expiry-danger">${r.daysLeft}d left</span>`;
+      } else if (r.daysLeft <= 90) {
+        daysBadge = `<span class="badge-expiry-warning">${r.daysLeft}d left</span>`;
+      } else {
+        daysBadge = `<span class="badge-expiry-safe">${r.daysLeft}d left</span>`;
+      }
+    }
+    expiryHtml = `
+      <div class="expiry-cell-grp">
+        <span class="expiry-date-text" title="${esc(r.domainExpiry)}">${esc(cleanExp)}</span>
+        ${daysBadge}
+        <button class="btn-edit-expiry" data-row-id="${r.id}" data-site-id="${r.siteId||''}" data-url="${esc(r.siteUrl)}" data-current="${esc(cleanExp)}" title="Edit expiration date">✏️</button>
+      </div>
+    `;
+  } else {
+    expiryHtml = `
+      <div class="expiry-cell-grp">
+        <span class="dim-dash">—</span>
+        <button class="btn-edit-expiry" data-row-id="${r.id}" data-site-id="${r.siteId||''}" data-url="${esc(r.siteUrl)}" data-current="" title="Set expiration date">✏️</button>
+      </div>
+    `;
+  }
+
+  // Pending Expiry Approval Badge + Actions
+  if (r.pendingExpiryRequest) {
+    const pr = r.pendingExpiryRequest;
+    const isAdmin = S.currentUser?.role === 'admin' || S.currentUser?.role === 'superadmin';
+    expiryHtml += `
+      <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <span class="expiry-pending-pill" title="Proposed by ${esc(pr.requestedByName||'User')}: ${esc(pr.requestedDate)}">
+          ⏳ ${esc(pr.requestedDate)}
+        </span>
+        ${isAdmin ? `
+          <button class="btn-approve-expiry" data-req-id="${pr.id}" title="Approve date: ${esc(pr.requestedDate)}">✓</button>
+          <button class="btn-reject-expiry" data-req-id="${pr.id}" title="Reject date">✕</button>
+        ` : ''}
+      </div>
+    `;
+  }
 
   // 8. Cloudflare Issues
   const isCfIssue = r.cloudflare && !/no/i.test(r.cloudflare) && r.cloudflare.trim() !== '';
@@ -736,29 +1358,32 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
     ? `<span class="badge badge-danger" title="${esc(r.cloudflare)}">⚠️ Issue</span>`
     : `<span class="badge badge-success">✓ None</span>`;
 
-  const isOnline = r.uptimeStatus === 'online' || (r.uptimeRobot && /yes/i.test(r.uptimeRobot));
+  const isOnline = r.uptimeStatus === 'online';
   const isOffline = r.uptimeStatus === 'offline';
-  const liveBall = `<span class="live-status-dot ${isOffline ? 'offline' : 'online'}" title="${isOffline ? 'Website Offline / Down' : 'Website Active & Online'}"></span>`;
+  const liveBall = `<span class="live-status-dot ${isOffline ? 'offline' : (isOnline ? 'online' : 'pending')}" id="live-dot-${r.id}" title="${isOffline ? 'Website Offline / Down' : (isOnline ? 'Website Active & Online' : 'Website Status: Unknown')}"></span>`;
   const co = (r.company || 'CW').trim();
 
   if (mode === 'smart') {
     return `
       <tr class="smart-row" data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
-        <td class="col-idx" style="color:var(--text-dim);font-size:11px">${i+1}</td>
-        <td class="col-live" style="text-align:center">${liveBall}</td>
-        <td class="col-type" style="text-align:center">
-          <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'} badge-xs">${esc(co)}</span>
+        <td class="col-select" style="text-align:center">
+          <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
         </td>
         <td class="col-url url-cell">
-          <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
-            ${esc(shortUrl(r.siteUrl, 28))} <span class="ext-icon">↗</span>
-          </a>
+          <div class="site-identity-cell">
+            ${liveBall}
+            <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'} badge-xs">${esc(co)}</span>
+            <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
+              ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
+            </a>
+            <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+          </div>
         </td>
         <td class="col-maint">
           <div class="status-cell-grp">
             <select class="status-select select-maint-compact" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select>
             <button class="btn-report-toggle ${r.reportSentStatus==='sent'?'sent':'pending'}" data-row-id="${r.id}" data-status="${r.reportSentStatus}" title="Click to toggle Report Sent">
-              ${r.reportSentStatus==='sent'?'✉️ Sent':'✉️ No'}
+              ${r.reportSentStatus==='sent'?'✓ Sent':'✉ No'}
             </button>
           </div>
         </td>
@@ -771,10 +1396,9 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         </td>
         <td class="col-integ">
           <div class="integrations-pill-grp">
-            ${ga4Html !== '<span class="dim-dash">—</span>' ? ga4Html : ''}
+            ${ga4SelectHtml}
             ${newsHtml !== '<span class="dim-dash">—</span>' ? newsHtml : ''}
             ${formHtml !== '<span class="dim-dash">—</span>' ? formHtml : ''}
-            ${ga4Html === '<span class="dim-dash">—</span>' && newsHtml === '<span class="dim-dash">—</span>' && formHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
           </div>
         </td>
         <td class="col-resp">${respHtml}</td>
@@ -786,7 +1410,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         </td>
       </tr>
       <tr class="detail-accordion-row hidden" id="detail-row-${r.id}" data-parent-id="${r.id}">
-        <td colspan="9">
+        <td colspan="7">
           <div class="row-detail-bento">
             <div class="detail-bento-card">
               <div class="dbc-head">🌐 Website &amp; Account</div>
@@ -802,17 +1426,17 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
             </div>
             <div class="detail-bento-card">
               <div class="dbc-head">📈 Analytics &amp; Comms</div>
-              <div class="dbc-row"><span class="dbc-lbl">GA4 Status:</span> <span class="dbc-val">${esc(r.ga4 || 'No GA4 Tag')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">GA4 Report:</span> ${ga4SelectHtml}</div>
               <div class="dbc-row"><span class="dbc-lbl">Newsletter:</span> <span class="dbc-val">${esc(r.newsletterMail || '—')}</span></div>
               <div class="dbc-row"><span class="dbc-lbl">Form Mail:</span> <span class="dbc-val" title="${esc(r.formSubmissionMail)}">${esc(r.formSubmissionMail || '—')}</span></div>
             </div>
             <div class="detail-bento-card">
-              <div class="dbc-head">🛡️ Health &amp; Booking</div>
+              <div class="dbc-head">🛡️ Health &amp; Domain</div>
+              <div class="dbc-row"><span class="dbc-lbl">Domain Expiry:</span> ${expiryHtml}</div>
               <div class="dbc-row"><span class="dbc-lbl">Booking Engine:</span> ${r.bookingLink ? `<a href="${esc(r.bookingLink)}" target="_blank" class="btn-booking">🍽️ Booking ↗</a>` : '<span class="dim-dash">—</span>'}</div>
-              <div class="dbc-row"><span class="dbc-lbl">Uptime Robot:</span> ${uptimeHtml}</div>
               <div class="dbc-row"><span class="dbc-lbl">Cloudflare:</span> ${cfHtml}</div>
               <div style="margin-top:6px;display:flex;justify-content:flex-end">
-                <button class="btn btn-secondary btn-sm edit-dr-row-btn" data-id="${r.id}">✏️ Edit All 12 Fields</button>
+                <button class="btn btn-secondary btn-sm edit-dr-row-btn" data-id="${r.id}">✏️ Edit Details</button>
               </div>
             </div>
           </div>
@@ -823,18 +1447,26 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   // Full spreadsheet mode
   return `
     <tr data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
-      <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
-      <td class="url-cell"><a href="${esc(r.siteUrl)}" target="_blank" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))}</a></td>
+      <td style="color:var(--text-dim);font-size:11px;text-align:center">
+        <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
+      </td>
+      <td class="url-cell">
+        <div class="site-identity-cell">
+          ${liveBall}
+          <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))} ↗</a>
+          <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+        </div>
+      </td>
       <td><span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'}">${esc(co)}</span></td>
       <td><select class="status-select select-maint" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
       <td><select class="status-select select-sent" data-row-id="${r.id}" data-field="reportSentStatus">${sentOpts}</select></td>
       <td>${cuLink}</td>
-      <td>${ga4Html}</td>
+      <td>${ga4SelectHtml}</td>
       <td>${newsHtml}</td>
       <td>${formHtml}</td>
       <td>${respHtml}</td>
       <td>${bookHtml}</td>
-      <td>${uptimeHtml}</td>
+      <td>${expiryHtml}</td>
       <td>${cfHtml}</td>
       <td>
         <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit all columns">✏️</button>
@@ -974,10 +1606,12 @@ async function viewMyTasks() {
 async function viewOverview() {
   setPage('Overview', 'Team-wide snapshot');
   let stats = {}, summary = [];
+  let noticeBannerHtml = '';
   try {
-    [stats, { summary }] = await Promise.all([
+    [stats, { summary }, noticeBannerHtml] = await Promise.all([
       GET('/api/master/stats'),
       GET('/api/master/summary'),
+      getNoticeBannerHtml(),
     ]);
   } catch (e) { toast(e.message, 'error'); }
 
@@ -987,6 +1621,7 @@ async function viewOverview() {
 
   mainEl.innerHTML = `
     <div class="fade-in">
+      ${noticeBannerHtml}
       <div class="stat-grid">
         <div class="stat-card accent"><div class="stat-value">${stats.totalSites||0}</div><div class="stat-label">Total Sites</div></div>
         <div class="stat-card success"><div class="stat-value">${overallPct}%</div><div class="stat-label">Today's Completion</div></div>
@@ -1020,6 +1655,8 @@ async function viewOverview() {
         </div>
       </div>
     </div>`;
+
+  mainEl.querySelectorAll('.btn-open-notices').forEach(btn => btn.addEventListener('click', openNoticeBoardModal));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1028,7 +1665,15 @@ async function viewOverview() {
 async function viewAllUsers() {
   setPage('Team Progress', 'Click a user to see their sites');
   let summary = [];
-  try { ({ summary } = await GET('/api/master/summary')); } catch (e) { toast(e.message,'error'); }
+  let noticeBannerHtml = '';
+  try {
+    const [sData, nHtml] = await Promise.all([
+      GET('/api/master/summary'),
+      getNoticeBannerHtml()
+    ]);
+    summary = sData.summary || [];
+    noticeBannerHtml = nHtml;
+  } catch (e) { toast(e.message,'error'); }
 
   const tabs = summary.filter(u=>u.total>0);
   if (!tabs.length) { mainEl.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No data synced yet.</p></div>`; return; }
@@ -1036,6 +1681,7 @@ async function viewAllUsers() {
   const firstUser = tabs[0];
   mainEl.innerHTML = `
     <div class="fade-in">
+      ${noticeBannerHtml}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
         ${tabs.map((u,i) => `
           <button class="btn ${i===0?'btn-primary':'btn-secondary'} user-tab-btn" data-uid="${u.userId}" data-uname="${esc(u.user)}">
@@ -1044,6 +1690,8 @@ async function viewAllUsers() {
       </div>
       <div id="user-sites-panel"></div>
     </div>`;
+
+  mainEl.querySelectorAll('.btn-open-notices').forEach(btn => btn.addEventListener('click', openNoticeBoardModal));
 
   async function loadUser(userId, userName) {
     const panel = $('user-sites-panel');
@@ -1057,8 +1705,8 @@ async function viewAllUsers() {
           <div class="card-header">
             <span class="card-title">🌐 ${esc(userName)}'s Assigned Sites (${rows.length})</span>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <span style="font-size:12px;color:var(--text-muted)">${u.pct||0}% complete</span>
-              <div class="progress-wrap" style="width:100px"><div class="progress-fill" style="width:${u.pct||0}%"></div></div>
+              <span class="user-pct-text" style="font-size:12px;color:var(--text-muted)">${u.pct||0}% complete</span>
+              <div class="progress-wrap" style="width:100px"><div class="progress-fill user-progress-fill" style="width:${u.pct||0}%"></div></div>
               <div class="view-mode-toggle" id="user-table-mode-toggle">
                 <button class="btn btn-sm mode-btn ${isSmart?'active':''}" data-mode="smart" title="Smart Fit 100vw - No horizontal scroll">⚡ Smart Fit</button>
                 <button class="btn btn-sm mode-btn ${!isSmart?'active':''}" data-mode="full" title="Spreadsheet mode">📋 Full Spread</button>
@@ -1071,19 +1719,21 @@ async function viewAllUsers() {
               <thead>
                 ${isSmart ? `
                   <tr>
-                    <th class="col-idx">#</th>
-                    <th class="col-live" title="Website Online / Active Status">Live</th>
-                    <th class="col-type">Type</th>
-                    <th class="col-url">Website Account</th>
+                    <th class="col-select" style="text-align:center">
+                      <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
+                    </th>
+                    <th class="col-url">Website &amp; Account</th>
                     <th class="col-maint">Maintenance &amp; Report</th>
                     <th class="col-links">Tasks &amp; Links</th>
                     <th class="col-integ">Integrations</th>
                     <th class="col-resp">Response</th>
-                    <th class="col-actions">Actions</th>
+                    <th class="col-actions" style="text-align:right">Actions</th>
                   </tr>
                 ` : `
                   <tr>
-                    <th>#</th>
+                    <th style="width:36px;text-align:center">
+                      <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
+                    </th>
                     <th>Website URL</th>
                     <th>Company</th>
                     <th>Maintenance</th>
@@ -1094,7 +1744,7 @@ async function viewAllUsers() {
                     <th>Form Submission Mail</th>
                     <th>Client Response</th>
                     <th>Booking Engine</th>
-                    <th>UPTimeRobot</th>
+                    <th>Domain Expiry</th>
                     <th>Cloudflare</th>
                     <th>Actions</th>
                   </tr>
@@ -1102,6 +1752,35 @@ async function viewAllUsers() {
               </thead>
               <tbody id="user-sites-tbody">${rows.map((r,i) => siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}</tbody>
             </table>
+          </div>
+
+          <!-- Bulk Edit Sticky Dock -->
+          <div class="bulk-dock hidden" id="bulk-dock">
+            <div class="bulk-dock-count"><span id="bulk-selected-count">0</span> sites selected</div>
+            <div class="bulk-dock-controls">
+              <select class="form-select select-sm" id="bulk-maint-status" style="width:130px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
+                <option value="">— Maintenance —</option>
+                <option value="completed">Completed</option>
+                <option value="in_progress">In Progress</option>
+                <option value="todo">To Do</option>
+              </select>
+              <select class="form-select select-sm" id="bulk-report-status" style="width:110px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
+                <option value="">— Report —</option>
+                <option value="sent">Sent (Yes)</option>
+                <option value="no">No</option>
+              </select>
+              <select class="form-select select-sm select-ga4-status" id="bulk-ga4-status" style="width:125px;border-radius:6px">
+                <option value="">— GA4 Status —</option>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
+                <option value="No GA4 Tag">No GA4 Tag</option>
+                <option value="N/A">N/A</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="btn-apply-bulk">Apply Updates</button>
+              <button class="btn btn-secondary btn-sm" id="btn-bulk-uptime" title="Check uptime for all selected sites">↺ Check Uptime</button>
+              <button class="btn btn-ghost btn-sm" id="btn-clear-selection" title="Clear selection">✕</button>
+            </div>
           </div>
         </div>`;
 
@@ -1146,7 +1825,7 @@ async function viewAllUsers() {
             });
             btn.dataset.status = newStatus;
             btn.className = `btn-report-toggle ${newStatus === 'sent' ? 'sent' : 'pending'}`;
-            btn.textContent = newStatus === 'sent' ? '✉️ Sent' : '✉️ No';
+            btn.textContent = newStatus === 'sent' ? '✓ Sent' : '✉ No';
             toast(`Report marked ${newRaw}`, 'success');
           } catch (err) { toast(err.message, 'error'); }
         });
@@ -1199,6 +1878,10 @@ async function viewAllUsers() {
           } catch (err) { toast(err.message, 'error'); }
         });
       });
+
+      // Initialize Quick Uptime, Bulk Edit, and Live Recalculation
+      initChecklistTable(panel, false, userId);
+
     } catch (e) { panel.innerHTML = `<div class="empty-state"><p>${esc(e.message)}</p></div>`; }
   }
 

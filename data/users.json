@@ -1,12 +1,12 @@
 [
   {
-    "id": "671ce8a3-5112-4239-a57e-011c6ed75dcd",
-    "name": "Ettekhar",
+    "id": "fec2f34a-1382-4950-9d46-5db269c6f63c",
+    "name": "Toufiq",
     "role": "superadmin",
     "email": "",
-    "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:45:35.621Z",
-    "active": true
+    "createdAt": "2026-09-11T06:50:11.971Z",
+    "updatedAt": "2026-09-11T06:54:01.119Z",
+    "active": false
   },
   {
     "id": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
@@ -50,8 +50,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z",
-    "active": true
+    "updatedAt": "2026-09-11T06:54:07.327Z",
+    "active": false
   },
   {
     "id": "6420eb28-11d9-4f35-b8e3-41d96b944de5",
@@ -68,7 +68,7 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-11T06:48:01.810Z",
-    "active": true
+    "updatedAt": "2026-09-11T06:54:04.576Z",
+    "active": false
   }
 ]

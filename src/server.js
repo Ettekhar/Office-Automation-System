@@ -339,6 +339,13 @@ const server = http.createServer(async (req, res) => {
         try { return ok({ row: db.updateDailyReviewRow(id, b) }); }
         catch (e) { return err(404, e.message); }
       }
+      // POST /api/master/daily-review/batch (batch update multiple rows)
+      if (pathname === '/api/master/daily-review/batch' && method === 'POST') {
+        const b = await body();
+        if (!Array.isArray(b.ids) || !b.ids.length) return err(400, 'ids array required');
+        const rows = db.updateDailyReviewBatch(b.ids, b.updates || {});
+        return ok({ rows, count: rows.length });
+      }
 
       // ── TASKS ──────────────────────────────────────────────────
       // GET /api/master/tasks?assigneeId=&status=
@@ -433,16 +440,30 @@ const server = http.createServer(async (req, res) => {
         const { checkSite, checkSitesBatch } = await import('./uptime.js');
         const sites = db.getSites();
 
-        if (b.siteId) {
-          const site = db.getSiteById(b.siteId);
-          if (!site) return err(404, 'Site not found');
-          const result = await checkSite(site.url);
-          const updated = db.updateSite(site.id, {
-            uptimeStatus: result.status,
-            uptimeStatusCode: result.statusCode,
-            uptimeResponseTime: result.responseTime,
-            lastUptimeCheck: result.checkedAt,
-          });
+        if (b.siteId || b.url || b.rowId) {
+          let url = b.url;
+          let site = b.siteId ? db.getSiteById(b.siteId) : (url ? db.getSiteByUrl(url) : null);
+          if (!site && b.rowId) {
+            const rows = db.getDailyReview();
+            const r = rows.find(x => x.id === b.rowId);
+            if (r) {
+              url = r.siteUrl;
+              if (r.siteId) site = db.getSiteById(r.siteId);
+              if (!site && url) site = db.getSiteByUrl(url);
+            }
+          }
+          if (!url && site) url = site.url;
+          if (!url) return err(400, 'Could not resolve URL to check');
+          const result = await checkSite(url);
+          let updated = null;
+          if (site) {
+            updated = db.updateSite(site.id, {
+              uptimeStatus: result.status,
+              uptimeStatusCode: result.statusCode,
+              uptimeResponseTime: result.responseTime,
+              lastUptimeCheck: result.checkedAt,
+            });
+          }
           return ok({ site: updated, result });
         }
 
@@ -478,6 +499,63 @@ const server = http.createServer(async (req, res) => {
         const updated = db.getSites();
         return ok({ online: updated.filter(s => s.uptimeStatus === 'online').length,
           offline: updated.filter(s => s.uptimeStatus === 'offline').length });
+      }
+
+      // ── NOTICES (Notice Board) ──────────────────────────────────
+      // GET /api/master/notices
+      if (pathname === '/api/master/notices' && method === 'GET') {
+        return ok({ notices: db.getNotices() });
+      }
+      // POST /api/master/notices  (admin+)
+      if (pathname === '/api/master/notices' && method === 'POST') {
+        const b = await body();
+        if (!b.title) return err(400, 'title required');
+        return ok({ notice: db.createNotice(b) });
+      }
+      // PUT /api/master/notices/:id  (admin+)
+      if (/^\/api\/master\/notices\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = pathname.split('/').pop();
+        const b = await body();
+        try { return ok({ notice: db.updateNotice(id, b) }); }
+        catch (e) { return err(404, e.message); }
+      }
+      // DELETE /api/master/notices/:id  (admin+)
+      if (/^\/api\/master\/notices\/([^/]+)$/.test(pathname) && method === 'DELETE') {
+        const id = pathname.split('/').pop();
+        db.deleteNotice(id);
+        return ok({ success: true });
+      }
+
+      // ── DOMAIN EXPIRY REQUESTS (Approval Workflow) ─────────────
+      // GET /api/master/domain-expiry-requests?status=
+      if (pathname === '/api/master/domain-expiry-requests' && method === 'GET') {
+        const status = reqUrl.searchParams.get('status');
+        return ok({ requests: db.getDomainExpiryRequests(status ? { status } : {}) });
+      }
+      // POST /api/master/domain-expiry-requests (user submits, or admin directApply)
+      if (pathname === '/api/master/domain-expiry-requests' && method === 'POST') {
+        const b = await body();
+        if (!b.requestedDate) return err(400, 'requestedDate required');
+        if (b.directApply) {
+          try {
+            const site = db.updateSiteDomainExpiryDirect(b.siteId || b.siteUrl, b.requestedDate);
+            return ok({ direct: true, site });
+          } catch (e) { return err(404, e.message); }
+        }
+        try {
+          const reqItem = db.createDomainExpiryRequest(b);
+          return ok({ request: reqItem });
+        } catch (e) { return err(400, e.message); }
+      }
+      // POST /api/master/domain-expiry-requests/:id/resolve (admin+)
+      if (/^\/api\/master\/domain-expiry-requests\/([^/]+)\/resolve$/.test(pathname) && method === 'POST') {
+        const id = pathname.split('/')[4];
+        const b = await body();
+        if (!b.action) return err(400, 'action required (approved or rejected)');
+        try {
+          const result = db.resolveDomainExpiryRequest(id, b.action, b.resolvedBy || 'admin');
+          return ok({ success: true, ...result });
+        } catch (e) { return err(400, e.message); }
       }
 
       sendJson(res, 404, { error: 'Master API route not found' });

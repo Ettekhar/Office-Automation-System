@@ -221,12 +221,23 @@ export function getDailyReview(filter = {}) {
     if (changed) setDailyReview(rows);
   }
 
-  // Ensure company and clickupLink fallback from site, and attach uptimeStatus
+  // Enrich rows with fallback info from site, uptimeStatus, domainExpiry, and pending requests
+  const pendingRequests = ensureArray(dbRead('domain-expiry-requests')).filter(pr => pr.status === 'pending');
+  const pendingBySite = {};
+  for (const pr of pendingRequests) {
+    if (pr.siteId) pendingBySite[pr.siteId] = pr;
+    if (pr.siteUrl) pendingBySite[(pr.siteUrl||'').toLowerCase().trim()] = pr;
+  }
+
   rows.forEach(r => {
     const s = (r.siteId ? sitesById[r.siteId] : null) || (r.siteUrl ? sitesByUrl[(r.siteUrl||'').toLowerCase().trim()] : null);
     if (!r.company && s) r.company = s.company || s.account || '';
     if (!r.clickupLink && s?.clickupUrl) r.clickupLink = s.clickupUrl;
     r.uptimeStatus = s?.uptimeStatus || (r.uptimeRobot && /yes/i.test(r.uptimeRobot) ? 'online' : 'unknown');
+    r.domainExpiry = s?.domainExpiry || '';
+    r.daysLeft = s?.daysLeft ?? (r.domainExpiry ? calcDaysUntil(r.domainExpiry) : null);
+    const siteKey = s?.id || (r.siteUrl||'').toLowerCase().trim();
+    r.pendingExpiryRequest = pendingBySite[siteKey] || null;
   });
 
   if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
@@ -271,6 +282,37 @@ export function updateDailyReviewRow(rowId, updates) {
   }
 
   return rows[idx];
+}
+
+export function updateDailyReviewBatch(ids, updates) {
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const rows = ensureArray(dbRead('daily-review'));
+  const sites = ensureArray(dbRead('sites'));
+  const idSet = new Set(ids);
+  const updatedRows = [];
+  let sitesChanged = false;
+
+  for (let i = 0; i < rows.length; i++) {
+    if (idSet.has(rows[i].id)) {
+      rows[i] = { ...rows[i], ...updates, updatedAt: now() };
+      updatedRows.push(rows[i]);
+
+      if (updates.clickupLink || updates.maintenanceRaw || updates.maintenanceStatus) {
+        const row = rows[i];
+        const sIdx = sites.findIndex(s => s.id === row.siteId || (row.siteUrl && s.url && s.url.toLowerCase().trim() === row.siteUrl.toLowerCase().trim()));
+        if (sIdx !== -1) {
+          if (updates.clickupLink) sites[sIdx].clickupUrl = updates.clickupLink;
+          if (updates.maintenanceRaw) sites[sIdx].latestMonthStatus = updates.maintenanceRaw;
+          sites[sIdx].updatedAt = now();
+          sitesChanged = true;
+        }
+      }
+    }
+  }
+
+  setDailyReview(rows);
+  if (sitesChanged) setSites(sites);
+  return updatedRows;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -347,6 +389,151 @@ export function updateDevProjectItem(projectId, itemIdx, updates) {
   projs[pIdx].items[itemIdx] = { ...projs[pIdx].items[itemIdx], ...updates, updatedAt: now() };
   setDevProjects(projs);
   return projs[pIdx];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTICES (Notice Board / Pinned Announcements)
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getNotices() {
+  const notices = ensureArray(dbRead('notices'));
+  return notices.sort((a, b) => {
+    if (a.pinned !== b.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
+}
+export function setNotices(data) { dbWrite('notices', data); }
+
+export function getNoticeById(id) {
+  return (dbRead('notices') || []).find(n => n.id === id) || null;
+}
+
+export function createNotice({ title, content, link = '', linkLabel = '', pinned = false, authorName = 'Admin', authorRole = 'admin' }) {
+  const notices = ensureArray(dbRead('notices'));
+  const notice = {
+    id: uuid(),
+    title,
+    content,
+    link,
+    linkLabel: linkLabel || (link ? 'Open Link ↗' : ''),
+    pinned: pinned === true,
+    authorName,
+    authorRole,
+    createdAt: now(),
+    updatedAt: now(),
+  };
+  notices.unshift(notice);
+  setNotices(notices);
+  return notice;
+}
+
+export function updateNotice(id, updates) {
+  const notices = ensureArray(dbRead('notices'));
+  const idx = notices.findIndex(n => n.id === id);
+  if (idx === -1) throw new Error(`Notice not found: ${id}`);
+  notices[idx] = { ...notices[idx], ...updates, updatedAt: now() };
+  setNotices(notices);
+  return notices[idx];
+}
+
+export function deleteNotice(id) {
+  const notices = ensureArray(dbRead('notices')).filter(n => n.id !== id);
+  setNotices(notices);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOMAIN EXPIRY & APPROVAL WORKFLOW
+// ═══════════════════════════════════════════════════════════════════════════════
+export function calcDaysUntil(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return Math.ceil((d.getTime() - Date.now()) / 86400000);
+}
+
+export function getDomainExpiryRequests(filter = {}) {
+  let list = ensureArray(dbRead('domain-expiry-requests'));
+  if (filter.status) list = list.filter(r => r.status === filter.status);
+  if (filter.siteId) list = list.filter(r => r.siteId === filter.siteId);
+  return list;
+}
+export function setDomainExpiryRequests(data) { dbWrite('domain-expiry-requests', data); }
+
+export function createDomainExpiryRequest({ siteId, siteUrl, requestedDate, requestedBy = '', requestedByName = '' }) {
+  if (!requestedDate) throw new Error('requestedDate is required');
+  const list = ensureArray(dbRead('domain-expiry-requests'));
+  const normUrl = (siteUrl || '').toLowerCase().trim();
+  const existingIdx = list.findIndex(r => r.status === 'pending' && ((siteId && r.siteId === siteId) || (normUrl && r.siteUrl && r.siteUrl.toLowerCase().trim() === normUrl)));
+  const reqItem = {
+    id: existingIdx !== -1 ? list[existingIdx].id : uuid(),
+    siteId: siteId || '',
+    siteUrl: siteUrl || '',
+    requestedDate: requestedDate.trim(),
+    requestedBy,
+    requestedByName,
+    status: 'pending',
+    createdAt: existingIdx !== -1 ? list[existingIdx].createdAt : now(),
+    updatedAt: now(),
+    resolvedAt: null,
+    resolvedBy: null,
+  };
+  if (existingIdx !== -1) {
+    list[existingIdx] = reqItem;
+  } else {
+    list.unshift(reqItem);
+  }
+  setDomainExpiryRequests(list);
+  return reqItem;
+}
+
+export function updateSiteDomainExpiryDirect(siteIdOrUrl, newDate) {
+  const sites = ensureArray(dbRead('sites'));
+  const normKey = (siteIdOrUrl || '').toLowerCase().trim();
+  const sIdx = sites.findIndex(s => s.id === siteIdOrUrl || (s.url && s.url.toLowerCase().trim() === normKey));
+  if (sIdx === -1) throw new Error(`Site not found: ${siteIdOrUrl}`);
+
+  const days = calcDaysUntil(newDate);
+  sites[sIdx] = {
+    ...sites[sIdx],
+    domainExpiry: newDate,
+    daysLeft: days,
+    updatedAt: now(),
+  };
+  setSites(sites);
+
+  // Auto-resolve any pending request for this site
+  const list = ensureArray(dbRead('domain-expiry-requests'));
+  let reqsChanged = false;
+  list.forEach(r => {
+    if (r.status === 'pending' && (r.siteId === sites[sIdx].id || (r.siteUrl && r.siteUrl.toLowerCase().trim() === (sites[sIdx].url || '').toLowerCase().trim()))) {
+      r.status = 'approved';
+      r.resolvedAt = now();
+      r.resolvedBy = 'admin-direct';
+      reqsChanged = true;
+    }
+  });
+  if (reqsChanged) setDomainExpiryRequests(list);
+
+  return sites[sIdx];
+}
+
+export function resolveDomainExpiryRequest(id, action, resolvedBy = 'admin') {
+  if (!['approved', 'rejected'].includes(action)) throw new Error('action must be approved or rejected');
+  const list = ensureArray(dbRead('domain-expiry-requests'));
+  const idx = list.findIndex(r => r.id === id);
+  if (idx === -1) throw new Error(`Request not found: ${id}`);
+
+  const reqItem = list[idx];
+  reqItem.status = action;
+  reqItem.resolvedAt = now();
+  reqItem.resolvedBy = resolvedBy;
+  list[idx] = reqItem;
+  setDomainExpiryRequests(list);
+
+  let updatedSite = null;
+  if (action === 'approved') {
+    updatedSite = updateSiteDomainExpiryDirect(reqItem.siteId || reqItem.siteUrl, reqItem.requestedDate);
+  }
+  return { request: reqItem, site: updatedSite };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

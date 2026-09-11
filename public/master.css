@@ -658,11 +658,12 @@ tr:last-child td { border-bottom: none; }
   display: flex; align-items: center; gap: 4px;
 }
 
-/* ─── Live Ball Indicator (Green ball or red ball) ─── */
+/* ─── Live Ball Indicator (Green ball, red ball, or yellow ball) ─── */
 .live-status-dot {
   width: 9px; height: 9px; border-radius: 50%;
   display: inline-block;
   vertical-align: middle;
+  flex-shrink: 0;
   transition: all var(--transition);
 }
 .live-status-dot.online {
@@ -673,23 +674,317 @@ tr:last-child td { border-bottom: none; }
   background: #f43f5e;
   box-shadow: 0 0 8px rgba(244, 63, 94, 0.8), 0 0 2px #f43f5e;
 }
+.live-status-dot.pending {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8), 0 0 2px #f59e0b;
+}
+
+/* ─── Unified Site Identity Cell (* CW domain.com ↺) ─── */
+.site-identity-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.site-identity-cell .site-domain-link {
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-identity-cell .site-domain-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.btn-uptime-check {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.btn-uptime-check:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+.btn-uptime-check.spinning {
+  animation: spin 0.8s linear infinite;
+  color: var(--accent);
+  pointer-events: none;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .badge-xs {
-  font-size: 10px; padding: 2px 6px; font-weight: 800; border-radius: 4px;
+  font-size: 10px; padding: 2px 6px; font-weight: 800; border-radius: 4px; flex-shrink: 0;
 }
 
 /* ─── Smart Fit Precise Column Sizing ─── */
 .table-smart-fit th, .table-smart-fit td {
   padding: 8px 10px;
 }
-.table-smart-fit .col-idx { width: 32px; text-align: center; }
-.table-smart-fit .col-live { width: 38px; text-align: center; }
-.table-smart-fit .col-type { width: 50px; text-align: center; }
-.table-smart-fit .col-url { min-width: 180px; }
+.table-smart-fit .col-select { width: 36px; text-align: center; }
+.table-smart-fit .col-url { min-width: 240px; }
 .table-smart-fit .col-maint { width: 175px; }
-.table-smart-fit .col-links { width: 125px; }
+.table-smart-fit .col-links { width: 120px; }
 .table-smart-fit .col-integ { width: 135px; }
 .table-smart-fit .col-resp { width: 95px; }
 .table-smart-fit .col-actions { width: 75px; text-align: right; }
+
+/* ─── Bulk Edit Sticky Dock ─── */
+.bulk-dock {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 24, 38, 0.96);
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  backdrop-filter: blur(16px);
+  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.bulk-dock-count {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+.bulk-dock-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.row-checkbox, .select-all-checkbox {
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  vertical-align: middle;
+}
+
+/* ─── Pinned Notice Banner ─── */
+.pinned-notice-banner {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+.pnb-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+.pnb-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.pnb-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pnb-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pnb-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.pnb-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-notice-meet {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white !important;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  transition: all var(--transition);
+}
+.btn-notice-meet:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+}
+
+/* ─── GA4 Report Status Dropdown & Pill ─── */
+.select-ga4-status {
+  background: #0b1a2e;
+  border: 1.5px solid #0284c7;
+  color: #38bdf8;
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+  max-width: 120px;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.2);
+}
+.select-ga4-status:hover, .select-ga4-status:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+.select-ga4-status option {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+.select-ga4-status.val-dim {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ─── Domain Expiry Cell & Badges ─── */
+.expiry-cell-grp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.expiry-date-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.badge-expiry-safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.badge-expiry-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.badge-expiry-danger {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.btn-edit-expiry {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+}
+.btn-edit-expiry:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #fff;
+}
+.expiry-pending-pill {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse 2s infinite;
+}
+.btn-approve-expiry, .btn-reject-expiry {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition);
+}
+.btn-approve-expiry {
+  background: #10b981;
+  color: white;
+}
+.btn-approve-expiry:hover {
+  background: #059669;
+}
+.btn-reject-expiry {
+  background: rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+}
+.btn-reject-expiry:hover {
+  background: #f43f5e;
+  color: white;
+}
+
 
 /* ─── Row Accordion Bento Cards (Full 12-Column Detail View) ─── */
 .detail-accordion-row td {
