@@ -316,7 +316,7 @@ const server = http.createServer(async (req, res) => {
       // GET /api/master/summary — per-user completion stats
       if (pathname === '/api/master/summary' && method === 'GET') {
         const rows = db.getDailyReview();
-        const users = db.getUsers();
+        const users = db.getUsers().filter(u => u.active !== false);
         const summary = users.map(u => {
           const uRows = rows.filter(r => r.userId === u.id);
           const completed = uRows.filter(r => r.maintenanceStatus === 'completed').length;

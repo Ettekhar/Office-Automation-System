@@ -658,6 +658,39 @@ tr:last-child td { border-bottom: none; }
   display: flex; align-items: center; gap: 4px;
 }
 
+/* ─── Live Ball Indicator (Green ball or red ball) ─── */
+.live-status-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  transition: all var(--transition);
+}
+.live-status-dot.online {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8), 0 0 2px #10b981;
+}
+.live-status-dot.offline {
+  background: #f43f5e;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.8), 0 0 2px #f43f5e;
+}
+.badge-xs {
+  font-size: 10px; padding: 2px 6px; font-weight: 800; border-radius: 4px;
+}
+
+/* ─── Smart Fit Precise Column Sizing ─── */
+.table-smart-fit th, .table-smart-fit td {
+  padding: 8px 10px;
+}
+.table-smart-fit .col-idx { width: 32px; text-align: center; }
+.table-smart-fit .col-live { width: 38px; text-align: center; }
+.table-smart-fit .col-type { width: 50px; text-align: center; }
+.table-smart-fit .col-url { min-width: 180px; }
+.table-smart-fit .col-maint { width: 175px; }
+.table-smart-fit .col-links { width: 125px; }
+.table-smart-fit .col-integ { width: 135px; }
+.table-smart-fit .col-resp { width: 95px; }
+.table-smart-fit .col-actions { width: 75px; text-align: right; }
+
 /* ─── Row Accordion Bento Cards (Full 12-Column Detail View) ─── */
 .detail-accordion-row td {
   padding: 0 !important;

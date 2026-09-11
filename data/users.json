@@ -5,7 +5,8 @@
     "role": "superadmin",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:45:35.621Z"
+    "updatedAt": "2026-09-10T19:45:35.621Z",
+    "active": true
   },
   {
     "id": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
@@ -13,7 +14,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
@@ -21,7 +23,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "1accc4a5-138f-4347-983b-c64c08ee342f",
@@ -29,7 +32,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "3320c667-0c92-4334-a278-c5fcbc047f76",
@@ -37,7 +41,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "09901b12-d50d-4c19-b659-df49987ae4eb",
@@ -45,7 +50,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "6420eb28-11d9-4f35-b8e3-41d96b944de5",
@@ -53,7 +59,8 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-10T19:42:03.346Z",
+    "active": true
   },
   {
     "id": "d4ed8d6f-0ba6-455f-aa09-a77919195319",
@@ -61,6 +68,7 @@
     "role": "user",
     "email": "",
     "createdAt": "2026-09-10T19:42:03.346Z",
-    "updatedAt": "2026-09-10T19:42:03.346Z"
+    "updatedAt": "2026-09-11T06:48:01.810Z",
+    "active": true
   }
 ]

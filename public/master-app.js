@@ -118,6 +118,7 @@ const NAV = {
     { id:'tasks',         icon:'📋', label:'Tasks' },
     { id:'domain-expiry', icon:'📅', label:'Domain Expiry' },
     { id:'uptime',        icon:'💓', label:'Uptime Monitor' },
+    { id:'user-mgmt',     icon:'⚙️',  label:'Team Members' },
     { id:'send-emails',   icon:'✉️', label:'Send Emails' },
   ],
   superadmin: [
@@ -318,7 +319,8 @@ async function initLanding() {
     const { users } = await GET('/api/master/users');
     if (users && users.length > 0) {
       S.users = users;
-      nameSelect.innerHTML = users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+      const activeUsers = users.filter(u => u.active !== false);
+      nameSelect.innerHTML = activeUsers.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
     }
   } catch {}
 
@@ -448,14 +450,15 @@ async function viewMySites() {
             <thead>
               ${isSmart ? `
                 <tr>
-                  <th style="width:36px">#</th>
-                  <th>Website &amp; Account</th>
-                  <th style="width:175px">Maintenance &amp; Report</th>
-                  <th style="width:125px">Tasks &amp; Links</th>
-                  <th>Integrations</th>
-                  <th style="width:110px">Monitoring</th>
-                  <th style="width:95px">Response</th>
-                  <th style="width:80px;text-align:right">Actions</th>
+                  <th class="col-idx">#</th>
+                  <th class="col-live" title="Website Online / Active Status">Live</th>
+                  <th class="col-type">Type</th>
+                  <th class="col-url">Website Account</th>
+                  <th class="col-maint">Maintenance &amp; Report</th>
+                  <th class="col-links">Tasks &amp; Links</th>
+                  <th class="col-integ">Integrations</th>
+                  <th class="col-resp">Response</th>
+                  <th class="col-actions">Actions</th>
                 </tr>
               ` : `
                 <tr>
@@ -733,21 +736,24 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
     ? `<span class="badge badge-danger" title="${esc(r.cloudflare)}">⚠️ Issue</span>`
     : `<span class="badge badge-success">✓ None</span>`;
 
-  const co = (r.company || 'CW').trim();
+  const isOnline = r.uptimeStatus === 'online' || (r.uptimeRobot && /yes/i.test(r.uptimeRobot));
+  const isOffline = r.uptimeStatus === 'offline';
+  const liveBall = `<span class="live-status-dot ${isOffline ? 'offline' : 'online'}" title="${isOffline ? 'Website Offline / Down' : 'Website Active & Online'}"></span>`;
 
   if (mode === 'smart') {
     return `
       <tr class="smart-row" data-url="${esc((r.siteUrl||'').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
-        <td style="color:var(--text-dim);font-size:11px">${i+1}</td>
-        <td class="url-cell">
-          <div class="site-main-cell">
-            <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
-              ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
-            </a>
-            <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'}">${esc(co)}</span>
-          </div>
+        <td class="col-idx" style="color:var(--text-dim);font-size:11px">${i+1}</td>
+        <td class="col-live" style="text-align:center">${liveBall}</td>
+        <td class="col-type" style="text-align:center">
+          <span class="badge badge-${co.toLowerCase().includes('cw')?'cw':'rm'} badge-xs">${esc(co)}</span>
         </td>
-        <td>
+        <td class="col-url url-cell">
+          <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
+            ${esc(shortUrl(r.siteUrl, 28))} <span class="ext-icon">↗</span>
+          </a>
+        </td>
+        <td class="col-maint">
           <div class="status-cell-grp">
             <select class="status-select select-maint-compact" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select>
             <button class="btn-report-toggle ${r.reportSentStatus==='sent'?'sent':'pending'}" data-row-id="${r.id}" data-status="${r.reportSentStatus}" title="Click to toggle Report Sent">
@@ -755,14 +761,14 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
             </button>
           </div>
         </td>
-        <td>
+        <td class="col-links">
           <div class="quick-links-grp">
             ${cuLink !== '<span class="dim-dash">—</span>' ? cuLink : ''}
             ${bookHtml !== '<span class="dim-dash">—</span>' ? bookHtml : ''}
             ${cuLink === '<span class="dim-dash">—</span>' && bookHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
           </div>
         </td>
-        <td>
+        <td class="col-integ">
           <div class="integrations-pill-grp">
             ${ga4Html !== '<span class="dim-dash">—</span>' ? ga4Html : ''}
             ${newsHtml !== '<span class="dim-dash">—</span>' ? newsHtml : ''}
@@ -770,14 +776,8 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
             ${ga4Html === '<span class="dim-dash">—</span>' && newsHtml === '<span class="dim-dash">—</span>' && formHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
           </div>
         </td>
-        <td>
-          <div class="health-cell-grp">
-            ${uptimeHtml}
-            ${cfHtml}
-          </div>
-        </td>
-        <td>${respHtml}</td>
-        <td style="text-align:right">
+        <td class="col-resp">${respHtml}</td>
+        <td class="col-actions" style="text-align:right">
           <div class="actions-grp" style="justify-content:flex-end">
             <button class="btn btn-ghost btn-sm toggle-detail-btn" data-id="${r.id}" title="Toggle all 12 details">👁️</button>
             <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit row">✏️</button>
@@ -785,7 +785,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         </td>
       </tr>
       <tr class="detail-accordion-row hidden" id="detail-row-${r.id}" data-parent-id="${r.id}">
-        <td colspan="8">
+        <td colspan="9">
           <div class="row-detail-bento">
             <div class="detail-bento-card">
               <div class="dbc-head">🌐 Website &amp; Account</div>
@@ -1070,14 +1070,15 @@ async function viewAllUsers() {
               <thead>
                 ${isSmart ? `
                   <tr>
-                    <th style="width:36px">#</th>
-                    <th>Website &amp; Account</th>
-                    <th style="width:175px">Maintenance &amp; Report</th>
-                    <th style="width:125px">Tasks &amp; Links</th>
-                    <th>Integrations</th>
-                    <th style="width:110px">Monitoring</th>
-                    <th style="width:95px">Response</th>
-                    <th style="width:80px;text-align:right">Actions</th>
+                    <th class="col-idx">#</th>
+                    <th class="col-live" title="Website Online / Active Status">Live</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-url">Website Account</th>
+                    <th class="col-maint">Maintenance &amp; Report</th>
+                    <th class="col-links">Tasks &amp; Links</th>
+                    <th class="col-integ">Integrations</th>
+                    <th class="col-resp">Response</th>
+                    <th class="col-actions">Actions</th>
                   </tr>
                 ` : `
                   <tr>
@@ -1969,102 +1970,235 @@ async function viewDevProjects() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VIEW: USER MANAGEMENT (Superadmin)
+// VIEW: USER MANAGEMENT (Admin / Superadmin)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewUserMgmt() {
-  setPage('User Management', 'Create, edit, and manage team members');
-  let users = [];
-  try { ({ users } = await GET('/api/master/users')); S.users = users; } catch (e) { toast(e.message,'error'); }
+  setPage('Team Members', 'Manage active team members and system access');
+  let users = [], sites = [];
+  try {
+    const [uData, sData] = await Promise.all([
+      GET('/api/master/users'),
+      GET('/api/master/sites'),
+    ]);
+    users = uData.users || [];
+    sites = sData.sites || [];
+    S.users = users;
+  } catch (e) { toast(e.message, 'error'); }
 
-  mainEl.innerHTML = `
-    <div class="fade-in">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">⚙️ Team Members (${users.length})</span>
-          <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
+  let currentFilter = 'all';
+
+  function render() {
+    const activeCount = users.filter(u => u.active !== false).length;
+    const deactCount = users.filter(u => u.active === false).length;
+
+    const filteredUsers = users.filter(u => {
+      if (currentFilter === 'active') return u.active !== false;
+      if (currentFilter === 'inactive') return u.active === false;
+      return true;
+    });
+
+    mainEl.innerHTML = `
+      <div class="fade-in">
+        <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+          <div class="stat-card accent">
+            <div class="stat-value">${users.length}</div>
+            <div class="stat-label">Total Team Members</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-value">${activeCount}</div>
+            <div class="stat-label">🟢 Active in Team Progress</div>
+          </div>
+          <div class="stat-card danger">
+            <div class="stat-value">${deactCount}</div>
+            <div class="stat-label">🔴 Deactivated (Hidden)</div>
+          </div>
         </div>
-        <div class="table-wrap"><table>
-          <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Sites Assigned</th><th>Created</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${users.map(u=>`
+
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:12px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span class="card-title">⚙️ Team Members (${users.length})</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm ${currentFilter==='all'?'btn-primary':'btn-secondary'} filter-chip-btn" data-filter="all">All (${users.length})</button>
+                <button class="btn btn-sm ${currentFilter==='active'?'btn-primary':'btn-secondary'} filter-chip-btn" data-filter="active">Active (${activeCount})</button>
+                <button class="btn btn-sm ${currentFilter==='inactive'?'btn-primary':'btn-secondary'} filter-chip-btn" data-filter="inactive">Deactivated (${deactCount})</button>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead>
               <tr>
-                <td style="font-weight:600;display:flex;align-items:center;gap:8px">
-                  <div class="user-avatar" style="width:26px;height:26px;font-size:11px">${u.name[0].toUpperCase()}</div>
-                  ${esc(u.name)}
-                </td>
-                <td><span class="badge badge-${u.role==='superadmin'?'danger':u.role==='admin'?'warning':'info'}">${esc(u.role)}</span></td>
-                <td style="font-size:12px;color:var(--text-muted)">${esc(u.email||'—')}</td>
-                <td style="font-size:12px;color:var(--text-muted)">—</td>
-                <td style="font-size:11px;color:var(--text-dim)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
-                <td style="display:flex;gap:4px">
-                  <button class="btn btn-ghost btn-sm edit-user-btn" data-id="${u.id}">✏️ Edit</button>
-                  ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm del-user-btn" data-id="${u.id}">🗑</button>`:''}
-                </td>
-              </tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
-    </div>`;
+                <th>Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Email</th>
+                <th>Sites Assigned</th>
+                <th>Created</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredUsers.length ? filteredUsers.map(u => {
+                const isActive = u.active !== false;
+                const userSites = sites.filter(s => s.assignedUsers?.includes(u.id));
+                return `
+                  <tr style="${!isActive ? 'opacity:0.65;background:rgba(244,63,94,0.03)' : ''}">
+                    <td style="font-weight:600;display:flex;align-items:center;gap:8px">
+                      <div class="user-avatar" style="width:26px;height:26px;font-size:11px;${!isActive?'filter:grayscale(1)':''}">${(u.name||'U')[0].toUpperCase()}</div>
+                      <div>
+                        <div>${esc(u.name)}</div>
+                        ${!isActive ? '<div style="font-size:10px;color:var(--danger);font-weight:500">Deactivated — excluded from Team Progress</div>' : ''}
+                      </div>
+                    </td>
+                    <td><span class="badge badge-${u.role==='superadmin'?'danger':u.role==='admin'?'warning':'info'}">${esc(u.role)}</span></td>
+                    <td>
+                      <span class="badge badge-${isActive ? 'success' : 'danger'}" style="font-size:11px">
+                        ${isActive ? '🟢 Active' : '🔴 Deactivated'}
+                      </span>
+                    </td>
+                    <td style="font-size:12px;color:var(--text-muted)">${esc(u.email||'—')}</td>
+                    <td style="font-size:12px;font-weight:600">${userSites.length} ${userSites.length === 1 ? 'site' : 'sites'}</td>
+                    <td style="font-size:11px;color:var(--text-dim)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
+                    <td style="text-align:right">
+                      <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+                        <button class="btn btn-ghost btn-sm edit-user-btn" data-id="${u.id}" title="Edit User">✏️ Edit</button>
+                        <button class="btn btn-sm toggle-status-btn ${isActive ? 'btn-secondary' : 'btn-success'}" data-id="${u.id}" data-active="${!isActive}" title="${isActive ? 'Deactivate user (hide from Team Progress)' : 'Activate user (show in Team Progress)'}">
+                          ${isActive ? '🚫 Deactivate' : '✅ Activate'}
+                        </button>
+                        ${u.role!=='superadmin'?`<button class="btn btn-danger btn-sm del-user-btn" data-id="${u.id}" title="Delete User">🗑</button>`:''}
+                      </div>
+                    </td>
+                  </tr>`;
+              }).join('') : `<tr><td colspan="7" class="empty-state" style="text-align:center;padding:32px">No users found in this view</td></tr>`}
+            </tbody>
+          </table></div>
+        </div>
+      </div>`;
 
-  $('new-user-btn').addEventListener('click', () => {
-    openModal('Add Team Member',
-      `<div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="nu-name" placeholder="e.g. John Doe"></div>
-       <div class="form-group"><label class="form-label">Role</label>
-         <select class="form-select" id="nu-role">
-           <option value="user">User</option>
-           <option value="admin">Admin</option>
-           <option value="superadmin">Superadmin</option>
-         </select></div>
-       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nu-email" type="email" placeholder="optional"></div>`,
-      [
-        { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
-        { label:'Create', cls:'btn btn-primary', onClick: async () => {
-          const name = $('nu-name').value.trim();
-          if (!name) { toast('Name required','error'); return; }
-          try {
-            const { user } = await POST('/api/master/users', { name, role: $('nu-role').value, email: $('nu-email').value });
-            S.users.push(user);
-            toast(`User "${name}" created`,'success'); closeModal(); navigate('user-mgmt');
-          } catch (e) { toast(e.message,'error'); }
-        }},
-      ]
-    );
-  });
+    // Filter chip listeners
+    mainEl.querySelectorAll('.filter-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        render();
+      });
+    });
 
-  mainEl.querySelectorAll('.edit-user-btn').forEach(btn => {
-    const user = users.find(u=>u.id===btn.dataset.id);
-    if (!user) return;
-    btn.addEventListener('click', () => {
-      openModal(`Edit: ${user.name}`,
-        `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="eu-name" value="${esc(user.name)}"></div>
+    // Add User listener
+    $('new-user-btn').addEventListener('click', () => {
+      openModal('Add Team Member',
+        `<div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="nu-name" placeholder="e.g. John Doe"></div>
          <div class="form-group"><label class="form-label">Role</label>
-           <select class="form-select" id="eu-role">
-             <option value="user" ${user.role==='user'?'selected':''}>User</option>
-             <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
-             <option value="superadmin" ${user.role==='superadmin'?'selected':''}>Superadmin</option>
+           <select class="form-select" id="nu-role">
+             <option value="user">User</option>
+             <option value="admin">Admin</option>
+             <option value="superadmin">Superadmin</option>
            </select></div>
-         <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" type="email" value="${esc(user.email||'')}"></div>`,
+         <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="nu-email" type="email" placeholder="optional"></div>
+         <div class="form-group"><label class="form-label">Status</label>
+           <select class="form-select" id="nu-active">
+             <option value="true">🟢 Active (Shown in Team Progress)</option>
+             <option value="false">🔴 Deactivated (Hidden)</option>
+           </select></div>`,
         [
           { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
-          { label:'Save', cls:'btn btn-primary', onClick: async () => {
+          { label:'Create', cls:'btn btn-primary', onClick: async () => {
+            const name = $('nu-name').value.trim();
+            if (!name) { toast('Name required','error'); return; }
             try {
-              await PUT(`/api/master/users/${user.id}`, { name: $('eu-name').value, role: $('eu-role').value, email: $('eu-email').value });
-              toast('Updated','success'); closeModal(); navigate('user-mgmt');
+              const { user } = await POST('/api/master/users', {
+                name,
+                role: $('nu-role').value,
+                email: $('nu-email').value,
+                active: $('nu-active').value === 'true',
+              });
+              users.push(user);
+              S.users = users;
+              toast(`User "${name}" created`,'success'); closeModal(); render();
             } catch (e) { toast(e.message,'error'); }
           }},
         ]
       );
     });
-  });
 
-  mainEl.querySelectorAll('.del-user-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const user = users.find(u=>u.id===btn.dataset.id);
-      if (!confirm(`Delete user "${user?.name}"?`)) return;
-      try { await DELETE(`/api/master/users/${btn.dataset.id}`); toast('Deleted','success'); navigate('user-mgmt'); }
-      catch (e) { toast(e.message,'error'); }
+    // Toggle status listener
+    mainEl.querySelectorAll('.toggle-status-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const targetActive = btn.dataset.active === 'true';
+        const user = users.find(u => u.id === id);
+        btn.disabled = true;
+        try {
+          const { user: updated } = await PUT(`/api/master/users/${id}`, { active: targetActive });
+          const idx = users.findIndex(u => u.id === id);
+          if (idx !== -1) users[idx] = updated;
+          S.users = users;
+          toast(`User "${user?.name || 'Member'}" ${targetActive ? 'activated' : 'deactivated'}`, targetActive ? 'success' : 'warning');
+          render();
+        } catch (e) {
+          toast(e.message, 'error');
+          btn.disabled = false;
+        }
+      });
     });
-  });
+
+    // Edit user listener
+    mainEl.querySelectorAll('.edit-user-btn').forEach(btn => {
+      const user = users.find(u=>u.id===btn.dataset.id);
+      if (!user) return;
+      btn.addEventListener('click', () => {
+        const isActive = user.active !== false;
+        openModal(`Edit: ${user.name}`,
+          `<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="eu-name" value="${esc(user.name)}"></div>
+           <div class="form-group"><label class="form-label">Role</label>
+             <select class="form-select" id="eu-role">
+               <option value="user" ${user.role==='user'?'selected':''}>User</option>
+               <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
+               <option value="superadmin" ${user.role==='superadmin'?'selected':''}>Superadmin</option>
+             </select></div>
+           <div class="form-group"><label class="form-label">Status</label>
+             <select class="form-select" id="eu-active">
+               <option value="true" ${isActive ? 'selected' : ''}>🟢 Active (Shown in Team Progress)</option>
+               <option value="false" ${!isActive ? 'selected' : ''}>🔴 Deactivated (Hidden from Team Progress)</option>
+             </select></div>
+           <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" type="email" value="${esc(user.email||'')}"></div>`,
+          [
+            { label:'Cancel', cls:'btn btn-secondary', onClick: closeModal },
+            { label:'Save', cls:'btn btn-primary', onClick: async () => {
+              try {
+                const { user: updated } = await PUT(`/api/master/users/${user.id}`, {
+                  name: $('eu-name').value,
+                  role: $('eu-role').value,
+                  active: $('eu-active').value === 'true',
+                  email: $('eu-email').value,
+                });
+                const idx = users.findIndex(u => u.id === user.id);
+                if (idx !== -1) users[idx] = updated;
+                S.users = users;
+                toast('User updated','success'); closeModal(); render();
+              } catch (e) { toast(e.message,'error'); }
+            }},
+          ]
+        );
+      });
+    });
+
+    // Delete user listener
+    mainEl.querySelectorAll('.del-user-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const user = users.find(u=>u.id===btn.dataset.id);
+        if (!confirm(`Delete user "${user?.name}"?`)) return;
+        try {
+          await DELETE(`/api/master/users/${btn.dataset.id}`);
+          users = users.filter(u => u.id !== btn.dataset.id);
+          S.users = users;
+          toast('User deleted','success'); render();
+        } catch (e) { toast(e.message,'error'); }
+      });
+    });
+  }
+
+  render();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -43,7 +43,10 @@ function ensureArray(data) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
-export function getUsers() { return ensureArray(dbRead('users')); }
+export function getUsers() {
+  const users = ensureArray(dbRead('users'));
+  return users.map(u => ({ ...u, active: u.active !== false }));
+}
 export function setUsers(data) { dbWrite('users', data); }
 
 export function getUserById(id) { return getUsers().find(u => u.id === id) || null; }
@@ -52,11 +55,11 @@ export function getUserByName(name) {
   return getUsers().find(u => u.name.toLowerCase() === n) || null;
 }
 
-export function createUser({ name, role = 'user', email = '' }) {
+export function createUser({ name, role = 'user', email = '', active = true }) {
   const users = getUsers();
   if (users.find(u => u.name.toLowerCase() === name.toLowerCase()))
     throw new Error(`User "${name}" already exists`);
-  const user = { id: uuid(), name, role, email, createdAt: now(), updatedAt: now() };
+  const user = { id: uuid(), name, role, email, active: active !== false, createdAt: now(), updatedAt: now() };
   users.push(user);
   setUsers(users);
   return user;
@@ -218,11 +221,12 @@ export function getDailyReview(filter = {}) {
     if (changed) setDailyReview(rows);
   }
 
-  // Ensure company and clickupLink fallback from site
+  // Ensure company and clickupLink fallback from site, and attach uptimeStatus
   rows.forEach(r => {
     const s = (r.siteId ? sitesById[r.siteId] : null) || (r.siteUrl ? sitesByUrl[(r.siteUrl||'').toLowerCase().trim()] : null);
     if (!r.company && s) r.company = s.company || s.account || '';
     if (!r.clickupLink && s?.clickupUrl) r.clickupLink = s.clickupUrl;
+    r.uptimeStatus = s?.uptimeStatus || (r.uptimeRobot && /yes/i.test(r.uptimeRobot) ? 'online' : 'unknown');
   });
 
   if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
@@ -370,7 +374,7 @@ export function getDbStats() {
   return {
     lastSync:      meta.lastSync,
     syncDuration:  meta.syncDuration,
-    totalUsers:    users.length,
+    totalUsers:    users.filter(u => u.active !== false).length,
     totalSites:    sites.length,
     totalTasks:    tasks.length,
     totalDailyRows:dr.length,

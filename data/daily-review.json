@@ -6,7 +6,7 @@
     "siteId": "74aac6bf-7d3e-4905-87fe-e029cc92aa47",
     "siteUrl": "https://femalefoundersinhospitality.com/",
     "rowIndex": 2,
-    "maintenanceStatus": "completed",
+    "maintenanceStatus": "todo",
     "maintenanceRaw": "Completed",
     "reportSentStatus": "no",
     "reportSentRaw": "No",
@@ -19,7 +19,8 @@
     "clientResponse": "No RFP form",
     "uptimeRobot": "Yes",
     "createdAt": "2026-09-10T19:42:08.435Z",
-    "updatedAt": "2026-09-10T19:42:08.435Z"
+    "updatedAt": "2026-09-11T06:33:48.294Z",
+    "maintenanceStatusRaw": "To Do"
   },
   {
     "id": "d441111a-4178-43ba-9466-63d1ca845792",
@@ -28,7 +29,7 @@
     "siteId": "ad8efee7-920b-4b5d-8634-ff25060cb85a",
     "siteUrl": "https://toastedbarrelbar.com/",
     "rowIndex": 3,
-    "maintenanceStatus": "completed",
+    "maintenanceStatus": "todo",
     "maintenanceRaw": "Completed",
     "reportSentStatus": "no",
     "reportSentRaw": "No",
@@ -41,7 +42,8 @@
     "clientResponse": "No",
     "uptimeRobot": "Yes",
     "createdAt": "2026-09-10T19:42:08.436Z",
-    "updatedAt": "2026-09-10T19:42:08.436Z"
+    "updatedAt": "2026-09-11T06:33:49.721Z",
+    "maintenanceStatusRaw": "To Do"
   },
   {
     "id": "5ec0497f-35b6-4402-9534-1c339d5bfd73",
