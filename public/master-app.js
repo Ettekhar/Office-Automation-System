@@ -739,6 +739,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   const isOnline = r.uptimeStatus === 'online' || (r.uptimeRobot && /yes/i.test(r.uptimeRobot));
   const isOffline = r.uptimeStatus === 'offline';
   const liveBall = `<span class="live-status-dot ${isOffline ? 'offline' : 'online'}" title="${isOffline ? 'Website Offline / Down' : 'Website Active & Online'}"></span>`;
+  const co = (r.company || 'CW').trim();
 
   if (mode === 'smart') {
     return `
