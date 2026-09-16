@@ -1,0 +1,15 @@
+name = "officeos-dev-assistant"
+main = "dev-assistant-worker.js"
+compatibility_date = "2024-09-23"
+
+# Non-secret configuration (edit or set with `wrangler deploy --var`)
+[vars]
+# TRACKER_API_URL = "https://your-officeos.vercel.app"
+
+# Secrets (set with: npx wrangler secret put GEMINI_API_KEY  etc.)
+#   GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY
+#   API_TOKEN              — optional shared secret; when set, callers must send
+#                            "Authorization: Bearer <token>" (the dashboard sends
+#                            its CLOUDFLARE_WORKER_TOKEN value here)
+# Only the secrets that exist are used, in priority order:
+#   gemini → groq → openrouter → mistral → builtin engine

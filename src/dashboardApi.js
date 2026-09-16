@@ -74,6 +74,13 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
     const contacts = parseContacts(row[cols.CONTACT]);
     const matchedTab = findMatchingTab(tabTitles, websiteUrl, acct.masterTabName);
 
+    // Anything the shared resolver did not map (a column someone added by hand)
+    // is surfaced as data instead of being dropped.
+    const extra = {};
+    (cols.EXTRAS || []).forEach(({ key, index }) => {
+      extra[key] = String(row[index] ?? '').trim();
+    });
+
     if (active) totalActive++;
     else totalInactive++;
 
@@ -115,6 +122,7 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
       contacts,
       matchedTab,
       status,
+      extra,
     });
   }
 
@@ -123,6 +131,28 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
     accountName: acct.name,
     masterTabName: acct.masterTabName,
     availableMonths,
+    // The detected layout of this master tab: field indexes, hand-added columns
+    // (`extraColumns`) and month columns. Any new column is visible here.
+    columns: {
+      profile: cols.PROFILE,
+      headerRowNumber: headerRowIndex + 1,
+      fields: {
+        status: cols.STATUS,
+        cms: cols.CMS,
+        company: cols.COMPANY,
+        contact: cols.CONTACT,
+        accountManager: cols.AM,
+        note: cols.NOTE,
+        websiteUrl: cols.WEBSITE_URL,
+        clickupUrl: cols.CLICKUP_URL,
+        reportUrl: cols.REPORT_URL,
+        backupUrl: cols.BACKUP_URL,
+        domainExpiry: cols.DOMAIN_EXPIRY,
+        backupDate: cols.BACKUP_DATE,
+      },
+      extraColumns: (cols.EXTRAS || []).map(({ key, label, index, kind }) => ({ key, label, index, kind })),
+      monthColumns: (cols.MONTHS || []).map((m) => ({ label: m.label, index: m.index })),
+    },
     selectedMonth: {
       name: reportMonth.monthName,
       lower: reportMonth.monthLower,

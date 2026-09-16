@@ -309,3 +309,52 @@ maintenance-mailer/
 6. Real end-to-end validation (real sheet + real SMTP) has never happened.
    Do not assume it works beyond the logic level until the client reports
    back from a real `npm run dry-run`.
+
+---
+
+## 6. Dev Tracker spreadsheet — TWO column layouts coexist (do not assume A:G)
+
+Added 2026-09-15. The project grew a dashboard (`src/server.js` + `public/`)
+whose **Dev Tracker & Feedback Log** page reads the *dev tracker* spreadsheet
+`14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78` (one tab per website project).
+Unlike the maintenance sheets documented above, **its tabs do not share one
+column layout**, and that bit us hard:
+
+| Tabs | Layout |
+|---|---|
+| AnsAngel coalition, Nines Hotel, Sara Paris Booth, Bunting& Murray Construction | **OLD 5-col:** `A=URL B=Status C=Feedbacks URL D=Date E=Note/Updates` |
+| The House, Reitz Union | **NEW 7-col:** `A=URL B=Status C=Development-Date D=Development-Updates E=Feedbacks URL F=Feedback-Date G=Feedbacks Note/Updates` |
+
+The original `fetchDevTrackerSheetData()` read fixed positions (C/D as
+Development, E/F/G as Feedback). On the 5-col tabs that meant the Feedback URL
+was parsed as **devDate**, the Date as **devNotes**, and the real Note/Updates
+column was **never read at all** — plus every dashboard write (always range
+`A:G`) shifted a 5-col row's C/D/E values two columns to the right.
+
+Now every dev-tracker read *and* write resolves columns **from that tab's own
+header row**:
+
+- `resolveDevTrackerColumns(headerRow)` → index map (pure, unit-tested)
+- `resolveDevTrackerLayout(tabName)` → reads `A1:Z1`, falls back to the 7-col
+  default only when the header row can't be understood
+- `buildDevTrackerRowForLayout(cols, fields)` → row sized to that tab's width
+  (`devTrackerRowWidth`), so a 5-col tab is written `A:E` (never shifted) and a
+  7-col tab `A:G` with development values in C/D
+- `fetchDevTrackerSheetData()` reads `A1:Z500` and stores the resolved
+  `columns` on each project for debugging
+
+Verify with the read-only diagnostic any time (zero writes):
+
+```bash
+node scripts/diagnose-dev-columns.mjs            # every tab: headers + parsed fields
+node scripts/diagnose-dev-columns.mjs reitz      # one tab only
+node scripts/test-development-columns.mjs        # 34 offline assertions
+```
+
+**If you add the Development columns to the remaining 5-col tabs, nothing in
+the code needs to change** — the header row drives everything. Two "gotchas"
+worth knowing: the live headers are spelled loosely (`Development--Date`,
+`Feedbacks -- Note/Updates`, double hyphens), so matching is
+substring/normalised on purpose; and The House's C/D cells are currently empty
+in the sheet, so the app correctly has nothing to show for it until someone
+types values there.

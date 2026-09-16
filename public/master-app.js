@@ -138,14 +138,55 @@ const NAV = {
 
 function buildNav(role) {
   const items = NAV[role] || [];
-  sidebarNavEl.innerHTML = items.map(n => `
-    <div class="nav-item" data-view="${n.id}" id="nav-${n.id}">
+  const navHtml = [];
+
+  // Static nav items (views)
+  for (const n of items) {
+    navHtml.push(`<div class="nav-item" data-view="${n.id}" id="nav-${n.id}">
       <span class="nav-icon">${n.icon}</span>
       <span class="nav-label">${esc(n.label)}</span>
-    </div>`).join('');
-  sidebarNavEl.querySelectorAll('.nav-item').forEach(el => {
-    el.addEventListener('click', () => navigate(el.dataset.view));
-  });
+    </div>`);
+  }
+
+  // "Connected Sheets" section — rendered from live credential registry so new
+  // sheets show up in the sidebar automatically (no code change needed when a
+  // sheet is added/removed in Settings → Sheets).
+  navHtml.push(`<div class="nav-section-label">Connected Sheets</div>`);
+  try {
+    fetch('/api/master/sheet-credentials?role=user')
+      .then(r => r.ok ? r.json() : {})
+      .then(data => {
+        const creds = Array.isArray(data.credentials) ? data.credentials : [];
+        const shown = creds.filter(c => c.showInNav !== false && c.active !== false);
+        if (!shown.length) {
+          navHtml.push(`<div class="nav-section-empty">No sheets connected</div>`);
+        } else {
+          for (const c of shown) {
+            navHtml.push(`<div class="nav-item nav-sheet" data-sheet-id="${c.id}" title="${esc(c.title || c.key || c.id)} · ${esc(c.tabName || '')}">
+              <span class="nav-icon nav-sheet-icon">${c.navIcon || '📊'}</span>
+              <span class="nav-label">${esc(c.title || c.key || c.id)}</span>
+              <span class="nav-sheet-tab">${esc(c.tabName || '')}</span>
+            </div>`);
+          }
+        }
+        // Re-run setActiveNav after injecting dynamic items (preserves active highlight)
+        sidebarNavEl.innerHTML = navHtml.join('');
+        sidebarNavEl.querySelectorAll('.nav-item').forEach(el => {
+          el.addEventListener('click', () => {
+            if (el.dataset.view) navigate(el.dataset.view);
+            else if (el.dataset.sheetId) navigate('sheet-view'); // future: open sheet data view
+          });
+        });
+        if (S.view) setActiveNav(S.view);
+      })
+      .catch(() => {
+        sidebarNavEl.innerHTML = navHtml.join('');
+        if (S.view) setActiveNav(S.view);
+      });
+  } catch {
+    sidebarNavEl.innerHTML = navHtml.join('');
+    if (S.view) setActiveNav(S.view);
+  }
 }
 
 function setActiveNav(viewId) {
@@ -180,6 +221,7 @@ function navigate(viewId) {
 }
 
 $('refresh-btn').addEventListener('click', () => { if (S.view) navigate(S.view); });
+$('theme-toggle-btn')?.addEventListener('click', toggleTheme);
 $('notice-board-top-btn')?.addEventListener('click', () => openNoticeBoardModal());
 $('logout-btn').addEventListener('click', () => {
   appShell.classList.add('hidden');
@@ -194,6 +236,31 @@ $('sidebar-toggle').addEventListener('click', () => {
   try { localStorage.setItem('officeos_sidebar_collapsed', isCollapsed); } catch {}
 });
 
+// ─── Theme Toggle (Light / Dark Mode) ─────────────────────────────────────────
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('officeos_theme', next); } catch {}
+  const sun = $('theme-icon-sun');
+  const moon = $('theme-icon-moon');
+  if (sun) sun.classList.toggle('hidden', next !== 'light');
+  if (moon) moon.classList.toggle('hidden', next !== 'dark');
+}
+function initTheme() {
+  const btn = $('theme-toggle-btn');
+  const saved = (() => { try { return localStorage.getItem('officeos_theme'); } catch { return null; } })();
+  const initial = saved || 'dark';
+  document.documentElement.setAttribute('data-theme', initial);
+  const sun = $('theme-icon-sun');
+  const moon = $('theme-icon-moon');
+  if (sun) sun.classList.toggle('hidden', initial !== 'light');
+  if (moon) moon.classList.toggle('hidden', initial !== 'dark');
+  if (btn) btn.addEventListener('click', toggleTheme);
+}
+
+initTheme();
 // ─── Command Palette Setup ───────────────────────────────────────────────────
 function initCommandPalette() {
   const overlay = $('cmd-overlay');
@@ -2998,3 +3065,174 @@ async function viewSync() {
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 initLanding();
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// DEV ASSISTANT CHAT WIDGET — dynamic sheet schema display on boot
+// ═══════════════════════════════════════════════════════════════════════════════════
+(function initDevAssistantChat() {
+  const launcher = $('ai-chat-launcher');
+  const panel = $('ai-chat-panel');
+  const closeBtn = $('ai-chat-close');
+  const form = $('ai-chat-form');
+  const input = $('ai-chat-input');
+  const sendBtn = $('ai-chat-send');
+  const msgBox = $('ai-chat-messages');
+  const chipBox = $('ai-chat-chips');
+  if (!launcher || !panel) return;
+
+  let booted = false;
+  let busy = false;
+
+  function escChat(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderRich(text) {
+    let html = escChat(text);
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(https?:\/\/[^\s"\'<>)\]]+)/g, (m) =>
+      `<a href="${m}" target="_blank" rel="noopener" style="color:var(--accent-2);text-decoration:underline;word-break:break-all">${m.length > 46 ? m.slice(0, 44) + '…' : m}</a>`);
+    return html.split('\n').map((line) => {
+      if (!line.trim()) return '<div class="ai-gap"></div>';
+      if (/^<strong>[^<]+<\/strong>$/.test(line)) return `<div class="ai-h">${line}</div>`;
+      const stat = line.match(/^([A-Z][A-Za-z ]{1,16}):\s+(.+)$/);
+      if (stat) return `<div class="ai-stat"><span class="ai-stat-k">${stat[1]}</span><span class="ai-stat-v">${stat[2]}</span></div>`;
+      const li = line.match(/^\s*[•·\-]\s+(.+)$/);
+      if (li) return `<div class="ai-li"><span class="ai-dot">•</span><span class="ai-li-t">${li[1]}</span></div>`;
+      if (/^\s{2,}\S/.test(line)) return `<div class="ai-sub">${line.trim()}</div>`;
+      if (/^["“]/.test(line.trim())) return `<div class="ai-quote">${line.trim()}</div>`;
+      return `<div class="ai-line">${line}</div>`;
+    }).join('');
+  }
+
+  function addMsg(text, who, meta) {
+    const el = document.createElement('div');
+    el.className = `ai-msg ai-msg-${who}`;
+    el.innerHTML = who === 'user' ? escChat(text) : renderRich(text);
+    msgBox.appendChild(el);
+    if (meta) {
+      const m = document.createElement('div');
+      m.className = 'ai-msg-meta';
+      m.textContent = meta;
+      msgBox.appendChild(m);
+    }
+    msgBox.scrollTop = msgBox.scrollHeight;
+    return el;
+  }
+
+  function showTyping() {
+    const el = document.createElement('div');
+    el.className = 'ai-msg ai-msg-bot';
+    el.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+    el.id = 'ai-typing-el';
+    msgBox.appendChild(el);
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+  function hideTyping() { document.getElementById('ai-typing-el')?.remove(); }
+
+  function setChips(chips) {
+    chipBox.innerHTML = '';
+    (chips || []).forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ai-chip';
+      b.textContent = c;
+      b.addEventListener('click', () => ask(c));
+      chipBox.appendChild(b);
+    });
+  }
+
+  async function ask(question, fresh = false) {
+    if (busy || !question.trim()) return;
+    busy = true;
+    sendBtn.disabled = true;
+    input.value = '';
+    addMsg(question, 'user');
+    showTyping();
+    try {
+      const res = await POST('/api/master/dev-assistant', { question, fresh });
+      hideTyping();
+      addMsg(res.answer || '…', 'bot', res.engine === 'llm' ? '✦ AI-enhanced answer' : null);
+      if (res.suggestions?.length) setChips(res.suggestions);
+    } catch (e) {
+      hideTyping();
+      addMsg(`⚠️ ${e.message || 'Something went wrong.'}`, 'bot');
+    } finally {
+      busy = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  async function boot() {
+    if (booted) return;
+    booted = true;
+    showTyping();
+    try {
+      const meta = await GET('/api/master/dev-assistant');
+      hideTyping();
+      const t = meta.overview?.totals;
+      const greet = [
+        '👋 **Hi! I\'m your Dev Assistant.**',
+        t ? `I\'m watching **${t.projects} projects** — ${t.completed}/${t.pages} sitemap pages done (${t.readiness}%), ${t.rounds} feedback rounds.` : 'Ask me anything about your Dev Tracker.',
+        '',
+        'Ask things like *"what\'s the update on Reitz Union?"*, *"what\'s pending?"* or *"latest updates"*.'
+      ].join('\n');
+      const aiNote = meta.aiAvailable
+        ? '✦ AI mode active (RAG)' + (Array.isArray(meta.aiProviders) && meta.aiProviders.length ? ': ' + meta.aiProviders.join(' → ') : '') + ' — data-grounded answers'
+        : '⚡ Deterministic engine — no AI keys configured';
+      addMsg(greet, 'bot', aiNote);
+      setChips(meta.suggestions || []);
+
+      // Show the dynamic schema so the user can see which columns the assistant
+      // knows about — including hand-added ones. This is the visible proof that
+      // the sheet is dynamic: new columns show up here without a code change.
+      if (meta.schemaText && typeof meta.schemaText === 'string' && meta.schemaText.length) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'ai-msg ai-msg-bot';
+          el.innerHTML = `<div class="ai-schema-notice"><strong style="font-size:11px">📐 Columns the assistant can see:</strong><pre style="font-size:10.5px;margin-top:4px;color:var(--text-muted);white-space:pre-wrap;font-family:var(--mono,monospace)">${escChat(meta.schemaText)}</pre></div>`;
+          msgBox.appendChild(el);
+          msgBox.scrollTop = msgBox.scrollHeight;
+        }, 120);
+      }
+      if (meta.detectedColumns && Array.isArray(meta.detectedColumns) && meta.detectedColumns.length) {
+        setTimeout(() => {
+          const labels = meta.detectedColumns.map(c => `${c.label}${c.project ? ' (' + escChat(c.project) + ')' : ''}`).join(', ');
+          const el = document.createElement('div');
+          el.className = 'ai-msg ai-msg-bot';
+          el.innerHTML = `<div class="ai-schema-notice" style="margin-top:6px"><strong style="font-size:11px">➕ Hand-added columns detected:</strong> ${escChat(labels)}</div>`;
+          msgBox.appendChild(el);
+          msgBox.scrollTop = msgBox.scrollHeight;
+        }, 140);
+      }
+      // Show which sheets the assistant is connected to (broad RAG — SECTION 6)
+      if (meta.allSheets && Array.isArray(meta.allSheets) && meta.allSheets.length) {
+        setTimeout(() => {
+          const names = meta.allSheets.map(s => `**${escChat(s.title)}** (${s.totalRows} rows · ${s.category || 'general'})`).join('  ·  ');
+          const el = document.createElement('div');
+          el.className = 'ai-msg ai-msg-bot';
+          el.innerHTML = `<div class="ai-schema-notice" style="margin-top:8px;border-left:2px solid var(--accent)"><strong style="font-size:11px">📚 Sheets I can read:</strong><div style="font-size:10.5px;color:var(--text-muted);margin-top:2px">${names}</div></div>`;
+          msgBox.appendChild(el);
+          msgBox.scrollTop = msgBox.scrollHeight;
+        }, 160);
+      }
+    } catch (e) {
+      hideTyping();
+      addMsg('⚠️ Couldn\'t reach the Dev Assistant API — is the server running?', 'bot');
+    }
+  }
+
+  function open() { panel.classList.remove('hidden'); setTimeout(() => input.focus(), 60); boot(); }
+  function close() { panel.classList.add('hidden'); }
+  function toggle() { panel.classList.contains('hidden') ? open() : close(); }
+
+  launcher.addEventListener('click', toggle);
+  closeBtn.addEventListener('click', close);
+  form.addEventListener('submit', (e) => { e.preventDefault(); ask(input.value); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !panel.classList.contains('hidden')) close();
+  });
+})();
+

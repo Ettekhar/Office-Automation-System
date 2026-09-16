@@ -9,6 +9,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/master.css">
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('officeos_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -96,38 +104,46 @@
   <aside id="sidebar">
     <div class="sidebar-header">
       <div class="brand-badge">
-        <span class="logo-icon sm">⚡</span>
+        <div class="brand-logo-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
         <div class="brand-meta">
-          <span class="sidebar-brand">OfficeOS</span>
+          <div class="sidebar-brand-row">
+            <span class="sidebar-brand">OfficeOS</span>
+            <span class="sidebar-plan-tag">PRO</span>
+          </div>
           <span class="sidebar-sub">Operations Suite</span>
         </div>
       </div>
-      <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse sidebar">‹</button>
+      <button id="sidebar-toggle" class="sidebar-toggle" title="Collapse sidebar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
     </div>
 
-    <div class="sidebar-user-card" id="sidebar-user-card">
-      <div class="user-avatar-wrap">
-        <div class="user-avatar" id="user-avatar">T</div>
-        <span class="avatar-status-dot online"></span>
-      </div>
-      <div class="user-info">
-        <div class="user-name" id="user-name-display">User</div>
-        <div class="user-role-badge" id="user-role-display">USER</div>
-      </div>
-    </div>
-
+    <!-- Grouped Sidebar Navigation -->
     <nav id="sidebar-nav" class="sidebar-nav"></nav>
 
+    <!-- Anchored User Profile & Quick Actions -->
     <div class="sidebar-footer">
-      <div class="sidebar-quick-actions">
-        <button id="quick-sync-btn" class="btn-sidebar-action" title="Sync Google Sheets">
-          <span>🔄</span>
-          <span class="action-label">Quick Sync</span>
-        </button>
-        <button id="logout-btn" class="btn-sidebar-action" title="Switch user or role">
-          <span>↩</span>
-          <span class="action-label">Switch Role</span>
-        </button>
+      <div class="sidebar-user-card" id="sidebar-user-card">
+        <div class="user-avatar-wrap">
+          <div class="user-avatar" id="user-avatar">S</div>
+          <span class="avatar-status-dot online"></span>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="user-name-display">Superadmin</div>
+          <div class="user-role-badge" id="user-role-display">ADMIN</div>
+        </div>
+        <div class="user-card-actions">
+          <button id="quick-sync-btn" class="btn-user-action" title="Quick Sync Sheets">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>
+          </button>
+          <button id="logout-btn" class="btn-user-action" title="Switch Role / Profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </aside>
@@ -145,9 +161,9 @@
 
       <!-- Quick Command Bar Search -->
       <div class="top-bar-center">
-        <div class="quick-search-trigger" id="cmd-palette-trigger">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <span class="search-placeholder">Quick search websites, tasks, team...</span>
+        <div class="quick-search-trigger" id="cmd-palette-trigger" title="Quick search (Ctrl+K)">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span class="search-placeholder">Quick search…</span>
           <kbd class="search-kbd">Ctrl K</kbd>
         </div>
       </div>
@@ -155,9 +171,37 @@
       <div class="top-bar-right">
         <!-- Quick Role Switcher Buttons -->
         <div class="quick-role-switcher" id="quick-role-switcher">
-          <button class="role-pill-btn" data-role="user" title="Switch to User view">👤 User</button>
-          <button class="role-pill-btn" data-role="admin" title="Switch to Admin view">🔑 Admin</button>
-          <button class="role-pill-btn" data-role="superadmin" title="Switch to Superadmin view">👑 Superadmin</button>
+          <button class="role-pill-btn" data-role="user" title="Switch to User view">
+            <svg class="role-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span class="role-text">User</span>
+          </button>
+          <button class="role-pill-btn" data-role="admin" title="Switch to Admin view">
+            <svg class="role-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 2-2 2m-1.5 1.5L14 9l-3 3v3h3l3-3 3.5-3.5a5 5 0 1 0-7.07-7.07z"/></svg>
+            <span class="role-text">Admin</span>
+          </button>
+          <button class="role-pill-btn" data-role="superadmin" title="Switch to Superadmin view">
+            <svg class="role-svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="role-text">Superadmin</span>
+          </button>
+        </div>
+
+        <!-- Active Month Selector Dropdown -->
+        <div class="month-selector-wrap" id="month-selector-wrap">
+          <button id="month-selector-btn" class="month-selector-btn" title="Click to switch active month or add a new month">
+            <svg class="month-icon-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="active-month-label" class="active-month-label">Loading…</span>
+            <svg id="month-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div id="month-dropdown" class="month-dropdown">
+            <div class="month-dropdown-header">Switch Active Month</div>
+            <div id="month-dropdown-list" class="month-dropdown-list"></div>
+            <div class="month-dropdown-footer">
+              <button id="btn-add-month-top" onclick="openAddMonthModal()" class="btn-add-month-top">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Create New Month Column
+              </button>
+            </div>
+          </div>
         </div>
 
         <div id="sync-status" class="sync-badge hidden">
@@ -165,12 +209,35 @@
           <span id="sync-status-text">Synced</span>
         </div>
 
-        <button id="notice-board-top-btn" class="btn-icon" title="📢 Notice Board & Pinned Announcements" style="font-size:15px">
-          📢
+        <button id="expiry-approvals-top-btn" class="btn btn-warning btn-sm hidden" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:6px" title="Pending Domain Expiry Approvals">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="expiry-approvals-count">0</span> Approvals
         </button>
 
-        <button id="refresh-btn" class="btn-icon" title="Refresh live data">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <button id="notice-board-top-btn" class="btn-icon btn-notice" title="Notice Board & Pinned Announcements">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+
+        <!-- Theme Toggle (Light / Dark Mode) -->
+        <button id="theme-toggle-btn" class="btn-icon btn-theme-toggle" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+          <svg class="theme-icon-sun hidden" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <button id="refresh-btn" class="btn-icon btn-refresh" title="Refresh live data">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         </button>
       </div>
     </header>
@@ -205,6 +272,35 @@
 
 <!-- ░░ TOAST CONTAINER ░░ -->
 <div id="toast-container" class="toast-container"></div>
+
+<!-- ░░ DEV ASSISTANT CHAT WIDGET ░░ -->
+<button id="ai-chat-launcher" class="ai-chat-launcher" title="Ask Dev Assistant" aria-label="Open Dev Assistant chat">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  <span class="ai-chat-pulse"></span>
+</button>
+
+<div id="ai-chat-panel" class="ai-chat-panel hidden" role="dialog" aria-label="Dev Assistant">
+  <div class="ai-chat-header">
+    <div class="ai-chat-header-info">
+      <div class="ai-chat-avatar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z"/></svg>
+      </div>
+      <div>
+        <div class="ai-chat-title">Dev Assistant</div>
+        <div class="ai-chat-sub"><span class="ai-online-dot"></span> Reads your Dev Tracker live</div>
+      </div>
+    </div>
+    <button id="ai-chat-close" class="ai-chat-close" aria-label="Close chat">✕</button>
+  </div>
+  <div id="ai-chat-messages" class="ai-chat-messages"></div>
+  <div id="ai-chat-chips" class="ai-chat-chips"></div>
+  <form id="ai-chat-form" class="ai-chat-form" autocomplete="off">
+    <input id="ai-chat-input" class="ai-chat-input" placeholder="Ask e.g. “What's the update on Reitz Union?”" autocomplete="off">
+    <button type="submit" id="ai-chat-send" class="ai-chat-send" aria-label="Send">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </form>
+</div>
 
 <script src="/master-app.js"></script>
 </body>

@@ -1,0 +1,555 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-16T07:18:21.532Z",
+  "spreadsheets": {
+    "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78": {
+      "spreadsheetId": "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78",
+      "label": "Dev Tracker Sheet",
+      "discoveredAt": "2026-09-16T07:18:21.528Z",
+      "tabCount": 6,
+      "tabs": [
+        {
+          "title": "AnsAngel coalition",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Feedbacks URL",
+            "Date",
+            "Note/Updates"
+          ],
+          "signature": "1d1mvxp-42",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 2,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 3,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 4,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "feedbackUrl": 2,
+            "date": 3,
+            "notes": 4,
+            "devDate": -1,
+            "devNotes": -1
+          },
+          "dataRowCount": 17,
+          "sampleRows": [
+            [
+              "https://ansangelscoalition.com/",
+              "Completed",
+              "Feedback-1 URL",
+              "2026-08-07",
+              "Blog page , single blog page , Program page created"
+            ],
+            [
+              "https://ansangelscoalition.com/moochies-story/",
+              "Completed",
+              "",
+              "2026-08-11",
+              "Updated some images what client gave us..all of them are team\nmember photos\n"
+            ],
+            [
+              "https://ansangelscoalition.com/about-us/",
+              "Completed"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
+        },
+        {
+          "title": "Nines Hotel",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Feedbacks URL",
+            "Date",
+            "Note/Updates"
+          ],
+          "signature": "1d1mvxp-42",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 2,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 3,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 4,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "feedbackUrl": 2,
+            "date": 3,
+            "notes": 4,
+            "devDate": -1,
+            "devNotes": -1
+          },
+          "dataRowCount": 19,
+          "sampleRows": [
+            [
+              "https://www.thenines.com/",
+              "Completed",
+              "Feedback-1 URL",
+              "2026-08-04",
+              "Completed the remaining content updates in the document.\nAddressed the recent feedback related to image changes across the website plugins.\nUpdated the History page slider section.\nThe History page slider is still using dummy data.\nWe need to request the content and corresponding images for each year to replace the dummy data.\nSome of the Events are added as client requested"
+            ],
+            [
+              "https://www.thenines.com/amenities/",
+              "Completed",
+              "https://docs.google.com/document/d/1cn0I6Js509w6bETodUz_a0UZzbXqOldMrCjmcdEOTVM/edit?pli=1&tab=t.0#heading=h.6fwf6gxl58vz"
+            ],
+            [
+              "https://www.thenines.com/accommodations/",
+              "Completed"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
+        },
+        {
+          "title": "Sara Paris  Booth ",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Feedbacks URL",
+            "Date",
+            "Note/Updates"
+          ],
+          "signature": "1d1mvxp-42",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 2,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 3,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 4,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "feedbackUrl": 2,
+            "date": 3,
+            "notes": 4,
+            "devDate": -1,
+            "devNotes": -1
+          },
+          "dataRowCount": 9,
+          "sampleRows": [
+            [
+              "https://sgpbco.com/",
+              "Completed",
+              "Feedback-1 URL",
+              "2026-08-04",
+              "1. are updating the cta button for each Homes property page with CPT- in progress. 2. we will also add a short code for displaying Images on the homes single page - TO DO"
+            ],
+            [
+              "https://sgpbco.com/about/",
+              "Completed",
+              "https://docs.google.com/document/d/1spCuYsydkyH1rZnx8PJYLSx_4_cAWZ9Y/edit",
+              "2026-08-05",
+              "1. added custom  scf field for the cta section to the bottom for each homes 2. custom  gallery for the homes 3. responsive issues fixed"
+            ],
+            [
+              "https://sgpbco.com/studio/",
+              "Completed",
+              "",
+              "2026-08-06",
+              "1. TO DO - Data Entry : Homes page"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
+        },
+        {
+          "title": "Bunting& Murray Construction",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Feedbacks URL",
+            "Date",
+            "Note/Updates"
+          ],
+          "signature": "1d1mvxp-42",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 2,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 3,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 4,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "feedbackUrl": 2,
+            "date": 3,
+            "notes": 4,
+            "devDate": -1,
+            "devNotes": -1
+          },
+          "dataRowCount": 12,
+          "sampleRows": [
+            [
+              "https://lightcoral-dolphin-755291.hostingersite.com/",
+              "Completed",
+              "Feedback-1 URL"
+            ],
+            [
+              "https://lightcoral-dolphin-755291.hostingersite.com/about-us/",
+              "Completed",
+              "\n\n\n\n\n\nhttps://docs.google.com/spreadsheets/d/1ePma_uymuypov6hL3qA-Pv6EoQ6KHQZc/edit?gid=1840994945#gid=1840994945",
+              "28/08/26",
+              "Worked on the new feedback.. almost complete but there is some dependency..need images of Coleman Bunting,  Justin Morgan .. all other are commented in the given sheet.... Also Client asked to removed some section to the homepage...Need To verify them before removing the homepage sections."
+            ],
+            [
+              "https://lightcoral-dolphin-755291.hostingersite.com/services/",
+              "Completed",
+              "",
+              "29/08/26",
+              "Feedback Completed"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
+        },
+        {
+          "title": "The House",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Development--Date",
+            "Development--Updates",
+            "Feedbacks URL",
+            "Feedback--Date",
+            "Feedbacks -- Note/Updates"
+          ],
+          "signature": "85ggco-98",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "devDate",
+              "label": "Development-Date",
+              "index": 2,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "devNotes",
+              "label": "Development-Updates",
+              "index": 3,
+              "kind": "longtext",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 4,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 5,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 6,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "devDate": 2,
+            "devNotes": 3,
+            "feedbackUrl": 4,
+            "date": 5,
+            "notes": 6
+          },
+          "dataRowCount": 3,
+          "sampleRows": [
+            [
+              "https://thehouse.cogwheelmarketing.site/",
+              "Completed",
+              "",
+              "",
+              "Feedback-1 URL",
+              "03/09/26",
+              "The House Homepage email feedback completed"
+            ],
+            [
+              "https://thehouse.cogwheelmarketing.site/home-2/",
+              "Completed"
+            ],
+            [
+              "",
+              "",
+              "",
+              "",
+              "Feedback-2 URL"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Development-Date (col 3, date), • Development-Updates (col 4, longtext), • Feedback URL (col 5, url), • Feedback-Date (col 6, date), • Feedback-Notes (col 7, longtext)"
+        },
+        {
+          "title": "Reitz Union",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "URL",
+            "Status",
+            "Development--Date",
+            "Development--Updates",
+            "Feedbacks URL",
+            "Feedback--Date",
+            "Feedbacks -- Note/Updates"
+          ],
+          "signature": "85ggco-98",
+          "profile": "devTracker",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 1,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "devDate",
+              "label": "Development-Date",
+              "index": 2,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "devNotes",
+              "label": "Development-Updates",
+              "index": 3,
+              "kind": "longtext",
+              "extra": false
+            },
+            {
+              "key": "feedbackUrl",
+              "label": "Feedback URL",
+              "index": 4,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "date",
+              "label": "Feedback-Date",
+              "index": 5,
+              "kind": "date",
+              "extra": false
+            },
+            {
+              "key": "notes",
+              "label": "Feedback-Notes",
+              "index": 6,
+              "kind": "longtext",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [],
+          "fields": {
+            "url": 0,
+            "status": 1,
+            "devDate": 2,
+            "devNotes": 3,
+            "feedbackUrl": 4,
+            "date": 5,
+            "notes": 6
+          },
+          "dataRowCount": 16,
+          "sampleRows": [
+            [
+              "https://thereitzunion.cogwheelmarketing.com/",
+              "Completed",
+              "2026-09-15",
+              "All the pages are completed",
+              "Feedback-1 URL",
+              "2026-08-28",
+              "Changes all given images & some feedbacks from siana in homepage 1 and home page 2"
+            ],
+            [
+              "https://thereitzunion.cogwheelmarketing.com/home-2/",
+              "Completed"
+            ],
+            [
+              "https://thereitzunion.cogwheelmarketing.com/faqs/",
+              "Completed"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Development-Date (col 3, date), • Development-Updates (col 4, longtext), • Feedback URL (col 5, url), • Feedback-Date (col 6, date), • Feedback-Notes (col 7, longtext)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    }
+  }
+}

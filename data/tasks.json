@@ -1,6 +1,6 @@
 [
   {
-    "id": "b270e7a1-e401-42c2-8392-a8dbe089aa3f",
+    "id": "664ea4ac-ebcc-45e9-89d1-0ae9eadf5358",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Hotel Dela Poste",
     "siteId": null,
@@ -13,11 +13,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.795Z",
+    "updatedAt": "2026-09-13T05:22:30.795Z"
   },
   {
-    "id": "b0d4f0cd-a5ae-47e5-a88c-8badd213ce48",
+    "id": "0b78e453-b8d9-43ba-9e2b-579da993f062",
     "taskName": "",
     "siteUrl": "Project Farmhouse",
     "siteId": null,
@@ -30,11 +30,11 @@
     "accountManager": "Nicole",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.796Z",
+    "updatedAt": "2026-09-13T05:22:30.796Z"
   },
   {
-    "id": "a6e4070b-dd83-4c36-a8af-336cd24946e2",
+    "id": "a50c38f8-61a9-4b8e-b8e5-6332d9864a51",
     "taskName": "",
     "siteUrl": "Apple Valley Restaurant",
     "siteId": null,
@@ -47,11 +47,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.796Z",
+    "updatedAt": "2026-09-13T05:22:30.796Z"
   },
   {
-    "id": "5523a193-dd57-4b14-a9e6-78ae608d2487",
+    "id": "d7a2d901-e31b-44c4-8c6e-611017574dfb",
     "taskName": "",
     "siteUrl": "Hotel Sheldon",
     "siteId": null,
@@ -64,11 +64,11 @@
     "accountManager": "Mohammed Razib",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.796Z",
+    "updatedAt": "2026-09-13T05:22:30.796Z"
   },
   {
-    "id": "a307dc8b-0c58-4c9c-86e0-50ecdef6c26d",
+    "id": "1a6c4bf3-9020-4f6c-a6d1-776ab426e5e3",
     "taskName": "",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -81,11 +81,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.796Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "6192be3b-86dd-48f1-b6fc-5fcb78a64343",
+    "id": "69772d43-a3fd-4378-94af-7d8ede35e432",
     "taskName": "",
     "siteUrl": "Hotel Sheldon",
     "siteId": null,
@@ -98,11 +98,11 @@
     "accountManager": "Mohammed Razib",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "25beb463-7755-4282-97c6-518822008a39",
+    "id": "66f9faef-2f40-4ca6-a390-de1b35cd8354",
     "taskName": "",
     "siteUrl": "Maison Metier",
     "siteId": null,
@@ -115,11 +115,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.677Z",
-    "updatedAt": "2026-09-11T06:50:25.677Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "58d54b88-4f2e-4eb6-a1ed-5d20b369ce38",
+    "id": "5d708680-9995-40a9-b57a-2b3882e9666e",
     "taskName": "",
     "siteUrl": "Hotel Sheldon",
     "siteId": null,
@@ -132,11 +132,11 @@
     "accountManager": "Mohammed Razib",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "73df3939-473c-4fa0-be4c-abd377f077b5",
+    "id": "954aabe4-901e-4b7a-8e95-aa5743196f0f",
     "taskName": "",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -149,11 +149,11 @@
     "accountManager": "Mohammed Razib",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "777fea01-d6d9-42c1-b9f3-fb42f7c780e3",
+    "id": "1cbdee83-33e8-4bca-a01a-370056985d73",
     "taskName": "",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -166,11 +166,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "d6a1ed3a-07a8-4b44-94ed-d95b726659ef",
+    "id": "6658ab95-56ff-4600-9fe5-edf21688eca4",
     "taskName": "",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -183,11 +183,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.798Z",
+    "updatedAt": "2026-09-13T05:22:30.798Z"
   },
   {
-    "id": "33dc6b6b-c0b4-48e8-8579-e0c8d6c1c1ac",
+    "id": "ef857a81-5a88-41ec-88e1-aa3653b0ed68",
     "taskName": "",
     "siteUrl": "La Fonda Santafe",
     "siteId": null,
@@ -200,11 +200,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "8e3b724f-5e47-4969-af59-612fc4899c2c",
+    "id": "12d6d764-6ff0-411b-8aac-40b326477612",
     "taskName": "",
     "siteUrl": "Arrive Austin",
     "siteId": null,
@@ -217,11 +217,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "8d158e2c-8ec9-42f1-a443-cd18e1756d7a",
+    "id": "3e7eb8b1-337d-46d1-83f9-2bc3380a4600",
     "taskName": "",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -234,11 +234,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "705c9e1e-d33e-4fc0-8630-7f708d39da2e",
+    "id": "1f20a2c5-84fb-44a8-a1d0-f7e9acc206b6",
     "taskName": "",
     "siteUrl": "Hotel Dela Poste",
     "siteId": null,
@@ -251,11 +251,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "4861edcb-77c7-4157-b36c-e0461436c678",
+    "id": "6b14a72a-d0d0-444c-b4d3-bbfc71b5c57b",
     "taskName": "",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -268,11 +268,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "7558d325-fa6c-440f-8228-11f9df6610e8",
+    "id": "4e25f300-b049-485d-9e67-0e10e9cd342e",
     "taskName": "",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -285,11 +285,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "4415053f-065e-4839-a64c-8666e7b9311c",
+    "id": "b83e6063-197b-4ef1-bcb8-31d9b57e5483",
     "taskName": "",
     "siteUrl": "The Grand Hotel Golf Resort & SPA",
     "siteId": null,
@@ -302,11 +302,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "6540fce4-9222-4459-8c43-129054a7cded",
+    "id": "9e8270a6-32f2-49e9-b594-212cb4580a2f",
     "taskName": "",
     "siteUrl": "Curtis Denver (Sage)",
     "siteId": null,
@@ -319,11 +319,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.678Z",
-    "updatedAt": "2026-09-11T06:50:25.678Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "a7167f19-63c9-4750-b945-5a03e7f21e39",
+    "id": "955f6a1a-9933-476e-be3b-a849fe9b6c17",
     "taskName": "",
     "siteUrl": "The Alexandrian",
     "siteId": null,
@@ -336,11 +336,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "519e6ee5-0066-4697-a682-1d322fbcef72",
+    "id": "e20f3a9e-a72a-4867-aeea-e413e0cd0495",
     "taskName": "",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -353,11 +353,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "e7321910-fd74-4c6f-8ae0-c4a0e2a99e30",
+    "id": "cbb54d68-e2c2-4edd-8614-2f6068f52655",
     "taskName": "",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -370,11 +370,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "5a361f79-0c3f-42d9-8a9f-1f98352aad3d",
+    "id": "487b26c9-68f5-42ef-a0af-3b0591b34c8b",
     "taskName": "",
     "siteUrl": "The Nines Portland (Sage)",
     "siteId": null,
@@ -387,11 +387,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "4db6414c-f79d-4739-ac21-3959ac1ef1df",
+    "id": "91abfffd-e2de-4954-ba9a-9adc920949ba",
     "taskName": "",
     "siteUrl": "Arrive Albuquerque (Palisociety)",
     "siteId": null,
@@ -404,11 +404,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "661b6528-dee5-4850-8d77-9f5d4205e6a1",
+    "id": "9ba2b44b-da2b-44a4-bd63-3575a66e0089",
     "taskName": "",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -421,11 +421,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.679Z",
-    "updatedAt": "2026-09-11T06:50:25.679Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "ac9ace8a-4e34-4d25-b603-6fd7ba0e7b09",
+    "id": "f6765590-4066-41b8-98f1-c134d6559058",
     "taskName": "",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -438,11 +438,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.799Z",
+    "updatedAt": "2026-09-13T05:22:30.799Z"
   },
   {
-    "id": "a488e90f-e103-42d7-bec7-93228ae517b8",
+    "id": "7328e60d-3bc6-45ae-9fab-b9c521243ec9",
     "taskName": "",
     "siteUrl": "Craftsman Inn",
     "siteId": null,
@@ -455,11 +455,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.800Z",
+    "updatedAt": "2026-09-13T05:22:30.800Z"
   },
   {
-    "id": "3f5605cf-3dbb-410e-af5d-4d2946ccd6b6",
+    "id": "ac2a059b-a1aa-495a-b718-b3f5955106dd",
     "taskName": "",
     "siteUrl": "Toasted Barrell",
     "siteId": null,
@@ -472,11 +472,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "c055bbec-58c1-4d35-9e58-a596ba6f5758",
+    "id": "6805d860-f967-4f82-9d3a-f515d2458f14",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -489,11 +489,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "f5388ecb-42de-4921-ae66-d5b24be161fe",
+    "id": "c2d97ea3-2d05-4136-8940-9e6138073f6d",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -506,11 +506,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "2b54e392-e9d7-4b2d-bbe8-b33a8814a3d6",
+    "id": "a54857a6-6b38-45be-9732-777c281d1992",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -523,11 +523,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "b75c40a5-5590-4eab-b75f-224ac910f8c8",
+    "id": "53cb31b2-452b-46b4-bef7-f57fee971fe3",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -540,11 +540,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "719d8495-cca3-4d29-b776-119026eac7cc",
+    "id": "fddb9e10-4919-4fb7-902c-b1c2592eb161",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -557,11 +557,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "56d0f85e-fb6f-4cc2-974b-3075cf53c4ab",
+    "id": "1e4d4e76-efee-4a11-ac41-a06bb42e0482",
     "taskName": "",
     "siteUrl": "WCBBQ",
     "siteId": null,
@@ -574,11 +574,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "30943ccb-dad4-4825-96b7-20108942ccef",
+    "id": "965fb0f8-9200-4fce-9380-a7fc0c299bb4",
     "taskName": "",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -591,11 +591,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "69937307-5697-4d7b-a70c-c9b3cf6e9683",
+    "id": "47901695-f063-4ffb-a062-53188a654cb8",
     "taskName": "",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -608,11 +608,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.802Z",
+    "updatedAt": "2026-09-13T05:22:30.802Z"
   },
   {
-    "id": "25da2700-9864-41c5-b61a-47234b3fe0e2",
+    "id": "95d195b7-9a7a-4936-927c-68efe47b3a52",
     "taskName": "",
     "siteUrl": "Rahman Fitness",
     "siteId": null,
@@ -625,11 +625,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "845ca67a-2cca-4088-a107-60707206f49a",
+    "id": "9982ab58-7ac6-4d70-bfa6-c22ed0ff1c53",
     "taskName": "",
     "siteUrl": "Divi Site Fixing",
     "siteId": null,
@@ -642,11 +642,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "79c422a9-acec-40ae-9116-c1d92d373de0",
+    "id": "a258744d-4bc1-49b4-9b80-c20fa4980d2d",
     "taskName": "",
     "siteUrl": "Cogwheel marketing",
     "siteId": null,
@@ -659,11 +659,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.680Z",
-    "updatedAt": "2026-09-11T06:50:25.680Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "3b77d3ff-7939-419e-8e9f-c8a28d41c6c3",
+    "id": "a85ba6b6-1337-4aed-8124-7b1eae138d38",
     "taskName": "",
     "siteUrl": "Granger Hotel",
     "siteId": null,
@@ -676,11 +676,11 @@
     "accountManager": "fixed",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "89f8fdd6-4ce8-430a-b8b6-bb39bf3749a5",
+    "id": "478f0841-1eae-41ab-9621-4255f99447b1",
     "taskName": "",
     "siteUrl": "All DIVI Site",
     "siteId": null,
@@ -693,11 +693,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "fb8c149c-ed1e-476e-967d-f75f997c9e36",
+    "id": "6c767d58-696c-436d-8fc4-052e4c9e6090",
     "taskName": "",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -710,11 +710,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "bf3c925a-8617-4c32-9599-98d112a61387",
+    "id": "796588c1-5c05-40fc-9975-1080fa9cf505",
     "taskName": "",
     "siteUrl": "Soprana Restaurant",
     "siteId": null,
@@ -727,11 +727,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "05dba20f-2ee1-4a6b-b4c6-4ad50851c368",
+    "id": "99fb8d26-14e2-4c43-9a50-5c53d267b2ef",
     "taskName": "",
     "siteUrl": "Montford Restaurant",
     "siteId": null,
@@ -744,11 +744,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "ec6acda8-78e1-4363-9d0d-966165977cec",
+    "id": "e53721dc-5e6a-4aad-943a-065b5c3e5cd0",
     "taskName": "",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -761,11 +761,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "9c1cdfa9-e953-45a0-9a41-e91d7ab06a19",
+    "id": "ae3b8bba-248d-4716-919d-0a2430d8e092",
     "taskName": "",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -778,11 +778,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "f81bcc10-5bb8-4180-a606-908782bf8d3e",
+    "id": "40186190-23c8-4bff-8194-cbe6985c873a",
     "taskName": "Schema, Sitemap & Navigation optimization",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -795,11 +795,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "b9f3c1cf-ea93-4d75-8d8d-b8d6077c341b",
+    "id": "5173f122-e6de-43be-b351-7cd84e42d937",
     "taskName": "Add redirect",
     "siteUrl": "Cogwheel marketing",
     "siteId": null,
@@ -812,11 +812,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.803Z",
+    "updatedAt": "2026-09-13T05:22:30.803Z"
   },
   {
-    "id": "2c29ad21-bd57-417c-94cf-562287918278",
+    "id": "3768d8e2-6c20-44c9-b03f-8573e7693dd8",
     "taskName": "Delphi Form Integration",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -829,11 +829,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "d3f6cab6-25a5-41ff-93b0-62daf402ab44",
+    "id": "ab014d8b-c086-4107-ad9a-583a17f10bed",
     "taskName": "Form Submission - #2026-02-17T06:43:34-07:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -846,11 +846,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "5e1af077-8caa-45fb-a76e-b168996568a1",
+    "id": "45c8cf9f-bafb-4aa1-bd2e-32f877cdbf35",
     "taskName": "Identify & Fix Broken Links",
     "siteUrl": "The Raphael Hotel",
     "siteId": null,
@@ -863,11 +863,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "75edd51f-ae7c-4ee6-b413-5f3ecac04edd",
+    "id": "ef6f3bcc-86f8-4eb0-8def-d0a2fd092939",
     "taskName": "Remove Hearts A Flutter:",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -880,11 +880,11 @@
     "accountManager": "Nicole",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.681Z",
-    "updatedAt": "2026-09-11T06:50:25.681Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "a336d83d-4307-4f41-a6ff-1f2dbc11dd9e",
+    "id": "9d5025bc-cc0e-44b3-a968-ae3bae3a106a",
     "taskName": "The Guild Fitness Center Update",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -897,11 +897,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "c6ae48fb-fb5e-45a1-8b8a-1e8366db3cdd",
+    "id": "07e26746-85c9-444e-a4e0-fd4c1b477b13",
     "taskName": "Form Submission - #2026-02-18T07:03:00-07:00",
     "siteUrl": "New Castle",
     "siteId": null,
@@ -914,11 +914,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "d9c5db5c-9c94-493e-8a27-782270d2f4e2",
+    "id": "181b8010-c079-4cc7-b687-7529b3454852",
     "taskName": "Form Submission - #2026-02-20T07:56:38-07:00",
     "siteUrl": "Salon Salon Nola",
     "siteId": null,
@@ -931,11 +931,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "a13830a1-82e3-4420-96b2-0ab444cd9354",
+    "id": "1da36e2c-4cc0-44bd-ae64-33b6e479d4a1",
     "taskName": "The Guild Website Updates",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -948,11 +948,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "545ae7c7-0ea5-4d7e-a94d-58d233abbccc",
+    "id": "ed34c6f0-d819-45c2-aa28-40bb152682f5",
     "taskName": "October Retreat Page - Insider Women",
     "siteUrl": "Insider Travel For Women",
     "siteId": null,
@@ -965,11 +965,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "21a70aef-53c1-4fc8-936e-08f78c96dca7",
+    "id": "747d3285-8584-47d8-9886-5898da3c7e20",
     "taskName": "Form Submission - #2026-02-20T22:13:40+00:00",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -982,11 +982,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.804Z",
+    "updatedAt": "2026-09-13T05:22:30.804Z"
   },
   {
-    "id": "3fda2a65-4d47-40c5-8ea9-91630ab7fa28",
+    "id": "6023970c-eccd-429e-b8b6-9f7f36c7c1ad",
     "taskName": "Action Required – Adopt Consent Mode for UET",
     "siteUrl": "Maison Metier\nPinon Court Santa Fe\nThe Barnett\nThe Winslow - Oklahoma City, OK\nThe Winslow - Winslow, AZ",
     "siteId": null,
@@ -999,11 +999,11 @@
     "accountManager": "Kylie",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.805Z",
+    "updatedAt": "2026-09-13T05:22:30.805Z"
   },
   {
-    "id": "e4801d60-0a1b-455a-af2a-0319bfd7ea56",
+    "id": "8716ae18-4485-417a-a7a7-54dc75dfc3ef",
     "taskName": "Newsletter Landing Page",
     "siteUrl": "Pinon Court",
     "siteId": null,
@@ -1016,11 +1016,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.805Z",
+    "updatedAt": "2026-09-13T05:22:30.805Z"
   },
   {
-    "id": "5f88ed34-94e4-4ac5-8220-d9f65ac93324",
+    "id": "c787d678-4fba-4ac7-8977-3755090b3ab2",
     "taskName": "Members on Buyer Seller Advisory page",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -1033,11 +1033,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.805Z",
+    "updatedAt": "2026-09-13T05:22:30.805Z"
   },
   {
-    "id": "2bb00fb4-2a8f-41c9-9b5a-a1cfe4a73fc1",
+    "id": "634b0763-afa8-4af4-9605-f1553e80eff9",
     "taskName": "Walter O’Connell profile link issue",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -1050,11 +1050,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.682Z",
-    "updatedAt": "2026-09-11T06:50:25.682Z"
+    "createdAt": "2026-09-13T05:22:30.805Z",
+    "updatedAt": "2026-09-13T05:22:30.805Z"
   },
   {
-    "id": "ba1a471a-b354-401d-8048-0bcbb9808029",
+    "id": "45623c90-f002-494e-a744-067ba85d6bce",
     "taskName": "Members Brand Service Page",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -1067,11 +1067,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "1c1e2384-c2bd-490b-8ff5-a86465c6d48b",
+    "id": "7d29d08c-6bef-40e8-b432-839e17545c7c",
     "taskName": "Form Submission - #2026-02-24T12:16:11-07:00",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -1084,11 +1084,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "2aac26be-ba8c-4488-af5b-36da7bc63db0",
+    "id": "2331f10c-f523-4107-a831-37b421ddeccf",
     "taskName": "Form Submission - #2026-02-24T19:23:04+00:00",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -1101,11 +1101,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "8a21dfa6-3dac-41ae-b8c9-c0c62e109889",
+    "id": "b7d9b1d5-5201-40be-9ab7-eefbb345fb6a",
     "taskName": "Form Submission - #2026-02-24T20:53:34+00:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -1118,11 +1118,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "b9b2b8d2-ffd9-477c-82e0-c65d60918ccd",
+    "id": "3623a590-cf6d-4c1d-bbea-da4454c7120d",
     "taskName": "Pets Data",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -1135,11 +1135,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "06e84f2b-9489-4759-b566-c225d99f2bdd",
+    "id": "5e1be9bc-eb78-42f9-a418-d5732a5a0682",
     "taskName": "Conversion Tracking",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -1152,11 +1152,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "5b864e0b-2ac9-4833-a2b1-357b60bc4a35",
+    "id": "456cf922-cb80-415a-89fb-5cb1c1659e45",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Hotel Fauchere",
     "siteId": null,
@@ -1169,11 +1169,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "070456b6-cc87-4bc6-9ec6-f6ed0e3a9fec",
+    "id": "82ebc9b6-cc9c-4dd8-8582-982115af95d2",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Tom Quick Inn",
     "siteId": null,
@@ -1186,11 +1186,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "05dacad7-d843-454c-a1cd-6ae9a97c529d",
+    "id": "632d14aa-f03e-47a9-a519-8d0d6997bdcb",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Arrive Wilmington (Palisociety)",
     "siteId": null,
@@ -1203,11 +1203,11 @@
     "accountManager": "TJ Wilson",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "9e3d32f7-801d-4d1f-9caa-fbfa7407489d",
+    "id": "ecf4587f-ba1d-4562-a245-8e7eb70dfa44",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Arrive Memphis (Palisociety)",
     "siteId": null,
@@ -1220,11 +1220,11 @@
     "accountManager": "TJ Wilson",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "660ac125-473d-4532-848c-66b9be587096",
+    "id": "a3ab902f-ad5d-4d59-a97a-ee81b43feaa7",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Arrive Palm Springs (Palisociety)",
     "siteId": null,
@@ -1237,11 +1237,11 @@
     "accountManager": "TJ Wilson",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.683Z",
-    "updatedAt": "2026-09-11T06:50:25.683Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "1d20234e-aeca-46f8-b969-de15d71f4022",
+    "id": "dde4623c-a6b4-4937-ae93-7acaae54f218",
     "taskName": "Vanity website tracking ID for Morrison House",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -1254,11 +1254,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "555d22e1-c683-41b8-8927-3bbb63622c25",
+    "id": "26236ef5-d3ea-4c59-a78d-69280c9055d5",
     "taskName": "Form Submission - #2026-02-25T16:33:04+00:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -1271,11 +1271,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "1fd788c9-eff0-4fd7-938f-efe67d612694",
+    "id": "784d9cb8-5ef9-4326-80a7-cd2afa5483f9",
     "taskName": "Form Submission - #2026-02-25T17:08:34+00:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -1288,11 +1288,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.806Z",
+    "updatedAt": "2026-09-13T05:22:30.806Z"
   },
   {
-    "id": "b335bef2-bffc-4ac5-8f94-e1fcb9faa8b6",
+    "id": "e8219183-3938-4380-b799-a4f529fc5e5a",
     "taskName": "Form Submission - #2026-02-24T12:16:11-07:00",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -1305,11 +1305,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "a4bc3823-5bef-4a2f-a24e-8aa85348fe9f",
+    "id": "99b5aad4-2ee0-45ae-af13-0cfa72123c85",
     "taskName": "Form Submission - #2026-02-25T17:52:46+00:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -1322,11 +1322,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "69b3edcd-1aad-4bf1-bf76-2f414a36742e",
+    "id": "cfca234c-33fe-4552-8011-5d38495f4b2f",
     "taskName": "Website Issues - Form and Text",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -1339,11 +1339,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "ad8deb5d-30fb-4faf-98a5-d1abbaddc791",
+    "id": "fbaa91af-c1dc-4168-a9a1-9fa18304c244",
     "taskName": "Form Submission - #2026-02-26T14:14:00-07:00",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -1356,11 +1356,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "8c937891-5895-4424-b434-aae5b0ae3d98",
+    "id": "00421f26-f53c-455d-b1dc-3bb969676790",
     "taskName": "Form Submission - #2026-02-26T21:51:26+00:00",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -1373,11 +1373,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "c6db7b2a-ecb9-4678-af0a-51c8f4bbad4f",
+    "id": "6f5e9e0c-0063-404a-b93b-64dab6bf4faa",
     "taskName": "Audit Website Caching/Speed & Optimization",
     "siteUrl": "Governor's Inn ND",
     "siteId": null,
@@ -1390,11 +1390,11 @@
     "accountManager": "Mohammed Razib",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "0577e2f6-f555-480b-b40c-aea55bbc2dad",
+    "id": "63537de9-f4e1-47a3-8ec1-1524e0b85a47",
     "taskName": "The Guild Hotel Website",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -1407,11 +1407,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "a53acaf2-e11c-41e8-ab5a-b7050086abe5",
+    "id": "47294528-968e-4303-81ed-f6d7cd2be39e",
     "taskName": "The Guild Hotel Website",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -1424,11 +1424,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "42e700c5-23d8-4b76-ae39-2bf934a3fe8a",
+    "id": "de1789a0-0670-4c25-846c-f8a25d52820a",
     "taskName": "Form Submission - #2026-02-25T13:38:31+00:00",
     "siteUrl": "New Castle",
     "siteId": null,
@@ -1441,11 +1441,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "31990912-7aa8-47d1-8f4d-b78977bc6781",
+    "id": "6f392255-068f-4e51-8192-a4e0ead5c513",
     "taskName": "Add Spring Offer",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -1458,11 +1458,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.684Z",
-    "updatedAt": "2026-09-11T06:50:25.684Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "f4f09d44-ee04-4a78-866c-6f80341c2386",
+    "id": "70d512c3-95d8-46f1-afa1-2679ca5efcf2",
     "taskName": "Remove \"Aristides\"",
     "siteUrl": "Wilson Arkansas",
     "siteId": null,
@@ -1475,11 +1475,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "24877db9-71fa-4295-a0ad-64f495950fdd",
+    "id": "8e103ee8-a055-4a38-8417-34de6080c0b1",
     "taskName": "Form Submission - #2026-02-26T21:51:26+00:00",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -1492,11 +1492,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.807Z",
+    "updatedAt": "2026-09-13T05:22:30.807Z"
   },
   {
-    "id": "9787b33f-7a68-4e55-8761-bd9f921848d2",
+    "id": "e183a63e-224d-4f55-8f62-c8b8cb169b2a",
     "taskName": "Add Group and Meetings Tab under the Offers Menu",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -1509,11 +1509,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "a35b192b-d84b-46de-88a9-92983d2506bc",
+    "id": "80dcdca2-3539-4ec5-8ebb-277446bf8f7e",
     "taskName": "Find & Fix Orphaned Pages",
     "siteUrl": "Sopranarooftop Restaurant",
     "siteId": null,
@@ -1526,11 +1526,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "0795b7f3-6b21-4665-a78c-2e87d9786bec",
+    "id": "41edc986-6b78-4611-ab2b-4d1813114430",
     "taskName": "Find & Fix Crawl Errors",
     "siteUrl": "Montford Restaurant",
     "siteId": null,
@@ -1543,11 +1543,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "cfda19e6-06c1-4dab-b45c-c3b0048e71ed",
+    "id": "1d4dd423-7d1c-438e-b9af-2005cbacffa0",
     "taskName": "Form Submission - #2026-02-25T17:08:34+00:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -1560,11 +1560,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "a25c79d8-49e0-4765-a72d-ce0216581237",
+    "id": "09f979fe-1a9e-4677-86cd-2cad5f23a243",
     "taskName": "Guild Hotel March Updates and feedbacks 1",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -1577,11 +1577,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "4eaad9ce-b142-47d6-a7f7-3f54300ede09",
+    "id": "365a9b1e-7787-4b08-b202-f77f290d9be0",
     "taskName": "Error Page",
     "siteUrl": "Cogwheel Marketing",
     "siteId": null,
@@ -1594,11 +1594,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "d0f38802-bae4-4c47-94fc-2ede28ded7c7",
+    "id": "8d94531a-88f9-4e4d-90fe-2f827f54e323",
     "taskName": "Form Submission - #2026-03-02T21:55:01+00:00",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -1611,11 +1611,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.808Z",
+    "updatedAt": "2026-09-13T05:22:30.808Z"
   },
   {
-    "id": "9b7fa255-dcc2-41f6-9696-b4929030cb2f",
+    "id": "54b44d34-8a62-4be5-bf7e-3eb5bc88ef62",
     "taskName": "Update Contact number",
     "siteUrl": "Atlantic Hotel Group",
     "siteId": null,
@@ -1628,11 +1628,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.809Z",
+    "updatedAt": "2026-09-13T05:22:30.809Z"
   },
   {
-    "id": "7824b8d0-d6f2-46ec-a775-db1e22dd5d44",
+    "id": "d8d09f0c-84c8-436f-a998-f61330fab90e",
     "taskName": "Copyright Update on Dr Bill Carroll",
     "siteUrl": "Dr Bill Carroll",
     "siteId": null,
@@ -1645,11 +1645,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.809Z",
+    "updatedAt": "2026-09-13T05:22:30.809Z"
   },
   {
-    "id": "0dd8b221-ac32-46fd-acd9-4ba481cabaab",
+    "id": "cd4ab6bb-b7c3-43b2-96be-f0f1d2671970",
     "taskName": "Form Submission - #2026-02-26T14:14:00-07:00",
     "siteUrl": "Maison Metier",
     "siteId": null,
@@ -1662,11 +1662,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.809Z",
+    "updatedAt": "2026-09-13T05:22:30.809Z"
   },
   {
-    "id": "af45700b-dfef-4213-9293-e5e64d1aa102",
+    "id": "867470d5-080f-482f-b7db-1af811f0fe09",
     "taskName": "Audit Website Caching/Speed & Optimization",
     "siteUrl": "Tom Quick INN",
     "siteId": null,
@@ -1679,11 +1679,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.685Z",
-    "updatedAt": "2026-09-11T06:50:25.685Z"
+    "createdAt": "2026-09-13T05:22:30.809Z",
+    "updatedAt": "2026-09-13T05:22:30.809Z"
   },
   {
-    "id": "90adb63c-23e1-4789-8e5d-37e567283338",
+    "id": "2f566317-24e5-414a-82ac-d15eb09f43e8",
     "taskName": "Hotel de la Poste Vanity Website Tracking ID",
     "siteUrl": "Hotel Dela Poste",
     "siteId": null,
@@ -1696,11 +1696,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "1115f423-672c-430d-a26b-4f7614c6493e",
+    "id": "bbdeda9e-6afe-4d02-bc59-fd15806a5f45",
     "taskName": "Hotel Perla Vanity Website Tracking ID",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -1713,11 +1713,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "fb080d33-9395-45f0-a916-16de5e76dacd",
+    "id": "e78e9254-bdaa-4f12-a0a3-a1fe10a271b4",
     "taskName": "Audit Website Caching/Speed & Optimization",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -1730,11 +1730,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "f53019ef-8214-499a-bf5a-feb658af31a2",
+    "id": "519cfa03-b8c1-4c60-a14d-236e6758a75f",
     "taskName": "Form Submission - #2026-03-09T23:31:14+00:00",
     "siteUrl": "Upside West village",
     "siteId": null,
@@ -1747,11 +1747,11 @@
     "accountManager": "None",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "a73a33a1-e9bd-49e4-ab53-6967a50eff6a",
+    "id": "02d0d1ed-6b1e-45ea-beb0-2d2a706bd9ae",
     "taskName": "Form Submission - #2026-03-09T23:29:54+00:00",
     "siteUrl": "Free Ride up town",
     "siteId": null,
@@ -1764,11 +1764,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "ed28b9e4-b5d3-4605-a711-7088def1e3de",
+    "id": "cf3f7d0f-7594-4173-9c17-68c0c5e45d85",
     "taskName": "New Dinner/Cocktail Menu",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -1781,11 +1781,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "74c9ccf0-3043-4ec4-ae8a-da6b7637850b",
+    "id": "fb0d55a2-2d17-4c20-8e08-43b6530f711d",
     "taskName": "Granger Hotel Photoshoot FAQ Change in Granger and Guild",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -1798,11 +1798,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "3ce9a4d5-df50-4c8d-8307-db9db4ac5773",
+    "id": "19770c80-67b3-4c67-a058-f58f6fc17480",
     "taskName": "Granger Hotel Photoshoot FAQ Change in Granger and Guild",
     "siteUrl": "Granger Hotel",
     "siteId": null,
@@ -1815,11 +1815,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "f82e2659-9649-41b3-bb09-c0d6f4b14969",
+    "id": "5da45566-c636-4bd0-b714-54fe9875db2b",
     "taskName": "Updated Solana Coffee Menu Granger Website",
     "siteUrl": "Granger Hotel",
     "siteId": null,
@@ -1832,11 +1832,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "9b53e8af-a4e1-46b7-91c3-ec635b76407e",
+    "id": "9c28f1a1-1332-4c42-9f3a-89ef447c9b9c",
     "taskName": "Change Header Navigation Menu Suggestions",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -1849,11 +1849,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "8c56f890-952d-4fe3-ad38-388a06428fa2",
+    "id": "6511e3e9-8cfb-419d-a449-1dcd9eb48ad8",
     "taskName": "Update Scheduling Link",
     "siteUrl": "Cogwheel Marketing",
     "siteId": null,
@@ -1866,11 +1866,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.812Z",
+    "updatedAt": "2026-09-13T05:22:30.812Z"
   },
   {
-    "id": "7fbacb4d-8828-4fb3-9311-2e3aa794501f",
+    "id": "ec905983-677a-461a-9bfe-185a96a3dc77",
     "taskName": "Home Page Offers",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -1883,11 +1883,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "7f7274b5-2b4a-4261-9906-38571d76decb",
+    "id": "c289a239-5c9f-4422-8c2b-fe257ddbf05a",
     "taskName": "Cookie Consent",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -1900,11 +1900,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.686Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "7f16fce1-acc0-43ac-b87d-f9724705a659",
+    "id": "68f820e2-14cb-49ed-ae6e-de3afafe0c13",
     "taskName": "Video Updates on DR Bill Carroll",
     "siteUrl": "Dr Bill Carroll",
     "siteId": null,
@@ -1917,11 +1917,11 @@
     "accountManager": "Stephine",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.686Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "58dfa005-2c25-41a5-a2a2-fa2f843d91ae",
+    "id": "b61392f9-f65e-4196-bc68-3eaebd2cb191",
     "taskName": "Form Submission - #2026-03-09T23:29:54+00:00",
     "siteUrl": "Free Ride up town",
     "siteId": null,
@@ -1934,11 +1934,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "33cb47ff-aae6-4f34-8bb9-a48fa50a644e",
+    "id": "496c03ef-a5f6-4e15-ae6a-f796d2a2aefa",
     "taskName": "Search Console Audit & Fix",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -1951,11 +1951,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "eb097006-c15c-44ba-b3d6-4ac8b429a5b1",
+    "id": "8d47aa61-95c8-4a31-b9c5-e3c67c7d3727",
     "taskName": "Breakfast & Drinks Menu Updates on Free Ride Up Town",
     "siteUrl": "Free Ride up town",
     "siteId": null,
@@ -1968,11 +1968,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "9fb27539-3fd0-4a87-8f95-36ef1b14face",
+    "id": "0f117805-39d9-4c19-8519-389484df6c83",
     "taskName": "Update Tracking Code Per Hilton",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -1985,11 +1985,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "6c361eb9-a716-49d5-bb15-52302163b07a",
+    "id": "cd8b06a2-3cba-468f-9409-e8d6ee777788",
     "taskName": "Quote Request-Add Gallery Page",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -2002,11 +2002,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "293d8dd6-24dc-4b04-a1d8-62e234de7fc9",
+    "id": "ccf48a27-8b05-4e5f-9da0-080934d29d05",
     "taskName": "Photoshoot FAQ Change Guild and Granger",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -2019,11 +2019,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "f3dc8f57-c4a2-4bd0-8e95-8602c857ab34",
+    "id": "bc06fe57-2bb0-4526-bc92-6f771c0586e3",
     "taskName": "Grant Client CMS Access",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -2036,11 +2036,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.813Z",
+    "updatedAt": "2026-09-13T05:22:30.813Z"
   },
   {
-    "id": "ef11de9a-2372-4b2d-aa77-fd1eb349a301",
+    "id": "37e79d06-ea40-470a-aeed-b90ef26f1e94",
     "taskName": "Form Submission - #2026-03-23T12:48:14-06:00",
     "siteUrl": "Maison Metier",
     "siteId": null,
@@ -2053,11 +2053,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "ea980293-1aac-468d-a2e6-0cd6560f5c3a",
+    "id": "28563956-1551-48de-ba65-2852649b2acf",
     "taskName": "Form Submission - #2026-03-19T18:48:56+00:00",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2070,11 +2070,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "d8e024d3-19ed-42c2-9a96-e88187987ad0",
+    "id": "493e6000-0fa5-4a9f-a025-c21fabf6bcc8",
     "taskName": "Local Area Page Update",
     "siteUrl": "Winslow",
     "siteId": null,
@@ -2087,11 +2087,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "c581efa9-abe0-4e5b-a84c-7e5a4adf6add",
+    "id": "b390028d-f33a-491d-a79f-854cf136727f",
     "taskName": "Breakfast & Drinks Menu Updates on Free Ride Up Town",
     "siteUrl": "Free Ride up town",
     "siteId": null,
@@ -2104,11 +2104,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "eadb6734-eafe-4136-b120-4f6c1bbb8133",
+    "id": "e9831d30-1e8e-49ee-b405-4186871cb496",
     "taskName": "Update Contact Information on Accessibility Page",
     "siteUrl": "Winslow",
     "siteId": null,
@@ -2121,11 +2121,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "5f3f97e1-fd36-483a-a50d-5a79bbb51a0e",
+    "id": "bc5d187e-4db7-47cb-8671-635451d5e6b9",
     "taskName": "Guild Hotel Zuma page finalization",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -2138,11 +2138,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "2c6e1fb9-7b4d-43b0-8ebf-3351e3006cd7",
+    "id": "611a00bb-fe87-4c73-9f26-b297858d9a84",
     "taskName": "Instagram Feed Widget- Morrison House",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -2155,11 +2155,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "1236433b-ce41-4db7-a6a1-2ea72443c475",
+    "id": "a6cd7d56-7d53-4477-aff4-553504b27458",
     "taskName": "Remove Winter Getaway",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -2172,11 +2172,11 @@
     "accountManager": " Yolanda",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.687Z",
-    "updatedAt": "2026-09-11T06:50:25.687Z"
+    "createdAt": "2026-09-13T05:22:30.814Z",
+    "updatedAt": "2026-09-13T05:22:30.814Z"
   },
   {
-    "id": "ecb37ee9-0794-4e79-bafa-c6b45b24884d",
+    "id": "9b913a46-a5d7-4847-b88a-896e347ff138",
     "taskName": "Remove Stay & Play Golf Package",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -2189,11 +2189,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "030ae383-987d-4ece-a556-cfd1da854915",
+    "id": "b1bb2755-a8cb-4beb-b70f-725ffc39d758",
     "taskName": "Press Page Addition",
     "siteUrl": "Bentley Legacy",
     "siteId": null,
@@ -2206,11 +2206,11 @@
     "accountManager": "Madison",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "7eed8522-8132-4556-baa6-a226665d3aff",
+    "id": "d8ac37f8-08c0-4c77-91fb-ca95cf1fcd1f",
     "taskName": "Update F&B FAQ Structure",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -2223,11 +2223,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "80cbfa9b-1982-4c80-a516-83842f57415b",
+    "id": "47e2b9cb-2d77-44fe-ac12-6476fb88fd1d",
     "taskName": "Form Submission - #2026-03-26T09:44:38-06:00",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -2240,11 +2240,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "8db60fa6-37bf-4561-b9be-74873b13ad92",
+    "id": "d6f2fcdd-e963-44ec-a45c-7fe60276400a",
     "taskName": "Form Submission - #2026-03-24T14:54:24-06:00",
     "siteUrl": "The Barnett",
     "siteId": null,
@@ -2257,11 +2257,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "c92e2156-237d-4239-907f-8ae4c6a7ebe6",
+    "id": "de26fd42-d08d-4e38-b2e7-8149cd607b03",
     "taskName": "LLM Txt Generation / Update",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2274,11 +2274,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "f139c596-da7e-4f2b-bcb1-d4e1e54f9079",
+    "id": "ce3e5c95-8b3d-48f9-9836-202bc4957126",
     "taskName": "Form Submission - #2026-03-30T14:40:07-06:00",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -2291,11 +2291,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "0ddb3eea-f78a-4e80-b5b2-b4de85259172",
+    "id": "60044318-9ea1-48b0-8044-78cf90b89cac",
     "taskName": "Update Images",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2308,11 +2308,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "789c0b80-9589-4b7c-8df9-eab4b19f2877",
+    "id": "0a932711-2c1a-43b4-b0c8-71203933bcdc",
     "taskName": "Chatham Lodging 2FA Acess",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -2325,11 +2325,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "64773994-a8ec-4372-9edd-50087282a668",
+    "id": "2564f479-3284-4cca-8377-8abfcd9ddba2",
     "taskName": "Content Update",
     "siteUrl": "Chatham Lodging Trust",
     "siteId": null,
@@ -2342,11 +2342,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "d45e7600-8508-48a7-bb6f-f12f014af1d9",
+    "id": "0f422c00-8e1e-4371-81ae-89ae64974ab6",
     "taskName": "April Zuma Page New Feedbacks",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -2359,11 +2359,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "fb882332-d7b0-4077-80a8-1a361c1222ca",
+    "id": "bafb70ae-29df-4ad8-a2b4-fe64447d805b",
     "taskName": "Form Submission - #2026-04-02T12:30:09-06:00",
     "siteUrl": "Milford Hospitality Group",
     "siteId": null,
@@ -2376,11 +2376,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.815Z",
+    "updatedAt": "2026-09-13T05:22:30.815Z"
   },
   {
-    "id": "ab32a571-a90e-4eab-b96b-990c222d98dd",
+    "id": "2f2f706f-edfd-40b7-b5a6-c01038e1c409",
     "taskName": "ADA Compliance Report Fixes",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -2393,11 +2393,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.816Z",
+    "updatedAt": "2026-09-13T05:22:30.816Z"
   },
   {
-    "id": "0b8520b6-528b-408f-897b-7c91256e212a",
+    "id": "025e505d-f47b-4088-9d51-3a9f763e93e1",
     "taskName": "Raphael News & Press Page updates April",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2410,11 +2410,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.816Z",
+    "updatedAt": "2026-09-13T05:22:30.816Z"
   },
   {
-    "id": "5d4df4df-0b1e-4969-8b61-6048a5acf7cb",
+    "id": "ce15467d-98ca-4e68-a120-c96707d39c02",
     "taskName": "Add Content Object - The Raphael",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2427,11 +2427,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.816Z",
+    "updatedAt": "2026-09-13T05:22:30.816Z"
   },
   {
-    "id": "ed77bb85-d73e-441c-95cd-8e4e3f9b4428",
+    "id": "9aafe700-ca45-4238-82e8-fc13824ac9fe",
     "taskName": "Create Inter-Page Links - The Raphael",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2444,11 +2444,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.817Z",
+    "updatedAt": "2026-09-13T05:22:30.817Z"
   },
   {
-    "id": "413dfce8-a6e2-4038-aee5-16221f5c98d7",
+    "id": "42f5dd01-b177-4257-b8f2-c6c98559d253",
     "taskName": "Implement New Meta Titles/Descriptions - The Raphael",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2461,11 +2461,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.688Z",
-    "updatedAt": "2026-09-11T06:50:25.688Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "63cae185-c22f-4c8f-ba43-3287f332b2d8",
+    "id": "e99531ed-0cea-457c-80f3-facb66ec2a8a",
     "taskName": "Implement SEO Content Audit Updates - The Raphael",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2478,11 +2478,11 @@
     "accountManager": "Sienna",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "71e594bb-3afe-44ff-9a2a-b9bf68584ff7",
+    "id": "7cf47deb-17f4-46c3-a0b1-dc382a26d3b1",
     "taskName": "Audit Website Caching/Speed & Optimization",
     "siteUrl": "Montford Restaurant",
     "siteId": null,
@@ -2495,11 +2495,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "c23e2fed-1dde-4461-b40e-7ba97031539a",
+    "id": "f4d76907-e00b-4f76-846e-3c14e73202f8",
     "taskName": "Guild Hotel Zuma page finalization",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -2512,11 +2512,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "cccb87bf-efab-4066-8878-2a8618e999da",
+    "id": "6bb99a38-c073-431b-996d-22c081b954ba",
     "taskName": "April Zuma Page New Feedbacks",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -2529,11 +2529,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "82b104e3-63dd-4bc2-b1d7-029be098e7c0",
+    "id": "4e54eea6-cd20-4b42-a36f-e60fbf985e21",
     "taskName": "Local Area Page Update",
     "siteUrl": "Winslow",
     "siteId": null,
@@ -2546,11 +2546,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "138941cb-8a14-4424-bebd-10e0b8c0237f",
+    "id": "fbb9c469-6876-4f4f-91b9-d12fc29e21ac",
     "taskName": "Raphael Hotel Menu Updates",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2563,11 +2563,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "525fc3b2-ac03-4066-92b7-e6f7733bd2ee",
+    "id": "36fc4c58-2e0b-45f3-b93e-f8e85ddf0a3f",
     "taskName": "SEMrush Issue",
     "siteUrl": "Hotel Fauchere",
     "siteId": null,
@@ -2580,11 +2580,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "2208a4e1-4e2f-4c91-959f-0e138362cae1",
+    "id": "261b454f-fc4a-4168-8286-10ea8a498f29",
     "taskName": "Title/Meta Description Optimization",
     "siteUrl": "Hotel Fauchere",
     "siteId": null,
@@ -2597,11 +2597,11 @@
     "accountManager": "Jacob",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "8db106a0-75f2-4339-8e9c-ef94f8f34977",
+    "id": "bb830493-0109-4aa9-a904-2efa718b1b6e",
     "taskName": "Image Optimization for SEO",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2614,11 +2614,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "754fdad8-a918-4903-9022-8c4bd26b1e19",
+    "id": "40af3269-1eef-45a4-8f28-44b5b19a866e",
     "taskName": "Service Page Formatting is Messed Up",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2631,11 +2631,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "1f59c6c8-a88f-40d2-9096-cd9405a25921",
+    "id": "6baa51cf-e68d-4318-a480-7bf742c3ed4c",
     "taskName": "Create \"categories\" on Offers Page",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -2648,11 +2648,11 @@
     "accountManager": "Sonya",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "8af560b0-098a-406c-adc1-d4d7dc393cef",
+    "id": "e54f0008-67ec-417b-9891-46f2cb0b6808",
     "taskName": "Update Homepage Copy",
     "siteUrl": "Maison Metier",
     "siteId": null,
@@ -2665,11 +2665,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "1dd83eea-4dc6-479e-8fb0-9354c90ef847",
+    "id": "c63bd84f-ed55-474e-9eac-8c2e9de996f5",
     "taskName": "Add FAQ to Sea & Sky Page",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2682,11 +2682,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "c343afa2-1e64-4441-b810-823b75915038",
+    "id": "5795d03f-3c2e-419d-a489-2b6d65f5fbf4",
     "taskName": "SEMrush Issue",
     "siteUrl": "Hotel Fauchere",
     "siteId": null,
@@ -2699,11 +2699,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.818Z",
+    "updatedAt": "2026-09-13T05:22:30.818Z"
   },
   {
-    "id": "796da327-6f5f-4ce0-ad8a-fcfe34ce9048",
+    "id": "316ff168-6a0c-4de8-a53a-835fe99e4ab1",
     "taskName": "URL Slug Changes?",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2716,11 +2716,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.819Z",
+    "updatedAt": "2026-09-13T05:22:30.819Z"
   },
   {
-    "id": "8dcea614-d9c5-4f3a-9ccc-9bcf4f8c6c6a",
+    "id": "43b3f284-3be5-459d-ad3f-c53c981f7eac",
     "taskName": "2026 Legacy Members",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2733,11 +2733,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.689Z",
-    "updatedAt": "2026-09-11T06:50:25.689Z"
+    "createdAt": "2026-09-13T05:22:30.819Z",
+    "updatedAt": "2026-09-13T05:22:30.819Z"
   },
   {
-    "id": "60f68dd8-87f1-45ea-9c7e-bc34c2733c9e",
+    "id": "2b33f7d2-67be-4d27-87cc-963cc87dc926",
     "taskName": "Log files for CHC",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2750,11 +2750,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.819Z",
+    "updatedAt": "2026-09-13T05:22:30.819Z"
   },
   {
-    "id": "af02e1d2-85a3-49ff-80f6-9995da1bfe70",
+    "id": "4d4d25fa-caf1-4e95-9da1-9f9a9b63a09a",
     "taskName": "Schema, Sitemap & Navigation optimization",
     "siteUrl": "Montford Restaurant",
     "siteId": null,
@@ -2767,11 +2767,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "978a07c7-61f5-4f96-8231-8b4d8f813bc9",
+    "id": "ca1c41a2-08b1-4eb6-85c7-2aa51e729b10",
     "taskName": "Website Updates",
     "siteUrl": "Senza Hotel",
     "siteId": null,
@@ -2784,11 +2784,11 @@
     "accountManager": "Sonya",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "c91c3ac5-8526-4e65-a587-3b0dfc833bc1",
+    "id": "02357c87-f875-419f-ba4a-4e2706ef5ea4",
     "taskName": "Service Pages Assignments",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2801,11 +2801,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "9f76cb76-a748-4f44-9f7f-d6b4e7269bbd",
+    "id": "ec9eccb5-9cf2-42c8-85af-ca4dd60cb2b9",
     "taskName": "Raphael Hotel Restaurant Hours update",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2818,11 +2818,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "d098c87c-3b47-4665-9293-f0f56f22447e",
+    "id": "587bd047-41d3-4d1d-920f-1cb6df7c9d70",
     "taskName": "Upload Clear SEO Optimized Image",
     "siteUrl": "West Coast BBQ",
     "siteId": null,
@@ -2835,11 +2835,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "9953c360-9b5f-4a8a-86c7-5e8e00584a52",
+    "id": "6c388ba5-4838-4658-84c8-c8e1d7e66a22",
     "taskName": "Credentials to edit site",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -2852,11 +2852,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "dd28c798-210b-4d2e-99d4-4f73233ebe3f",
+    "id": "e6068dfc-e291-4235-a26f-14e1855424f7",
     "taskName": "Changes are not displaying",
     "siteUrl": "Cayuga Hospitality",
     "siteId": null,
@@ -2869,11 +2869,11 @@
     "accountManager": "Yana",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "16fd3a35-fa4b-48c2-8dcb-ab59da1ca17e",
+    "id": "84b7c0b4-1333-46fe-8ccf-65dea69b3465",
     "taskName": "Image Optimization",
     "siteUrl": "Winslow Hotels",
     "siteId": null,
@@ -2886,11 +2886,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "59542588-2141-476e-890c-ef495808a2d8",
+    "id": "08a14e40-be98-4be1-8fc9-f111f89830ed",
     "taskName": "Form Submission - #2026-04-23T13:36:28-06:00",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -2903,11 +2903,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "8803457d-0d94-460f-9e48-b1e91cb50763",
+    "id": "27558f7b-1708-4cf5-9600-28028c6c40d9",
     "taskName": "Add and Remove Content on Activities Page",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -2920,11 +2920,11 @@
     "accountManager": "Yolanda Tates",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "3d7a069a-3a4d-47c2-b751-2b8621fba2bc",
+    "id": "16842cf6-0499-45e1-a2a5-6701ae8db89d",
     "taskName": "Form Submission - #2026-04-22T16:16:06-06:00",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2937,11 +2937,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "a98f6379-7139-40a0-9727-870bc099ed77",
+    "id": "be555180-4c1c-4b3f-9c31-dae480e0a076",
     "taskName": "Form Submission - #2026-04-22T16:13:02-06:00",
     "siteUrl": "Hotel La Jolla",
     "siteId": null,
@@ -2954,11 +2954,11 @@
     "accountManager": "Holly",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "b89e3f42-498d-49ed-bfac-f338891db9a5",
+    "id": "4f2a9a85-d6a0-4f86-b2ba-62e3ebd68e77",
     "taskName": "Remove AA Meeting Copy from the website",
     "siteUrl": "Hotel Fauchere",
     "siteId": null,
@@ -2971,11 +2971,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "9c3d5603-741c-44ff-8f35-19240c3fe072",
+    "id": "a8a3283e-90f6-46ea-abb1-166fab5ee285",
     "taskName": "Interpage Linking & Duplicate Content Audit",
     "siteUrl": "Morrison House",
     "siteId": null,
@@ -2988,11 +2988,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.820Z",
+    "updatedAt": "2026-09-13T05:22:30.820Z"
   },
   {
-    "id": "bcbfe67a-78f8-4b1d-a395-e9f56153ff19",
+    "id": "03412441-bd62-4880-a6ba-f61504d6facd",
     "taskName": "Upside Website Menu Error",
     "siteUrl": "Upside West village",
     "siteId": null,
@@ -3005,11 +3005,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "601ad171-535d-4fca-9619-9ddb5116f43c",
+    "id": "f69e2fec-7ce7-4a23-8acc-a1fa877c52d0",
     "taskName": "Form Submission - #2026-04-17T08:57:08-06:00",
     "siteUrl": "HQ Dallas Rooftop",
     "siteId": null,
@@ -3022,11 +3022,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "9b82c7b8-00b3-472b-9ef2-153760c92091",
+    "id": "14e1f3f8-ab1d-4290-9560-3182bd84f973",
     "taskName": "Menu Live On Raphael Hotel",
     "siteUrl": "Raphael Hotel",
     "siteId": null,
@@ -3039,11 +3039,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "0d9d085c-6a7c-460e-8225-e740488e5824",
+    "id": "9c420951-f6dc-4583-8e13-1d5dae7bc2c8",
     "taskName": "Add and Remove Content on Golf & Activities Page",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -3056,11 +3056,11 @@
     "accountManager": "Yolanda Tates",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "2f33fa5d-f4f5-44fb-a4d1-dfb379b44873",
+    "id": "aba2d4fc-5c5c-4b3b-9c5b-3e5b93b1efac",
     "taskName": "Grant Client Access to Wordpress Site",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -3073,11 +3073,11 @@
     "accountManager": "Yolanda Tates",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "354cd357-bb06-4e15-9daa-c27058314fc2",
+    "id": "62b1fcdc-4c9a-4636-9e44-2cf4ca319d3a",
     "taskName": "Add Summer Escape Offer to Website",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -3090,11 +3090,11 @@
     "accountManager": "Yolanda Tates",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "abc1aef0-94d2-4afb-b5e0-d945706bcab1",
+    "id": "52ef2b08-ad8c-46d0-bd72-0cb93e165731",
     "taskName": "SEMrush Issue",
     "siteUrl": "Hotel Perla",
     "siteId": null,
@@ -3107,11 +3107,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "7260205e-020a-4105-9ac6-a49879f5bc00",
+    "id": "dabe0e89-0869-437f-8749-7bad01de5e83",
     "taskName": "Please remove peloton bikes on the site",
     "siteUrl": "The Guild Hotel",
     "siteId": null,
@@ -3124,11 +3124,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "940005fb-cef1-433f-bd18-7ccba308abce",
+    "id": "74cf611a-d122-4c09-bf97-2d5be5c9aa10",
     "taskName": "Hotel Sheldon increasing our member discount",
     "siteUrl": "Hotel Sheldon",
     "siteId": null,
@@ -3141,11 +3141,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "34345ff9-493b-4542-95c3-c16fad500c4c",
+    "id": "16cfd85e-427c-4290-bec7-33414ff41cb8",
     "taskName": "Grant Client Admin Access to WordPress Site",
     "siteUrl": "The Louis Hotel",
     "siteId": null,
@@ -3158,11 +3158,11 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   },
   {
-    "id": "6d63392d-88fa-4a1b-b94c-a5b205e8f8c9",
+    "id": "8e4fdef0-4b7f-433d-8828-6be8b5fde0c8",
     "taskName": "Troubleshoot: Dining Page Image & Copy Not Updating on Live Site",
     "siteUrl": "Hotel Teatro",
     "siteId": null,
@@ -3175,7 +3175,7 @@
     "accountManager": "",
     "deadline": "",
     "notes": "",
-    "createdAt": "2026-09-11T06:50:25.690Z",
-    "updatedAt": "2026-09-11T06:50:25.690Z"
+    "createdAt": "2026-09-13T05:22:30.821Z",
+    "updatedAt": "2026-09-13T05:22:30.821Z"
   }
 ]

@@ -1,3 +1,5 @@
+import { resolveColumns, detectHeaderRow } from './tabSchema.js';
+
 /** Strip protocol, "www.", trailing slash, and any path/query so we get just the domain. */
 export function normalizeUrl(url) {
   if (!url) return '';
@@ -66,10 +68,22 @@ export function findMatchingTab(tabTitles, websiteUrl, masterTabName) {
 
 
 /**
- * Find the actual table header row in the master sheet (skipping any top banner/note rows).
+ * Find the actual table header row in the master sheet (skipping any top
+ * banner/note rows).
+ *
+ * A header row is identified by how many maintenance fields it explains (see
+ * tabSchema.js), so a sheet whose columns were renamed or reordered is still
+ * understood. When no row scores well enough we fall back to the original
+ * "does any of the first 10 rows mention Website URL / CMS" scan.
  */
 export function findHeaderRow(rows) {
   if (!rows || rows.length === 0) return { headerRow: [], headerRowIndex: 0 };
+
+  const detected = detectHeaderRow(rows, { profile: 'maintenance', maxScan: 10, minScore: 4 });
+  if (detected.score >= 4) {
+    return { headerRow: detected.headerRow, headerRowIndex: detected.headerRowIndex, profile: detected.profile };
+  }
+
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
     const row = rows[i] || [];
     const hasWebsite = row.some((c) =>
@@ -85,10 +99,10 @@ export function findHeaderRow(rows) {
         .includes("cms"),
     );
     if (hasWebsite || hasCMS) {
-      return { headerRow: row, headerRowIndex: i };
+      return { headerRow: row, headerRowIndex: i, profile: 'maintenance' };
     }
   }
-  return { headerRow: rows[0] || [], headerRowIndex: 0 };
+  return { headerRow: rows[0] || [], headerRowIndex: 0, profile: 'maintenance' };
 }
 
 
@@ -96,88 +110,65 @@ export function findHeaderRow(rows) {
  * Detect column indices dynamically based on header row text.
  * Adapts seamlessly between CW, RM, and any sheet with different column layouts.
  *
- * Optional columns (NOTE, CLICKUP_URL, REPORT_URL, BACKUP_URL) are initialized
- * to -1 (not found) so they never pollute the FIRST_MONTH_COL calculation.
- * FIRST_MONTH_COL is found by scanning for the first actual month name in the header.
+ * Delegates to the shared, profile-driven resolver in tabSchema.js: the header
+ * row decides every index, so inserting a column in the middle of the sheet (a
+ * new "Backup Date", a second contact column, anything) shifts every field
+ * correctly instead of silently mis-mapping them.
+ *
+ * Any column the profile does not recognise is returned in `EXTRAS`
+ * ({ key, label, index, kind }) and every month column in `MONTHS`, so the
+ * dashboard, the DB import and the chatbot can carry new columns as data.
+ *
+ * Optional columns (NOTE, CLICKUP_URL, REPORT_URL, BACKUP_URL) stay -1 when the
+ * sheet has no such column (the RM sheet has none of them) so they never
+ * pollute the FIRST_MONTH_COL calculation.
  */
 export function detectColumns(headerRow) {
-  const MONTH_NAMES = ['january','february','march','april','may','june','july','august','september','october','november','december',
-                       'jan','feb','mar','apr','jun','jul','aug','sep','oct','nov','dec'];
-
-  const cols = {
-    STATUS: 0,        // nearly always col 0 (Active/Inactive)
-    CMS: 1,           // default, updated by scan
-    COMPANY: 2,       // default, updated by scan
-    CONTACT: 3,       // default, updated by scan
-    AM: 4,            // default, updated by scan
-    NOTE: -1,         // optional – not in RM sheet
-    WEBSITE_URL: -1,  // MUST be detected; fallback 6
-    CLICKUP_URL: -1,  // optional
-    REPORT_URL: -1,   // optional – not in RM sheet
-    BACKUP_URL: -1,   // optional – not in RM sheet
-    FIRST_MONTH_COL: 10, // will be overridden by month-name scan
+  const cols = resolveColumns(headerRow, { profile: 'maintenance' });
+  const at = (key, fallback) => {
+    const idx = cols[key];
+    return typeof idx === 'number' && idx >= 0 ? idx : fallback;
   };
 
-  if (!headerRow || headerRow.length === 0) return cols;
+  const out = {
+    // `profile` is informational; STATUS…BACKUP_URL are the canonical indexes.
+    PROFILE: cols.profile,
+    STATUS: at('status', 0),        // column A by convention (Active/Deactive)
+    CMS: at('cms', 1),
+    COMPANY: at('company', 2),
+    CONTACT: at('contact', 3),
+    AM: at('accountManager', 4),
+    NOTE: at('note', -1),
+    WEBSITE_URL: at('websiteUrl', 6),
+    CLICKUP_URL: at('clickupUrl', -1),
+    REPORT_URL: at('reportUrl', -1),
+    BACKUP_URL: at('backupUrl', -1),
+    FIRST_MONTH_COL: -1, // resolved below
+    // Everything else the sheet carries, kept as first-class data.
+    EXTRAS: cols.extras,
+    MONTHS: cols.months,
+    DOMAIN_EXPIRY: at('domainExpiry', -1),
+    BACKUP_DATE: at('backupDate', -1),
+  };
 
-  headerRow.forEach((val, idx) => {
-    const v = String(val ?? '').trim().toLowerCase();
-    if (v.includes('website url') || (v === 'website')) {
-      cols.WEBSITE_URL = idx;
-    } else if (v === 'cms') {
-      cols.CMS = idx;
-    } else if (v === 'company') {
-      cols.COMPANY = idx;
-    } else if (v.includes('contact')) {
-      cols.CONTACT = idx;
-    } else if (v.includes('manager') || v === 'am' || v.includes('a/c')) {
-      cols.AM = idx;
-    } else if (v.includes('clickup')) {
-      cols.CLICKUP_URL = idx;
-    } else if (v.includes('report url') || v.includes('report link')) {
-      cols.REPORT_URL = idx;
-    } else if (v.includes('backup url') || v.includes('backup link')) {
-      cols.BACKUP_URL = idx;
-    } else if (v === 'note' || v === 'notes') {
-      cols.NOTE = idx;
-    }
-  });
-
-  // Fallback for WEBSITE_URL if not explicitly found
-  if (cols.WEBSITE_URL === -1) cols.WEBSITE_URL = 6;
-
-  // PRIMARY: find FIRST_MONTH_COL by scanning header for first month-name cell
-  // This is accurate regardless of how many meta columns exist.
-  let firstMonthFromScan = -1;
-  for (let i = 1; i < headerRow.length; i++) {
-    const v = String(headerRow[i] ?? '').trim().toLowerCase();
-    if (v && MONTH_NAMES.some((m) => v.startsWith(m))) {
-      firstMonthFromScan = i;
-      break;
-    }
-  }
-
-  if (firstMonthFromScan > 0) {
-    cols.FIRST_MONTH_COL = firstMonthFromScan;
+  // PRIMARY: the first actual month-name header decides where months start.
+  const firstMonth = (cols.months || [])[0];
+  if (firstMonth && firstMonth.index > 0) {
+    out.FIRST_MONTH_COL = firstMonth.index;
   } else {
-    // FALLBACK: max of only the explicitly detected cols + 1
+    // FALLBACK: max of only the explicitly detected columns + 1
     const detectedOnly = [
-      cols.STATUS,
-      cols.CMS,
-      cols.COMPANY,
-      cols.CONTACT,
-      cols.AM,
-      cols.WEBSITE_URL,
-      cols.CLICKUP_URL >= 0 ? cols.CLICKUP_URL : null,
-      cols.NOTE >= 0 ? cols.NOTE : null,
-      cols.REPORT_URL >= 0 ? cols.REPORT_URL : null,
-      cols.BACKUP_URL >= 0 ? cols.BACKUP_URL : null,
+      out.STATUS, out.CMS, out.COMPANY, out.CONTACT, out.AM, out.WEBSITE_URL,
+      out.CLICKUP_URL >= 0 ? out.CLICKUP_URL : null,
+      out.NOTE >= 0 ? out.NOTE : null,
+      out.REPORT_URL >= 0 ? out.REPORT_URL : null,
+      out.BACKUP_URL >= 0 ? out.BACKUP_URL : null,
     ].filter((idx) => idx !== null && idx !== undefined && idx >= 0);
     const maxDetected = detectedOnly.length > 0 ? Math.max(...detectedOnly) : 9;
-    cols.FIRST_MONTH_COL = maxDetected + 1;
+    out.FIRST_MONTH_COL = maxDetected + 1;
   }
 
-  return cols;
+  return out;
 }
 
 /**

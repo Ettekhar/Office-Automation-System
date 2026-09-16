@@ -40,6 +40,10 @@ function ensureArray(data) {
   return [];
 }
 
+export function cleanDomainUrl(u) {
+  return (u || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '').trim();
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -104,6 +108,70 @@ export function updateSite(id, updates) {
   const idx = sites.findIndex(s => s.id === id);
   if (idx === -1) throw new Error(`Site not found: ${id}`);
   sites[idx] = { ...sites[idx], ...updates, updatedAt: now() };
+  setSites(sites);
+  return sites[idx];
+}
+
+export function addSite(siteData) {
+  const sites = ensureArray(dbRead('sites'));
+  const rawUrl = (siteData.url || '').trim();
+  if (!rawUrl) throw new Error('Website URL is required');
+
+  const normUrl = rawUrl.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  const existing = sites.find(s => (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '') === normUrl);
+  if (existing) throw new Error(`Site "${rawUrl}" already exists`);
+
+  const statusVal = (siteData.status || '').toLowerCase().includes('deactiv') ? 'Deactive' : 'Active';
+  const newSite = {
+    id: uuid(),
+    url: rawUrl,
+    account: (siteData.account || 'CW').toUpperCase(),
+    status: statusVal,
+    cms: siteData.cms || '',
+    company: siteData.company || siteData.account || 'CW',
+    contact: siteData.contact || '',
+    accountManager: siteData.accountManager || '',
+    note: siteData.note || '',
+    clickupUrl: siteData.clickupUrl || '',
+    reportUrl: siteData.reportUrl || '',
+    backupUrl: siteData.backupUrl || '',
+    latestMonth: siteData.latestMonth || getActiveMonth() || '',
+    latestMonthStatus: siteData.latestMonthStatus || '',
+    monthlyHistory: [],
+    domainExpiry: siteData.domainExpiry || '',
+    daysLeft: siteData.daysLeft || null,
+    assignedUsers: Array.isArray(siteData.assignedUsers) ? siteData.assignedUsers : [],
+    uptimeStatus: 'unknown',
+    lastUptimeCheck: null,
+    createdAt: now(),
+    updatedAt: now(),
+  };
+
+  sites.unshift(newSite);
+  setSites(sites);
+
+  if (newSite.assignedUsers.length) {
+    try { assignUsersToSite(newSite.id, newSite.assignedUsers); } catch {}
+  }
+
+  return newSite;
+}
+
+export function toggleSiteStatus(id, newStatus) {
+  const sites = ensureArray(dbRead('sites'));
+  const idx = sites.findIndex(s => s.id === id);
+  if (idx === -1) throw new Error(`Site not found: ${id}`);
+
+  const current = sites[idx].status || 'Active';
+  const target = newStatus || (current.toLowerCase().includes('deactiv') ? 'Active' : 'Deactive');
+  const statusVal = target.toLowerCase().includes('deactiv') ? 'Deactive' : 'Active';
+
+  sites[idx] = {
+    ...sites[idx],
+    status: statusVal,
+    note: statusVal === 'Deactive' ? 'Deactive' : (sites[idx].note === 'Deactive' ? '' : sites[idx].note),
+    updatedAt: now()
+  };
   setSites(sites);
   return sites[idx];
 }
@@ -226,7 +294,10 @@ export function getDailyReview(filter = {}) {
   const pendingBySite = {};
   for (const pr of pendingRequests) {
     if (pr.siteId) pendingBySite[pr.siteId] = pr;
-    if (pr.siteUrl) pendingBySite[(pr.siteUrl||'').toLowerCase().trim()] = pr;
+    if (pr.siteUrl) {
+      pendingBySite[(pr.siteUrl||'').toLowerCase().trim()] = pr;
+      pendingBySite[cleanDomainUrl(pr.siteUrl)] = pr;
+    }
   }
 
   rows.forEach(r => {
@@ -236,8 +307,10 @@ export function getDailyReview(filter = {}) {
     r.uptimeStatus = s?.uptimeStatus || (r.uptimeRobot && /yes/i.test(r.uptimeRobot) ? 'online' : 'unknown');
     r.domainExpiry = s?.domainExpiry || '';
     r.daysLeft = s?.daysLeft ?? (r.domainExpiry ? calcDaysUntil(r.domainExpiry) : null);
-    const siteKey = s?.id || (r.siteUrl||'').toLowerCase().trim();
-    r.pendingExpiryRequest = pendingBySite[siteKey] || null;
+    const cleanU = cleanDomainUrl(r.siteUrl);
+    r.pendingExpiryRequest = (s?.id ? pendingBySite[s.id] : null) || 
+                             pendingBySite[(r.siteUrl||'').toLowerCase().trim()] || 
+                             (cleanU ? pendingBySite[cleanU] : null) || null;
   });
 
   if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
@@ -383,12 +456,201 @@ export function setDevProjects(data) { dbWrite('dev-projects', data); }
 
 export function updateDevProjectItem(projectId, itemIdx, updates) {
   const projs = dbRead('dev-projects') || [];
-  const pIdx = projs.findIndex(p => p.id === projectId);
+  const pIdx = projs.findIndex(p => p.id === projectId || p.project === projectId);
   if (pIdx === -1) throw new Error(`Project not found: ${projectId}`);
   if (!projs[pIdx].items[itemIdx]) throw new Error(`Item not found: ${itemIdx}`);
   projs[pIdx].items[itemIdx] = { ...projs[pIdx].items[itemIdx], ...updates, updatedAt: now() };
   setDevProjects(projs);
-  return projs[pIdx];
+  return { project: projs[pIdx], item: projs[pIdx].items[itemIdx] };
+}
+
+export function addDevProjectItem(projectId, newItem) {
+  const projs = dbRead('dev-projects') || [];
+  const pIdx = projs.findIndex(p => p.id === projectId || p.project === projectId);
+  if (pIdx === -1) throw new Error(`Project not found: ${projectId}`);
+  const items = projs[pIdx].items || [];
+  const item = {
+    idx: items.length,
+    rowNum: items.length ? Math.max(...items.map(i => i.rowNum || 0)) + 1 : 2,
+    feedbackGroup: newItem.feedbackGroup || 'Feedback 1',
+    url: newItem.url || '',
+    status: newItem.status || 'Pending',
+    devDate: newItem.devDate || '',
+    devNotes: newItem.devNotes || '',
+    feedbackUrl: newItem.feedbackUrl || '',
+    date: newItem.date || new Date().toISOString().slice(0, 10),
+    notes: newItem.notes || '',
+    // Hand-added sheet columns (auto-discovered keys) — kept on the item so a
+    // new column is stored and editable like any built-in field.
+    extra: newItem.extra && typeof newItem.extra === 'object' ? newItem.extra : {},
+    isHeader: false,
+    updatedAt: now(),
+  };
+  items.push(item);
+  projs[pIdx].items = items;
+  projs[pIdx].updatedAt = now();
+  setDevProjects(projs);
+  return { project: projs[pIdx], item };
+}
+
+export function addDevProjectFeedbackRound(projectId, { feedbackGroup, feedbackUrl, date, notes, status, url, devDate, devNotes, extra }) {
+  const projs = dbRead('dev-projects') || [];
+  const pIdx = projs.findIndex(p => p.id === projectId || p.project === projectId);
+  if (pIdx === -1) throw new Error(`Project not found: ${projectId}`);
+  const items = projs[pIdx].items || [];
+  const maxRow = items.length ? Math.max(...items.map(i => i.rowNum || 0)) : 1;
+
+  // Header row item
+  const headerItem = {
+    idx: items.length,
+    rowNum: maxRow + 1,
+    feedbackGroup,
+    url: '',
+    status: 'Header',
+    devDate: '',
+    devNotes: '',
+    feedbackUrl: `${(feedbackGroup || 'Feedback').replace(/\s+/g, '-')} URL`,
+    date: '',
+    notes: '',
+    isHeader: true,
+    updatedAt: now(),
+  };
+  items.push(headerItem);
+
+  // First comment/work item
+  const workItem = {
+    idx: items.length,
+    rowNum: maxRow + 2,
+    feedbackGroup,
+    url: url || '',
+    status: status || 'In Progress',
+    devDate: devDate || '',
+    devNotes: devNotes || '',
+    feedbackUrl: feedbackUrl || '',
+    date: date || new Date().toISOString().slice(0, 10),
+    notes: notes || '',
+    extra: extra && typeof extra === 'object' ? extra : {},
+    isHeader: false,
+    updatedAt: now(),
+  };
+  items.push(workItem);
+
+  projs[pIdx].items = items;
+  projs[pIdx].updatedAt = now();
+  setDevProjects(projs);
+  return { project: projs[pIdx], headerItem, workItem };
+}
+
+export function bulkAddDevProjectUrls(projectId, urls, status = 'todo') {
+  const projs = dbRead('dev-projects') || [];
+  const pIdx = projs.findIndex(p => p.id === projectId || p.project === projectId);
+  if (pIdx === -1) throw new Error(`Project not found: ${projectId}`);
+  const items = projs[pIdx].items || [];
+  let maxRow = items.length ? Math.max(...items.map(i => i.rowNum || 0)) : 1;
+  const added = [];
+
+  urls.forEach(u => {
+    const clean = (u || '').trim();
+    if (!clean) return;
+    maxRow++;
+    const item = {
+      idx: items.length,
+      rowNum: maxRow,
+      feedbackGroup: 'General',
+      url: clean,
+      status: status || 'todo',
+      devDate: '',
+      devNotes: '',
+      feedbackUrl: '',
+      date: new Date().toISOString().slice(0, 10),
+      notes: '',
+      isHeader: false,
+      updatedAt: now(),
+    };
+    items.push(item);
+    added.push(item);
+  });
+
+  projs[pIdx].items = items;
+  projs[pIdx].updatedAt = now();
+  setDevProjects(projs);
+  return { project: projs[pIdx], addedCount: added.length };
+}
+
+export function createDevProject({ projectName, urls = [], feedbackUrl = '', date = '', notes = '', status = 'todo' }) {
+  const projs = dbRead('dev-projects') || [];
+  const cleanName = (projectName || '').trim();
+  if (!cleanName) throw new Error('Project name is required');
+  
+  const existing = projs.find(p => p.project.toLowerCase() === cleanName.toLowerCase());
+  if (existing) throw new Error(`Project "${cleanName}" already exists`);
+
+  const id = Buffer.from(cleanName).toString('base64').replace(/=/g, '');
+  const items = [];
+  let rowNum = 2;
+
+  // Add sitemap URLs
+  urls.forEach(u => {
+    const clean = (u || '').trim();
+    if (!clean) return;
+    items.push({
+      idx: items.length,
+      rowNum: rowNum++,
+      feedbackGroup: 'Feedback 1',
+      url: clean,
+      status: status || 'todo',
+      devDate: '',
+      devNotes: '',
+      feedbackUrl: '',
+      date: '',
+      notes: '',
+      isHeader: false,
+      updatedAt: now(),
+    });
+  });
+
+  // Add Feedback-1 header
+  items.push({
+    idx: items.length,
+    rowNum: rowNum++,
+    feedbackGroup: 'Feedback 1',
+    url: '',
+    status: 'Header',
+    devDate: '',
+    devNotes: '',
+    feedbackUrl: 'Feedback-1 URL',
+    date: '',
+    notes: '',
+    isHeader: true,
+    updatedAt: now(),
+  });
+
+  // Add initial work/feedback row
+  items.push({
+    idx: items.length,
+    rowNum: rowNum++,
+    feedbackGroup: 'Feedback 1',
+    url: '',
+    status: status || 'in_progress',
+    devDate: '',
+    devNotes: '',
+    feedbackUrl: feedbackUrl || '',
+    date: date || new Date().toISOString().slice(0, 10),
+    notes: notes || 'Initial setup and tasks',
+    isHeader: false,
+    updatedAt: now(),
+  });
+
+  const newProj = {
+    id,
+    project: cleanName,
+    items,
+    updatedAt: now(),
+  };
+
+  projs.push(newProj);
+  setDevProjects(projs);
+  return { project: newProj };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -462,7 +724,8 @@ export function createDomainExpiryRequest({ siteId, siteUrl, requestedDate, requ
   if (!requestedDate) throw new Error('requestedDate is required');
   const list = ensureArray(dbRead('domain-expiry-requests'));
   const normUrl = (siteUrl || '').toLowerCase().trim();
-  const existingIdx = list.findIndex(r => r.status === 'pending' && ((siteId && r.siteId === siteId) || (normUrl && r.siteUrl && r.siteUrl.toLowerCase().trim() === normUrl)));
+  const cleanU = cleanDomainUrl(siteUrl);
+  const existingIdx = list.findIndex(r => r.status === 'pending' && ((siteId && r.siteId === siteId) || (cleanU && cleanDomainUrl(r.siteUrl) === cleanU)));
   const reqItem = {
     id: existingIdx !== -1 ? list[existingIdx].id : uuid(),
     siteId: siteId || '',
@@ -488,7 +751,8 @@ export function createDomainExpiryRequest({ siteId, siteUrl, requestedDate, requ
 export function updateSiteDomainExpiryDirect(siteIdOrUrl, newDate) {
   const sites = ensureArray(dbRead('sites'));
   const normKey = (siteIdOrUrl || '').toLowerCase().trim();
-  const sIdx = sites.findIndex(s => s.id === siteIdOrUrl || (s.url && s.url.toLowerCase().trim() === normKey));
+  const cleanKey = cleanDomainUrl(siteIdOrUrl);
+  const sIdx = sites.findIndex(s => s.id === siteIdOrUrl || (s.url && cleanDomainUrl(s.url) === cleanKey));
   if (sIdx === -1) throw new Error(`Site not found: ${siteIdOrUrl}`);
 
   const days = calcDaysUntil(newDate);
@@ -504,7 +768,7 @@ export function updateSiteDomainExpiryDirect(siteIdOrUrl, newDate) {
   const list = ensureArray(dbRead('domain-expiry-requests'));
   let reqsChanged = false;
   list.forEach(r => {
-    if (r.status === 'pending' && (r.siteId === sites[sIdx].id || (r.siteUrl && r.siteUrl.toLowerCase().trim() === (sites[sIdx].url || '').toLowerCase().trim()))) {
+    if (r.status === 'pending' && (r.siteId === sites[sIdx].id || (cleanDomainUrl(r.siteUrl) === cleanDomainUrl(sites[sIdx].url)))) {
       r.status = 'approved';
       r.resolvedAt = now();
       r.resolvedBy = 'admin-direct';
@@ -574,3 +838,472 @@ export function getDbStats() {
     initialised:   isInitialised(),
   };
 }
+
+export function getActiveMonth() {
+  const meta = getMeta();
+  if (meta.activeMonth) return meta.activeMonth;
+  const sites = ensureArray(dbRead('sites'));
+  const firstWithMonth = sites.find(s => s.latestMonth);
+  return firstWithMonth?.latestMonth || 'August';
+}
+
+export function getAllMonths() {
+  const meta = getMeta();
+  const set = new Set();
+  if (Array.isArray(meta.months)) meta.months.forEach(m => set.add(m));
+  const sites = ensureArray(dbRead('sites'));
+  sites.forEach(s => {
+    if (s.latestMonth) set.add(s.latestMonth);
+    (s.monthlyHistory || []).forEach(m => { if (m.month) set.add(m.month); });
+  });
+  if (meta.activeMonth) set.add(meta.activeMonth);
+  return Array.from(set);
+}
+
+export function addNewMonth(monthName) {
+  const cleanMonth = (monthName || '').trim();
+  if (!cleanMonth) throw new Error('Month name is required');
+
+  const meta = getMeta();
+  const months = new Set(Array.isArray(meta.months) ? meta.months : []);
+  months.add(cleanMonth);
+
+  setMeta({
+    activeMonth: cleanMonth,
+    months: Array.from(months),
+    lastMonthAdded: cleanMonth,
+    lastMonthAddedAt: now(),
+  });
+
+  // Update sites
+  const sites = ensureArray(dbRead('sites'));
+  sites.forEach(site => {
+    if (!site.monthlyHistory) site.monthlyHistory = [];
+    const exists = site.monthlyHistory.some(m => (m.month || '').toLowerCase() === cleanMonth.toLowerCase());
+    if (!exists) {
+      site.monthlyHistory.push({ month: cleanMonth, status: '' });
+    }
+    site.latestMonth = cleanMonth;
+    site.latestMonthStatus = '';
+    site.updatedAt = now();
+  });
+  setSites(sites);
+
+  // Reset daily review rows for the new month
+  const dr = ensureArray(dbRead('daily-review'));
+  dr.forEach(r => {
+    r.maintenanceStatus = 'todo';
+    r.maintenanceRaw = 'To Do';
+    r.reportSentStatus = 'no';
+    r.reportSentRaw = 'No';
+    r.updatedAt = now();
+  });
+  setDailyReview(dr);
+
+  return { monthName: cleanMonth, activeMonth: cleanMonth, totalSites: sites.length };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CUSTOM SHEETS (Superadmin-registered external Google Sheets)
+// ═══════════════════════════════════════════════════════════════════════════════
+export function getCustomSheets() {
+  return ensureArray(dbRead('custom-sheets'));
+}
+export function setCustomSheets(data) { dbWrite('custom-sheets', data); }
+
+export function getCustomSheetById(id) {
+  return (dbRead('custom-sheets') || []).find(s => s.id === id) || null;
+}
+
+export function createCustomSheet({
+  label, spreadsheetId, tabName, headerRow = 1,
+  visibleTo = ['superadmin'], color = '#6366f1',
+  icon = 'table', pinToTop = false, statColumns = [],
+  createdBy = 'superadmin',
+}) {
+  if (!label || !spreadsheetId || !tabName) throw new Error('label, spreadsheetId and tabName are required');
+  const sheets = ensureArray(dbRead('custom-sheets'));
+  const dup = sheets.find(s => s.spreadsheetId === spreadsheetId && s.tabName === tabName);
+  if (dup) throw new Error(`Sheet "${tabName}" in spreadsheet "${spreadsheetId}" already registered`);
+  const sheet = {
+    id: uuid(),
+    label: label.trim(),
+    spreadsheetId: spreadsheetId.trim(),
+    tabName: tabName.trim(),
+    headerRow: Number(headerRow) || 1,
+    visibleTo: Array.isArray(visibleTo) ? visibleTo : ['superadmin'],
+    color: color || '#6366f1',
+    icon: icon || 'table',
+    pinToTop: !!pinToTop,
+    statColumns: Array.isArray(statColumns) ? statColumns : [],
+    connectionStatus: 'untested',
+    lastProbed: null,
+    columns: [],
+    createdBy,
+    createdAt: now(),
+    updatedAt: now(),
+  };
+  sheets.unshift(sheet);
+  setCustomSheets(sheets);
+  return sheet;
+}
+
+export function updateCustomSheet(id, updates) {
+  const sheets = ensureArray(dbRead('custom-sheets'));
+  const idx = sheets.findIndex(s => s.id === id);
+  if (idx === -1) throw new Error(`Custom sheet not found: ${id}`);
+  sheets[idx] = { ...sheets[idx], ...updates, id, updatedAt: now() };
+  setCustomSheets(sheets);
+  return sheets[idx];
+}
+
+export function deleteCustomSheet(id) {
+  const sheets = ensureArray(dbRead('custom-sheets')).filter(s => s.id !== id);
+  setCustomSheets(sheets);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHEET CREDENTIALS (System & Custom Connected Sheets)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const DEFAULT_SHEET_CREDENTIALS = [
+  {
+    id: 'cw-maintenance',
+    key: 'CW_MAINTENANCE',
+    title: 'CW Maintenance Sheet',
+    category: 'Core Maintenance',
+    spreadsheetId: process.env.CW_SPREADSHEET_ID || '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE',
+    tabName: 'Website List',
+    headerRow: 2,
+    active: true,
+    visibleTo: ['superadmin', 'admin', 'user'],
+    editableBy: ['superadmin', 'admin'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    description: 'Cogwheel Marketing website directory, contacts, and monthly maintenance reports.',
+  },
+  {
+    id: 'rm-maintenance',
+    key: 'RM_MAINTENANCE',
+    title: 'RM Maintenance Sheet',
+    category: 'Core Maintenance',
+    spreadsheetId: process.env.RM_SPREADSHEET_ID || '1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY',
+    tabName: 'Website List',
+    headerRow: 2,
+    active: true,
+    visibleTo: ['superadmin', 'admin', 'user'],
+    editableBy: ['superadmin', 'admin'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    description: 'Razib Marketing website directory, contacts, and monthly maintenance reports.',
+  },
+  {
+    id: 'master-tracker',
+    key: 'MASTER_TRACKER',
+    title: 'Master Tracker & Distribution',
+    category: 'Tasks & Distribution',
+    spreadsheetId: '1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU',
+    tabName: 'Distribution and Work Sheet',
+    headerRow: 1,
+    active: true,
+    visibleTo: ['superadmin', 'admin'],
+    editableBy: ['superadmin', 'admin'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    showInNav: true,
+    navSection: 'Connected Sheets',
+    description: 'Central task distribution across team members and domain expiry tracker.',
+  },
+  {
+    id: 'daily-review',
+    key: 'DAILY_REVIEW',
+    title: 'Daily Review Sheet',
+    category: 'Daily Activity',
+    spreadsheetId: '1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs',
+    tabName: 'Toufiq',
+    headerRow: 1,
+    active: true,
+    visibleTo: ['superadmin', 'admin', 'user'],
+    editableBy: ['superadmin', 'admin', 'user'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    description: 'Daily team review logs, per-user tracking tabs, and status updates.',
+  },
+  {
+    id: 'property-registry',
+    key: 'PROPERTY_REGISTRY',
+    title: 'Property Registry Sheet',
+    category: 'Properties & Assets',
+    spreadsheetId: '1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY',
+    tabName: 'Sheet1',
+    headerRow: 1,
+    active: true,
+    visibleTo: ['superadmin', 'admin'],
+    editableBy: ['superadmin'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    description: 'Property catalog, asset URLs, and assigned site managers.',
+  },
+  {
+    id: 'dev-tracker',
+    key: 'DEV_TRACKER',
+    title: 'Dev Tracker Sheet',
+    category: 'Development Tracker',
+    spreadsheetId: '14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78',
+    tabName: 'AnsAngel coalition',
+    headerRow: 1,
+    active: true,
+    visibleTo: ['superadmin', 'admin', 'user'],
+    editableBy: ['superadmin', 'admin'],
+    connectionStatus: 'ok',
+    lastChecked: null,
+    isSystem: true,
+    description: 'Development sprints, bug backlog, and ongoing dev projects.',
+  },
+];
+
+export function getSheetCredentials() {
+  let list = dbRead('sheet-credentials');
+  if (!Array.isArray(list) || list.length === 0) {
+    list = DEFAULT_SHEET_CREDENTIALS.map(item => ({ ...item, createdAt: now(), updatedAt: now() }));
+    dbWrite('sheet-credentials', list);
+    return list;
+  }
+
+  // Migrate legacy default tab names if outdated
+  let migrated = false;
+  list.forEach(c => {
+    if (c.id === 'master-tracker' && c.tabName === 'Distribution') {
+      c.tabName = 'Distribution and Work Sheet';
+      migrated = true;
+    }
+    if (c.id === 'daily-review' && c.tabName === 'Daily Review') {
+      c.tabName = 'Toufiq';
+      migrated = true;
+    }
+    if (c.id === 'property-registry' && c.tabName === 'Registry') {
+      c.tabName = 'Sheet1';
+      migrated = true;
+    }
+    if (c.id === 'dev-tracker' && c.tabName === 'Projects') {
+      c.tabName = 'AnsAngel coalition';
+      migrated = true;
+    }
+  });
+  if (migrated) {
+    dbWrite('sheet-credentials', list);
+  }
+  // Ensure default system sheets and role permissions exist on all records
+  let modified = false;
+  for (const def of DEFAULT_SHEET_CREDENTIALS) {
+    const existing = list.find(s => s.id === def.id || s.key === def.key);
+    if (!existing) {
+      list.push({ ...def, createdAt: now(), updatedAt: now() });
+      modified = true;
+    }
+  }
+  list.forEach(item => {
+    if (!item.visibleTo) {
+      item.visibleTo = ['superadmin', 'admin', 'user'];
+      modified = true;
+    }
+    if (!item.editableBy) {
+      item.editableBy = ['superadmin', 'admin'];
+      modified = true;
+    }
+    if (!item.navSection) {
+      item.navSection = 'Connected Sheets';
+      modified = true;
+    }
+    if (item.showInNav === undefined || item.showInNav === false) {
+      item.showInNav = true;
+      modified = true;
+    }
+    if (!Array.isArray(item.assignedUsers)) {
+      item.assignedUsers = [];
+      modified = true;
+    }
+    if (!item.headerRow) {
+      item.headerRow = (item.id === 'cw-maintenance' || item.id === 'rm-maintenance') ? 2 : 1;
+      modified = true;
+    }
+  });
+  if (modified) {
+    dbWrite('sheet-credentials', list);
+  }
+  return list;
+}
+
+export function setSheetCredentials(data) {
+  dbWrite('sheet-credentials', data);
+}
+
+export function getSheetCredentialById(id) {
+  return (getSheetCredentials() || []).find(s => s.id === id || s.key === id) || null;
+}
+
+export function updateSheetCredential(id, updates) {
+  const list = getSheetCredentials();
+  const idx = list.findIndex(s => s.id === id || s.key === id);
+  if (idx === -1) throw new Error(`Sheet credential not found: ${id}`);
+  list[idx] = { ...list[idx], ...updates, updatedAt: now() };
+  setSheetCredentials(list);
+  return list[idx];
+}
+
+export function createSheetCredential({
+  title, spreadsheetId, tabName = 'Sheet1', category = 'Operations',
+  navSection = 'Operations', visibleTo = ['superadmin', 'admin', 'user'],
+  editableBy = ['superadmin', 'admin'], assignedUsers = [],
+  description = '', active = true, icon = 'table', showInNav = true,
+}) {
+  if (!title || !spreadsheetId) throw new Error('Title and Spreadsheet ID are required');
+  const list = getSheetCredentials();
+  const item = {
+    id: 'custom-' + uuid(),
+    key: 'CUSTOM_' + Date.now(),
+    title: title.trim(),
+    category: (category || 'Operations').trim(),
+    navSection: (navSection || 'Operations').trim(),
+    spreadsheetId: spreadsheetId.trim(),
+    tabName: (tabName || 'Sheet1').trim(),
+    description: (description || '').trim(),
+    icon: (icon || 'table').trim(),
+    visibleTo: Array.isArray(visibleTo) && visibleTo.length ? visibleTo : ['superadmin', 'admin', 'user'],
+    editableBy: Array.isArray(editableBy) && editableBy.length ? editableBy : ['superadmin', 'admin'],
+    assignedUsers: Array.isArray(assignedUsers) ? assignedUsers : [],
+    showInNav: showInNav !== false,
+    active: active !== false,
+    connectionStatus: 'untested',
+    lastChecked: null,
+    isSystem: false,
+    createdAt: now(),
+    updatedAt: now(),
+  };
+  list.push(item);
+  setSheetCredentials(list);
+  return item;
+}
+
+// =============================================================================
+// AI CONFIG STORAGE NOTE
+// =============================================================================
+// Dev Assistant provider keys + RAG source live in data/assistant-config.json and
+// are accessed only through getAssistantConfig/setAssistantConfig (defined above).
+// Raw provider keys never leave the server - the superadmin UI receives masked
+// previews only (see db.maskSecret and the /api/master/assistant-config route).
+
+export function deleteSheetCredential(id) {
+  const list = getSheetCredentials();
+  const target = list.find(s => s.id === id || s.key === id);
+  if (target?.isSystem) {
+    throw new Error('System sheets cannot be deleted. You can deactivate them instead.');
+  }
+  const filtered = list.filter(s => s.id !== id && s.key !== id);
+  setSheetCredentials(filtered);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEV ASSISTANT CONFIG (provider keys, RAG data source, retrieval settings)
+//
+// Stored in data/assistant-config.json (git-ignored — it holds API tokens).
+// Keys stored HERE take precedence over .env, so a superadmin can add/rotate a
+// token from the dashboard without editing files or restarting the server.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Priority order of the fallback chain. Only providers that are BOTH enabled and
+// holding a key (or a worker URL) are part of the live chain.
+export const ASSISTANT_PROVIDER_ORDER = ['gemini', 'groq', 'openrouter', 'mistral', 'cloudflare'];
+
+const ASSISTANT_PROVIDER_DEFAULTS = {
+  gemini: { label: 'Google Gemini (AI Studio)', kind: 'gemini', keyEnv: 'GEMINI_API_KEY', baseUrl: 'https://generativelanguage.googleapis.com/v1beta', models: '' },
+  groq: { label: 'Groq', kind: 'openai', keyEnv: 'GROQ_API_KEY', baseUrl: 'https://api.groq.com/openai/v1', models: '' },
+  openrouter: { label: 'OpenRouter', kind: 'openai', keyEnv: 'OPENROUTER_API_KEY', baseUrl: 'https://openrouter.ai/api/v1', models: '' },
+  mistral: { label: 'Mistral', kind: 'openai', keyEnv: 'MISTRAL_API_KEY', baseUrl: 'https://api.mistral.ai/v1', models: '' },
+  cloudflare: { label: 'Cloudflare Worker (self-hosted RAG gateway)', kind: 'worker', keyEnv: 'CLOUDFLARE_WORKER_TOKEN', urlEnv: 'CLOUDFLARE_WORKER_URL', baseUrl: '', models: '' },
+};
+
+function defaultProviderConfig() {
+  const out = {};
+  for (const name of ASSISTANT_PROVIDER_ORDER) {
+    const d = ASSISTANT_PROVIDER_DEFAULTS[name];
+    out[name] = { enabled: true, apiKey: '', baseUrl: '', models: '', label: d.label, kind: d.kind };
+  }
+  return out;
+}
+
+export function defaultAssistantConfig() {
+  return {
+    // Provider credentials entered in the dashboard (empty = fall back to .env).
+    providers: defaultProviderConfig(),
+    order: [...ASSISTANT_PROVIDER_ORDER],
+    // Which Google Sheet the assistant reads (superadmin-selectable).
+    source: {
+      credentialId: 'dev-tracker',
+      spreadsheetId: '14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78',
+      tabs: [],              // [] = all tabs of the spreadsheet
+      freshOnAsk: false,     // true = re-pull from Google Sheets before answering
+    },
+    // Retrieval / accuracy tuning.
+    rag: {
+      strictGrounding: true, // reject an LLM answer containing numbers absent from ground truth
+      verifyNumbers: true,   // run the numeric verification guard at all
+      evidenceLimit: 18,     // max retrieved evidence rows fed to the LLM
+      contextChars: 20000,   // hard cap on the RAG context string
+      includePageUrls: true, // include sitemap page URLs of the matched project
+    },
+    updatedAt: null,
+  };
+}
+
+function deepMergeAssistant(base, patch) {
+  const out = { ...base };
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (v && typeof v === 'object' && !Array.isArray(v) && base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) {
+      out[k] = deepMergeAssistant(base[k], v);
+    } else if (v !== undefined) {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+export function getAssistantConfig() {
+  const raw = dbRead('assistant-config');
+  const defaults = defaultAssistantConfig();
+  if (!raw || typeof raw !== 'object') return defaults;
+  const merged = deepMergeAssistant(defaults, raw);
+  // Guarantee every known provider exists even if the stored file predates it.
+  merged.providers = { ...defaultProviderConfig(), ...(merged.providers || {}) };
+  for (const name of ASSISTANT_PROVIDER_ORDER) {
+    merged.providers[name] = { ...defaultProviderConfig()[name], ...(merged.providers[name] || {}) };
+  }
+  // Guarantee every provider appears in the order list exactly once.
+  const order = Array.isArray(merged.order) ? merged.order.filter(n => ASSISTANT_PROVIDER_ORDER.includes(n)) : [];
+  merged.order = [...order, ...ASSISTANT_PROVIDER_ORDER.filter(n => !order.includes(n))];
+  return merged;
+}
+
+export function setAssistantConfig(patch) {
+  const next = deepMergeAssistant(getAssistantConfig(), patch || {});
+  next.updatedAt = now();
+  dbWrite('assistant-config', next);
+  return next;
+}
+
+/**
+ * Mask a secret for display: keeps the first 6 and last 4 characters.
+ * Never send a raw key to the browser.
+ */
+export function maskSecret(value) {
+  const v = String(value || '');
+  if (!v) return '';
+  if (v.length <= 12) return '•'.repeat(v.length);
+  return `${v.slice(0, 6)}…${v.slice(-4)}`;
+}
+

@@ -11,15 +11,16 @@
  *  7. Import Dev Tracker tabs → create DevProject records
  */
 
-import { getTabValues, listTabTitles } from './sheets.js';
+import { getTabValues, listTabTitles, fetchDevTrackerSheetData } from './sheets.js';
+import { findHeaderRow, detectColumns } from './reportUtils.js';
 import {
   uuid, setUsers, setSites, setDailyReview, setTasks, setProperties, setDevProjects, setMeta,
-  getUsers, dbRead, dbWrite,
+  getUsers, dbRead, dbWrite, getSheetCredentials,
 } from './db.js';
 
 const RANGE = 'A1:ZZ2000';
 
-const SHEET_IDS = {
+const SHEET_IDS_FALLBACK = {
   MASTER_TRACKER:    '1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU',
   DAILY_REVIEW:      '1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs',
   PROPERTY_REGISTRY: '1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY',
@@ -27,6 +28,31 @@ const SHEET_IDS = {
   CW_MAINTENANCE:    '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE',
   RM_MAINTENANCE:    '1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY',
 };
+
+export function getSheetId(key) {
+  try {
+    const creds = getSheetCredentials();
+    const item = creds.find(c => c.key === key || c.id === key);
+    if (item && item.spreadsheetId) return item.spreadsheetId;
+  } catch {}
+  return SHEET_IDS_FALLBACK[key] || '';
+}
+
+export function isSheetActive(key) {
+  try {
+    const creds = getSheetCredentials();
+    const item = creds.find(c => c.key === key || c.id === key);
+    if (item) return item.active !== false;
+  } catch {}
+  return true;
+}
+
+export const SHEET_IDS = new Proxy(SHEET_IDS_FALLBACK, {
+  get(target, prop) {
+    return getSheetId(prop) || target[prop];
+  }
+});
+
 
 export const DEFAULT_USERS = [
   { name: 'Toufiq',  role: 'superadmin', email: '' },
@@ -117,31 +143,40 @@ async function importSites() {
     const rows = await getTabValues('Website List', RANGE, sheetId);
     if (!rows || rows.length < 3) return;
 
-    const h = rows[1] || []; // Row 0 = note, Row 1 = headers
-    const urlCol    = hi(h, 'website url');
-    const cmsCol    = hi(h, 'cms');
-    const compCol   = hi(h, 'company');
-    const contCol   = hi(h, 'contact');
-    const acmCol    = hi(h, 'a/c manager', 'account manager');
-    const noteCol   = hi(h, 'note');
-    const cuCol     = hi(h, 'maintenance task clickup');
-    const reportCol = hi(h, 'maintenance report url');
-    const backupCol = hi(h, 'backup url');
+    // Header row is FOUND, not assumed: these sheets have a note/banner in row 1
+    // and the real header in row 2 (db.js stores headerRow: 2 for them).
+    const { headerRow, headerRowIndex } = findHeaderRow(rows);
+    const cols = detectColumns(headerRow);
 
-    const monthCols = h.reduce((acc, col, i) => {
-      if (col && /[a-z]+ \d{2,4}/i.test(col) && i > 9) acc.push({ i, label: col });
-      return acc;
-    }, []);
+    const urlCol = cols.WEBSITE_URL;
+    const cmsCol = cols.CMS;
+    const compCol = cols.COMPANY;
+    const contCol = cols.CONTACT;
+    const acmCol = cols.AM;
+    const noteCol = cols.NOTE;
+    const cuCol = cols.CLICKUP_URL;
+    const reportCol = cols.REPORT_URL;
+    const backupCol = cols.BACKUP_URL;
+
+    // Month columns come from the shared resolver (year-aware, typo-tolerant:
+    // "Augus 23", "February24", "octobor" are all understood).
+    const monthCols = (cols.MONTHS || []).map((m) => ({ i: m.index, label: m.label }));
     const latestMonth = monthCols[monthCols.length - 1];
 
-    rows.slice(2).forEach(r => {
+    rows.slice(headerRowIndex + 1).forEach(r => {
       const url = (r[urlCol] || '').trim();
       if (!url) return;
+      // Any column the profile didn't map (someone added it by hand) is kept
+      // as-is, so a new column shows up on the site record with no code change.
+      const extra = {};
+      (cols.EXTRAS || []).forEach(({ key, index }) => {
+        extra[key] = String(r[index] ?? '').trim();
+      });
       sites.push({
         id: uuid(),
         url,
         account,
-        status: (r[0] || 'Active').trim(),
+        status: (r[cols.STATUS] || 'Active').trim(),
         cms: r[cmsCol] || '',
         company: r[compCol] || account,
         contact: r[contCol] || '',
@@ -150,6 +185,7 @@ async function importSites() {
         clickupUrl: r[cuCol] || '',
         reportUrl: r[reportCol] || '',
         backupUrl: r[backupCol] || '',
+        extra,
         latestMonth: latestMonth?.label || '',
         latestMonthStatus: latestMonth ? (r[latestMonth.i] || '') : '',
         monthlyHistory: monthCols.map(mc => ({ month: mc.label, status: r[mc.i] || '' })),
@@ -163,9 +199,18 @@ async function importSites() {
     report(`Imported ${account} sites (${sites.filter(s => s.account === account).length})`, progressStart);
   };
 
-  await processSheet(SHEET_IDS.CW_MAINTENANCE, 'CW', 10);
-  report('Importing RM sites…', 12);
-  await processSheet(SHEET_IDS.RM_MAINTENANCE, 'RM', 15);
+  if (isSheetActive('CW_MAINTENANCE')) {
+    await processSheet(SHEET_IDS.CW_MAINTENANCE, 'CW', 10);
+  } else {
+    report('CW Maintenance sheet is inactive (skipped)', 10);
+  }
+
+  if (isSheetActive('RM_MAINTENANCE')) {
+    report('Importing RM sites…', 12);
+    await processSheet(SHEET_IDS.RM_MAINTENANCE, 'RM', 15);
+  } else {
+    report('RM Maintenance sheet is inactive (skipped)', 15);
+  }
   return sites;
 }
 
@@ -408,36 +453,9 @@ async function importProperties(userMap) {
 // ─── Step 7: Import Dev Tracker ───────────────────────────────────────────────
 async function importDevProjects() {
   report('Importing dev projects…', 74);
-  const projects = [];
+  let projects = [];
   try {
-    const tabs = await listTabTitles(SHEET_IDS.DEV_TRACKER);
-    for (const tab of tabs) {
-      try {
-        const rows = await getTabValues(tab, RANGE, SHEET_IDS.DEV_TRACKER);
-        if (!rows || rows.length < 2) continue;
-        const h = rows[0];
-        const urlCol    = hi(h, 'url');
-        const statusCol = hi(h, 'status');
-        const fbCol     = hi(h, 'feedback', 'feedbacks');
-        const dateCol   = hi(h, 'date');
-        const noteCol   = hi(h, 'note', 'updates');
-
-        const items = rows.slice(1).map((r, idx) => {
-          const url = (r[urlCol] || '').trim();
-          if (!url) return null;
-          return {
-            idx,
-            url, status: r[statusCol] || '',
-            feedbackUrl: r[fbCol] || '',
-            date: r[dateCol] || '',
-            notes: r[noteCol] || '',
-            updatedAt: now(),
-          };
-        }).filter(Boolean);
-
-        if (items.length) projects.push({ id: uuid(), project: tab, items, updatedAt: now() });
-      } catch {}
-    }
+    projects = await fetchDevTrackerSheetData();
   } catch (e) { console.error('[sync] dev-projects failed:', e.message); }
   report('Dev projects imported', 90);
   return projects;

@@ -1,6 +1,6 @@
 [
   {
-    "id": "7e3e3ad6-207a-41c0-bac0-524afc2568ab",
+    "id": "e63977c8-138d-481a-9e6d-91d451083eb2",
     "url": "qualityinnparkersburg.com",
     "account": "CW",
     "status": "Deactive",
@@ -12,7 +12,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -162,18 +162,22 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "offline",
-    "lastUptimeCheck": "2026-09-11T07:13:49.537Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:49.670Z"
+    "lastUptimeCheck": "2026-09-13T07:58:17.356Z",
+    "createdAt": "2026-09-13T05:22:26.206Z",
+    "updatedAt": "2026-09-13T07:58:17.489Z"
   },
   {
-    "id": "f0af30e1-04ac-4676-8907-9a624d06f895",
+    "id": "97c2a38a-30b9-47c5-8325-831fc2eddaca",
     "url": "governorsinnnd.com",
     "account": "CW",
     "status": "Active",
@@ -185,8 +189,8 @@
     "clickupUrl": "https://app.clickup.com/t/868a6gkvn",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1610374045#gid=1610374045",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -335,20 +339,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-08-30",
-    "daysLeft": 353,
+    "daysLeft": 351,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.539Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:52.023Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.358Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.704Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2482
+    "uptimeResponseTime": 1340
   },
   {
-    "id": "74851a62-a654-44d2-951e-40f429a0310e",
+    "id": "c14ced3d-211a-4ab2-b66b-4c585d406807",
     "url": "cogwheelmarketing.com",
     "account": "CW",
     "status": "Active",
@@ -360,8 +368,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8ubug",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1224146003#gid=1224146003",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -510,22 +518,26 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2029-03-12",
-    "daysLeft": 913,
+    "daysLeft": 911,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.539Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:50.977Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.360Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.668Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1434
+    "uptimeResponseTime": 1304
   },
   {
-    "id": "8e496f3d-fa68-4d62-a1b4-ba205daa9dc0",
+    "id": "42c6cb88-6aa1-4014-b510-7b82dcecc8bc",
     "url": "hotelfauchere.com",
     "account": "CW",
     "status": "Active",
@@ -537,8 +549,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1393120586#gid=1393120586",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -687,20 +699,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-18",
-    "daysLeft": 249,
+    "daysLeft": 247,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.540Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:51.673Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.361Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.391Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2128
+    "uptimeResponseTime": 1025
   },
   {
-    "id": "f5b5796e-9374-4838-b3a2-09167234a9d8",
+    "id": "3a04573c-59a4-4fa7-8ffc-10d65bfbbc66",
     "url": "jivebarlounge.com",
     "account": "CW",
     "status": "Active",
@@ -712,8 +728,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=624721599#gid=624721599",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -862,23 +878,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-08-10",
-    "daysLeft": 333,
+    "daysLeft": 331,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.540Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:50.519Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.363Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.242Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 975
+    "uptimeResponseTime": 873
   },
   {
-    "id": "0cd2bf11-d1f7-4073-8a59-8607b3f417b4",
+    "id": "e39802b9-88fc-45b1-8599-7888ace199d6",
     "url": "milfordhospitalitygroup.com",
     "account": "CW",
     "status": "Active",
@@ -890,8 +910,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=427827399#gid=427827399",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -1040,22 +1060,26 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-24",
-    "daysLeft": 194,
+    "daysLeft": 192,
     "assignedUsers": [
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.540Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:51.282Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.366Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.944Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1736
+    "uptimeResponseTime": 1575
   },
   {
-    "id": "941b536c-12e8-4631-bd4c-a7e8aa5eebde",
+    "id": "eb7959ca-84a6-4f75-becf-3a68067fde3f",
     "url": "https://tcrmservices.com/",
     "account": "CW",
     "status": "Active",
@@ -1067,8 +1091,8 @@
     "clickupUrl": "https://app.clickup.com/t/8688euc39",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=2110463890#gid=2110463890",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -1217,23 +1241,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-06-18",
-    "daysLeft": 280,
+    "daysLeft": 278,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.541Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:50.566Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.367Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.500Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1021
+    "uptimeResponseTime": 1127
   },
   {
-    "id": "402283d2-765a-41c5-8916-631cdbede884",
+    "id": "5c0665e7-dde4-43ef-b206-fb7acf4bb337",
     "url": "themilfordtheater.com",
     "account": "CW",
     "status": "Active",
@@ -1245,8 +1273,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=970823023#gid=970823023",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -1395,20 +1423,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-01",
-    "daysLeft": 202,
+    "daysLeft": 200,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.542Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:51.385Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.368Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.890Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1838
+    "uptimeResponseTime": 1517
   },
   {
-    "id": "687e0df3-4992-4f8e-962f-ccb8c8615303",
+    "id": "592cedf7-a748-4044-9c4c-698317489fc5",
     "url": "themillatmsu.com",
     "account": "CW",
     "status": "Deactive",
@@ -1420,7 +1452,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -1570,20 +1602,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.544Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:51.350Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.371Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.610Z",
     "uptimeStatusCode": 308,
-    "uptimeResponseTime": 1800
+    "uptimeResponseTime": 1234
   },
   {
-    "id": "29e785e1-84b6-4205-918b-2424aebeaaa2",
+    "id": "5f3e70a4-8516-4207-a789-475393008312",
     "url": "tomquickinnmilford.com",
     "account": "CW",
     "status": "Active",
@@ -1595,8 +1631,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=717021792#gid=717021792",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -1745,20 +1781,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-06",
-    "daysLeft": 207,
+    "daysLeft": 205,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:49.545Z",
-    "createdAt": "2026-09-11T06:50:14.560Z",
-    "updatedAt": "2026-09-11T07:13:51.339Z",
+    "lastUptimeCheck": "2026-09-13T07:58:17.372Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:18.996Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1790
+    "uptimeResponseTime": 1620
   },
   {
-    "id": "25d65534-9b1b-496e-b244-b0c74885d82e",
+    "id": "6f8af408-f072-49ad-9e17-f040ed6c35c1",
     "url": "https://diamondconferencecenter.com/",
     "account": "CW",
     "status": "Active",
@@ -1770,8 +1810,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b6wxaw",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=207745951#gid=207745951",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -1920,23 +1960,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-06-28",
-    "daysLeft": 656,
+    "daysLeft": 654,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.026Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:52.844Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.000Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:19.674Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 812
+    "uptimeResponseTime": 670
   },
   {
-    "id": "0854b029-32b3-48d6-8373-b0df4806a55d",
+    "id": "9d8409be-41b5-4487-8e5c-4ec8ae0de13a",
     "url": "alpha3hotels.com",
     "account": "CW",
     "status": "Active",
@@ -1948,8 +1992,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8umth",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1092865668#gid=1092865668",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -2098,22 +2142,26 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-29",
-    "daysLeft": 230,
+    "daysLeft": 228,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.027Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:52.895Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.001Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.026Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 864
+    "uptimeResponseTime": 1020
   },
   {
-    "id": "3da3a9d8-06df-4d85-a484-595d70ab37eb",
+    "id": "ef82df92-014c-49e6-8496-189b87a793c3",
     "url": "atlantichotelsgroup.com",
     "account": "CW",
     "status": "Active",
@@ -2125,8 +2173,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b6wxd0",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=413577340#gid=413577340",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -2275,23 +2323,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2034-10-21",
-    "daysLeft": 2962,
+    "daysLeft": 2960,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.028Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.029Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.003Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:19.752Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 995
+    "uptimeResponseTime": 744
   },
   {
-    "id": "218045e5-d786-4b33-be1c-f30943429774",
+    "id": "fac52471-7f71-4f23-8cfa-b6c47fb2d2b1",
     "url": "laposadamilford.com",
     "account": "CW",
     "status": "Active",
@@ -2303,8 +2355,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1602440721#gid=1602440721",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -2453,22 +2505,26 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-05-03",
-    "daysLeft": 600,
+    "daysLeft": 598,
     "assignedUsers": [
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.029Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.094Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.004Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.193Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1057
+    "uptimeResponseTime": 1184
   },
   {
-    "id": "81c23305-30c6-418c-89b1-93d6d32eb65c",
+    "id": "2a8f0137-c58b-4f9d-99c8-17feff2f0005",
     "url": "https://jacksonsouthtown.com/",
     "account": "CW",
     "status": "Active",
@@ -2480,8 +2536,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b6wy7v",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=111860493#gid=111860493",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -2630,23 +2686,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-16",
-    "daysLeft": 247,
+    "daysLeft": 245,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.029Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.862Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.005Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.524Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1827
+    "uptimeResponseTime": 1515
   },
   {
-    "id": "6da72531-6e34-4f5c-b6f0-7c9a31a3159c",
+    "id": "65368042-ae9c-4efe-a1f9-653aebb38ed2",
     "url": "https://drbillcarroll.com/",
     "account": "CW",
     "status": "Active",
@@ -2658,7 +2718,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -2808,20 +2868,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.030Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.841Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.005Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.349Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1806
+    "uptimeResponseTime": 1338
   },
   {
-    "id": "905385ee-cfec-4e2d-8ce8-e86459123497",
+    "id": "dd0b49a4-01b0-4461-bf3f-e187cb89191f",
     "url": "https://nhghotels.com/",
     "account": "CW",
     "status": "Active",
@@ -2833,8 +2897,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -2983,20 +3047,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.030Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.751Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.006Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.304Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1714
+    "uptimeResponseTime": 1294
   },
   {
-    "id": "1aa9c3eb-a2ca-40d8-a39a-bcdafb90643e",
+    "id": "5721a239-8a15-40c5-9b7a-2eea78a36424",
     "url": "https://toolkit.consulting/",
     "account": "CW",
     "status": "Active",
@@ -3008,8 +3076,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b7v3dk",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1136125933#gid=1136125933",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -3158,23 +3226,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-01-19",
-    "daysLeft": 130,
+    "daysLeft": 128,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.031Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.886Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.007Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.585Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1847
+    "uptimeResponseTime": 1572
   },
   {
-    "id": "7c6bbc76-84d9-4cdb-8f05-35e7320ecff5",
+    "id": "9dc23ebf-fb51-4dcf-9986-26265abd280b",
     "url": "https://applevalleyrestaurant.com/",
     "account": "CW",
     "status": "Active",
@@ -3186,8 +3258,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=375509873#gid=375509873",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -3336,24 +3408,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-27",
-    "daysLeft": 228,
+    "daysLeft": 226,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:52.031Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:53.666Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.008Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:21.067Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1629
+    "uptimeResponseTime": 2054
   },
   {
-    "id": "8077046b-4838-4257-a29c-710179cdcc53",
+    "id": "289f3877-e7d9-4993-aa66-c993b23ae7a1",
     "url": "https://chathamlodgingtrust.com/",
     "account": "CW",
     "status": "Active",
@@ -3365,8 +3441,8 @@
     "clickupUrl": "https://app.clickup.com/t/868aqfjrk",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1609573877#gid=1609573877",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -3515,24 +3591,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2030-10-28",
-    "daysLeft": 1508,
+    "daysLeft": 1506,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:50.246Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:51.012Z",
+    "lastUptimeCheck": "2026-09-13T07:58:19.009Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:20.258Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 762
+    "uptimeResponseTime": 1244
   },
   {
-    "id": "7ce10582-21fa-4aff-baca-8628b15029d0",
+    "id": "cce012d4-c2e5-4571-9386-4f5c097f44e8",
     "url": "https://legacygb.com/wp-admin",
     "account": "CW",
     "status": "Deactive",
@@ -3544,7 +3624,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -3694,20 +3774,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.891Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:55.197Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.071Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.250Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1298
+    "uptimeResponseTime": 1173
   },
   {
-    "id": "0bf297f0-4a1c-4468-834e-2dd08b304006",
+    "id": "a6507495-7948-41b6-966d-ac467704eb2e",
     "url": "https://theelizajane.com/wp-admin",
     "account": "CW",
     "status": "Deactive",
@@ -3719,7 +3803,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -3869,20 +3953,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.893Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:55.363Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.073Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.269Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1466
+    "uptimeResponseTime": 1189
   },
   {
-    "id": "3dce0072-33cf-476b-89b9-84d01479e05c",
+    "id": "c4cd58d3-f3c9-40f2-aea1-9686be88d6dc",
     "url": "https://foresthallmilford.com/",
     "account": "CW",
     "status": "Active",
@@ -3894,8 +3982,8 @@
     "clickupUrl": "https://app.clickup.com/t/868am6hy8",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=200297663#gid=200297663",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4044,24 +4132,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-01-11",
-    "daysLeft": 122,
+    "daysLeft": 120,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.896Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:55.382Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.073Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.506Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1483
+    "uptimeResponseTime": 1428
   },
   {
-    "id": "69868423-4a3c-41eb-9164-42fc8792135d",
+    "id": "0574627f-75ac-4c82-899f-19ab47ef1703",
     "url": "https://cayugahospitality.com/",
     "account": "CW",
     "status": "Active",
@@ -4073,8 +4165,8 @@
     "clickupUrl": "https://app.clickup.com/t/8688qnd9d",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=2027428957#gid=2027428957",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4223,24 +4315,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-12-08",
-    "daysLeft": 453,
+    "daysLeft": 451,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:21:00.450Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:21:01.881Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.074Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.465Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1428
+    "uptimeResponseTime": 1386
   },
   {
-    "id": "cd503909-23fc-4055-a135-4ffe71b158f5",
+    "id": "49f87aca-5887-4679-b95c-28674ed9c3fd",
     "url": "https://valleyofthemoonpartners.com/",
     "account": "CW",
     "status": "Active",
@@ -4252,8 +4348,8 @@
     "clickupUrl": "https://app.clickup.com/t/8688qndb6",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1608831005#gid=1608831005",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "In Progress",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4402,23 +4498,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": "In Progress"
       }
     ],
-    "domainExpiry": "2026-10-16",
-    "daysLeft": 35,
+    "domainExpiry": "2026-10-15",
+    "daysLeft": 32,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:41.457Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:47.883Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.076Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T08:15:53.062Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2535
+    "uptimeResponseTime": 1021
   },
   {
-    "id": "07e5bbac-db96-43ca-b6ef-5a3cc5ff534a",
+    "id": "c0486b01-f7bc-4ed9-b88c-91aae9729e70",
     "url": "https://www.wilsonarkansas.com",
     "account": "CW",
     "status": "Active",
@@ -4430,8 +4530,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8vfxr",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4580,23 +4680,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-13",
-    "daysLeft": 214,
+    "daysLeft": 212,
     "assignedUsers": [
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.903Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:54.701Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.077Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:21.894Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 723
+    "uptimeResponseTime": 811
   },
   {
-    "id": "188ee202-79ab-40c6-9573-b037a920b79d",
+    "id": "a8bd0689-aedf-44a2-acc6-e0c043a76499",
     "url": "www.eatatwilson.com",
     "account": "CW",
     "status": "Active",
@@ -4608,8 +4712,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8vfxr",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4758,23 +4862,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-06-08",
-    "daysLeft": 270,
+    "daysLeft": 268,
     "assignedUsers": [
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.905Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:54.744Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.078Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:21.930Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 832
+    "uptimeResponseTime": 847
   },
   {
-    "id": "997f6007-9a92-47f7-a787-f11d71bfc013",
+    "id": "38c0ba32-d0de-49f5-99dd-176a0a3753a1",
     "url": "www.wilsongrange.com",
     "account": "CW",
     "status": "Active",
@@ -4786,8 +4894,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8vfxr",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -4936,23 +5044,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-05-22",
-    "daysLeft": -112,
+    "daysLeft": -114,
     "assignedUsers": [
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.906Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:55.132Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.079Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.220Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1221
+    "uptimeResponseTime": 1136
   },
   {
-    "id": "09f20a65-4dd0-42c2-8b46-6b6d98598630",
+    "id": "7c8c5588-eb21-4902-8b9f-505df5b995cd",
     "url": "https://thelouishotel.com/",
     "account": "CW",
     "status": "Active",
@@ -4964,8 +5076,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bjvr4a",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -5114,23 +5226,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-07-19",
-    "daysLeft": -54,
+    "daysLeft": -56,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:53.907Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:55.473Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.080Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.571Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1561
+    "uptimeResponseTime": 1487
   },
   {
-    "id": "6058b7a8-23ba-4913-8a71-a8fb568daf33",
+    "id": "008af9d6-57ad-40ad-84bd-4465195cf4e9",
     "url": "https://innatwise.com/",
     "account": "CW",
     "status": "Active",
@@ -5142,8 +5258,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bx09v3v",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=124776980#gid=124776980",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -5292,23 +5408,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2029-02-26",
-    "daysLeft": 899,
+    "daysLeft": 897,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:46.629Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:48.106Z",
+    "lastUptimeCheck": "2026-09-13T07:58:21.081Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:22.751Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1472
+    "uptimeResponseTime": 1665
   },
   {
-    "id": "159c568b-f559-442a-b11b-b4167a8b6881",
+    "id": "b836e4a2-732a-4e13-9669-f287e9622985",
     "url": "nauticalbeachfrontresort.com",
     "account": "CW",
     "status": "Active",
@@ -5320,8 +5440,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -5470,20 +5590,24 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.583Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.019Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.755Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:23.149Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 428
+    "uptimeResponseTime": 389
   },
   {
-    "id": "e5111a06-08f1-4142-b986-eb661005f389",
+    "id": "d9ee8959-f440-454d-9f3f-8084fac86a03",
     "url": "https://www.hotelteatro.com/",
     "account": "CW",
     "status": "Active",
@@ -5495,8 +5619,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b8vnyj",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=575979455#gid=575979455",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -5645,23 +5769,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-30",
-    "daysLeft": 200,
+    "daysLeft": 198,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.585Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.954Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.757Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:24.054Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1360
+    "uptimeResponseTime": 1294
   },
   {
-    "id": "7630e950-8fd8-4e20-9964-eb24376dd03c",
+    "id": "4720505c-8b71-4cc8-bcaa-b8c7d60bf0e3",
     "url": "https://cogwheelanalytics.com/",
     "account": "CW",
     "status": "Active",
@@ -5673,8 +5801,8 @@
     "clickupUrl": "https://app.clickup.com/t/8688a14jh",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=1130862742#gid=1130862742",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -5823,23 +5951,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-02-27",
-    "daysLeft": 534,
+    "daysLeft": 532,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.586Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.463Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.758Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:23.609Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 871
+    "uptimeResponseTime": 842
   },
   {
-    "id": "816e94e4-a6a1-4ee5-a0e8-f7c71c3946f1",
+    "id": "3d5c34b7-97fe-46cc-8f5d-35dd9cfe4a7a",
     "url": "https://barmetier.com/",
     "account": "CW",
     "status": "Deactived",
@@ -5851,7 +5983,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -6001,20 +6133,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.588Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.423Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.759Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:23.447Z",
     "uptimeStatusCode": 405,
-    "uptimeResponseTime": 829
+    "uptimeResponseTime": 685
   },
   {
-    "id": "15a0742c-6cd5-4f2f-bdac-c16aef55f9e9",
+    "id": "2f8e2ee2-34c5-4e67-a936-cb81a3c97fe2",
     "url": "https://trattoriabarnett.com/",
     "account": "CW",
     "status": "Active",
@@ -6026,7 +6162,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -6176,20 +6312,24 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.590Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.280Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.760Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:23.088Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 675
+    "uptimeResponseTime": 323
   },
   {
-    "id": "aba4dcb4-a033-4336-a490-82280c4d4abf",
+    "id": "84ca007c-e41d-4815-b904-8738502d904b",
     "url": "https://winslowhotels.com/",
     "account": "CW",
     "status": "Active",
@@ -6201,8 +6341,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b7p942",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1273402890#gid=1273402890",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -6351,10 +6491,14 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-09-30",
-    "daysLeft": 384,
+    "daysLeft": 382,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "1accc4a5-138f-4347-983b-c64c08ee342f",
@@ -6362,14 +6506,14 @@
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.595Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:58.514Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.761Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:24.722Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1910
+    "uptimeResponseTime": 1956
   },
   {
-    "id": "ea6d9d66-041a-4377-ae72-215b5d72fbdc",
+    "id": "3d4e7690-f550-4c45-9cdd-d2d1cd9a61d9",
     "url": "https://www.theguildhotel.com/",
     "account": "CW",
     "status": "Deactive",
@@ -6381,7 +6525,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868e202u6",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -6531,24 +6675,28 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-12-08",
-    "daysLeft": 453,
+    "daysLeft": 451,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.656Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:12.016Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.114Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:39.185Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1356
+    "uptimeResponseTime": 1066
   },
   {
-    "id": "2b1d8d15-9671-4c0f-bf92-7fd7919bf325",
+    "id": "557d7682-42f0-4908-bffa-d2a56dd2ee83",
     "url": "https://grangerhotel.com/",
     "account": "CW",
     "status": "Deactive",
@@ -6560,7 +6708,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868e202ud",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -6710,23 +6858,27 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-01-08",
-    "daysLeft": 119,
+    "daysLeft": 117,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.659Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:11.551Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.116Z",
+    "createdAt": "2026-09-13T05:22:26.207Z",
+    "updatedAt": "2026-09-13T07:58:38.712Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 883
+    "uptimeResponseTime": 592
   },
   {
-    "id": "da56201b-90bf-4623-a688-acb0da993a7d",
+    "id": "39f31042-ffdd-42c7-a1fb-4617d673b835",
     "url": "https://femalefoundersinhospitality.com/",
     "account": "CW",
     "status": "Active",
@@ -6738,8 +6890,8 @@
     "clickupUrl": "https://app.clickup.com/t/868cbv8z6",
     "reportUrl": "",
     "backupUrl": "Add November Maintenance Addition to the previous",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -6888,23 +7040,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
-    "domainExpiry": "2027-01-15",
-    "daysLeft": 126,
+    "domainExpiry": "2027-09-10",
+    "daysLeft": 362,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.600Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:42:01.231Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.764Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:23.551Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1170
+    "uptimeResponseTime": 781
   },
   {
-    "id": "854c7395-ac28-4ed6-9dc2-3036112e689b",
+    "id": "1a018418-1d9c-405a-ad08-c758c7608ef8",
     "url": "https://toastedbarrelbar.com/",
     "account": "CW",
     "status": "Active",
@@ -6916,8 +7072,8 @@
     "clickupUrl": "https://app.clickup.com/t/868a83wmj",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1266712980#gid=1266712980",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7066,23 +7222,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-12-02",
-    "daysLeft": 82,
+    "daysLeft": 80,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:56.602Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:57.840Z",
+    "lastUptimeCheck": "2026-09-13T07:58:22.766Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:23.515Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1229
+    "uptimeResponseTime": 744
   },
   {
-    "id": "476da6fb-2362-4a18-85fa-485336c38729",
+    "id": "f1392778-036e-4711-9b92-f9a4c60a29de",
     "url": "https://seaworthynola.com/",
     "account": "CW",
     "status": "Active",
@@ -7094,8 +7254,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689y8yu5",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1813222948#gid=1813222948",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7244,23 +7404,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-05-29",
-    "daysLeft": 626,
+    "daysLeft": 624,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:58.520Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:59.713Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.726Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:25.752Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1190
+    "uptimeResponseTime": 1022
   },
   {
-    "id": "2efa29a4-d439-4fb4-8f80-2126a86c578d",
+    "id": "7e671e2b-201c-4002-8f67-31999fcfab59",
     "url": "hotelperla.com",
     "account": "CW",
     "status": "Active",
@@ -7272,8 +7436,8 @@
     "clickupUrl": "https://app.clickup.com/t/868b6wy0d",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=676032378#gid=676032378",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7422,23 +7586,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-30",
-    "daysLeft": 200,
+    "daysLeft": 198,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:58.524Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:58.815Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.728Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:25.176Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 280
+    "uptimeResponseTime": 443
   },
   {
-    "id": "dfd3b7ec-7d49-4c7c-a4d2-2fcf5a866e34",
+    "id": "4c928b81-f0f3-4d48-8a16-e40a34981d56",
     "url": "https://thebarnett.com/",
     "account": "CW",
     "status": "Active",
@@ -7450,8 +7618,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689y8yu5",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=296036524#gid=296036524",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7600,23 +7768,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-29",
-    "daysLeft": 199,
+    "daysLeft": 197,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:58.527Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:00.152Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.729Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:25.775Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1622
+    "uptimeResponseTime": 1042
   },
   {
-    "id": "ca7bca90-3b5a-4ac2-9d4e-8ad606018ed2",
+    "id": "1f67d905-7345-40d7-8169-d1fac920d66f",
     "url": "https://salonsalonnola.com/",
     "account": "CW",
     "status": "Active",
@@ -7628,8 +7800,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689m34j4",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=210564174#gid=210564174",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7778,23 +7950,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-29",
-    "daysLeft": 260,
+    "daysLeft": 258,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:13:58.530Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:13:59.733Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.730Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:25.869Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1192
+    "uptimeResponseTime": 1133
   },
   {
-    "id": "70c69c08-9453-4245-aa2c-e8c75bb8b161",
+    "id": "534539ac-3c64-4ee5-868e-405f4b67c8ba",
     "url": "https://maisonmetier.com/",
     "account": "CW",
     "status": "Active",
@@ -7806,8 +7982,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689m34j4",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=321278684#gid=321278684",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -7956,23 +8132,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-29",
-    "daysLeft": 199,
+    "daysLeft": 197,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:51.023Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:51.929Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.731Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.167Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 904
+    "uptimeResponseTime": 1432
   },
   {
-    "id": "d947123a-958c-416c-9212-a24def878e5b",
+    "id": "180a4b1d-8063-4f28-86fd-0b5d367ac6d7",
     "url": "https://goodmeasurenola.com/",
     "account": "CW",
     "status": "Active",
@@ -7984,8 +8164,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689y8yu5",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=140095795#gid=140095795",
     "backupUrl": "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -8134,23 +8314,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-29",
-    "daysLeft": 260,
+    "daysLeft": 258,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:51.942Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:52.853Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.732Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.188Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 907
+    "uptimeResponseTime": 1450
   },
   {
-    "id": "9ecd7912-89ca-4f30-a2f1-d59b7148131e",
+    "id": "5af37058-8664-4ace-b585-4d27b40fb204",
     "url": "https://ohioeventcenter.com/",
     "account": "CW",
     "status": "Active",
@@ -8162,8 +8346,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=459542082#gid=459542082",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -8312,23 +8496,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-17",
-    "daysLeft": 248,
+    "daysLeft": 246,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:52.865Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:53.816Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.733Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.103Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 947
+    "uptimeResponseTime": 1367
   },
   {
-    "id": "cbc0d6db-dbe6-403b-a425-c0ecf76190e4",
+    "id": "501bcb6d-eb0c-4e86-9187-45e3543f3a60",
     "url": "https://craftsmanwoodgrilletaphouse.com/",
     "account": "CW",
     "status": "Active",
@@ -8340,8 +8528,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1743128013#gid=1743128013",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -8490,24 +8678,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-06-25",
-    "daysLeft": 287,
+    "daysLeft": 285,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:53.829Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:54.755Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.735Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.257Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 924
+    "uptimeResponseTime": 1517
   },
   {
-    "id": "dddc1a9b-d259-409c-89aa-c06c3354a883",
+    "id": "dddaebab-86e4-44ad-8734-10a4040fee6e",
     "url": "https://craftsmankitchenandterrace.com/",
     "account": "CW",
     "status": "Active",
@@ -8519,8 +8711,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=598296038#gid=598296038",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -8669,24 +8861,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-06-30",
-    "daysLeft": 292,
+    "daysLeft": 290,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:54.765Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:55.691Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.736Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.275Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 924
+    "uptimeResponseTime": 1534
   },
   {
-    "id": "582964a5-3792-4856-a77e-78c3f4f313a8",
+    "id": "3d08682c-1147-4682-b730-db401a7eeca9",
     "url": "https://woodcliffgolf.com/",
     "account": "CW",
     "status": "Active",
@@ -8698,8 +8894,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1073302332#gid=1073302332",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -8848,24 +9044,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-02",
-    "daysLeft": 172,
+    "daysLeft": 170,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:55.701Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:56.596Z",
+    "lastUptimeCheck": "2026-09-13T07:58:24.737Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:26.444Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 889
+    "uptimeResponseTime": 1703
   },
   {
-    "id": "cb447199-dad7-4568-b3ff-74a4c56c62ae",
+    "id": "cf833c0c-9f19-475d-ba52-4a8f36ec3261",
     "url": "https://woodcliffhotelspa.com/",
     "account": "CW",
     "status": "Active",
@@ -8877,8 +9077,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1790440627#gid=1790440627",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9027,23 +9227,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-03-22",
-    "daysLeft": 192,
+    "daysLeft": 190,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:59.552Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:21:00.434Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.449Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.306Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 874
+    "uptimeResponseTime": 853
   },
   {
-    "id": "79c2b585-788d-4eed-a7b7-e63ac96a13fb",
+    "id": "7b723020-968b-45f8-ba4b-0e0075439fd1",
     "url": "https://horizonsmodernkitchen.com/",
     "account": "CW",
     "status": "Active",
@@ -9055,8 +9259,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=881614032#gid=881614032",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "In Progress",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9205,23 +9409,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": "In Progress"
       }
     ],
     "domainExpiry": "2027-04-06",
-    "daysLeft": 207,
+    "daysLeft": 205,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.888Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:02.398Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.450Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.760Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1498
+    "uptimeResponseTime": 1304
   },
   {
-    "id": "10f0852a-497d-461d-a594-c86d1ea0f899",
+    "id": "761c80c6-dc0c-4e2d-b726-aa3b4e261106",
     "url": "https://craftsmaninn.com/",
     "account": "CW",
     "status": "Active",
@@ -9233,8 +9441,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bxkb0f",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1652316283#gid=1652316283",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9383,23 +9591,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-11-17",
-    "daysLeft": 67,
+    "daysLeft": 65,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.892Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:02.106Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.451Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.423Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1207
+    "uptimeResponseTime": 969
   },
   {
-    "id": "ed567292-912a-444d-b608-d26c5c5249a1",
+    "id": "04f45fdb-f115-4365-8eec-10ff8cf48e6b",
     "url": "https://pinoncourt.com/",
     "account": "CW",
     "status": "Active",
@@ -9411,8 +9623,8 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=10126558#gid=10126558",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9561,24 +9773,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-05-31",
-    "daysLeft": 262,
+    "daysLeft": 260,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:49.218Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:50.236Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.452Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.736Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1015
+    "uptimeResponseTime": 1277
   },
   {
-    "id": "739a07be-afe8-4f8c-b240-d0471afdec0e",
+    "id": "f965ebab-3ebf-4aeb-885f-324e056f3b20",
     "url": "https://www.lafondasantafe.com/",
     "account": "CW",
     "status": "Active",
@@ -9590,8 +9806,8 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=1045180906#gid=1045180906",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9740,23 +9956,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-07-05",
-    "daysLeft": 297,
+    "daysLeft": 295,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.897Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:14:02.932Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.453Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:29.025Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 2032
+    "uptimeResponseTime": 2569
   },
   {
-    "id": "c68d8e7a-b70b-45f8-8998-3a014fe1e224",
+    "id": "db932522-b930-42cc-9b69-120d4c1e85ff",
     "url": "https://senzahotel.com/",
     "account": "CW",
     "status": "Active",
@@ -9768,8 +9988,8 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1887525982#gid=1887525982",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -9918,23 +10138,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-02-22",
-    "daysLeft": 164,
+    "daysLeft": 162,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:48.119Z",
-    "createdAt": "2026-09-11T06:50:14.561Z",
-    "updatedAt": "2026-09-11T07:20:49.204Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.454Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.804Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1078
+    "uptimeResponseTime": 1346
   },
   {
-    "id": "416a9e79-2aaf-4804-a23c-18cf46a0b7a7",
+    "id": "c44868b3-41bd-4211-97da-6acdc988bf80",
     "url": "https://hqdallasrooftop.com/",
     "account": "CW",
     "status": "Active",
@@ -9946,8 +10170,8 @@
     "clickupUrl": "https://app.clickup.com/t/868bgxt6j",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1091573416#gid=1091573416",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10096,24 +10320,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2030-06-03",
-    "daysLeft": 1361,
+    "daysLeft": 1359,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.900Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:02.457Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.455Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.702Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1547
+    "uptimeResponseTime": 1243
   },
   {
-    "id": "354a312c-e679-4f1f-a8fa-b2aacf147122",
+    "id": "4a9740bd-be37-4104-9a29-e171a399ee08",
     "url": "https://romarelevators.com/",
     "account": "CW",
     "status": "Active",
@@ -10125,8 +10353,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689y8wyy",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1483700205#gid=1483700205",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10275,23 +10503,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-09-02",
-    "daysLeft": -9,
+    "daysLeft": -11,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.901Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:02.040Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.456Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.432Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1134
+    "uptimeResponseTime": 971
   },
   {
-    "id": "d2c28491-8c6b-4aaa-a68a-a83b8953314b",
+    "id": "65221ebc-08c9-4e41-a16f-746f9c099748",
     "url": "http://freerideuptown.com/",
     "account": "CW",
     "status": "Active",
@@ -10303,8 +10535,8 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1311759810#gid=1311759810",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10453,24 +10685,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-02-27",
-    "daysLeft": 534,
+    "daysLeft": 532,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.901Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:02.363Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.457Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:27.494Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1457
+    "uptimeResponseTime": 1032
   },
   {
-    "id": "cbc73d65-3706-468d-b83d-9c6574c27060",
+    "id": "5304134f-6d3e-4abc-a46e-66013b7f83bd",
     "url": "https://www.upsidewestvillage.com/",
     "account": "CW",
     "status": "Active",
@@ -10482,8 +10718,8 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=1956824253#gid=1956824253",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10632,23 +10868,27 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-01-24",
-    "daysLeft": 135,
+    "daysLeft": 133,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:00.903Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:02.910Z",
+    "lastUptimeCheck": "2026-09-13T07:58:26.459Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:28.130Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1999
+    "uptimeResponseTime": 1667
   },
   {
-    "id": "4d3559b0-6680-44b6-89bb-508f2c5808e2",
+    "id": "e40f8cd0-879d-4c46-9419-b67f27094b1d",
     "url": "https://joecaincafe.com/",
     "account": "CW",
     "status": "Active",
@@ -10660,8 +10900,8 @@
     "clickupUrl": "https://app.clickup.com/t/868ajeepb",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=2132848934#gid=2132848934",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10810,24 +11050,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-11-02",
-    "daysLeft": 783,
+    "daysLeft": 781,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.938Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:03.692Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.028Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:29.716Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 747
+    "uptimeResponseTime": 678
   },
   {
-    "id": "2942c8a9-34b7-4717-8923-09e75584ef84",
+    "id": "93a05596-5aa5-402e-a607-4e68056d63ef",
     "url": "https://bruttoamericano.com/",
     "account": "CW",
     "status": "Active",
@@ -10839,8 +11083,8 @@
     "clickupUrl": "https://app.clickup.com/t/8689y8yu5",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=37988666#gid=37988666",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -10989,24 +11233,28 @@
       {
         "month": "May 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-07-16",
-    "daysLeft": 308,
+    "daysLeft": 306,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.942Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:03.982Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.029Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:29.940Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1030
+    "uptimeResponseTime": 908
   },
   {
-    "id": "99bfefae-4ab7-47f8-b0ea-116c21880270",
+    "id": "9d62310b-b188-44f4-b760-d3ce8e68f1f3",
     "url": "https://room56.com/",
     "account": "CW",
     "status": "Active",
@@ -11018,7 +11266,7 @@
     "clickupUrl": "https://app.clickup.com/t/868farr6q",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=298797086#gid=298797086",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -11168,23 +11416,27 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-01-08",
-    "daysLeft": 119,
+    "daysLeft": 117,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.945Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:03.873Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.030Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:29.683Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 920
+    "uptimeResponseTime": 644
   },
   {
-    "id": "4112e2d2-8f89-4903-93df-b155d65d8696",
+    "id": "c668e74f-e65c-43cc-9890-91f9873a982e",
     "url": "https://bentleylegacy.com/",
     "account": "CW",
     "status": "Active",
@@ -11196,7 +11448,7 @@
     "clickupUrl": "https://app.clickup.com/t/868c6u8jp",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1715213647#gid=1715213647",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -11346,23 +11598,27 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-10-27",
-    "daysLeft": 411,
+    "daysLeft": 409,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.949Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:04.352Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.031Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.100Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1398
+    "uptimeResponseTime": 1063
   },
   {
-    "id": "2991d547-6013-4c89-bb77-7b7fb8794aea",
+    "id": "d7de549e-ec83-440f-a941-e7aeff202392",
     "url": "https://hoteldelapostenola.com/",
     "account": "CW",
     "status": "Active",
@@ -11374,7 +11630,7 @@
     "clickupUrl": "https://app.clickup.com/t/868du5q0u",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=684305034#gid=684305034",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -11524,24 +11780,28 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-10-29",
-    "daysLeft": 48,
+    "daysLeft": 46,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.953Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:04.097Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.032Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.130Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1140
+    "uptimeResponseTime": 1092
   },
   {
-    "id": "f2464f34-a901-4e6c-82f2-e00b446c016c",
+    "id": "f982620c-e528-4eb0-b482-8cd0f2b0ec2c",
     "url": "https://hotellajolla.com/",
     "account": "CW",
     "status": "Active",
@@ -11553,7 +11813,7 @@
     "clickupUrl": "https://app.clickup.com/t/868e0d1bh",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=2138343753#gid=2138343753",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -11703,24 +11963,28 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-12-29",
-    "daysLeft": 109,
+    "daysLeft": 107,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.957Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:14:04.203Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.033Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.063Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1235
+    "uptimeResponseTime": 1023
   },
   {
-    "id": "0564d7f7-d456-4df3-ab76-c6d985190808",
+    "id": "264038e7-30ff-4f51-aec8-0741b0b7d8f6",
     "url": "https://morrisonhouse.com/",
     "account": "CW",
     "status": "Active",
@@ -11732,8 +11996,8 @@
     "clickupUrl": "https://app.clickup.com/t/868gzg160",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1035521345#gid=1035521345",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -11882,24 +12146,28 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-02-28",
-    "daysLeft": 170,
+    "daysLeft": 168,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:21:03.412Z",
-    "createdAt": "2026-09-11T06:50:14.562Z",
-    "updatedAt": "2026-09-11T07:21:04.233Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.034Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.235Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 819
+    "uptimeResponseTime": 1193
   },
   {
-    "id": "4bcda828-6e48-49ae-b5e1-5a716c0b7fe3",
+    "id": "42caf591-d295-4827-93b0-6863d760e4ad",
     "url": "https://raphaelkc.com/",
     "account": "CW",
     "status": "Active",
@@ -11911,7 +12179,7 @@
     "clickupUrl": "https://app.clickup.com/t/868exjjxk",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?pli=1&gid=1826507515#gid=1826507515",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -12061,6 +12329,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12069,14 +12341,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.964Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:04.339Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.035Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.117Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1368
+    "uptimeResponseTime": 1076
   },
   {
-    "id": "2bf4bf95-70aa-4aed-bddf-0edc4e3fb74d",
+    "id": "dda31dd9-5339-45fb-9960-a880abae3092",
     "url": "https://thewilliamfelltavern.com/",
     "account": "CW",
     "status": "Active",
@@ -12088,7 +12360,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2rgb",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1252209040#gid=1252209040",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -12238,6 +12510,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12247,14 +12523,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:02.966Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:04.400Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.035Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.965Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1430
+    "uptimeResponseTime": 1926
   },
   {
-    "id": "64ce98f5-00e7-4262-87a8-3a5c034531d7",
+    "id": "260dfad8-1de4-46c8-972e-06b2a717c325",
     "url": "https://thehotelelysium.com/",
     "account": "CW",
     "status": "Active",
@@ -12266,8 +12542,8 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868g3gqtq",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=114627453#gid=114627453",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -12416,6 +12692,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12424,14 +12704,14 @@
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:21:01.889Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:21:03.399Z",
+    "lastUptimeCheck": "2026-09-13T07:58:29.036Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:30.645Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1506
+    "uptimeResponseTime": 1605
   },
   {
-    "id": "dd1246e0-e1c8-4dac-a5d2-c7cd57e6cc77",
+    "id": "28aaad9f-842b-4bd8-846c-3dca60705625",
     "url": "https://www.meyerjabarahotels.com/",
     "account": "CW",
     "status": "Active",
@@ -12443,7 +12723,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2uar",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1165385447#gid=1165385447",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -12593,6 +12873,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12601,14 +12885,14 @@
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.021Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:07.108Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.968Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:32.268Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 2079
+    "uptimeResponseTime": 1294
   },
   {
-    "id": "5725e5ba-7390-4bec-9b17-b26480ead570",
+    "id": "28205e09-a5dc-4a70-985a-afc044f14340",
     "url": "https://ocalaflevents.com/",
     "account": "CW",
     "status": "Active",
@@ -12620,7 +12904,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2rx0",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=172044980#gid=172044980",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -12770,6 +13054,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12778,14 +13066,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.025Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:06.524Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.970Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:31.894Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1485
+    "uptimeResponseTime": 920
   },
   {
-    "id": "6ce2449d-df71-4645-8231-20105a1e12f7",
+    "id": "ae6f72e7-3d28-4656-b48a-a503035308ed",
     "url": "https://hiltonchristiana.com/",
     "account": "CW",
     "status": "Active",
@@ -12797,7 +13085,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2rga",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=497692656#gid=497692656",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -12947,6 +13235,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -12957,14 +13249,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.029Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:06.698Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.971Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:32.062Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1665
+    "uptimeResponseTime": 1087
   },
   {
-    "id": "223c4a4e-36d5-4cb5-ab54-b32935072b68",
+    "id": "584ecea8-6836-4140-a393-86262f0c9f28",
     "url": "https://themenhaden.com/",
     "account": "CW",
     "status": "Active",
@@ -12976,8 +13268,8 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2tky",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1542473353#gid=1542473353",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -13126,6 +13418,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -13135,14 +13431,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:58.114Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:20:59.540Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.972Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:32.945Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1422
+    "uptimeResponseTime": 1969
   },
   {
-    "id": "5b882e0c-62d5-472e-9a85-fda06518b163",
+    "id": "6bc362c2-62c3-4fc9-9226-1597a93ad82a",
     "url": "https://www.thewentworth.com/",
     "account": "CW",
     "status": "Active",
@@ -13154,8 +13450,8 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2tp7",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1427641979#gid=1427641979",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -13304,6 +13600,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -13313,14 +13613,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:56.611Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:20:58.103Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.972Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:33.130Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1487
+    "uptimeResponseTime": 2153
   },
   {
-    "id": "9fd3b8b3-b9a1-4413-a1ad-49fcf6ee1528",
+    "id": "03003c1d-67eb-42cb-a230-6ea48b9f9bf4",
     "url": "https://thewentworthrestaurants.com/",
     "account": "CW",
     "status": "Active",
@@ -13332,7 +13632,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2ug0",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1028825565#gid=1028825565",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -13482,6 +13782,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -13490,14 +13794,14 @@
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.037Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:07.783Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.973Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:33.149Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2741
+    "uptimeResponseTime": 2171
   },
   {
-    "id": "8074e9bd-a90e-49b8-9c15-53cb26d68497",
+    "id": "d14875c5-865a-4f5b-895c-24adde7f5f12",
     "url": "https://thesagaponackny.com/",
     "account": "CW",
     "status": "Active",
@@ -13509,7 +13813,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2tur",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1060401616#gid=1060401616",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -13659,6 +13963,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -13668,14 +13976,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.041Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:07.916Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.974Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:33.120Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2871
+    "uptimeResponseTime": 2142
   },
   {
-    "id": "70c951c3-2404-4b5c-9f9e-067fca530c22",
+    "id": "4dc93bf8-98f7-4108-bb66-36a98de24dd4",
     "url": "https://baltimoreeventsandcatering.com/",
     "account": "CW",
     "status": "Active",
@@ -13687,7 +13995,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868jx2rve",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=496631069#gid=496631069",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -13837,6 +14145,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -13845,14 +14157,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.044Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:07.204Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.975Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:32.475Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2156
+    "uptimeResponseTime": 1495
   },
   {
-    "id": "624d3cb4-d264-461b-97f8-07b44e76c73f",
+    "id": "5788d62c-f475-4e3c-8bdf-8453b3245743",
     "url": "https://thebensonhotel.com/",
     "account": "CW",
     "status": "Active",
@@ -13864,8 +14176,8 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868j792hg",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=550792020#gid=550792020",
     "backupUrl": "",
-    "latestMonth": "May 25",
-    "latestMonthStatus": "To Do",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "March 22",
@@ -14014,6 +14326,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -14022,14 +14338,14 @@
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:21:04.241Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:21:04.910Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.975Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:32.549Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 665
+    "uptimeResponseTime": 1570
   },
   {
-    "id": "18b47682-24cd-4138-8526-257bc07edec2",
+    "id": "7ae56722-db5e-4304-9101-5043efef6ab1",
     "url": "https://www.thenines.com/",
     "account": "CW",
     "status": "Active",
@@ -14041,7 +14357,7 @@
     "clickupUrl": "https://app.clickup.com/t/10554421/868hngp92",
     "reportUrl": "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=225972860#gid=225972860",
     "backupUrl": "",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -14191,6 +14507,10 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -14199,14 +14519,14 @@
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:05.050Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:08.587Z",
+    "lastUptimeCheck": "2026-09-13T07:58:30.976Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:33.656Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 3532
+    "uptimeResponseTime": 2673
   },
   {
-    "id": "cc23bb1f-316d-4b2a-9040-c77c01423277",
+    "id": "1e99de82-4210-4cbc-8b79-66f2391651b6",
     "url": "Note:https://morrisonhouse.com/",
     "account": "CW",
     "status": "Active",
@@ -14218,7 +14538,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "During our review, we identified a few files that were flagged as suspicious during security scans. After a thorough review, all genuinely injected and unsafe files were removed from the website. Based on the file creation date it's clear the site was compromised on previous hosting. We removed compromised plugins and files while keeping the website functionality as is.\n\nAt this point, the website has been fully secured, all vulnerabilities have been addressed, and the site is now safe and functioning normally.",
-    "latestMonth": "May 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -14368,18 +14688,22 @@
       {
         "month": "May 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "offline",
-    "lastUptimeCheck": "2026-09-11T07:14:08.597Z",
-    "createdAt": "2026-09-11T06:50:14.563Z",
-    "updatedAt": "2026-09-11T07:14:08.620Z"
+    "lastUptimeCheck": "2026-09-13T07:58:33.660Z",
+    "createdAt": "2026-09-13T05:22:26.208Z",
+    "updatedAt": "2026-09-13T07:58:33.676Z"
   },
   {
-    "id": "c4f6aa9d-d35b-42a1-906c-6b84f557a6c2",
+    "id": "74f94c0e-8e78-48c4-9e8b-a8c1be444add",
     "url": "razibmarketing.com",
     "account": "RM",
     "status": "Active",
@@ -14391,8 +14715,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e2028e",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -14517,23 +14841,27 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-07-26",
-    "daysLeft": 318,
+    "daysLeft": 316,
     "assignedUsers": [
       "6420eb28-11d9-4f35-b8e3-41d96b944de5",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.597Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:10.032Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.663Z",
+    "createdAt": "2026-09-13T05:22:26.666Z",
+    "updatedAt": "2026-09-13T07:58:34.837Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1430
+    "uptimeResponseTime": 1170
   },
   {
-    "id": "3f908375-90cd-4ec1-a82b-6fd1222d9de5",
+    "id": "ca4582bb-1f33-433b-85c9-18f3547ce6b8",
     "url": "https://groundupmusicfestival.com/",
     "account": "RM",
     "status": "Active",
@@ -14545,8 +14873,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -14671,20 +14999,24 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.598Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:09.581Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.665Z",
+    "createdAt": "2026-09-13T05:22:26.666Z",
+    "updatedAt": "2026-09-13T07:58:34.452Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 978
+    "uptimeResponseTime": 784
   },
   {
-    "id": "f2bb3f71-1a74-4e04-8091-649a9f4c470e",
+    "id": "8e49441d-3d15-4c9c-bee7-d8eeccab45b7",
     "url": "https://mdmhotelsusa.com/",
     "account": "RM",
     "status": "Active",
@@ -14696,8 +15028,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -14822,22 +15154,26 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-02-17",
-    "daysLeft": 524,
+    "daysLeft": 522,
     "assignedUsers": [
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.599Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:09.367Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.666Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:34.160Z",
     "uptimeStatusCode": 405,
-    "uptimeResponseTime": 764
+    "uptimeResponseTime": 489
   },
   {
-    "id": "fc1d1e12-99e1-423f-8a1a-289f3d68bf90",
+    "id": "14cc8980-b775-4730-9021-25efb9e597f9",
     "url": "https://hotelbschool.com/wp-admin/",
     "account": "RM",
     "status": "Active",
@@ -14849,7 +15185,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -14975,20 +15311,24 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.601Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:10.328Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.668Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:38.101Z",
     "uptimeStatusCode": 302,
-    "uptimeResponseTime": 1714
+    "uptimeResponseTime": 4427
   },
   {
-    "id": "9a9a7227-98bd-484d-b86f-7a381cc9c36c",
+    "id": "ca67bc94-9173-4a09-9fd0-ab2b64e4418d",
     "url": "https://womenintravelthrive.com/",
     "account": "RM",
     "status": "Active",
@@ -15000,8 +15340,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202dp",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -15126,23 +15466,27 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-10-11",
-    "daysLeft": 30,
+    "daysLeft": 28,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.602Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:10.634Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.669Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:35.531Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2028
+    "uptimeResponseTime": 1856
   },
   {
-    "id": "0fd86c33-7a91-4773-8db6-810d8a8a62ed",
+    "id": "6303ed60-982e-49c4-9284-5170fa94209c",
     "url": "https://cowboytechhub.com/",
     "account": "RM",
     "status": "Active",
@@ -15154,8 +15498,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202fq",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -15280,23 +15624,27 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-02-17",
-    "daysLeft": 524,
+    "daysLeft": 522,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.603Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:09.734Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.670Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:34.196Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1125
+    "uptimeResponseTime": 522
   },
   {
-    "id": "352ea625-6b59-4d29-a081-a2c30d902da9",
+    "id": "bb26051b-c89f-4ff1-bc47-72fe4ea5d8f3",
     "url": "https://mountainmanoutdoors.com/",
     "account": "RM",
     "status": "Active",
@@ -15308,8 +15656,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -15434,20 +15782,24 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2029-01-29",
-    "daysLeft": 871,
+    "daysLeft": 869,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.605Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:09.436Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.670Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:34.296Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 825
+    "uptimeResponseTime": 620
   },
   {
-    "id": "daee9ad5-fa22-4860-b383-88fbb76844f2",
+    "id": "4c5bb283-5181-443c-bc13-a64c6ca454ef",
     "url": "http://margatemasjid.org/",
     "account": "RM",
     "status": "Active",
@@ -15459,7 +15811,7 @@
     "clickupUrl": "https://app.clickup.com/t/868e202nj",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -15585,24 +15937,28 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-25",
-    "daysLeft": 226,
+    "daysLeft": 224,
     "assignedUsers": [
       "1accc4a5-138f-4347-983b-c64c08ee342f",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.608Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:10.110Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.671Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:34.657Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 1498
+    "uptimeResponseTime": 981
   },
   {
-    "id": "5dd9ddbc-2eaa-4da1-b495-aa1f36085c4b",
+    "id": "a7581016-7e8a-4483-bc94-190884d066df",
     "url": "https://www.zwibak.com/",
     "account": "RM",
     "status": "Active",
@@ -15614,7 +15970,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -15740,20 +16096,24 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:08.609Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:09.600Z",
+    "lastUptimeCheck": "2026-09-13T07:58:33.672Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:34.373Z",
     "uptimeStatusCode": 404,
-    "uptimeResponseTime": 985
+    "uptimeResponseTime": 697
   },
   {
-    "id": "1de5daec-6310-44fc-a997-4098b3e3462d",
+    "id": "5bf73f1d-8440-4c9e-b54e-26a3e510be76",
     "url": "https://rev-mm.com/",
     "account": "RM",
     "status": "Active",
@@ -15765,8 +16125,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202nu",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -15891,23 +16251,27 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-09-09",
-    "daysLeft": -2,
+    "daysLeft": -4,
     "assignedUsers": [
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.645Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:11.975Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.109Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:39.299Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1323
+    "uptimeResponseTime": 1186
   },
   {
-    "id": "10b3f9c2-a304-4cb1-bf55-c2f1606fa5d0",
+    "id": "0500e8f0-1f43-46ff-a630-c82b4dcfc2d9",
     "url": "https://miamikdistribution.com/",
     "account": "RM",
     "status": "Active",
@@ -15919,8 +16283,8 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16045,20 +16409,24 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-06-25",
-    "daysLeft": -78,
+    "daysLeft": -80,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.650Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:10.918Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.110Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:38.351Z",
     "uptimeStatusCode": 302,
-    "uptimeResponseTime": 264
+    "uptimeResponseTime": 236
   },
   {
-    "id": "0e2bd038-550a-491e-a723-775db5b9a8c0",
+    "id": "23e6c4fc-6f0c-48ec-af96-e6f266eee8f6",
     "url": "https://wcbbqcompany.com",
     "account": "RM",
     "status": "Active",
@@ -16070,7 +16438,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -16196,20 +16564,24 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
     "daysLeft": null,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.651Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:11.597Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.111Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:38.403Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 940
+    "uptimeResponseTime": 287
   },
   {
-    "id": "a42f8970-af94-43cf-ac8c-63b1a72c7187",
+    "id": "07a4407d-1d9e-42b0-8f5e-b56ebb47b3be",
     "url": "https://hotelsheldon.com/",
     "account": "RM",
     "status": "Active",
@@ -16221,8 +16593,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202qm",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16347,24 +16719,28 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-12-30",
-    "daysLeft": 110,
+    "daysLeft": 108,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.652Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:12.057Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.112Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:39.393Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1401
+    "uptimeResponseTime": 1276
   },
   {
-    "id": "6dff15c3-e2aa-4ee3-b88d-bd6bf627a548",
+    "id": "5c30971e-1f88-4ce0-9615-b0575061dc14",
     "url": "https://amarvacation.com/",
     "account": "RM",
     "status": "Active",
@@ -16376,8 +16752,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202ty",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16502,10 +16878,14 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-11-10",
-    "daysLeft": 60,
+    "daysLeft": 58,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
@@ -16513,14 +16893,14 @@
       "d4ed8d6f-0ba6-455f-aa09-a77919195319"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.654Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:11.563Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.113Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:38.601Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 903
+    "uptimeResponseTime": 481
   },
   {
-    "id": "b18b33ef-d855-4276-82ed-5610df0a64cc",
+    "id": "8cd7a19b-4368-439b-af55-ec6e84b391d0",
     "url": "https://www.theguildhotel.com/",
     "account": "RM",
     "status": "Active",
@@ -16532,8 +16912,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202u6",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16658,6 +17038,10 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -16665,11 +17049,11 @@
     "assignedUsers": [],
     "uptimeStatus": "unknown",
     "lastUptimeCheck": null,
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T06:50:18.300Z"
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T05:22:26.667Z"
   },
   {
-    "id": "efd9d112-bbde-4e5e-92c6-47edd4057409",
+    "id": "40f4690f-1a67-4908-a93c-8881d935c7ff",
     "url": "https://grangerhotel.com/",
     "account": "RM",
     "status": "Active",
@@ -16681,8 +17065,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202ud",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16807,6 +17191,10 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -16814,11 +17202,11 @@
     "assignedUsers": [],
     "uptimeStatus": "unknown",
     "lastUptimeCheck": null,
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T06:50:18.300Z"
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T05:22:26.667Z"
   },
   {
-    "id": "758e2559-2f5b-492a-8679-ab6e23caacb1",
+    "id": "afcddd84-f470-4711-8413-914f077c70e8",
     "url": "https://duneclimbinn.com/",
     "account": "RM",
     "status": "Active",
@@ -16830,8 +17218,8 @@
     "clickupUrl": "https://app.clickup.com/t/868e202v2",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
-    "latestMonthStatus": "Updated & Backup",
+    "latestMonth": "September 26",
+    "latestMonthStatus": "",
     "monthlyHistory": [
       {
         "month": "June 22",
@@ -16956,23 +17344,27 @@
       {
         "month": "January 25",
         "status": "Updated & Backup"
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-03-22",
-    "daysLeft": 558,
+    "daysLeft": 556,
     "assignedUsers": [
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.662Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:12.411Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.117Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:38.574Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1738
+    "uptimeResponseTime": 452
   },
   {
-    "id": "c3871984-2634-43cc-bc3f-4ccf66c8bfa6",
+    "id": "272305bf-3104-4a09-a204-e3ecb2237bac",
     "url": "https://elevatebyhvmg.com/",
     "account": "RM",
     "status": "Active",
@@ -16984,7 +17376,7 @@
     "clickupUrl": "https://app.clickup.com/t/868e2ppdk",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17110,23 +17502,27 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-07-16",
-    "daysLeft": 308,
+    "daysLeft": 306,
     "assignedUsers": [
       "fec2f34a-1382-4950-9d46-5db269c6f63c",
       "3320c667-0c92-4334-a278-c5fcbc047f76"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.668Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:12.263Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.118Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:39.225Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1581
+    "uptimeResponseTime": 1102
   },
   {
-    "id": "23b2062e-329c-47f6-89b6-14675f8f6eda",
+    "id": "42c6beba-db1c-46a0-bd04-2beef4be74d7",
     "url": "https://tanresorts.com/cap-cana/",
     "account": "RM",
     "status": "Active",
@@ -17138,7 +17534,7 @@
     "clickupUrl": "https://app.clickup.com/t/868e2ppjj",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17264,6 +17660,10 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "",
@@ -17273,14 +17673,14 @@
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:10.673Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:12.959Z",
+    "lastUptimeCheck": "2026-09-13T07:58:38.119Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:39.883Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2282
+    "uptimeResponseTime": 1757
   },
   {
-    "id": "9c45a2fd-403c-497f-996b-d08063a44bba",
+    "id": "4107d16b-e09c-437a-8948-2436c7577e47",
     "url": "https://tanresorts.com/",
     "account": "RM",
     "status": "Active",
@@ -17292,7 +17692,7 @@
     "clickupUrl": "https://app.clickup.com/t/868e2ppjj",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17418,23 +17818,27 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2027-04-10",
-    "daysLeft": 211,
+    "daysLeft": 209,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.971Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:14.650Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.886Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:40.613Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1671
+    "uptimeResponseTime": 721
   },
   {
-    "id": "d125b423-157a-4dda-8cc6-bf22c46c82f7",
+    "id": "3f1eca62-7e3d-4b76-a250-239ca15e8496",
     "url": "https://insidertravelforwomen.com/",
     "account": "RM",
     "status": "Active",
@@ -17446,7 +17850,7 @@
     "clickupUrl": "https://app.clickup.com/t/868exvt5k",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17572,24 +17976,28 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2028-05-27",
-    "daysLeft": 624,
+    "daysLeft": 622,
     "assignedUsers": [
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
       "09901b12-d50d-4c19-b659-df49987ae4eb",
       "6420eb28-11d9-4f35-b8e3-41d96b944de5"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.975Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:13.327Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.888Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:40.133Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 349
+    "uptimeResponseTime": 241
   },
   {
-    "id": "696ee9b4-3c76-4804-9cac-e02998479654",
+    "id": "20527687-b67d-4e6d-a975-386e150bdf0d",
     "url": "https://warautospa.com/",
     "account": "RM",
     "status": "Active",
@@ -17601,7 +18009,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17727,20 +18135,24 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-08-07",
-    "daysLeft": -35,
+    "daysLeft": -37,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.976Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:13.349Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.889Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:40.440Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 369
+    "uptimeResponseTime": 548
   },
   {
-    "id": "91868ab4-c811-4e42-af49-ef7ec761f91b",
+    "id": "8fa85f6d-4bc9-4332-870e-0ca48ca3e72a",
     "url": "http://bhospitalityadvisors.com/",
     "account": "RM",
     "status": "Active",
@@ -17752,7 +18164,7 @@
     "clickupUrl": "",
     "reportUrl": "",
     "backupUrl": "",
-    "latestMonth": "January 25",
+    "latestMonth": "September 26",
     "latestMonthStatus": "",
     "monthlyHistory": [
       {
@@ -17878,20 +18290,24 @@
       {
         "month": "January 25",
         "status": ""
+      },
+      {
+        "month": "September 26",
+        "status": ""
       }
     ],
     "domainExpiry": "2026-06-05",
-    "daysLeft": -98,
+    "daysLeft": -100,
     "assignedUsers": [],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.978Z",
-    "createdAt": "2026-09-11T06:50:18.300Z",
-    "updatedAt": "2026-09-11T07:14:13.307Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.890Z",
+    "createdAt": "2026-09-13T05:22:26.667Z",
+    "updatedAt": "2026-09-13T07:58:39.992Z",
     "uptimeStatusCode": 301,
-    "uptimeResponseTime": 319
+    "uptimeResponseTime": 95
   },
   {
-    "id": "298d97b1-4228-43d9-9cf9-04a6cba996de",
+    "id": "b92d21b7-2b64-4e41-a7e9-15250825c074",
     "url": "https://app.clickup.com/t/10554421/868am6hz8",
     "account": "CW",
     "status": "Active",
@@ -17912,14 +18328,14 @@
       "fec2f34a-1382-4950-9d46-5db269c6f63c"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.978Z",
-    "createdAt": "2026-09-11T06:50:19.933Z",
-    "updatedAt": "2026-09-11T07:14:13.495Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.890Z",
+    "createdAt": "2026-09-13T05:22:27.736Z",
+    "updatedAt": "2026-09-13T07:58:40.077Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 502
+    "uptimeResponseTime": 184
   },
   {
-    "id": "079c8ca4-677e-4bbc-8ca9-c453657f767f",
+    "id": "5a512521-f342-44ec-827e-7d7732538d9b",
     "url": "https://us2.cloudbeds.com/reservation/3ZRoQW",
     "account": "CW",
     "status": "Active",
@@ -17932,7 +18348,7 @@
     "reportUrl": "",
     "backupUrl": "",
     "latestMonth": "",
-    "latestMonthStatus": "To Do",
+    "latestMonthStatus": "",
     "monthlyHistory": [],
     "domainExpiry": "",
     "daysLeft": null,
@@ -17941,14 +18357,14 @@
       "09901b12-d50d-4c19-b659-df49987ae4eb"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:20:44.005Z",
-    "createdAt": "2026-09-11T06:50:20.352Z",
-    "updatedAt": "2026-09-11T07:20:47.883Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.891Z",
+    "createdAt": "2026-09-13T05:22:28.092Z",
+    "updatedAt": "2026-09-13T07:58:40.983Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 2604
+    "uptimeResponseTime": 1087
   },
   {
-    "id": "3f1e07a5-9c75-4846-bfdd-542ff4ede78b",
+    "id": "3d0a5974-3532-44a4-a5ff-918d7e5128b8",
     "url": "https://hotels.cloudbeds.com/en/reservation/8Etpav?_gl=1*1dx06bu*_ga*NDIyNDgyMzEwLjE3Njc4NjkzNjc.*_ga_9EK770M6Q4*czE3Njc4NjkzNjYkbzEkZzEkdDE3Njc4NjkzNjYkajYwJGwwJGg0Njk2OTUyMjU.&currency=usd",
     "account": "RM",
     "status": "Active",
@@ -17969,14 +18385,14 @@
       "97071bf7-e6f9-4645-8a1e-6b7829d91ecf"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.981Z",
-    "createdAt": "2026-09-11T06:50:20.825Z",
-    "updatedAt": "2026-09-11T07:14:14.269Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.892Z",
+    "createdAt": "2026-09-13T05:22:28.448Z",
+    "updatedAt": "2026-09-13T07:58:40.894Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1282
+    "uptimeResponseTime": 998
   },
   {
-    "id": "f6e5b6ee-d8a7-4250-9ef6-1b8a171d84cf",
+    "id": "f8d7490e-7327-4126-a956-91daeff70618",
     "url": "https://www.wyndhamhotels.com/days-inn/casselton-north-dakota/days-inn-fargo-casselton/rooms-rates?brand_id=DI&checkInDate=2026-01-08&checkOutDate=2026-01-09&useWRPoints=false&adults=1&rooms=1",
     "account": "CW",
     "status": "Active",
@@ -17997,14 +18413,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.984Z",
-    "createdAt": "2026-09-11T06:50:21.255Z",
-    "updatedAt": "2026-09-11T07:14:13.842Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.893Z",
+    "createdAt": "2026-09-13T05:22:28.823Z",
+    "updatedAt": "2026-09-13T07:58:40.454Z",
     "uptimeStatusCode": 404,
-    "uptimeResponseTime": 847
+    "uptimeResponseTime": 556
   },
   {
-    "id": "6019fb2a-179f-44da-a67a-7e11c531e731",
+    "id": "3d6b2d3d-eebf-44ce-92f2-c8bd498e3f7f",
     "url": "https://us2.cloudbeds.com/en/reservation/Drj1GS/?currency=usd&checkin=2026-01-08&checkout=2026-01-09",
     "account": "CW",
     "status": "Active",
@@ -18025,14 +18441,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.992Z",
-    "createdAt": "2026-09-11T06:50:21.255Z",
-    "updatedAt": "2026-09-11T07:14:14.864Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.894Z",
+    "createdAt": "2026-09-13T05:22:28.824Z",
+    "updatedAt": "2026-09-13T07:58:40.953Z",
     "uptimeStatusCode": 200,
-    "uptimeResponseTime": 1866
+    "uptimeResponseTime": 1056
   },
   {
-    "id": "50129a4c-15d0-4404-9c0b-b4c7d9886ac3",
+    "id": "41cc2f51-dbe4-42e5-872f-7aaa53b57bcb",
     "url": "https://us2.cloudbeds.com/en/reservation/3ZRoQW \nhttps://us2.cloudbeds.com/en/reservation/Drj1GS \n\nhttps://us2.cloudbeds.com/en/reservation/IxIT7l",
     "account": "CW",
     "status": "Active",
@@ -18053,14 +18469,14 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:12.995Z",
-    "createdAt": "2026-09-11T06:50:21.256Z",
-    "updatedAt": "2026-09-11T07:14:14.793Z",
+    "lastUptimeCheck": "2026-09-13T07:58:39.894Z",
+    "createdAt": "2026-09-13T05:22:28.824Z",
+    "updatedAt": "2026-09-13T07:58:40.855Z",
     "uptimeStatusCode": 400,
-    "uptimeResponseTime": 1791
+    "uptimeResponseTime": 957
   },
   {
-    "id": "67781fb5-c74f-404f-b27e-083dc5199abe",
+    "id": "8a5f77ab-86ed-4050-bba8-8b8bd0cfb48c",
     "url": "https://www.ticketmaster.com/milford-theater-tickets-milford/venue/17198\n\n\nMember:\n  https://www.ticketmaster.com/milford-theater-tickets-milford/venue/17198",
     "account": "CW",
     "status": "Active",
@@ -18081,10 +18497,10 @@
       "1accc4a5-138f-4347-983b-c64c08ee342f"
     ],
     "uptimeStatus": "online",
-    "lastUptimeCheck": "2026-09-11T07:14:14.884Z",
-    "createdAt": "2026-09-11T06:50:21.256Z",
-    "updatedAt": "2026-09-11T07:14:15.313Z",
+    "lastUptimeCheck": "2026-09-13T07:58:40.988Z",
+    "createdAt": "2026-09-13T05:22:28.824Z",
+    "updatedAt": "2026-09-13T07:58:41.353Z",
     "uptimeStatusCode": 403,
-    "uptimeResponseTime": 425
+    "uptimeResponseTime": 359
   }
 ]
