@@ -58,3 +58,11 @@ scratch/row-highlight-before.json
 # running them again hits the live spreadsheets. Kept locally for the record.
 scratch/inspect-*.mjs
 scripts/discovery-report-raw.md
+
+scratch/route-classification.json
+
+scratch/live-sweep.json
+
+scratch/kv-seed-dryrun.json
+
+cloudflare-worker/.dev.vars

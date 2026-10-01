@@ -1,0 +1,88 @@
+# dashboard-wrangler.toml
+#
+# Hosts the OfficeOS MASTER DASHBOARD (src/server.js + public/) on Cloudflare.
+#
+# This is a SEPARATE config from wrangler.toml (the dev-assistant) and from
+# mailer-wrangler.toml (the mailer relay). Always deploy with --config so the
+# other two are never touched:
+#
+#     npm run dashboard:deploy
+#
+# ---------------------------------------------------------------------------
+# THE [alias] TABLE IS THE WHOLE TRICK
+# ---------------------------------------------------------------------------
+# src/server.js is a Node http server that keeps state on disk and talks to
+# Google through googleapis. A Worker has no filesystem and no listening socket.
+# Rather than rewrite 3439 lines of server.js and 1967 of db.js, each Node-only
+# module is redirected at bundler level to a Worker-native implementation:
+#
+#   node:fs / fs                  -> dashboard/kv-shim.js       (Workers KV)
+#   node:http / http              -> dashboard/http-shim.js      (capture handler)
+#   node:url / url                -> dashboard/url-shim.js       (fileURLToPath)
+#   googleapis                    -> dashboard/google-shim.js    (REST + WebCrypto)
+#   google-auth-library           -> dashboard/google-shim.js    (JWT class)
+#   nodemailer                    -> dashboard/nodemailer-stub.js(throws on purpose)
+#   dotenv/config                 -> dashboard/dotenv-stub.js    (no disk, no-op)
+#
+# Consequence: src/server.js, src/db.js, src/sheets.js, src/mailer.js and the
+# other modules are used BYTE-FOR-BYTE UNCHANGED. The email and ClickUp logic
+# is not edited, not forked, and not reimplemented. If the dashboard ever
+# breaks, the cause is in this directory, not in src/.
+# ---------------------------------------------------------------------------
+
+name = "officeos-dashboard"
+main = "dashboard-worker.js"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# Static assets: the real public/ directory, served as-is.
+# ---------------------------------------------------------------------------
+[assets]
+directory = "../public"
+binding = "ASSETS"
+# Run every request through the Worker first. Static files are served by the
+# Worker from the ASSETS binding, so the Worker must see /master.html too -
+# otherwise Cloudflare would answer from the asset store before the gate runs,
+# which would put the dashboard UI in front of an unauthenticated visitor.
+run_worker_first = true
+
+# ---------------------------------------------------------------------------
+# State: replaces data/*.json
+#
+# Create with:  npx wrangler kv namespace create --config cloudflare-worker/dashboard-wrangler.toml
+# The id below is an IDENTIFIER, not a credential, so it is safe to commit -
+# same reasoning as the D1 database_id. The secrets are NOT in this file.
+# ---------------------------------------------------------------------------
+[[kv_namespaces]]
+binding = "DASHBOARD_KV"
+id = "c44955e25a1c4791a89f3f3783213e12"
+
+# ---------------------------------------------------------------------------
+# Secrets (set with `wrangler secret put`, never committed):
+#   ADMIN_TOKEN                  bearer token for every non-health route.
+#                                REQUIRED - if unset the Worker refuses all
+#                                requests, because this surface can delete
+#                                columns from client spreadsheets.
+#   GOOGLE_SERVICE_ACCOUNT_JSON  the service account, on one line.
+#                                NOTE: the dashboard needs the FULL
+#                                spreadsheets scope, not readonly, because it
+#                                writes. See docs/cloudflare-dashboard-hosting.md.
+# ---------------------------------------------------------------------------
+
+[alias]
+"node:fs" = "./dashboard/kv-shim.js"
+"fs" = "./dashboard/kv-shim.js"
+"node:http" = "./dashboard/http-shim.js"
+"http" = "./dashboard/http-shim.js"
+"node:url" = "./dashboard/url-shim.js"
+"url" = "./dashboard/url-shim.js"
+"googleapis" = "./dashboard/google-shim.js"
+"google-auth-library" = "./dashboard/google-shim.js"
+"nodemailer" = "./dashboard/nodemailer-stub.js"
+"dotenv/config" = "./dashboard/dotenv-stub.js"

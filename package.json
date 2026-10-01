@@ -1,36 +1,43 @@
-{
-  "name": "maintenance-report-mailer",
-  "version": "1.0.0",
-  "description": "Reads the maintenance tracking Google Sheet, finds active sites due for their monthly report, pulls the per-site report tab, and emails it to the client contact.",
-  "type": "module",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dashboard": "node src/server.js",
-    "sync:rag": "node scripts/sync-rag.mjs",
-    "eval:rag": "node scripts/eval-rag.mjs",
-    "dry-run": "node src/index.js",
-    "send": "node src/index.js --send",
-    "relay": "node src/localMailAgent.js",
-    "relay:once": "node src/localMailAgent.js --once",
-    "relay:dry-run": "node src/localMailAgent.js --once --dry-run",
-    "worker:deploy": "wrangler deploy --config cloudflare-worker/mailer-wrangler.toml",
-    "worker:dev": "wrangler dev --config cloudflare-worker/mailer-wrangler.toml",
-    "worker:schema": "wrangler d1 execute officeos-mailer --remote --config cloudflare-worker/mailer-wrangler.toml --file cloudflare-worker/schema.sql",
-    "test:worker:parity": "node scratch/verify-worker-parity.mjs",
-    "test:worker:api": "node scratch/verify-worker-api.mjs",
-    "test:agent:email": "node scratch/verify-agent-email.mjs"
-  },
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "google-auth-library": "^9.14.1",
-    "googleapis": "^140.0.1",
-    "nodemailer": "^6.9.14"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "devDependencies": {
-    "wrangler": "^4.146.0"
-  }
+﻿{
+    "name":  "maintenance-report-mailer",
+    "version":  "1.0.0",
+    "description":  "Reads the maintenance tracking Google Sheet, finds active sites due for their monthly report, pulls the per-site report tab, and emails it to the client contact.",
+    "type":  "module",
+    "main":  "src/index.js",
+    "scripts":  {
+                    "dashboard:deploy":  "wrangler deploy --config cloudflare-worker/dashboard-wrangler.toml",
+                    "dashboard:dev":  "wrangler dev --config cloudflare-worker/dashboard-wrangler.toml",
+                    "dashboard:logs":  "wrangler tail --config cloudflare-worker/dashboard-wrangler.toml",
+                    "test:dashboard":  "node scratch/verify-dashboard-hosting.mjs",
+                    "test:dashboard:mutation":  "node scratch/mutation-dashboard-hosting.mjs",
+                    "test:dashboard:live":  "node scratch/classify-routes.mjs \u0026\u0026 node scratch/sweep-dashboard-live.mjs",
+                    "dashboard:seed:dryrun":  "node scratch/dryrun-seed-kv.mjs",
+                    "start":  "node src/index.js",
+                    "dashboard":  "node src/server.js",
+                    "sync:rag":  "node scripts/sync-rag.mjs",
+                    "eval:rag":  "node scripts/eval-rag.mjs",
+                    "dry-run":  "node src/index.js",
+                    "send":  "node src/index.js --send",
+                    "relay":  "node src/localMailAgent.js",
+                    "relay:once":  "node src/localMailAgent.js --once",
+                    "relay:dry-run":  "node src/localMailAgent.js --once --dry-run",
+                    "worker:deploy":  "wrangler deploy --config cloudflare-worker/mailer-wrangler.toml",
+                    "worker:dev":  "wrangler dev --config cloudflare-worker/mailer-wrangler.toml",
+                    "worker:schema":  "wrangler d1 execute officeos-mailer --remote --config cloudflare-worker/mailer-wrangler.toml --file cloudflare-worker/schema.sql",
+                    "test:worker:parity":  "node scratch/verify-worker-parity.mjs",
+                    "test:worker:api":  "node scratch/verify-worker-api.mjs",
+                    "test:agent:email":  "node scratch/verify-agent-email.mjs"
+                },
+    "dependencies":  {
+                         "dotenv":  "^16.4.5",
+                         "google-auth-library":  "^9.14.1",
+                         "googleapis":  "^140.0.1",
+                         "nodemailer":  "^6.9.14"
+                     },
+    "engines":  {
+                    "node":  "\u003e=18"
+                },
+    "devDependencies":  {
+                            "wrangler":  "^4.146.0"
+                        }
 }
