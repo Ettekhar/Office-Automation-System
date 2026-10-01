@@ -75,6 +75,12 @@ Create the tables:
 npm run worker:schema
 ```
 
+**`--remote` is not optional.** `wrangler d1 execute` writes to a local miniflare
+SQLite file by default and reports success while leaving the real database
+untouched, so a schema applied without `--remote` produces a Worker that answers
+`500 D1_ERROR: no such table` on every endpoint that reads the ledger. The npm
+script passes `--remote`.
+
 Set the three secrets. Each one is a single line on stdin, so the service
 account has to be minified first:
 
@@ -85,6 +91,12 @@ npx wrangler secret put ADMIN_TOKEN  --config cloudflare-worker/mailer-wrangler.
 # the whole service-account.json on ONE line — this is the fiddly one
 node -e "process.stdout.write(JSON.stringify(require('./service-account.json')))" \
   | npx wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON --config cloudflare-worker/mailer-wrangler.toml
+
+# the two master-sheet ids, from .env, so they never enter git
+(Get-Content .env | Select-String '^CW_SPREADSHEET_ID=').Split('=')[1].Trim() \
+  | npx wrangler secret put CW_SPREADSHEET_ID --config cloudflare-worker/mailer-wrangler.toml
+(Get-Content .env | Select-String '^RM_SPREADSHEET_ID=').Split('=')[1].Trim() \
+  | npx wrangler secret put RM_SPREADSHEET_ID --config cloudflare-worker/mailer-wrangler.toml
 ```
 
 `RELAY_TOKEN` is any long random string; the agent must present the same value.
@@ -131,6 +143,42 @@ exercises everything except the SMTP handoff. Useful after a deploy.
 
 ---
 
+## A dry run must never arm the queue
+
+This is the sharpest edge in the system, and it is worth stating plainly.
+
+`pending` is the only status `/api/jobs/next` hands out. So a planning run that
+writes `pending` has *armed real client mail*, whether or not anyone intended a
+send — the next `npm run relay` goes out to real people with no further question.
+A rehearsal that does that is not a rehearsal.
+
+Two independent locks, because the consequence is mail to real clients:
+
+1. **The Worker.** A run created with `{"dryRun":true}` queues its jobs as
+   `dry-run`, not `pending`. No agent can ever claim them. They are still written
+   to the ledger, because "who *would* get mail, and who would be skipped and why"
+   is exactly what a rehearsal is for. `/api/report` counts them under
+   `summary.dryRun`, separately from `pending`, and the markdown says
+   `queued by a DRY RUN (not sendable)`.
+
+2. **The agent.** `runJob` refuses any job whose `status` is neither `pending` nor
+   `claimed`, and reports it as skipped with the status named. It should be
+   unreachable. It is checked anyway, because the cost is one comparison and the
+   alternative is real mail from a replayed or mis-queried job.
+
+Lock 2 is deliberately permissive about a *missing* `status`: that is the shape
+`/api/jobs/next` actually returns, so treating it as a refusal would break every
+real send.
+
+Verified against the live deployment: a dry run leaves zero claimable jobs, and
+`/api/jobs/next` returns an empty list afterwards.
+
+One consequence to know about: `/api/jobs/next` **claims** — it is not a query.
+Calling it consumes the pending pool, so a "let me just look" call empties the
+queue.
+
+---
+
 ## The API
 
 All routes return JSON. The two marked `admin` take the `ADMIN_TOKEN` bearer.
@@ -138,8 +186,8 @@ All routes return JSON. The two marked `admin` take the `ADMIN_TOKEN` bearer.
 | Route | Method | Token | What it does |
 |---|---|---|---|
 | `/api/health` | GET | none | which accounts are configured, whether the secrets are set |
-| `/api/run` | POST | admin | plan a run: read the sheets, write a job per site |
-| `/api/jobs/next` | GET | `RELAY_TOKEN` | claim up to `?limit=` (max 20) pending jobs |
+| `/api/run` | POST | admin | plan a run: read the sheets, write a job per site. `{"dryRun":true}` plans without arming anything |
+| `/api/jobs/next` | GET | `RELAY_TOKEN` | claim up to `?limit=` (max 20) pending jobs. **This has a side effect — it claims** |
 | `/api/jobs/result` | POST | `RELAY_TOKEN` | report the outcome of one job |
 | `/api/report` | GET | admin | the full after-action report, JSON |
 | `/api/report.md` | GET | admin | the same thing as markdown |

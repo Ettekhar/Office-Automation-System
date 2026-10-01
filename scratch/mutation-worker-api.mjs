@@ -76,6 +76,20 @@ const MUTATIONS = [
     to: '  const id = typeof value === \'string\' ? value : \'\';',
   },
   {
+    // The single most consequential line in the Worker: get this wrong and a
+    // rehearsal against the real sheets arms a queue of real client mail.
+    id: 'A13',
+    name: 'a dry run queues claimable jobs (real mail one drain away)',
+    from: "  const queuedStatus = dryRun ? 'dry-run' : 'pending';",
+    to: "  const queuedStatus = 'pending';",
+  },
+  {
+    id: 'A14',
+    name: 'the report lumps dry-run jobs back in with pending work',
+    from: "      dryRun: byStatus['dry-run'] || 0,",
+    to: '      dryRun: 0,',
+  },
+  {
     id: 'A4',
     name: '"did not get mail" lists everybody, sent or not',
     from: "const notSent = shaped.filter((s) => s.mail.status !== 'sent')",

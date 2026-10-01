@@ -15,10 +15,10 @@
 # GOOGLE_SERVICE_ACCOUNT_JSON is the WHOLE service-account.json on ONE line:
 #   node -e "process.stdout.write(JSON.stringify(require('./service-account.json')))"
 #
-# The spreadsheet IDs below are the SAME variables src/config.js reads from .env.
-# They are not a second vocabulary - they are the same fact, stated once more in
-# the only place a Worker can keep it. They ship as placeholders because this file
-# is committed to a public remote; paste the real values from .env before deploy.
+# The spreadsheet IDs are the SAME variables src/config.js reads from .env, set as
+# Worker secrets rather than vars (see [vars] below for why). They are not a second
+# vocabulary - they are the same fact, stated once more in the only place a Worker
+# can keep it.
 # ═══════════════════════════════════════════════════════════════════════════
 
 name = "officeos-mailer"
@@ -27,24 +27,27 @@ compatibility_date = "2025-09-01"
 # reportUtils.js is plain ESM; nodejs_compat gives it a correct module environment.
 compatibility_flags = ["nodejs_compat"]
 
-# The ledger. Create the database first, then paste the id it prints below.
+# The ledger. Created 2026-10-02 (`npx wrangler d1 create officeos-mailer`).
+# A D1 database id is an identifier, not a credential, so it is safe to commit.
 [[d1_databases]]
 binding = "DB"
 database_name = "officeos-mailer"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "c3eae9dc-588c-4935-9087-b58404e27532"
 
 [vars]
-# Live master sheets. SAME VALUES as .env CW_SPREADSHEET_ID / RM_SPREADSHEET_ID -
-# paste them in from your .env before deploying. They are placeholders here because
-# this file is committed and the GitHub remote is PUBLIC, and a spreadsheet id is
-# the one thing in the deployment that must not be published by accident.
+# The master-sheet ids are NOT here: they are Worker secrets (see below). They were
+# originally written into [vars] and that was wrong for a committed file on a public
+# remote - a spreadsheet id is the one identifier in this deployment that must not be
+# published by accident, and having the name in both places is ambiguous anyway.
 #
-# Leaving a placeholder is SAFE, unlike the CLI's behaviour: accountsFor() drops
-# any account with no spreadsheet id, so the Worker comes up with zero configured
-# accounts and /api/health reports configuredAccounts: [] instead of quietly
-# reading the wrong sheet. (npm run send has no such guard - see the docs.)
-CW_SPREADSHEET_ID = "REPLACE_WITH_CW_SPREADSHEET_ID"
-RM_SPREADSHEET_ID = "REPLACE_WITH_RM_SPREADSHEET_ID"
+#   (Get-Content .env | Select-String '^CW_SPREADSHEET_ID=').Split('=')[1].Trim() |
+#     npx wrangler secret put CW_SPREADSHEET_ID --config cloudflare-worker/mailer-wrangler.toml
+#
+# accountsFor() treats a blank or "REPLACE_WITH_..." id as UNCONFIGURED, so a deploy
+# whose ids were never set comes up with zero accounts and /api/health says
+# configuredAccounts: [] rather than quietly reading the wrong sheet.
+#
+# npm run send has no equivalent guard - see docs/cloudflare-mail-relay.md.
 CW_MASTER_TAB_NAME = "Website List"
 RM_MASTER_TAB_NAME = "Website List"
 CW_NAME = "CW Maintenance"
@@ -53,7 +56,8 @@ RM_NAME = "RM Maintenance"
 # when it does the row is marked htmlTruncated rather than silently shortened.
 MAX_HTML_CHARS = "400000"
 
-# Secrets (never here):
+# Secrets (never in this file):
 #   RELAY_TOKEN                 — bearer token the local agent presents
-#   ADMIN_TOKEN                 — optional gate on /api/run, /api/report, /api/overview
+#   ADMIN_TOKEN                 — gate on /api/run, /api/report, /api/overview
 #   GOOGLE_SERVICE_ACCOUNT_JSON — service account, spreadsheets.readonly scope
+#   CW_SPREADSHEET_ID / RM_SPREADSHEET_ID — the live master sheets

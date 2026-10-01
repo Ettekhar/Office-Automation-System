@@ -49,7 +49,9 @@ CREATE TABLE IF NOT EXISTS jobs (
   time_track_url  TEXT,
   account_manager TEXT,
 
-  status          TEXT NOT NULL DEFAULT 'pending',
+  -- 'pending' is the ONLY status /api/jobs/next will claim. A run created with
+  -- dry_run=1 queues as 'dry-run' instead, so a rehearsal can never become a send.
+  status          TEXT NOT NULL DEFAULT 'pending',  -- pending|dry-run|claimed|sent|failed|skipped
                   -- pending  queued, not yet claimed by any agent
                   -- claimed  an agent is working on it
                   -- sent     SMTP accepted it (message_id recorded)

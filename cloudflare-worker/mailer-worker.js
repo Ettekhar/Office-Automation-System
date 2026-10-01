@@ -386,17 +386,24 @@ async function planRun(env, { account, month, dryRun, actor, trigger }) {
     );
   }
 
+  // A dry run must NOT leave a claimable queue behind. 'pending' is the only
+  // status /api/jobs/next hands out, so writing 'pending' from a dry run means the
+  // next real agent drain mails real clients without anyone asking for a send.
+  // 'dry-run' rows are kept instead: they still answer "who WOULD get mail", they
+  // still appear in the report, and no agent can ever claim them.
+  const queuedStatus = dryRun ? 'dry-run' : 'pending';
+
   for (const j of jobRows) {
     stmts.push(
       env.DB.prepare(
         `INSERT INTO jobs (id, run_id, seq, account, account_name, website_url, matched_tab,
                            recipients, month, month_lower, year, time_track_url, account_manager,
                            status, queued_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).bind(
         uuid(), runId, j.seq, j.account, j.account_name, j.website_url, j.matched_tab,
         JSON.stringify(j.recipients), j.month, j.month_lower, String(j.year),
-        j.time_track_url || null, j.account_manager || null, at,
+        j.time_track_url || null, j.account_manager || null, queuedStatus, at,
       ),
     );
   }
@@ -669,6 +676,9 @@ async function buildReport(env, params) {
       sent: byStatus.sent || 0,
       failed: byStatus.failed || 0,
       skipped: byStatus.skipped || 0,
+      // Reported apart from pending: a dry-run job was never offered to an agent,
+      // so counting it as "pending" would imply work in flight that cannot happen.
+      dryRun: byStatus['dry-run'] || 0,
       pending: (byStatus.pending || 0) + (byStatus.claimed || 0),
       clickupSent: byClickup.sent || 0,
       clickupSkipped: byClickup.skipped || 0,
@@ -759,7 +769,7 @@ function toMarkdown(report) {
   L.push(`- created: ${report.run.createdAt} by ${report.run.createdBy} (${report.run.trigger}${report.run.dryRun ? ', DRY RUN' : ''})`);
   L.push(`- generated: ${report.generatedAt}`);
   const s = report.summary;
-  L.push(`- mail sent: **${s.sent}**, failed: **${s.failed}**, skipped: **${s.skipped}**, still pending: **${s.pending}**`);
+  L.push(`- mail sent: **${s.sent}**, failed: **${s.failed}**, skipped: **${s.skipped}**, still pending: **${s.pending}**${s.dryRun ? `, queued by a DRY RUN (not sendable): **${s.dryRun}**` : ''}`);
   L.push(`- clickup closed: **${s.clickupSent}**, skipped: **${s.clickupSkipped}**, would-have (dry run): **${s.clickupDryRun}**, failed: **${s.clickupFailed}**`);
   L.push(`- recipients: ${s.recipients}`);
   L.push('');

@@ -16,7 +16,7 @@
     "relay:dry-run": "node src/localMailAgent.js --once --dry-run",
     "worker:deploy": "wrangler deploy --config cloudflare-worker/mailer-wrangler.toml",
     "worker:dev": "wrangler dev --config cloudflare-worker/mailer-wrangler.toml",
-    "worker:schema": "wrangler d1 execute officeos-mailer --config cloudflare-worker/mailer-wrangler.toml --file cloudflare-worker/schema.sql",
+    "worker:schema": "wrangler d1 execute officeos-mailer --remote --config cloudflare-worker/mailer-wrangler.toml --file cloudflare-worker/schema.sql",
     "test:worker:parity": "node scratch/verify-worker-parity.mjs",
     "test:worker:api": "node scratch/verify-worker-api.mjs",
     "test:agent:email": "node scratch/verify-agent-email.mjs"

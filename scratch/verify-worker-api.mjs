@@ -218,6 +218,65 @@ console.log('── auth ──');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// 3b. A dry run must not leave a claimable queue
+//
+// This is the safety property that matters most in the whole file. 'pending' is
+// the only status /api/jobs/next hands out, so a dry run that wrote 'pending'
+// would put real client mail one agent-drain away from going out without anyone
+// asking for a send. Found on a live dry run against the real sheets before it
+// was written down here.
+//
+// ORDERING: this runs before any real run so that the claim endpoint is asked
+// for work while the only jobs in the ledger are this dry run's. Calling it
+// later would CONSUME the real run's pending jobs - the claim has a side effect,
+// it is not a query - and the checks after this one would find an empty pool.
+// ═══════════════════════════════════════════════════════════════════════════
+
+console.log('── dry run does not arm the queue ──');
+
+let dryRunId = null;
+{
+  const res = await call('/api/run', { method: 'POST', body: { actor: 'suite', dryRun: true }, token: ADMIN });
+  const body = await res.json();
+  dryRunId = body.runId;
+  check(res.status === 200, 'a dry run returns 200', JSON.stringify(body).slice(0, 200));
+  check(body.queued > 0, 'the dry run did queue something, so the checks below are meaningful', `queued ${body.queued}`);
+
+  const claimable = sql.prepare("SELECT COUNT(*) n FROM jobs WHERE run_id = ? AND status = 'pending'").get(dryRunId);
+  check(claimable.n === 0, 'a dry run leaves ZERO claimable jobs', `${claimable.n} pending`);
+
+  const asDry = sql.prepare("SELECT COUNT(*) n FROM jobs WHERE run_id = ? AND status = 'dry-run'").get(dryRunId);
+  check(asDry.n === body.queued, 'every dry-run job is recorded as dry-run instead',
+    `${asDry.n} dry-run vs ${body.queued} queued`);
+
+  // And the end-to-end proof: ask the claim endpoint. It must come back empty.
+  const handed = await (await call('/api/jobs/next?limit=20&agent=should-get-nothing', { token: RELAY })).json();
+  const fromDry = handed.jobs.filter((j) => j.run_id === dryRunId || j.runId === dryRunId);
+  check(fromDry.length === 0, 'the claim endpoint hands out nothing from a dry run', `${fromDry.length} leaked`);
+
+  // Skips are still recorded, because "who did NOT get mail, and why" is the
+  // question the report exists to answer and a dry run should still answer it.
+  const skips = sql.prepare("SELECT COUNT(*) n FROM jobs WHERE run_id = ? AND status = 'skipped'").get(dryRunId);
+  check(skips.n > 0, 'a dry run still records why each ineligible site was skipped', `${skips.n} skips`);
+
+  // And the report must not describe them as pending work in flight. The report
+  // always reads the most recent run, which is this one - it was created last.
+  const rep = await (await call('/api/report', { token: ADMIN })).json();
+  check(rep.run && rep.run.id === dryRunId, 'the report is about this run', rep.run && rep.run.id);
+  check(rep.summary.dryRun === body.queued,
+    'the report counts dry-run jobs separately from pending',
+    `dryRun ${rep.summary.dryRun}, pending ${rep.summary.pending}`);
+  check(rep.run.dryRun === true, 'the report marks the run itself as a dry run');
+  check(rep.summary.sent === 0 && rep.summary.pending === 0,
+    'a dry run reports nothing sent and nothing pending',
+    `sent ${rep.summary.sent}, pending ${rep.summary.pending}`);
+
+  const md = await (await call('/api/report.md', { token: ADMIN })).text();
+  check(/DRY RUN/.test(md), 'the markdown report says it was a dry run');
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
 // 3. Planning writes a ledger that matches the truth table
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -235,7 +294,13 @@ check(runRes.status === 200, 'run returns 200', JSON.stringify(run));
   check(!!signedJwt, 'the Worker signed a real JWT for Google');
   check(signedJwt && signedJwt.iss === 'relay@example.iam.gserviceaccount.com', 'JWT issuer is the service account', JSON.stringify(signedJwt));
   check(signedJwt && /spreadsheets/.test(signedJwt.scope || ''), 'JWT asks for spreadsheets scope', JSON.stringify(signedJwt));
-  check(sql.prepare('SELECT COUNT(*) n FROM runs').get().n === 1, 'exactly one run exists in the ledger');
+  // Two runs exist by this point: the dry run above, and this one. Only the real
+  // run's jobs are in the pending pool, because that is the whole point of the
+  // dry-run block.
+  check(sql.prepare('SELECT COUNT(*) n FROM runs').get().n === 2, 'exactly two runs exist in the ledger');
+  check(sql.prepare('SELECT COUNT(*) n FROM runs WHERE dry_run = 1').get().n === 1, 'exactly one of them is flagged dry_run');
+  check(sql.prepare("SELECT COUNT(DISTINCT run_id) n FROM jobs WHERE status = 'pending'").get().n === 1,
+    'only the real run has pending jobs');
 }
 
 {

@@ -95,6 +95,19 @@ async function api(path, { method = 'GET', body } = {}) {
  * the result against what `npm run send` produces for the same site.
  */
 export async function runJob(job) {
+  // Defence in depth. /api/jobs/next only ever hands out status='pending', and a
+  // run created with dryRun queues as 'dry-run', so this should be unreachable.
+  // It is checked anyway because the failure it prevents is real mail to real
+  // clients from a rehearsal, and the cost of the check is one comparison.
+  if (job && job.status && job.status !== 'pending' && job.status !== 'claimed') {
+    return {
+      jobId: job.id, agent: AGENT_NAME, status: 'skipped', subject: null, html: null,
+      messageId: null, error: null,
+      skipReason: `refused: job status is "${job.status}", not pending`,
+      clickupStatus: 'none', clickupDetail: null,
+    };
+  }
+
   const record = {
     jobId: job.id,
     agent: AGENT_NAME,

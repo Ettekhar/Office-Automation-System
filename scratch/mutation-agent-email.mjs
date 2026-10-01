@@ -80,6 +80,20 @@ const MUTATIONS = [
     from: 'conditionalNotes,\n      accountKey: job.account,',
     to: 'accountKey: job.account,',
   },
+  {
+    // The guard that stops this machine mailing real clients from a job that
+    // only looked sendable - e.g. one queued by a dry run.
+    id: 'M9',
+    name: 'the agent no longer refuses a non-pending job',
+    from: "if (job && job.status && job.status !== 'pending' && job.status !== 'claimed') {",
+    to: 'if (false) {',
+  },
+  {
+    id: 'M10',
+    name: 'the refusal quietly reports success instead of a skip',
+    from: "messageId: null, error: null,\n      skipReason: `refused: job status is \"${job.status}\", not pending`,\n      clickupStatus: 'none', clickupDetail: null,",
+    to: "messageId: 'fake-id', error: null, skipReason: null,\n      clickupStatus: 'none', clickupDetail: null,",
+  },
 ];
 
 let pass = 0;

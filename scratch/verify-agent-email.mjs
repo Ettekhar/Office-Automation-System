@@ -281,6 +281,53 @@ console.log('── the one gap a fixture cannot cover ──');
 
 // ═══════════════════════════════════════════════════════════════════════════
 
+// The agent refuses a job that is not pending
+// ---------------------------------------------------------------------------
+
+// The Worker never hands out a 'dry-run' job - /api/jobs/next selects status =
+// 'pending' only, and a rehearsal queues as 'dry-run'. This is the second lock on
+// the same door: if the Worker's query ever regressed, or a job were replayed by
+// hand, this machine must not put real clients' mail in a real SMTP socket. A dry
+// run against the live sheets that armed a claimable queue is exactly the bug this
+// exists to make impossible, so it is checked behaviourally here: no send call,
+// and an honest skip reason that names the status it refused.
+console.log('\n-- a job that is not pending is refused --');
+
+{
+  const base = {
+    id: 'job-refused', runId: 'run-fixture', account: 'CW',
+    websiteUrl: 'cw-ok.test', matchedTab: 'cw-ok.test', recipients: ['a@b.com'],
+    month: 'May', monthLower: 'may', year: 2026,
+    timeTrackUrl: null, accountManager: null,
+    spreadsheetId: 'cw-sheet-id', masterTabName: 'Website List',
+  };
+
+  for (const status of ['dry-run', 'sent', 'skipped', 'failed', 'claimed-stale']) {
+    const before = double.CALLS.length;
+    const rec = await runJob({ ...base, id: `job-refused-${status}`, status });
+    const sent = double.CALLS.length - before;
+
+    check(sent === 0, `a "${status}" job is never handed to SMTP`, `${sent} send call(s)`);
+    check(rec.status === 'skipped', `a "${status}" job is recorded as skipped, not sent`, rec.status);
+    check(rec.skipReason && rec.skipReason.includes(status),
+      `...and the reason names the status it refused`, rec.skipReason);
+    check(!rec.html, `...and no message body is built for a "${status}" job`);
+    check(!rec.messageId, `...and no message id is claimed for a "${status}" job`);
+  }
+
+  // A job with no status at all is the shape the Worker actually returns, so it
+  // must NOT be refused - otherwise the guard would break every real send.
+  const before = double.CALLS.length;
+  const plain = await runJob({ ...base, id: 'job-nostatus' });
+  check(double.CALLS.length - before === 1,
+    'a job with no status field is still sent, because that is what the Worker returns',
+    `${double.CALLS.length - before} send call(s)`);
+  check(plain.status === 'sent', '...and it records as sent', plain.status);
+
+  const claimed = await runJob({ ...base, id: 'job-claimed', status: 'claimed' });
+  check(claimed.status === 'sent', 'a freshly claimed job is sent', claimed.status);
+}
+
 if (failures.length) {
   console.log('\nFAILURES');
   for (const f of failures) console.log(`  x ${f}`);
