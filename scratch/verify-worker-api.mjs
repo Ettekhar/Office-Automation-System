@@ -152,6 +152,27 @@ console.log('\n── health + Google auth ──');
   check(eq(body.configuredAccounts.map((a) => a.key), ['CW', 'RM']), 'health lists both accounts', JSON.stringify(body.configuredAccounts));
   check(body.sheetsCredentialConfigured === true, 'health reports the service account is configured');
   check(body.relayTokenConfigured === true, 'health reports the relay token is configured');
+
+  // The spreadsheet ids are Worker SECRETS precisely so they are not published.
+  // /api/health is unauthenticated and the Worker URL is not a secret, so echoing
+  // them here gave away exactly what the secret store was there to protect - the
+  // ids reached the public internet and the repo had never seen them.
+  // This asserts ABSENCE, which is the only direction that matters.
+  const anon = await (await call('/api/health')).text();
+  check(!/cw-sheet-id/.test(anon), 'an unauthenticated health check does not leak the CW spreadsheet id', anon.slice(0, 200));
+  check(!/rm-sheet-id/.test(anon), 'an unauthenticated health check does not leak the RM spreadsheet id');
+  check(!/"spreadsheetId"/.test(anon), 'an unauthenticated health check has no spreadsheetId field at all');
+
+  const rootAnon = await (await call('/')).text();
+  check(!/cw-sheet-id/.test(rootAnon), 'the bare / route does not leak spreadsheet ids either');
+  check(!/rm-sheet-id/.test(rootAnon), '…for either account');
+
+  // But an operator holding the admin token still gets them, so the endpoint
+  // remains useful for confirming the wiring.
+  const asAdmin = await (await call('/api/health', { token: ADMIN })).json();
+  check(asAdmin.configuredAccounts.some((a) => a.spreadsheetId === 'cw-sheet-id'),
+    'an ADMIN-authenticated health check still shows the resolved spreadsheet ids',
+    JSON.stringify(asAdmin.configuredAccounts));
 }
 
 // mailer-wrangler.toml ships the spreadsheet ids as REPLACE_WITH_... placeholders

@@ -90,6 +90,15 @@ const MUTATIONS = [
     to: '      dryRun: 0,',
   },
   {
+    id: 'A15',
+    // The Worker URL is not a secret, so anything an unauthenticated caller can
+    // read is public. This re-publishes the spreadsheet ids that had just been
+    // moved into Worker secrets for the express purpose of keeping them private.
+    name: 'the unauthenticated health check leaks the spreadsheet ids again',
+    from: '        const withIds = requireAdmin(req, env);',
+    to: '        const withIds = true;',
+  },
+  {
     id: 'A4',
     name: '"did not get mail" lists everybody, sent or not',
     from: "const notSent = shaped.filter((s) => s.mail.status !== 'sent')",

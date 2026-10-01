@@ -443,14 +443,26 @@ export default {
 
     try {
       // ---- public -------------------------------------------------------
+      // NO spreadsheet ids here. This route is unauthenticated and the Worker URL
+      // is not a secret, so anything returned from it is public. The ids used to
+      // be echoed in this block, which published them to anyone with the link -
+      // the exact thing moving them into Worker secrets was meant to prevent.
+      // An operator who needs to confirm the wiring reads /api/health with the
+      // ADMIN_TOKEN bearer, which does return them.
       if (p === '/' || p === '/api/health') {
+        const withIds = requireAdmin(req, env);
         return json({
           service: 'officeos-mailer',
           role: 'planner + ledger + report (SMTP is local, by design)',
-          configuredAccounts: accountsFor(env).map((a) => ({ key: a.key, spreadsheetId: a.spreadsheetId, masterTab: a.masterTabName })),
+          configuredAccounts: accountsFor(env).map((a) => (withIds
+            ? { key: a.key, spreadsheetId: a.spreadsheetId, masterTab: a.masterTabName }
+            : { key: a.key, spreadsheetIdConfigured: true, masterTab: a.masterTabName })),
           sheetsCredentialConfigured: !!env.GOOGLE_SERVICE_ACCOUNT_JSON,
           relayTokenConfigured: !!env.RELAY_TOKEN,
           d1Bound: !!env.DB,
+          ...(withIds ? {} : {
+            note: 'spreadsheet ids are withheld from unauthenticated callers; send the ADMIN_TOKEN bearer to see them',
+          }),
         });
       }
 

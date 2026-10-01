@@ -186,6 +186,7 @@ All routes return JSON. The two marked `admin` take the `ADMIN_TOKEN` bearer.
 | Route | Method | Token | What it does |
 |---|---|---|---|
 | `/api/health` | GET | none | which accounts are configured, whether the secrets are set |
+| `/` | GET | none | same as `/api/health` |
 | `/api/run` | POST | admin | plan a run: read the sheets, write a job per site. `{"dryRun":true}` plans without arming anything |
 | `/api/jobs/next` | GET | `RELAY_TOKEN` | claim up to `?limit=` (max 20) pending jobs. **This has a side effect — it claims** |
 | `/api/jobs/result` | POST | `RELAY_TOKEN` | report the outcome of one job |
@@ -286,6 +287,17 @@ Worker does not have this failure mode, because its spreadsheet ids are explicit
 `/api/report` and `/api/overview` are readable and `/api/run` is callable by
 anyone who finds the URL. `/api/health` will tell you whether it is set. If you
 have any reason to leave it off, put Cloudflare Access in front of the Worker.
+
+**A Worker URL is not a secret, so `/api/health` publishes nothing sensitive.**
+It is unauthenticated by design — it has to answer before a token is known — so
+it reports *that* each account is configured, never *which* spreadsheet. With
+`Authorization: Bearer <ADMIN_TOKEN>` it returns the resolved ids, which is what
+you want when checking the wiring.
+
+This was a real leak, not a hypothetical one: `/api/health` originally returned
+the spreadsheet ids, so moving them into Worker secrets to keep them out of the
+public repo was undone by the very next request anyone made. `A15` in the
+mutation harness reverts the fix and the suite goes red.
 
 **The agent needs the report tab to exist.** It reads
 `<matchedTab>` at `A1:D200` — the same range the CLI uses. A site whose tab is
