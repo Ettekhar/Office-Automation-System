@@ -41,6 +41,11 @@ export function tabTitlesCacheKey(spreadsheetId) {
   return `titles::${spreadsheetId}`;
 }
 
+/** Build the cache key for spreadsheet metadata (tab titles + gids). */
+export function tabMetaCacheKey(spreadsheetId) {
+  return `meta::${spreadsheetId}`;
+}
+
 /** Build the cache key for a single tab's values. */
 export function tabValuesCacheKey(spreadsheetId, tabName, range) {
   return `values::${spreadsheetId}::${tabName}::${range}`;
@@ -63,6 +68,11 @@ export function cacheGet(key) {
 /** Store a value in the cache. */
 export function cacheSet(key, value) {
   store[key] = { value, fetchedAt: Date.now() };
+}
+
+/** Force-refresh support for a single read while preserving the shared queue. */
+export function cacheDelete(key) {
+  delete store[key];
 }
 
 /**

@@ -7,8 +7,9 @@
  * NOT share one layout:
  *
  *   CW "Website List"   A=status  B=CMS  C=Company  D=Contact  E=A/C Manager
- *                       F=Note  G=Website URL  H=ClickUp  I=Report URL
- *                       J=Backup URL  K…=month columns          (11+ cols)
+ *                       F=Note  G=Website URL  H=Time-Track ClickUp
+ *                       I=Task ClickUp  J=Report URL  K=Backup URL
+ *                       L…=month columns                        (12+ cols)
  *   RM "Website List"   A=status  B=CMS  C=Company  D=Contact  E=A/C Manager
  *                       F=Website URL  G=ClickUp  H…=month columns (8+ cols)
  *   Dev Tracker tabs    TWO layouts coexist: OLD 5-col (A=URL B=Status
@@ -217,8 +218,17 @@ export const FIELD_PROFILES = {
       },
       {
         key: 'clickupUrl', label: 'ClickUp URL', kind: 'url',
-        exactAliases: ['clickup', 'clickup url', 'clickup link', 'task clickup'],
-        aliases: ['clickup'],
+        exactAliases: ['clickup', 'clickup url', 'clickup link', 'task clickup', 'maintenance task clickup url', 'maintenance task clickup link'],
+        aliases: ['clickup', 'task clickup'],
+      },
+      {
+        // New CW column: "Maintenance time tracking ClickUp URL" (time-tracking
+        // sheet). Must be a separate field so it can never steal the Task ClickUp
+        // column: exact aliases claim it on the full "maintenance time tracking
+        // clickup url" header before the generic `clickupUrl` substring does.
+        key: 'clickupTimeTrackUrl', label: 'ClickUp Time Track URL', kind: 'url',
+        exactAliases: ['maintenance time tracking clickup url', 'time tracking clickup url', 'clickup time tracking url', 'maintenance time tracking clickup', 'time tracking clickup'],
+        aliases: ['time tracking', 'time track clickup'],
       },
       {
         key: 'reportUrl', label: 'Report URL', kind: 'url',

@@ -141,6 +141,7 @@ export function detectColumns(headerRow) {
     NOTE: at('note', -1),
     WEBSITE_URL: at('websiteUrl', 6),
     CLICKUP_URL: at('clickupUrl', -1),
+    TIME_TRACK_URL: at('clickupTimeTrackUrl', -1),
     REPORT_URL: at('reportUrl', -1),
     BACKUP_URL: at('backupUrl', -1),
     FIRST_MONTH_COL: -1, // resolved below
@@ -160,6 +161,7 @@ export function detectColumns(headerRow) {
     const detectedOnly = [
       out.STATUS, out.CMS, out.COMPANY, out.CONTACT, out.AM, out.WEBSITE_URL,
       out.CLICKUP_URL >= 0 ? out.CLICKUP_URL : null,
+      out.TIME_TRACK_URL >= 0 ? out.TIME_TRACK_URL : null,
       out.NOTE >= 0 ? out.NOTE : null,
       out.REPORT_URL >= 0 ? out.REPORT_URL : null,
       out.BACKUP_URL >= 0 ? out.BACKUP_URL : null,
@@ -192,6 +194,86 @@ export function isValidWebsiteUrl(raw) {
  * Find the latest (rightmost) month column from the master sheet header row,
  * or find a specific requested month if provided.
  */
+/**
+ * Month name normalizer.
+ *
+ * Accepts any raw sheet column header and extracts:
+ *   - A proper-cased full month name  ("September")
+ *   - A lowercase version             ("september")
+ *   - A 4-digit year if present       (2026), else current year
+ *
+ * Handles every format seen in practice:
+ *   "september-26"  "September 26"  "sept-2026"  "sep 26"
+ *   "September2026" "september_26"  "SEPT-26"    "September-26-2026"
+ *   "2026-09"       "09-2026"       "sep"        "September"
+ *
+ * Returns { monthName, monthLower, year } or null if no month detected.
+ */
+export function normalizeMonthName(raw) {
+  if (!raw) return null;
+  const str = String(raw).trim();
+
+  const MONTHS = [
+    ['january',   'jan'],
+    ['february',  'feb'],
+    ['march',     'mar'],
+    ['april',     'apr'],
+    ['may',       'may'],
+    ['june',      'jun'],
+    ['july',      'jul'],
+    ['august',    'aug'],
+    ['september', 'sep', 'sept'],
+    ['october',   'oct'],
+    ['november',  'nov'],
+    ['december',  'dec'],
+  ];
+
+  const lower = str.toLowerCase();
+
+  // 1. Try to extract a 4-digit year from anywhere in the string
+  const yearMatch = str.match(/\b(20\d{2})\b/);
+  let year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
+
+  // 2-digit year suffix handling: "september-26" → could be year 2026 or day 26
+  // We treat a 2-digit number ≥ 24 as a year suffix (2024+) and < 24 as a day/irrelevant
+  if (!yearMatch) {
+    const twoDigit = str.match(/[-_\s\/](\d{2})$/);
+    if (twoDigit) {
+      const n = parseInt(twoDigit[1], 10);
+      if (n >= 24) year = 2000 + n;
+      // if n < 24 it's ambiguous — leave year as current year
+    }
+  }
+
+  // 3. Find the month name in the string
+  for (const [full, ...abbrevs] of MONTHS) {
+    const allVariants = [full, ...abbrevs];
+    if (allVariants.some((v) => {
+      // match the variant as a whole word or at start/end of the string
+      const re = new RegExp(`(?:^|[^a-z])${v}(?:[^a-z]|$)`);
+      return re.test(lower);
+    })) {
+      const monthName = full.charAt(0).toUpperCase() + full.slice(1); // "September"
+      return {
+        monthName,
+        monthLower: full,
+        year,
+      };
+    }
+  }
+
+  // 4. Numeric month fallback: "2026-09" or "09-2026"
+  const numericMonth = str.match(/\b(0?[1-9]|1[0-2])\b/);
+  if (numericMonth) {
+    const idx = parseInt(numericMonth[1], 10) - 1;
+    const full = MONTHS[idx][0];
+    const monthName = full.charAt(0).toUpperCase() + full.slice(1);
+    return { monthName, monthLower: full, year };
+  }
+
+  return null;
+}
+
 export function resolveMonthColumn(
   headerRow,
   firstMonthCol = 10,
@@ -204,11 +286,12 @@ export function resolveMonthColumn(
     for (let i = headerRow.length - 1; i >= firstMonthCol; i--) {
       const colName = (headerRow[i] || "").trim();
       if (colName.toLowerCase() === targetMonthName.trim().toLowerCase()) {
+        const normalized = normalizeMonthName(colName);
         return {
           columnIndex: i,
-          monthName: colName,
-          monthLower: colName.toLowerCase(),
-          year: new Date().getFullYear(),
+          monthName: normalized?.monthName || colName,
+          monthLower: normalized?.monthLower || colName.toLowerCase(),
+          year: normalized?.year || new Date().getFullYear(),
         };
       }
     }
@@ -219,17 +302,19 @@ export function resolveMonthColumn(
   for (let i = headerRow.length - 1; i >= firstMonthCol; i--) {
     const colName = (headerRow[i] || "").trim();
     if (colName) {
+      const normalized = normalizeMonthName(colName);
       return {
         columnIndex: i,
-        monthName: colName,
-        monthLower: colName.toLowerCase(),
-        year: new Date().getFullYear(),
+        monthName: normalized?.monthName || colName,
+        monthLower: normalized?.monthLower || colName.toLowerCase(),
+        year: normalized?.year || new Date().getFullYear(),
       };
     }
   }
 
   return null;
 }
+
 
 export function isActive(statusCell) {
   return String(statusCell ?? "")
@@ -307,6 +392,138 @@ export function isIssueSubHeader(row) {
       .toLowerCase(),
   );
   return lowerCells.includes("title") || lowerCells.includes("note");
+}
+
+/**
+ * Only http(s) links are ever put into an href. The value comes from a cell a
+ * human typed into a spreadsheet, so it is untrusted input as far as the email
+ * client is concerned — a `javascript:` URL here would be a stored-injection
+ * vector into every recipient's mail client.
+ */
+export function safeExternalUrl(raw) {
+  const text = String(raw ?? "").trim();
+  if (!text) return "";
+  let parsed;
+  try {
+    parsed = new URL(text);
+  } catch {
+    return "";
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
+  return parsed.toString();
+}
+
+/**
+ * Find which registered conditions a report tab actually mentions.
+ *
+ * The operator writes ONE cell, shaped "<condition>:<link>", e.g.
+ *
+ *     a11y:https://docs.google.com/document/d/…#heading=h.xxxxx
+ *
+ * and the paired message is added to that site's email before "Best Regards,".
+ * The whole grid is scanned, not just the parsed sections: a note written under
+ * "Additional Issue Fixed" but separated by a blank row is orphaned by
+ * parseReportSections' two-blank-row rule and would otherwise never be seen.
+ *
+ * Matching is deliberately narrow, because over-eager detection is how this
+ * project ended up with 44 false alarms in one pass. A cell matches only when it
+ * is, in full, either "<condition>:<link>" or the bare "<condition>". So a
+ * registered condition of "Update" cannot fire on the ordinary
+ * "Update | Theme | To Version" row, and "a11y review done" is prose, not a
+ * trigger.
+ *
+ * @param {Array<Array<string>>} rawRows the report grid as fetched (A:D).
+ * @param {Array<{condition:string,message:string,enabled?:boolean}>} notes
+ * @returns {Array<{condition:string, message:string, url:string, sourceRow:number, sourceCell:string}>}
+ */
+export function resolveConditionalNotes(rawRows, notes) {
+  // `enabled` is checked here as well as by the caller's enabledOnly filter, so
+  // switching a condition off cannot be defeated by a caller that forgot it.
+  const registry = (Array.isArray(notes) ? notes : []).filter(
+    (n) => n
+      && n.enabled !== false
+      && String(n.condition ?? "").trim()
+      && String(n.message ?? "").trim(),
+  );
+  if (!registry.length) return [];
+
+  // Longest condition first so a more specific key is not shadowed by a shorter
+  // one that happens to share its prefix. Ties keep registry order (stable sort),
+  // so two equal-length keys still render in the order they were registered.
+  const byKey = registry
+    .map((n, i) => ({
+      note: n,
+      key: normaliseConditionKey(n.condition),
+      i,
+    }))
+    .sort((a, b) => (b.key.length - a.key.length) || (a.i - b.i));
+
+  const found = new Map();
+
+  for (let r = 0; r < (rawRows || []).length; r++) {
+    const row = rawRows[r] || [];
+    // A bare "<key>" carries no colon to narrow it, and single words collide with
+    // real sheet content: "Update" is the first cell of an ordinary Other-section
+    // row, and a plugin may genuinely be named "a11y". A bare mention is
+    // therefore only trusted when the cell stands alone in its row — which is
+    // what writing a note in a single cell actually looks like.
+    const filledInRow = row.reduce(
+      (n, c) => (String(c ?? "").trim() ? n + 1 : n),
+      0,
+    );
+
+    for (let c = 0; c < row.length; c++) {
+      const cell = String(row[c] ?? "").trim();
+      if (!cell) continue;
+
+      for (const { note, key } of byKey) {
+        if (found.has(key)) continue; // first mention wins, scanning order
+        // Two accepted shapes, both anchored at the start of the cell:
+        //   "<key>:<url>"  → link present
+        //   "<key>"        → condition present, no link (still renders)
+        // Anything else — "a11y review done", "we fixed a11y:…" — must NOT match,
+        // which is what keeps a registered condition from firing on prose.
+        const m = cell.match(new RegExp(`^${escapeRegExp(key)}(?:\\s*:\\s*(.*))?$`, "i"));
+        if (!m) continue;
+        if (m[1] === undefined && filledInRow > 1) continue; // bare, but not alone
+        found.set(key, {
+          condition: key,
+          message: String(note.message).trim(),
+          // No URL after the colon is legitimate: the message still renders, the
+          // link is just left off rather than promised and left dead.
+          url: m[1] === undefined ? "" : safeExternalUrl(m[1]),
+          sourceRow: r + 1,
+          sourceCell: String.fromCharCode(65 + c) + String(r + 1),
+        });
+      }
+    }
+  }
+
+  // Output in REGISTRY order, not scan order, so the same set of conditions
+  // always reads the same way in the email regardless of key length.
+  return byKey
+    .filter(({ key }) => found.has(key))
+    .sort((a, b) => a.i - b.i)
+    .map(({ key }) => found.get(key));
+}
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * How a condition keyword is reduced to the key that gets matched.
+ *
+ * This deliberately repeats normaliseNoteCondition() in db.js rather than
+ * importing it: db.js owns the collection, and reportUtils is the pure layer
+ * that everything imports. In the real pipeline notes always arrive from
+ * getConditionalNotes(), which has already normalised them, so this is
+ * belt-and-braces for a caller that hands the resolver a raw registry entry —
+ * without it, "  G112:  " would normalise to "g112:" here and silently match
+ * nothing. The two must agree, and the suite asserts that they do.
+ */
+function normaliseConditionKey(condition) {
+  return String(condition ?? '').trim().replace(/\s*:+\s*$/, '').toLowerCase();
 }
 
 export function parseReportSections(rawRows) {

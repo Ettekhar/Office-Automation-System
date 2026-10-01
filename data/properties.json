@@ -1,6 +1,6 @@
 [
   {
-    "id": "814b07e8-3406-45aa-9762-20ab4080d799",
+    "id": "2da89f51-2250-420e-adb4-6c23a9f16cf0",
     "name": "The Nines Portland (Sage)",
     "url": "https://www.thenines.com/",
     "type": "Soft Vanity",
@@ -11,11 +11,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 2,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "35fca639-90b4-4bc7-8ab5-86c6b842aa7d",
+    "id": "89305256-32bb-4c2a-b55b-3d54b617791d",
     "name": "The Alexandrian (Sage)",
     "url": "https://www.thealexandrian.com/",
     "type": "Soft Vanity",
@@ -26,11 +30,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 3,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "76e7069f-21d2-41b3-9a48-b59bcc677b6b",
+    "id": "5fecee06-dc92-4c14-b88b-e8df71c8ce6d",
     "name": "Curtis Denver (Sage)",
     "url": "https://www.thecurtis.com/",
     "type": "Soft Vanity",
@@ -41,11 +49,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 4,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "ace9a2ed-5c18-4179-9f18-af56e07c5ba7",
+    "id": "01480cae-e9d5-4920-9743-38623d9398f7",
     "name": "Arrive Memphis (Palisociety)",
     "url": "https://www.arrivehotels.com/hotels/memphis",
     "type": "Independent",
@@ -56,11 +68,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 5,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "066c2eed-bcec-4329-8277-a50b57fca4de",
+    "id": "cf0c9f53-ca84-4642-aed5-ea6a8b44705a",
     "name": "Arrive Palm Springs (Palisociety)",
     "url": "https://www.arrivehotels.com/hotels/palm-springs",
     "type": "Independent",
@@ -71,11 +87,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 6,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "18261eaa-47a3-48ac-9f58-fdb8a19fa28a",
+    "id": "90df19de-f576-4aa7-9e8d-246c9fc3e0de",
     "name": "Arrive Wilmington (Palisociety)",
     "url": "https://www.arrivehotels.com/hotels/wilmington",
     "type": "Independent",
@@ -86,11 +106,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 7,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "3cb6d07b-d734-42b1-8dac-9a23a59b739c",
+    "id": "8229ff77-87c2-4ae2-a1b9-d17cbad94e19",
     "name": "Arrive Austin (Palisociety)",
     "url": "https://www.arrivehotels.com/hotels/austin",
     "type": "Independent",
@@ -101,11 +125,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 8,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "89640ca5-e55f-447c-aa2d-6348c2c9b7d2",
+    "id": "1018e175-fb0c-456a-97ce-8f3cbe602908",
     "name": "Arrive Albuquerque (Palisociety)",
     "url": "https://www.arrivehotels.com/hotels/austin",
     "type": "Independent",
@@ -116,11 +144,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 9,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "c6a575fd-655b-4a86-ae08-fdeab001cddd",
+    "id": "18662df0-4eeb-4ea7-9d48-9000cdc00b79",
     "name": "The Grand Hotel Golf Resort & Spa (PCH)",
     "url": "https://www.grand1847.com/",
     "type": "Soft Vanity",
@@ -131,11 +163,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 10,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "9af0c6e0-386c-467c-80e5-eaa380046f14",
+    "id": "60fa0f85-3da8-4532-84f0-9b1d40a8a7d5",
     "name": "The Coachman (Sage)",
     "url": "https://www.coachmantahoe.com/",
     "type": "Independent",
@@ -146,11 +182,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 11,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "6975c8bd-5be3-4f55-8d59-88defec02796",
+    "id": "d524eb60-6c70-4720-a730-8408780f2590",
     "name": "The Benson (Sage)",
     "url": "https://thebenson.cogwheelmarketing.com/",
     "type": "Independent",
@@ -161,11 +201,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 12,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "f1ce208b-e8ed-4c20-819e-070173ade357",
+    "id": "a3c627ba-5b56-4c23-894b-a81c42d79436",
     "name": "Embassy Suites Asheville (Parks) Montford Restaurant 2026",
     "url": "https://www.themontford.com/",
     "type": "Restaurant",
@@ -176,11 +220,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 13,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "eb3f3c1a-8727-412a-a618-1aae5ff097a4",
+    "id": "2943e42f-c3aa-4948-8822-2dd1fc793d17",
     "name": "Embassy Suites Asheville (Parks) Soprana Restaurant 2026",
     "url": "https://sopranarooftop.com/",
     "type": "Restaurant",
@@ -191,11 +239,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 14,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "91e5320a-391b-4793-8ff6-9a57f77d756a",
+    "id": "6a96fdbd-f16a-488c-afc0-b5737427e6d9",
     "name": "Salt Ranch (Remington)",
     "url": "https://saltranchhotel.com/",
     "type": "Independent",
@@ -206,11 +258,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 15,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "504e146b-2fbc-4f84-9b3a-87ace2d9ecf0",
+    "id": "65ec678a-75f4-4e7d-a892-b66c9b53eaa9",
     "name": "The Pennywell Hotel (HVMG)",
     "url": "https://thepennywellhotel.com/",
     "type": "Soft Vanity",
@@ -221,11 +277,15 @@
     "seoAssigneeId": null,
     "webAssignee": "",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 16,
+    "lastSeenAt": "2026-09-25T08:25:47.194Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.194Z"
   },
   {
-    "id": "b80c7e30-09a9-46de-8b41-5b1732aee0c6",
+    "id": "ca9ae54c-e203-483a-9bc9-b54abfdd60d1",
     "name": "Hotel Elysium",
     "url": "https://hotelely.cogwheelmarketing.com/",
     "type": "Independent",
@@ -236,11 +296,15 @@
     "seoAssigneeId": null,
     "webAssignee": "None",
     "webAssigneeId": null,
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 17,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "e768fa18-4b2c-4191-aec7-39febe39761c",
+    "id": "ecba349f-6499-4281-a92f-762e24d80c54",
     "name": "Governors' Inn",
     "url": "governorsinnnd.com",
     "type": "Independent",
@@ -251,11 +315,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 18,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "d87df764-60a0-47b0-92c3-64f949905e58",
+    "id": "2f4f013f-67a2-4ebd-8783-9bf42c69b62f",
     "name": "Cogwheel Marketing",
     "url": "cogwheelmarketing.com",
     "type": "Independent",
@@ -266,11 +334,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 19,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "68fe2db9-ee77-4bc9-904f-8488bb5bce94",
+    "id": "7be6413f-d83a-4c87-9797-f0859e9eb8cf",
     "name": "(Milford Hospitality Group) Hotel Fauchere",
     "url": "hotelfauchere.com",
     "type": "Independent",
@@ -281,11 +353,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 20,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "db59e0d4-fe9a-4678-81d9-27be06481e65",
+    "id": "0f43b9e5-3316-498f-8a53-a36149723701",
     "name": "Jive Bar lounge",
     "url": "jivebarlounge.com",
     "type": "Restaurant",
@@ -296,11 +372,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 21,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "fc17768f-8e13-436a-baea-1f0bb45ea6e4",
+    "id": "a2fb0782-ac39-408f-9139-9b17a6d417cf",
     "name": "Milford Hospitality Group",
     "url": "milfordhospitalitygroup.com",
     "type": "Other",
@@ -311,11 +391,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 22,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "e4b9064b-9511-4a1e-8030-9c655a661582",
+    "id": "cd207748-570c-4be4-a44c-e9f37d2f9fd1",
     "name": "Razib Marketing",
     "url": "razibmarketing.com",
     "type": "Other",
@@ -326,11 +410,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 23,
+    "lastSeenAt": "2026-09-25T08:25:47.195Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.195Z"
   },
   {
-    "id": "9a360685-371d-47a0-b234-bc6749407552",
+    "id": "656e72bd-4a13-4768-b231-3daeb9070462",
     "name": "TCRM Services",
     "url": "https://tcrmservices.com/",
     "type": "Other",
@@ -341,11 +429,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 24,
+    "lastSeenAt": "2026-09-25T08:25:47.196Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.196Z"
   },
   {
-    "id": "df3154f9-e1cf-423c-8479-83895f6b3573",
+    "id": "4d7d42d2-fec7-40fd-a436-e388a2cd9c6e",
     "name": "Milford Theater",
     "url": "themilfordtheater.com",
     "type": "Other",
@@ -356,11 +448,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 25,
+    "lastSeenAt": "2026-09-25T08:25:47.196Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "1f32e2de-6e08-4bd4-a5ed-b7179e708b3f",
+    "id": "20a36d61-0c72-48bd-b6b0-27caa3c832dd",
     "name": "Tom Quick Inn",
     "url": "tomquickinnmilford.com",
     "type": "Independent",
@@ -371,11 +467,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 26,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "e66dc6f3-6e4e-441e-84fa-183c48c49262",
+    "id": "2e87071b-4ade-4536-b9fa-69e589257c12",
     "name": "Diamond Conference Center",
     "url": "https://diamondconferencecenter.com/",
     "type": "Other",
@@ -386,11 +486,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 27,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "2ecbfdeb-d41a-4d80-a5c6-36ab8b1203c8",
+    "id": "af62b359-3411-4117-b475-620dedd8bf51",
     "name": "Alpha3 Hotels.",
     "url": "alpha3hotels.com",
     "type": "Other",
@@ -401,11 +505,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 28,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "f22deddb-808b-411b-a591-b931cb2a2f84",
+    "id": "58adb4dc-983d-4978-bed3-0d2cf22ac583",
     "name": "Atlantic Hotels Group",
     "url": "atlantichotelsgroup.com",
     "type": "Other",
@@ -416,11 +524,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 29,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "94e7ffdf-08f3-46c6-a296-4cefdee254af",
+    "id": "46f853ec-5379-476d-ab44-6b2c28718cbe",
     "name": "La Posada Milford",
     "url": "laposadamilford.com",
     "type": "Independent",
@@ -431,11 +543,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 30,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "c063dd20-ddf9-449f-8bb5-f970c5f1d3ce",
+    "id": "b2530b65-ea94-4ae2-a96e-682a674115d3",
     "name": "The Jackson Southtown",
     "url": "https://jacksonsouthtown.com/",
     "type": "Independent",
@@ -446,11 +562,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 31,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "a141f928-6fb9-4d79-8e75-382f7ee63474",
+    "id": "96bbb54e-98e0-4e68-a17c-b8e3d68a2e7f",
     "name": "ToolKit Consulting",
     "url": "https://toolkit.consulting/",
     "type": "Other",
@@ -461,11 +581,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 32,
+    "lastSeenAt": "2026-09-25T08:25:47.197Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.197Z"
   },
   {
-    "id": "add9914e-3369-4d95-aadc-5f5fdc2076da",
+    "id": "d820b60a-f835-4ff8-ad0e-29db87534c13",
     "name": "Apple Valley Restaurant",
     "url": "https://applevalleyrestaurant.com/",
     "type": "Restaurant",
@@ -476,11 +600,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 33,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "35d3cec7-3a9a-414b-8ff1-87a47f9483ca",
+    "id": "d4f0d2dc-f868-4266-afdf-86cdfbcc3876",
     "name": "Chatham Lodgingtrust",
     "url": "https://chathamlodgingtrust.com/",
     "type": "Other",
@@ -491,11 +619,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 34,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "f8c3cebc-6d82-4ac7-b6b0-80e505696f9e",
+    "id": "83696331-95ae-4c01-8e3a-9b0974a4696f",
     "name": "Forest Hall Milford",
     "url": "https://foresthallmilford.com/",
     "type": "Other",
@@ -506,11 +638,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 35,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "0103f893-4388-4908-a50b-a3bef12c5236",
+    "id": "3328fd43-2120-4972-8f63-896bd8f23cc2",
     "name": "Cayuga Hospitality Consultants",
     "url": "https://cayugahospitality.com/",
     "type": "Other",
@@ -521,11 +657,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 36,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "4e819567-d024-4dff-9b79-467ceb32677d",
+    "id": "4a871210-f05d-40ec-927d-50fc5577dc01",
     "name": "Valley Of The Moon Partners",
     "url": "https://valleyofthemoonpartners.com/",
     "type": "Other",
@@ -536,11 +676,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 37,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "54079189-a7c0-4109-aad6-3cd97d8ad821",
+    "id": "bd6b5d98-b11b-4ac0-9f4b-f672b3191770",
     "name": "The Inn at Wise",
     "url": "https://innatwise.com/",
     "type": "Independent",
@@ -551,11 +695,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 38,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "84c7ade9-d474-4c10-99a4-68acb1ef8080",
+    "id": "a4c19e27-0f1f-4df3-af03-ba11069a2d1f",
     "name": "Hotel Teatro (Sage)",
     "url": "https://www.hotelteatro.com/",
     "type": "Independent",
@@ -566,11 +714,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 39,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "816e22b2-2d01-46f7-a07a-b3731803cbe3",
+    "id": "02f73b02-6e7b-4596-92ca-dae8efaac8dc",
     "name": "Cogwheel Analytics",
     "url": "https://cogwheelanalytics.com/",
     "type": "Other",
@@ -581,11 +733,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 40,
+    "lastSeenAt": "2026-09-25T08:25:47.198Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.198Z"
   },
   {
-    "id": "27935e11-212c-4939-a8ab-9e154246b9eb",
+    "id": "59343124-7f25-486a-b115-8ef64ce9b572",
     "name": "The Winslow Hotels",
     "url": "https://winslowhotels.com/",
     "type": "Branded",
@@ -596,11 +752,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 41,
+    "lastSeenAt": "2026-09-25T08:25:47.199Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.199Z"
   },
   {
-    "id": "37b7150f-ea41-422a-91e8-f4ea9d50ff8e",
+    "id": "dfb77b22-3b6c-4f6a-a292-c82f1c46c3c4",
     "name": "Female Founders In Hospitality",
     "url": "https://femalefoundersinhospitality.com/",
     "type": "Other",
@@ -611,11 +771,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 42,
+    "lastSeenAt": "2026-09-25T08:25:47.199Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.199Z"
   },
   {
-    "id": "3ecbec49-ca3d-46b9-866b-ba175141ba9f",
+    "id": "6173c423-565a-401c-9347-fde62d5a8479",
     "name": "Toasted Barrel",
     "url": "https://toastedbarrelbar.com/",
     "type": "Restaurant",
@@ -626,11 +790,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 43,
+    "lastSeenAt": "2026-09-25T08:25:47.199Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.199Z"
   },
   {
-    "id": "b0faad5a-6c35-49a5-86d5-672d5cd7c0e2",
+    "id": "dcb527b8-cec3-44ed-80f8-090989df0290",
     "name": "Seaworthy NOLA",
     "url": "https://seaworthynola.com/",
     "type": "Restaurant",
@@ -641,11 +809,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 44,
+    "lastSeenAt": "2026-09-25T08:25:47.199Z",
+    "createdAt": "2026-09-23T13:06:55.565Z",
+    "updatedAt": "2026-09-25T08:25:47.199Z"
   },
   {
-    "id": "e4b7d5b8-917f-4345-ab3f-d5f6100cb0e3",
+    "id": "c233eebe-7947-42d4-804a-e84be0efd3e7",
     "name": "Hotel Per La (Vanity)",
     "url": "hotelperla.com",
     "type": "Independent",
@@ -656,11 +828,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 45,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "63fbf20d-3b8a-42e3-9a49-aabf899936e8",
+    "id": "43da2487-a67c-48c4-a626-3358af70ba45",
     "name": "The Barnett",
     "url": "https://thebarnett.com/",
     "type": "Soft Vanity",
@@ -671,11 +847,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 46,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "9239ce76-ad5a-4e78-93c1-9d71c5d89043",
+    "id": "2ec206a0-5381-47ae-bb30-03262a5ecd2d",
     "name": "Salon Salon",
     "url": "https://salonsalonnola.com/",
     "type": "Restaurant",
@@ -686,11 +866,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 47,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "c1271519-dc53-47b5-bdb3-792accd68f38",
+    "id": "8ee7fe76-a749-47b4-9e62-d12eeadcef2f",
     "name": "Maison Métier",
     "url": "https://maisonmetier.com/",
     "type": "Soft Vanity",
@@ -701,11 +885,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 48,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "27c6f66f-add6-44ee-9152-445be10d88cb",
+    "id": "0521ce31-9715-44ad-9b3d-99d52c5404f8",
     "name": "Good Measure",
     "url": "https://goodmeasurenola.com/",
     "type": "Independent",
@@ -716,11 +904,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 49,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "857989f3-69f1-48cd-96a0-7378630b47de",
+    "id": "dfdd97be-8642-40fd-bf57-67a33a181edc",
     "name": "Ohio Event Center",
     "url": "https://ohioeventcenter.com/",
     "type": "Independent",
@@ -731,11 +923,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 50,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "cdbce1d3-3ca8-405f-946f-fdfd6a5b9b1f",
+    "id": "e50d5eb0-f18c-441b-9d55-66b96c87ab7e",
     "name": "Craftsman Wood Grile & Tap House",
     "url": "https://craftsmanwoodgrilletaphouse.com/",
     "type": "Restaurant",
@@ -746,11 +942,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 51,
+    "lastSeenAt": "2026-09-25T08:25:47.200Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.200Z"
   },
   {
-    "id": "3f38c2f9-e26e-4318-8c84-9a11aa8ae6d6",
+    "id": "c3e775cf-1a5a-48e1-840b-3f06ad8db6aa",
     "name": "Craftsman Kitchen & Terrace",
     "url": "https://craftsmankitchenandterrace.com/",
     "type": "Restaurant",
@@ -761,11 +961,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 52,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "2e882ab2-103c-4b9c-84d7-710514f94cd1",
+    "id": "cc8453f1-50d3-40a5-b088-e4dbe86ffbae",
     "name": "The Links at Woodcliff",
     "url": "https://woodcliffgolf.com/",
     "type": "Other",
@@ -776,11 +980,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 53,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "144598f1-dd99-435f-9ae8-26fda6e77cac",
+    "id": "ec178d3b-9125-4eb0-868b-6f5cf283cef5",
     "name": "Woodcliff Hotel & Spa",
     "url": "https://woodcliffhotelspa.com/",
     "type": "Independent",
@@ -791,11 +999,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 54,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "81772ca7-4d3d-45dc-bb82-6ac4a6dcfb56",
+    "id": "838d4210-8a19-4adf-b61b-87fa7e84dc13",
     "name": "Horizons Modern Kitchen",
     "url": "https://horizonsmodernkitchen.com/",
     "type": "Independent",
@@ -806,11 +1018,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 55,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "b8d1840b-5eb8-4990-b8bd-fcd4d81bce04",
+    "id": "24588196-4b50-4176-96f9-c513cfe08eed",
     "name": "Craftsman Inn",
     "url": "https://craftsmaninn.com/",
     "type": "Independent",
@@ -821,11 +1037,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 56,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "b1b0d713-ce51-4cb0-b531-83f7f05aaf68",
+    "id": "75b01b3a-afa4-4277-9886-3b72597ca614",
     "name": "Pinon Court (Bentley)",
     "url": "https://pinoncourt.com/",
     "type": "Independent",
@@ -836,11 +1056,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 57,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "d7922e6b-aa61-4fe7-85b7-12cfbb830b18",
+    "id": "9f08560c-f2f3-4a54-bb3a-8365404ae746",
     "name": "La Fonda (Bentley)",
     "url": "https://www.lafondasantafe.com/",
     "type": "Independent",
@@ -851,11 +1075,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 58,
+    "lastSeenAt": "2026-09-25T08:25:47.201Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.201Z"
   },
   {
-    "id": "67fb2a66-68a3-4804-9469-2a9f91cd7330",
+    "id": "a0cd8612-2ec1-445b-ba3f-4d4d3edb2f96",
     "name": "SENZA Hotel (Bentley)",
     "url": "https://senzahotel.com/",
     "type": "Independent",
@@ -866,11 +1094,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 59,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "911fe100-23a1-4d3a-9944-31b55c969d9e",
+    "id": "15843a9a-6972-4f88-84e8-b84797b6df21",
     "name": "HQ Dallas Rooftop",
     "url": "https://hqdallasrooftop.com/",
     "type": "Other",
@@ -881,11 +1113,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 60,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "021b05a1-84aa-40a3-8850-63490f4ce33e",
+    "id": "b1b6a2b6-87b7-4235-aade-e89e7cc1c850",
     "name": "Romar Elevators",
     "url": "https://romarelevators.com/",
     "type": "Other",
@@ -896,11 +1132,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 61,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "377bef0b-0c8a-4c7f-919a-84abe3bfd082",
+    "id": "5b840005-11b9-4987-a3f3-c6f90b07eba6",
     "name": "Free Ride Café",
     "url": "http://freerideuptown.com/",
     "type": "Restaurant",
@@ -911,11 +1151,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 62,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "01f2e5a7-7a62-4f34-a662-b23a3248cbe0",
+    "id": "32815039-c30d-420e-a1f1-ab53d431c172",
     "name": "Upside West Village",
     "url": "https://www.upsidewestvillage.com/",
     "type": "Restaurant",
@@ -926,11 +1170,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 63,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "869240d5-8128-49ad-8a14-510c8e6a45e4",
+    "id": "792490f1-bf67-463b-af5a-cbddb98040b5",
     "name": "Joe Cain Cafe",
     "url": "https://joecaincafe.com/",
     "type": "Restaurant",
@@ -941,11 +1189,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 64,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "e7f5cdf9-c279-4cd2-9f2d-3c56af192b56",
+    "id": "ba1d789c-dd15-4202-a7a9-74c054d482ca",
     "name": "Brutto Americano",
     "url": "https://bruttoamericano.com/",
     "type": "Restaurant",
@@ -956,11 +1208,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 65,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "7870e473-4830-4b39-81dd-0302ffb089f1",
+    "id": "1519d314-1c31-42d9-a8cd-f420930a264b",
     "name": "Room 56",
     "url": "https://room56.com/",
     "type": "Restaurant",
@@ -971,11 +1227,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 66,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "dc7b22bb-b442-43b0-9191-6f5ee1ce89d0",
+    "id": "fa85a735-71b5-48c4-932e-902c9f1331b7",
     "name": "Bentley Legacy",
     "url": "https://bentleylegacy.com/",
     "type": "Other",
@@ -986,11 +1246,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 67,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "4068fd02-36a6-4ab6-89d4-d5715d19641e",
+    "id": "1769d8ae-592f-4503-8cc8-c5b126906a15",
     "name": "Hotel De La Poste French Quarter (Sage)",
     "url": "https://hoteldelapostenola.com/",
     "type": "Vanity",
@@ -1001,11 +1265,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 68,
+    "lastSeenAt": "2026-09-25T08:25:47.202Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.202Z"
   },
   {
-    "id": "8cfd567a-4d86-4fac-a048-240dc3412fc8",
+    "id": "b03cd347-0269-42da-8748-0a62d645b453",
     "name": "Hotel La Jolla, Curio Collection by Hilton (Sage)",
     "url": "https://hotellajolla.com/",
     "type": "Vanity",
@@ -1016,11 +1284,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 69,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "cae6a997-1751-4de6-a86d-3cc543cae6ca",
+    "id": "240b8df7-edda-4394-9a26-9b8d95f8b250",
     "name": "Morrison House",
     "url": "https://morrisonhouse.com/",
     "type": "Soft Vanity",
@@ -1031,11 +1303,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 70,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "4373f9b1-2cef-4699-9ef7-7c1b01e7fa19",
+    "id": "97b3dbb3-c4fa-477a-b854-058710030015",
     "name": "The Raphael Hotel",
     "url": "https://raphaelkc.com/",
     "type": "Independent",
@@ -1046,11 +1322,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 71,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "3f516706-feed-4faa-8921-f820e2476916",
+    "id": "95808ad4-bd65-47c9-8e25-932a4c01e25c",
     "name": "Razib Marketing",
     "url": "razibmarketing.com",
     "type": "Other",
@@ -1061,11 +1341,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 72,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "6cf8926d-fd07-4b2c-b0a0-abeb8cf47416",
+    "id": "f0248461-ebcc-48de-bc6f-518d11d38f2e",
     "name": "Women In Travel Thrive",
     "url": "https://womenintravelthrive.com/",
     "type": "Other",
@@ -1076,11 +1360,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 73,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "4b93850c-b738-4f7c-938a-55e9c6d986f5",
+    "id": "05c48abc-84da-4822-b0e3-49f8e58d45d8",
     "name": "Cowboy Tech Hub",
     "url": "https://cowboytechhub.com/",
     "type": "Other",
@@ -1091,11 +1379,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 74,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "89c69554-86a5-4580-ba0a-c32f4f42027f",
+    "id": "3482820d-2c6c-4d3e-a937-81d8544a900d",
     "name": "Margate Masjid",
     "url": "http://margatemasjid.org/",
     "type": "Other",
@@ -1106,11 +1398,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 75,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "83b0860f-5364-4945-ad63-cd69a7354d6f",
+    "id": "1415fe67-9a78-4c6d-ad21-76172bfb74fe",
     "name": "Rev Motion Management",
     "url": "https://rev-mm.com/",
     "type": "Other",
@@ -1121,11 +1417,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 76,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "2d01b202-7015-4fe8-9b57-a51124f184ce",
+    "id": "b7280b90-b2cc-4ef5-8cad-49e8cde794e3",
     "name": "Hotel Sheldon",
     "url": "https://hotelsheldon.com/",
     "type": "Independent",
@@ -1136,11 +1436,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 77,
+    "lastSeenAt": "2026-09-25T08:25:47.203Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.203Z"
   },
   {
-    "id": "72419bff-541e-4a60-929f-d3ff1912e471",
+    "id": "bbfd0d3e-fe99-4cf6-9fe2-4e6382c30f53",
     "name": "Amar Vacation",
     "url": "https://amarvacation.com/",
     "type": "Other",
@@ -1151,11 +1455,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 78,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "904df06f-c74e-49c4-ae6e-68c80f22ecd9",
+    "id": "4bd3f1d1-63eb-47d5-9222-e6ae701f083b",
     "name": "The Guild Hotel",
     "url": "https://www.theguildhotel.com/",
     "type": "Vanity",
@@ -1166,11 +1474,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 79,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "0aac2f87-3524-41a5-9d89-491291c2fcae",
+    "id": "9f95ebe0-f4cb-404e-bdaf-d4a05fed22af",
     "name": "Granger Hotel",
     "url": "https://grangerhotel.com/",
     "type": "Independent",
@@ -1181,11 +1493,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 80,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "cabd750a-b0c5-4095-b3ae-89d28cdbe7fa",
+    "id": "4d087457-970e-4043-9493-e0d29fcad697",
     "name": "The Dune Climb Inn",
     "url": "https://duneclimbinn.com/",
     "type": "Independent",
@@ -1196,11 +1512,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 81,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "b0209d12-358d-463b-b63b-3edc9c15362b",
+    "id": "9df44fbe-2a7f-4ef8-8e83-fc5bcb85ac3f",
     "name": "Elevate By HVMG",
     "url": "https://elevatebyhvmg.com/",
     "type": "Other",
@@ -1211,11 +1531,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 82,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "0a17403e-22e4-4706-91c8-20136c5132c7",
+    "id": "50bde9fb-302b-454d-b458-407c12fc55b5",
     "name": "Punta Cana All Inclusive Family Resorts",
     "url": "https://tanresorts.com/cap-cana/",
     "type": "Independent",
@@ -1226,11 +1550,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 83,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "3a850b88-f3ac-4860-b39e-81b6d906f073",
+    "id": "4ea82dd6-8006-43ad-bb99-8526c1f4d2a3",
     "name": "TAN Resorts",
     "url": "https://tanresorts.com/",
     "type": "Independent",
@@ -1241,11 +1569,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 84,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "abe90db8-b6a0-4e24-875b-dcc466def4e3",
+    "id": "65bb027e-938c-445e-8fd8-1d139de02ff9",
     "name": "Insider Travel For Women",
     "url": "https://insidertravelforwomen.com/",
     "type": "Other",
@@ -1256,11 +1588,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 85,
+    "lastSeenAt": "2026-09-25T08:25:47.204Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.204Z"
   },
   {
-    "id": "73bbec2e-435e-4dfa-b624-d90964b70b91",
+    "id": "46cbaf5d-3313-47bc-ba27-afd20a6f0327",
     "name": "Hilton Wilmington/Christiana",
     "url": "https://hiltonchristiana.com/",
     "type": "",
@@ -1271,11 +1607,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Toufiq",
     "webAssigneeId": "fec2f34a-1382-4950-9d46-5db269c6f63c",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 86,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "128288b5-3eb1-4559-98a4-a8578e267551",
+    "id": "8bbf335c-7034-411a-9d0d-256697f9bdc0",
     "name": "Wedding and Event Venues in Ocala FL",
     "url": "https://ocalaflevents.com/",
     "type": "",
@@ -1286,11 +1626,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Medul",
     "webAssigneeId": "1accc4a5-138f-4347-983b-c64c08ee342f",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 87,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "fa12cd11-79bd-42b7-8815-3f988d3c516b",
+    "id": "4e500bb5-ab1d-499c-917b-c0707fb675a0",
     "name": "The Wentworth",
     "url": "https://thewentworthrestaurants.com/",
     "type": "",
@@ -1301,11 +1645,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 88,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "c7d05382-42c1-4cc0-a2d7-db8b757a244c",
+    "id": "c9d8b473-732c-48ef-93d9-68e76f795e45",
     "name": "The Sagaponack",
     "url": "https://thesagaponackny.com/",
     "type": "",
@@ -1316,11 +1664,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 89,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "267bb0f9-cf99-4dcf-9f70-240621359750",
+    "id": "010a3994-6d5e-47df-959e-37f303e2f3f4",
     "name": "The William Fell Tavern",
     "url": "https://thewilliamfelltavern.com/",
     "type": "",
@@ -1331,11 +1683,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Taion",
     "webAssigneeId": "97071bf7-e6f9-4645-8a1e-6b7829d91ecf",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 90,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "e6a33ab6-3f43-4df2-9c52-edc6dc960c00",
+    "id": "64fb117b-1b01-4b92-8542-9dfadcc97867",
     "name": "The Wentworth",
     "url": "https://www.thewentworth.com/",
     "type": "",
@@ -1346,11 +1702,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 91,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "f1b7a1b5-a79c-407c-a3d6-3c01e9106342",
+    "id": "7751d5cd-dafb-4593-9695-6e9f83e6c9a8",
     "name": "The Menhaden",
     "url": "https://themenhaden.com/",
     "type": "",
@@ -1361,11 +1721,15 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 92,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   },
   {
-    "id": "9c68bfc5-489d-40a6-838a-11b1fe6a97bc",
+    "id": "bb82ce5b-1829-4480-88d9-b16ff82991ae",
     "name": "Baltimore Events And Catering",
     "url": "https://baltimoreeventsandcatering.com/",
     "type": "",
@@ -1376,7 +1740,11 @@
     "seoAssigneeId": null,
     "webAssignee": "Sabbir",
     "webAssigneeId": "834ad7b6-ee28-407c-a132-7af5ba2b2c3b",
-    "createdAt": "2026-09-13T05:22:31.221Z",
-    "updatedAt": "2026-09-13T05:22:31.221Z"
+    "source": "sheet:PROPERTY_REGISTRY",
+    "sourceTab": "Sheet1",
+    "sourceRow": 93,
+    "lastSeenAt": "2026-09-25T08:25:47.205Z",
+    "createdAt": "2026-09-23T13:06:55.566Z",
+    "updatedAt": "2026-09-25T08:25:47.205Z"
   }
 ]

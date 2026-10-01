@@ -7,8 +7,19 @@
   "scripts": {
     "start": "node src/index.js",
     "dashboard": "node src/server.js",
+    "sync:rag": "node scripts/sync-rag.mjs",
+    "eval:rag": "node scripts/eval-rag.mjs",
     "dry-run": "node src/index.js",
-    "send": "node src/index.js --send"
+    "send": "node src/index.js --send",
+    "relay": "node src/localMailAgent.js",
+    "relay:once": "node src/localMailAgent.js --once",
+    "relay:dry-run": "node src/localMailAgent.js --once --dry-run",
+    "worker:deploy": "wrangler deploy --config cloudflare-worker/mailer-wrangler.toml",
+    "worker:dev": "wrangler dev --config cloudflare-worker/mailer-wrangler.toml",
+    "worker:schema": "wrangler d1 execute officeos-mailer --config cloudflare-worker/mailer-wrangler.toml --file cloudflare-worker/schema.sql",
+    "test:worker:parity": "node scratch/verify-worker-parity.mjs",
+    "test:worker:api": "node scratch/verify-worker-api.mjs",
+    "test:agent:email": "node scratch/verify-agent-email.mjs"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -18,5 +29,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.146.0"
   }
 }

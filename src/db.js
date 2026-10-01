@@ -9,7 +9,13 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = path.resolve(__dirname, '../data');
+// OFFICEOS_DATA_DIR exists so tests and throwaway probes can run against a
+// throwaway directory instead of the live one. Unset in every real process, so
+// the default below is unchanged behaviour — but it removes the only reason a
+// test could ever reach (and pollute) production data.
+export const DATA_DIR = process.env.OFFICEOS_DATA_DIR
+  ? path.resolve(process.env.OFFICEOS_DATA_DIR)
+  : path.resolve(__dirname, '../data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 export const uuid = () => crypto.randomUUID();
@@ -133,6 +139,7 @@ export function addSite(siteData) {
     accountManager: siteData.accountManager || '',
     note: siteData.note || '',
     clickupUrl: siteData.clickupUrl || '',
+    clickupTimeTrackUrl: siteData.clickupTimeTrackUrl || '',
     reportUrl: siteData.reportUrl || '',
     backupUrl: siteData.backupUrl || '',
     latestMonth: siteData.latestMonth || getActiveMonth() || '',
@@ -176,6 +183,120 @@ export function toggleSiteStatus(id, newStatus) {
   return sites[idx];
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SITE-FACT INHERITANCE (confirmed by the team 2026-09-26)
+//
+// Fields like GA4, the newsletter tool, the form-submission address and the
+// booking link describe the SITE, not the person doing the work. They used to
+// be stored per (site,user) with nothing to copy them, so assigning a second
+// person to a site produced a nearly empty row even though the answer was
+// already in the database under somebody else.
+//
+// When a daily-review record is created, it now inherits those site facts from
+// an existing record for the SAME site.
+//
+// Three rules keep this from manufacturing data:
+//
+//  1. Only records actually READ FROM A TAB are donors. Records created by an
+//     assignment carry no observation, and two such records "agreeing" with
+//     each other is circular — the same code invented both.
+//  2. Only ACTIVE users are donors. An inactive user's row is often a stale
+//     copy of somebody else's and would launder old values back in.
+//  3. Per-person work is NEVER inherited. maintenanceStatus, reportSentStatus
+//     and their raw text are each person's own progress; copying them would
+//     overwrite one person's real state with another's.
+//
+// A value is still only a SUGGESTION. Literal template placeholders such as
+// "{admin_email}" are refused, and the donor is recorded per field so any
+// inherited value can be traced back to who actually recorded it.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const DAILY_REVIEW_SITE_FACT_FIELDS = [
+  'ga4', 'newsletterMail', 'formSubmissionMail', 'bookingLink',
+  'clientResponse', 'cloudflare', 'uptimeRobot',
+];
+
+// A lone "{...}" is an unfilled template token, not an observation. Copying it
+// just spreads the placeholder into another tab.
+const TEMPLATE_PLACEHOLDER = /^\{[^}]*\}$/;
+
+/*
+ * ── Why rule 2 (active-only donors) is load-bearing, not belt-and-braces ──────
+ *
+ * There is a real class of value that is dormant *only* because of rule 2, and
+ * it would be easy to "clean up" rule 2 without realising what that unblocks.
+ *
+ * Some sites carry a value that is probably a copy-paste mistake - one email
+ * address sitting in BOTH the Newsletter and Form Submission columns, which ask
+ * different questions. Inheritance copies cell for cell, so such a value would
+ * be handed to the next assignee instead of being re-derived.
+ *
+ * duneclimbinn.com is the concrete case. Its only holder of
+ * info@duneclimbinn.com in both columns is an INACTIVE user. Because rule 2
+ * refuses inactive donors, that address currently cannot reach anybody: the
+ * inheritance path finds zero donors for the site and writes nothing.
+ *
+ * That safety is a property of the USER'S STATUS, not of the data. Reactivating
+ * that user - or adding any second, active holder of the same site - makes the
+ * risk live immediately, and nothing in the assignment path will complain,
+ * because from its point of view an active donor is a perfectly good source.
+ *
+ * So the "is it still safe" question is not answered here, where it would
+ * silently rot. It is re-evaluated on every sync by
+ * dataQuality.assessDuplicatedAddressRisk(), which reports each such site as
+ * DORMANT (all holders inactive) or LIVE (an active holder could donate it), and
+ * separately reports whether a pending assignee would actually receive it.
+ * Treat a flip from DORMANT to LIVE as a prompt to fix the source row.
+ *
+ * Note the correct scope of the smell, too: an address in the Newsletter column
+ * is NOT itself suspicious. 26 of 73 filled Newsletter cells are addresses, so
+ * that column legitimately holds both tool names ("MailChimp") and mailboxes.
+ * Only the SAME address in BOTH mail columns is worth a look. An earlier check
+ * that flagged "same string in 2+ columns" fired on 44 of 184 records purely
+ * because ga4/cloudflare/clientResponse all legitimately answer "No".
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export function collectInheritedSiteFacts(drRows, siteId, targetUserId, usersById) {
+  const inherited = {};
+  const siteFactsFrom = {};
+  const refused = [];
+
+  const donors = ensureArray(drRows).filter((r) => {
+    if (r.siteId !== siteId) return false;
+    if (r.userId === targetUserId) return false;                       // never self
+    if (String(r.source || '').startsWith('app:assign')) return false;  // rule 1
+    const u = usersById[r.userId];
+    return u && u.active !== false;                                     // rule 2
+  });
+  if (!donors.length) return { inherited, siteFactsFrom, refused };
+
+  for (const field of DAILY_REVIEW_SITE_FACT_FIELDS) {
+    // Majority wins so a single typo cannot beat a value several people agree on.
+    const tally = new Map();
+    for (const d of donors) {
+      const v = String(d[field] ?? '').trim();
+      if (!v) continue;
+      tally.set(v, (tally.get(v) || 0) + 1);
+    }
+    if (!tally.size) continue;
+    const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const [value, agreeCount] = ranked[0];
+    if (TEMPLATE_PLACEHOLDER.test(value)) {
+      refused.push({ field, value, reason: 'template-placeholder' });
+      continue;
+    }
+    const backers = donors.filter((d) => String(d[field] ?? '').trim() === value);
+    inherited[field] = value;
+    siteFactsFrom[field] = {
+      from: backers.map((b) => b.userName).join(', '),
+      agreeCount,
+      contested: ranked.length > 1,
+      alternatives: ranked.slice(1).map(([v, n]) => ({ value: v, count: n })),
+    };
+  }
+  return { inherited, siteFactsFrom, refused };
+}
+
 export function assignUsersToSite(siteId, userIds) {
   const sites = ensureArray(dbRead('sites'));
   const idx = sites.findIndex(s => s.id === siteId);
@@ -203,6 +324,10 @@ export function assignUsersToSite(siteId, userIds) {
     const existing = drRows.find(r => r.siteId === siteId && r.userId === uid);
     if (!existing) {
       const u = userMap[uid];
+      // Site facts come from whoever already recorded them for this site, so a
+      // second assignee does not start blind. Never fabricates: no donor means
+      // no value, and per-person status is never copied.
+      const { inherited, siteFactsFrom } = collectInheritedSiteFacts(drRows, site.id, uid, userMap);
       drRows.push({
         id: uuid(),
         userId: uid,
@@ -211,18 +336,21 @@ export function assignUsersToSite(siteId, userIds) {
         siteUrl: site.url,
         company: site.company || site.account || '',
         rowIndex: null,
+        // Per-person work starts fresh — never inherited (rule 3).
         maintenanceStatus: 'todo',
         maintenanceRaw: 'To Do',
         reportSentStatus: 'no',
         reportSentRaw: 'No',
-        ga4: '',
-        newsletterMail: '',
-        formSubmissionMail: '',
-        bookingLink: '',
-        cloudflare: 'No',
+        ga4: inherited.ga4 || '',
+        newsletterMail: inherited.newsletterMail || '',
+        formSubmissionMail: inherited.formSubmissionMail || '',
+        bookingLink: inherited.bookingLink || '',
+        cloudflare: inherited.cloudflare || '',
         clickupLink: site.clickupUrl || '',
-        clientResponse: '',
-        uptimeRobot: 'Yes',
+        clickupTimeTrackUrl: site.clickupTimeTrackUrl || '',
+        clientResponse: inherited.clientResponse || '',
+        uptimeRobot: inherited.uptimeRobot || '',
+        siteFactsFrom,
         createdAt: now(),
         updatedAt: now(),
       });
@@ -256,10 +384,13 @@ export function getDailyReview(filter = {}) {
     const allUsers = getUsers();
     const u = allUsers.find(x => x.id === targetUserId);
     const uName = u ? u.name : (filter.userName || 'User');
+    const usersById = Object.fromEntries(allUsers.map(x => [x.id, x]));
 
     for (const s of userSites) {
       const exists = rows.some(r => (r.siteId === s.id || (r.siteUrl && s.url && r.siteUrl.toLowerCase().trim() === s.url.toLowerCase().trim())) && r.userId === targetUserId);
       if (!exists) {
+        // Same inheritance as assignUsersToSite() — see the rules above it.
+        const { inherited, siteFactsFrom } = collectInheritedSiteFacts(rows, s.id, targetUserId, usersById);
         rows.push({
           id: uuid(),
           userId: targetUserId,
@@ -268,18 +399,21 @@ export function getDailyReview(filter = {}) {
           siteUrl: s.url,
           company: s.company || s.account || '',
           rowIndex: null,
+          // Per-person work, never inherited.
           maintenanceStatus: 'todo',
           maintenanceRaw: 'To Do',
           reportSentStatus: 'no',
           reportSentRaw: 'No',
-          ga4: '',
-          newsletterMail: '',
-          formSubmissionMail: '',
-          bookingLink: '',
-          cloudflare: 'No',
+          ga4: inherited.ga4 || '',
+          newsletterMail: inherited.newsletterMail || '',
+          formSubmissionMail: inherited.formSubmissionMail || '',
+          bookingLink: inherited.bookingLink || '',
+          cloudflare: inherited.cloudflare || '',
           clickupLink: s.clickupUrl || '',
-          clientResponse: '',
-          uptimeRobot: 'Yes',
+          clickupTimeTrackUrl: s.clickupTimeTrackUrl || '',
+          clientResponse: inherited.clientResponse || '',
+          uptimeRobot: inherited.uptimeRobot || '',
+          siteFactsFrom,
           createdAt: now(),
           updatedAt: now(),
         });
@@ -304,6 +438,7 @@ export function getDailyReview(filter = {}) {
     const s = (r.siteId ? sitesById[r.siteId] : null) || (r.siteUrl ? sitesByUrl[(r.siteUrl||'').toLowerCase().trim()] : null);
     if (!r.company && s) r.company = s.company || s.account || '';
     if (!r.clickupLink && s?.clickupUrl) r.clickupLink = s.clickupUrl;
+    if (!r.clickupTimeTrackUrl && s?.clickupTimeTrackUrl) r.clickupTimeTrackUrl = s.clickupTimeTrackUrl;
     r.uptimeStatus = s?.uptimeStatus || (r.uptimeRobot && /yes/i.test(r.uptimeRobot) ? 'online' : 'unknown');
     r.domainExpiry = s?.domainExpiry || '';
     r.daysLeft = s?.daysLeft ?? (r.domainExpiry ? calcDaysUntil(r.domainExpiry) : null);
@@ -322,6 +457,42 @@ export function getDailyReview(filter = {}) {
 }
 export function setDailyReview(rows) { dbWrite('daily-review', rows); }
 
+/**
+ * attachDailyReviewSheetRow — persist WHERE a daily-review record lives in the
+ * connected sheet (rowIndex + provenance), so the next reconcile hits the fast
+ * path instead of searching the tab by URL, and the mapping survives restarts.
+ *
+ * Called by the assignment write-back after it appends (or finds) the user's row.
+ * The row number reported by the sheet is authoritative: if the stored rowIndex
+ * disagrees, the stored value is corrected and the previous value is returned so
+ * the caller can audit the old→new change (never silently).
+ *
+ * Never fabricates a record: returns null when the (siteId,userId) row is absent
+ * so the caller can flag a conflict rather than invent a mapping.
+ */
+export function attachDailyReviewSheetRow({ siteId, userId, rowNumber, tabName, spreadsheetId = null, source = null }) {
+  if (!Number.isInteger(rowNumber) || rowNumber < 1) {
+    throw new Error(`attachDailyReviewSheetRow: invalid rowNumber ${rowNumber}`);
+  }
+  const rows = ensureArray(dbRead('daily-review'));
+  const idx = rows.findIndex(r => r.siteId === siteId && r.userId === userId);
+  if (idx === -1) return null;
+
+  const previousRowIndex = rows[idx].rowIndex ?? null;
+  rows[idx] = {
+    ...rows[idx],
+    rowIndex: rowNumber,
+    sourceTab: tabName || rows[idx].sourceTab || null,
+    sourceRow: rowNumber,
+    sheetSpreadsheetId: spreadsheetId || rows[idx].sheetSpreadsheetId || null,
+    source: source || rows[idx].source || null,
+    sheetSyncedAt: now(),
+    updatedAt: now(),
+  };
+  setDailyReview(rows);
+  return { row: rows[idx], previousRowIndex, changed: previousRowIndex !== rowNumber };
+}
+
 export function getDailyReviewByUser(userName) {
   const user = getUserByName(userName);
   if (!user) return [];
@@ -336,8 +507,8 @@ export function updateDailyReviewRow(rowId, updates) {
   rows[idx] = { ...rows[idx], ...updates, updatedAt: now() };
   setDailyReview(rows);
 
-  // If clickupLink or maintenanceStatus is updated, keep site record in sync if site exists
-  if (updates.clickupLink || updates.maintenanceRaw || updates.maintenanceStatus) {
+  // If clickupLink, clickupTimeTrackUrl or maintenanceStatus updated, keep site record in sync if site exists
+  if (updates.clickupLink || updates.clickupTimeTrackUrl || updates.maintenanceRaw || updates.maintenanceStatus) {
     const row = rows[idx];
     if (row.siteId || row.siteUrl) {
       try {
@@ -346,6 +517,7 @@ export function updateDailyReviewRow(rowId, updates) {
         if (sIdx !== -1) {
           const siteUpdates = {};
           if (updates.clickupLink) siteUpdates.clickupUrl = updates.clickupLink;
+          if (updates.clickupTimeTrackUrl !== undefined) siteUpdates.clickupTimeTrackUrl = updates.clickupTimeTrackUrl;
           if (updates.maintenanceRaw) siteUpdates.latestMonthStatus = updates.maintenanceRaw;
           sites[sIdx] = { ...sites[sIdx], ...siteUpdates, updatedAt: now() };
           setSites(sites);
@@ -370,11 +542,12 @@ export function updateDailyReviewBatch(ids, updates) {
       rows[i] = { ...rows[i], ...updates, updatedAt: now() };
       updatedRows.push(rows[i]);
 
-      if (updates.clickupLink || updates.maintenanceRaw || updates.maintenanceStatus) {
+      if (updates.clickupLink || updates.clickupTimeTrackUrl || updates.maintenanceRaw || updates.maintenanceStatus) {
         const row = rows[i];
         const sIdx = sites.findIndex(s => s.id === row.siteId || (row.siteUrl && s.url && s.url.toLowerCase().trim() === row.siteUrl.toLowerCase().trim()));
         if (sIdx !== -1) {
           if (updates.clickupLink) sites[sIdx].clickupUrl = updates.clickupLink;
+          if (updates.clickupTimeTrackUrl !== undefined) sites[sIdx].clickupTimeTrackUrl = updates.clickupTimeTrackUrl;
           if (updates.maintenanceRaw) sites[sIdx].latestMonthStatus = updates.maintenanceRaw;
           sites[sIdx].updatedAt = now();
           sitesChanged = true;
@@ -703,6 +876,236 @@ export function deleteNotice(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// CONDITIONAL EMAIL NOTES  (condition detected in a report tab -> paragraph)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// The operator writes a single cell in a site's report tab, shaped
+//
+//     a11y:https://docs.google.com/document/d/…#heading=h.xxxxx
+//
+// i.e. "<condition>:<link>". When a registered condition matches, the paired
+// message is added to that site's email immediately before "Best Regards," and
+// the link is taken from the cell — so each site links to its own document and
+// the report tab stays the single source of truth.
+//
+// A condition with no link after the colon still renders the message; the link
+// is simply omitted rather than promised and left dead.
+//
+// Scoped per account because CW and RM clients get their own wording.
+
+const CONDITIONAL_NOTES_COLLECTION = 'email-conditional-notes';
+
+/**
+ * Conditions are matched case-insensitively, so they are stored normalised. A
+ * trailing colon is stripped because the cell format is "<condition>:<link>":
+ * typing "a11y:" into the dashboard is the obvious slip, and storing it would
+ * create a key no cell could ever match — a condition that looks registered and
+ * silently does nothing.
+ */
+export function normaliseNoteCondition(condition) {
+  return String(condition ?? '').trim().replace(/\s*:+\s*$/, '').toLowerCase();
+}
+
+/**
+ * A condition is a bare keyword, never a whole trigger cell. Pasting
+ * "a11y:https://…" into the Condition box is the other obvious slip: it would
+ * otherwise be stored happily and then never match anything. Refused here, with
+ * a message that says what to do instead. Any keyword is otherwise accepted —
+ * "link", "ADA Review", "a11y", "sec-fix" — so the feature is not tied to one
+ * pre-approved word.
+ */
+function assertUsableCondition(key) {
+  if (!key) throw new Error('Condition is required.');
+  if (key.includes('://')) {
+    throw new Error('Condition must be the keyword only (e.g. a11y). Put the link in the report tab cell as "a11y:https://…" — not in the condition.');
+  }
+  return key;
+}
+
+export function getConditionalNotes(filter = {}) {
+  let list = ensureArray(dbRead(CONDITIONAL_NOTES_COLLECTION));
+  if (filter.account) {
+    const acct = String(filter.account).toUpperCase();
+    list = list.filter((n) => String(n.account || 'CW').toUpperCase() === acct);
+  }
+  if (filter.enabledOnly) list = list.filter((n) => n.enabled !== false);
+  return list.map((n) => ({ ...n, condition: normaliseNoteCondition(n.condition) }));
+}
+
+export function setConditionalNotes(data) {
+  dbWrite(CONDITIONAL_NOTES_COLLECTION, ensureArray(data));
+}
+
+export function getConditionalNoteById(id) {
+  return ensureArray(dbRead(CONDITIONAL_NOTES_COLLECTION)).find((n) => n.id === id) || null;
+}
+
+export function createConditionalNote({
+  account = 'CW', condition, message, enabled = true,
+  actor = 'admin', actorId = '',
+}) {
+  const key = assertUsableCondition(normaliseNoteCondition(condition));
+  const text = String(message ?? '').trim();
+  if (!text) throw new Error('Message is required.');
+  if (key.length > 60) throw new Error('Condition must be 60 characters or fewer.');
+  if (text.length > 4000) throw new Error('Message must be 4000 characters or fewer.');
+
+  const acct = String(account || 'CW').toUpperCase();
+  const list = ensureArray(dbRead(CONDITIONAL_NOTES_COLLECTION));
+  // One note per condition per account: two notes for the same key would both
+  // render and the email would carry the paragraph twice.
+  if (list.some((n) => normaliseNoteCondition(n.condition) === key
+    && String(n.account || 'CW').toUpperCase() === acct)) {
+    throw new Error(`Condition "${key}" already exists for ${acct}. Edit it instead.`);
+  }
+
+  const note = {
+    id: uuid(),
+    account: acct,
+    condition: key,
+    message: text,
+    enabled: enabled !== false,
+    createdAt: now(),
+    updatedAt: now(),
+  };
+  list.push(note);
+  dbWrite(CONDITIONAL_NOTES_COLLECTION, list);
+  appendAuditLog({
+    actor, actorId,
+    action: 'conditional-note:create',
+    entity: 'email-conditional-note',
+    entityId: note.id,
+    label: `${acct} "${key}"`,
+    field: 'condition',
+    oldValue: null,
+    newValue: key,
+    source: 'app',
+    reason: 'Condition registered for report-tab detection',
+  });
+  return note;
+}
+
+export function updateConditionalNote(id, updates = {}, { actor = 'admin', actorId = '' } = {}) {
+  const list = ensureArray(dbRead(CONDITIONAL_NOTES_COLLECTION));
+  const idx = list.findIndex((n) => n.id === id);
+  if (idx === -1) throw new Error(`Conditional note not found: ${id}`);
+
+  const before = list[idx];
+  const patch = { ...updates };
+
+  if (patch.condition !== undefined) {
+    const key = assertUsableCondition(normaliseNoteCondition(patch.condition));
+    const acct = String(patch.account || before.account || 'CW').toUpperCase();
+    if (list.some((n) => n.id !== id && normaliseNoteCondition(n.condition) === key
+      && String(n.account || 'CW').toUpperCase() === acct)) {
+      throw new Error(`Condition "${key}" already exists for ${acct}.`);
+    }
+    patch.condition = key;
+  }
+  if (patch.message !== undefined) {
+    const text = String(patch.message).trim();
+    if (!text) throw new Error('Message is required.');
+    if (text.length > 4000) throw new Error('Message must be 4000 characters or fewer.');
+    patch.message = text;
+  }
+  if (patch.account !== undefined) patch.account = String(patch.account).toUpperCase();
+
+  list[idx] = { ...before, ...patch, updatedAt: now() };
+  dbWrite(CONDITIONAL_NOTES_COLLECTION, list);
+
+  const changed = ['condition', 'message', 'account', 'enabled']
+    .filter((f) => patch[f] !== undefined && String(patch[f]) !== String(before[f]));
+  if (changed.length) {
+    appendAuditLog({
+      actor, actorId,
+      action: 'conditional-note:update',
+      entity: 'email-conditional-note',
+      entityId: id,
+      label: `${list[idx].account} "${list[idx].condition}"`,
+      field: changed.join(','),
+      oldValue: changed.map((f) => `${f}=${before[f]}`).join('; ').slice(0, 2000) || null,
+      newValue: changed.map((f) => `${f}=${list[idx][f]}`).join('; ').slice(0, 2000) || null,
+      source: 'app',
+      reason: 'Conditional email note changed',
+    });
+  }
+  return list[idx];
+}
+
+/**
+ * Apply one condition+message to several sheets in a single action.
+ *
+ * The operator thinks in terms of "this message goes to both sheets", not "two
+ * separate records I must remember to keep in step". This fans one action out to
+ * one record per sheet, so the two can never drift apart.
+ *
+ * Deliberately one record per sheet rather than a single record with account
+ * "ALL":
+ *   - a record still belongs to exactly one account, so `getConditionalNotes`
+ *     needs no new matching rule and a message can never reach a sheet it was
+ *     not chosen for;
+ *   - a future third account does not silently inherit every existing note the
+ *     way an "ALL" scope would;
+ *   - the existing record shape is unchanged, so nothing migrates and the live
+ *     note is untouched;
+ *   - each record keeps its own stable id and its own audit entry, which is what
+ *     the audit log has always meant.
+ *
+ * Sheets that already have this condition are UPDATED, not duplicated and not
+ * rejected — that is what makes one edit reach every sheet the operator ticked.
+ * Nothing is ever deleted here: a sheet that was not passed in keeps whatever it
+ * already had.
+ */
+export function setConditionalNoteForAccounts({
+  accounts, condition, message, enabled = true,
+  actor = 'admin', actorId = '',
+}) {
+  const keys = [...new Set((Array.isArray(accounts) ? accounts : [accounts])
+    .map((a) => String(a ?? '').trim().toUpperCase())
+    .filter(Boolean))];
+  if (!keys.length) throw new Error('Choose at least one sheet.');
+
+  // Validate once, before touching anything, so a bad condition cannot leave the
+  // first sheet updated and the second rejected.
+  assertUsableCondition(normaliseNoteCondition(condition));
+  const text = String(message ?? '').trim();
+  if (!text) throw new Error('Message is required.');
+
+  const created = [];
+  const updated = [];
+  for (const acct of keys) {
+    const existing = getConditionalNotes({ account: acct })
+      .find((n) => normaliseNoteCondition(n.condition) === normaliseNoteCondition(condition));
+    if (existing) {
+      updated.push(updateConditionalNote(existing.id, { message: text, enabled: enabled !== false }, { actor, actorId }));
+    } else {
+      created.push(createConditionalNote({ account: acct, condition, message: text, enabled, actor, actorId }));
+    }
+  }
+  return { accounts: keys, created, updated, notes: [...updated, ...created] };
+}
+
+export function deleteConditionalNote(id, { actor = 'admin', actorId = '' } = {}) {
+  const list = ensureArray(dbRead(CONDITIONAL_NOTES_COLLECTION));
+  const found = list.find((n) => n.id === id);
+  if (!found) return false;
+  dbWrite(CONDITIONAL_NOTES_COLLECTION, list.filter((n) => n.id !== id));
+  appendAuditLog({
+    actor, actorId,
+    action: 'conditional-note:delete',
+    entity: 'email-conditional-note',
+    entityId: id,
+    label: `${found.account || 'CW'} "${found.condition}"`,
+    field: 'condition',
+    oldValue: found.condition,
+    newValue: null,
+    source: 'app',
+    reason: 'Conditional email note removed; affected emails will no longer show the paragraph',
+  });
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DOMAIN EXPIRY & APPROVAL WORKFLOW
 // ═══════════════════════════════════════════════════════════════════════════════
 export function calcDaysUntil(dateStr) {
@@ -809,6 +1212,56 @@ export function setMeta(updates) { dbWrite('meta', { ...getMeta(), ...updates })
 export function isInitialised() {
   return ['users', 'sites', 'daily-review', 'tasks', 'properties', 'dev-projects']
     .every(c => fs.existsSync(fp(c)));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIT LOG — append-only history of every meaningful change
+// ═══════════════════════════════════════════════════════════════════════════════
+// Entry shape (matches the "who/what/when/old→new/source" requirement):
+//   { id, at, actor, actorId, action, entity, entityId, label,
+//     field, oldValue, newValue, source, reason }
+// `action` is a short verb like "create" | "update" | "assignment:add" | "sync".
+// `source` tells where the change came from: "Team Progress UI", "AI Settings",
+// "Sheets Sync", "daily-review PUT", etc. Append-only: entries are never
+// mutated or removed by the application.
+
+export function getAuditLog(limit = 500) {
+  const log = ensureArray(dbRead('audit-log'));
+  return log.slice(-Math.max(1, Number(limit) || 500)).reverse();
+}
+
+export function appendAuditLog(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const log = ensureArray(dbRead('audit-log'));
+  const item = {
+    id: uuid(),
+    at: now(),
+    actor: String(entry.actor || 'system').slice(0, 100),
+    actorId: String(entry.actorId || '').slice(0, 100),
+    action: String(entry.action || 'update').slice(0, 60),
+    entity: String(entry.entity || 'unknown').slice(0, 60),
+    entityId: String(entry.entityId || '').slice(0, 100),
+    label: String(entry.label || '').slice(0, 300),
+    field: String(entry.field || '').slice(0, 60),
+    oldValue: entry.oldValue == null ? null : String(entry.oldValue).slice(0, 2000),
+    newValue: entry.newValue == null ? null : String(entry.newValue).slice(0, 2000),
+    source: String(entry.source || 'app').slice(0, 100),
+    reason: String(entry.reason || '').slice(0, 500),
+  };
+  log.push(item);
+  // Keep the log bounded (most recent 10k entries) — it is append-only, but a
+  // runaway sync shouldn't grow the file forever.
+  dbWrite('audit-log', log.slice(-10000));
+  return item;
+}
+
+export function auditLogStats() {
+  const log = ensureArray(dbRead('audit-log'));
+  const byAction = {};
+  for (const e of log.slice(-5000)) {
+    byAction[e.action] = (byAction[e.action] || 0) + 1;
+  }
+  return { count: log.length, byAction };
 }
 
 export function getDbStats() {
@@ -1021,7 +1474,7 @@ export const DEFAULT_SHEET_CREDENTIALS = [
     key: 'DAILY_REVIEW',
     title: 'Daily Review Sheet',
     category: 'Daily Activity',
-    spreadsheetId: '1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs',
+    spreadsheetId: '1QqDY9q7mRj4QPsuRnFEfFmegFvJoywfDmwanCFtZY6I',
     tabName: 'Toufiq',
     headerRow: 1,
     active: true,
@@ -1249,6 +1702,21 @@ export function defaultAssistantConfig() {
       tabs: [],              // [] = all tabs of the spreadsheet
       freshOnAsk: false,     // true = re-pull from Google Sheets before answering
     },
+    // Individual Docs and Drive folders for SOP/policy retrieval. All are
+    // read-only and must be shared with the service account.
+    documents: { sources: [], folderIds: [], freshOnAsk: false },
+    // Optional separate, read-only Operations Handbook RAG Worker. Its URL is
+    // configurable in AI Settings; any auth token stays in the server .env.
+    handbook: { enabled: true, workerUrl: '' },
+    // Read-only bridge to the Report Automation Worker's daily report log.
+    // The service token lives only in data/assistant-config.json (git-ignored)
+    // and is masked in the dashboard like provider keys.
+    reportAutomation: {
+      enabled: true,
+      baseUrl: 'https://report-automation.taion16240.workers.dev',
+      apiKey: '',
+      freshOnAsk: false,     // true = re-pull the report log before every question
+    },
     // Retrieval / accuracy tuning.
     rag: {
       strictGrounding: true, // reject an LLM answer containing numbers absent from ground truth
@@ -1305,5 +1773,195 @@ export function maskSecret(value) {
   if (!v) return '';
   if (v.length <= 12) return '•'.repeat(v.length);
   return `${v.slice(0, 6)}…${v.slice(-4)}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNC CONFLICTS — divergences the sync REFUSED to auto-pick a winner for.
+// ═══════════════════════════════════════════════════════════════════════════════
+// The "Conflict Handling" policy says: never silently pick a value. When two
+// sources disagree on a field (sheet vs DB/UI), the sync records the divergence
+// here — flagging both values, the origin of each, and what policy was applied —
+// instead of quietly overwriting. Resolution (acknowledge/keep/override) is a
+// deliberate, auditable act, never an implicit one.
+//
+// Entry shape:
+//   { id, key, at, entity, entityId, label, field,
+//     sheetValue, dbValue, sheetSource, dbSource,
+//     policy,          // keep-sheet | keep-db | manual
+//     state,           // open | acknowledged
+//     acknowledgedAt, acknowledgedBy }
+// Bounded to the 5k most recent entries; keyed by entity::entityId::field so a
+// repeated sync re-records the conflict instead of growing duplicates forever.
+const SYNC_CONFLICT_MAX = 5000;
+
+export function getSyncConflicts({ state } = {}) {
+  const list = ensureArray(dbRead('sync-conflicts'));
+  if (state) return list.filter(c => c.state === state);
+  return list;
+}
+
+/** Record (or refresh) one sync conflict. Returns the stored entry. */
+export function recordSyncConflict(entry) {
+  if (!entry || !entry.entityId) return null;
+  const list = ensureArray(dbRead('sync-conflicts'));
+  const key = `${entry.entity}::${entry.entityId}::${entry.field}`;
+  const existingIdx = list.findIndex(c => c.key === key);
+  const item = {
+    id: existingIdx !== -1 ? list[existingIdx].id : uuid(),
+    key,
+    at: now(),
+    entity: String(entry.entity || 'unknown').slice(0, 60),
+    entityId: String(entry.entityId || '').slice(0, 200),
+    label: String(entry.label || '').slice(0, 300),
+    field: String(entry.field || 'unknown').slice(0, 60),
+    sheetValue: entry.sheetValue == null ? '' : String(entry.sheetValue).slice(0, 2000),
+    dbValue: entry.dbValue == null ? '' : String(entry.dbValue).slice(0, 2000),
+    sheetSource: String(entry.sheetSource || 'sheet').slice(0, 100),
+    dbSource: String(entry.dbSource || 'db').slice(0, 100),
+    policy: String(entry.policy || 'keep-sheet').slice(0, 40),
+    state: 'open',
+    acknowledgedAt: null,
+    acknowledgedBy: null,
+    occurrences: existingIdx !== -1 ? (list[existingIdx].occurrences || 0) + 1 : 1,
+  };
+  if (existingIdx !== -1) list[existingIdx] = item;
+  else list.push(item);
+  dbWrite('sync-conflicts', list.slice(-SYNC_CONFLICT_MAX));
+  return item;
+}
+
+/** Mark a conflict acknowledged (the operator saw it and accepts the policy). */
+export function acknowledgeSyncConflict(id, by = 'admin') {
+  const list = ensureArray(dbRead('sync-conflicts'));
+  const idx = list.findIndex(c => c.id === id);
+  if (idx === -1) throw new Error(`Sync conflict not found: ${id}`);
+  list[idx] = {
+    ...list[idx],
+    state: 'acknowledged',
+    acknowledgedAt: now(),
+    acknowledgedBy: String(by || 'admin').slice(0, 100),
+  };
+  dbWrite('sync-conflicts', list);
+  return list[idx];
+}
+
+export function syncConflictStats() {
+  const list = getSyncConflicts();
+  return {
+    count: list.length,
+    open: list.filter(c => c.state === 'open').length,
+    acknowledged: list.filter(c => c.state === 'acknowledged').length,
+    byEntity: list.reduce((acc, c) => { acc[c.entity] = (acc[c.entity] || 0) + 1; return acc; }, {}),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER IDENTITY RESOLUTION — the same human across sheets, deliberately.
+// ═══════════════════════════════════════════════════════════════════════════════
+// Sheets name the same person differently ("Ettekhar Taion" vs "Taion"). We
+// never guess: resolution is exact-name first, then an EXPLICIT alias table
+// (data/user-aliases.json, editable), then a token-containment check that is
+// deterministic and reported (matchedBy). An unresolvable name yields null —
+// the caller treats it as "unknown assignee", never a made-up one.
+
+// Seeded from verified real data: the daily-report mirror authors with the
+// self-reported full name "Ettekhar Taion"; OfficeOS's canonical user is "Taion".
+const DEFAULT_USER_ALIASES = {
+  Taion: ['Ettekhar Taion', 'Md. Ettekhar Rahman Taion'],
+};
+
+export function getUserAliases() {
+  const raw = dbRead('user-aliases');
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const seeded = {};
+    for (const [canonical, aliases] of Object.entries(DEFAULT_USER_ALIASES)) {
+      seeded[canonical] = aliases;
+    }
+    // Merge stored aliases over the seed (stored wins on conflict).
+    for (const [canonical, aliases] of Object.entries(raw)) {
+      if (Array.isArray(aliases)) seeded[canonical] = aliases;
+    }
+    return seeded;
+  }
+  dbWrite('user-aliases', DEFAULT_USER_ALIASES);
+  return { ...DEFAULT_USER_ALIASES };
+}
+
+export function setUserAliases(map) {
+  const clean = {};
+  for (const [canonical, aliases] of Object.entries(map || {})) {
+    if (!Array.isArray(aliases)) continue;
+    const canon = String(canonical).trim();
+    if (!canon) continue;
+    clean[canon] = aliases.map(a => String(a).trim()).filter(Boolean);
+  }
+  dbWrite('user-aliases', clean);
+  return clean;
+}
+
+const _compactName = (n) => String(n || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const _tokens = (n) => String(n || '').toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length >= 3);
+
+/**
+ * Resolve a raw name from any sheet to a canonical OfficeOS user.
+ * Returns { user, matchedBy } (matchedBy: 'exact' | 'alias' | 'tokens' | null);
+ * `user` is null when nothing resolves — never a fabricated identity.
+ */
+export function resolveUserByName(name) {
+  const users = (getUsers() || []).filter(u => u.active !== false);
+  const raw = String(name || '').trim();
+  if (!raw || !users.length) return { user: null, matchedBy: null };
+
+  // 1. Exact (case/space-insensitive) match on canonical names
+  const exact = users.find(u => _compactName(u.name) === _compactName(raw));
+  if (exact) return { user: exact, matchedBy: 'exact' };
+
+  // 2. Alias table: alias → canonical user
+  const aliases = getUserAliases();
+  for (const [canonical, list] of Object.entries(aliases)) {
+    const hit = (list || []).some(a => _compactName(a) === _compactName(raw));
+    if (hit) {
+      const user = users.find(u => _compactName(u.name) === _compactName(canonical));
+      if (user) return { user, matchedBy: 'alias' };
+    }
+  }
+
+  // 3. Token containment ("Md. Ettekhar Rahman Taion" ↔ "Taion") — reported,
+  //    not guessed silently: the caller sees matchedBy:'tokens'.
+  const target = _tokens(raw);
+  if (target.length) {
+    for (const u of users) {
+      const candidates = [u.name, ...(aliases[u.name] || [])];
+      for (const c of candidates) {
+        const tokens = _tokens(c);
+        if (!tokens.length) continue;
+        const full = _compactName(c);
+        if (full.includes(_compactName(raw)) || _compactName(raw).includes(full)) {
+          return { user: u, matchedBy: 'tokens' };
+        }
+        if (target.every(t => tokens.includes(t)) || tokens.every(t => target.includes(t))) {
+          return { user: u, matchedBy: 'tokens' };
+        }
+      }
+    }
+  }
+
+  return { user: null, matchedBy: null };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OPTIMISTIC LOCKING — concurrent-write protection
+// ═══════════════════════════════════════════════════════════════════════════════
+// A mutation may carry the client's last-seen `updatedAt` (or a `version`
+// integer). If the stored record has changed since, the write is STALE and must
+// be rejected — two editors can't silently last-write-win the same field.
+export function assertRecordFresh(record, expected) {
+  if (expected === undefined || expected === null || expected === '') return true;
+  const stored = record?.updatedAt || record?.version || null;
+  if (stored === null) return true;
+  if (typeof expected === 'number') {
+    return Number(record.version ?? (typeof stored === 'string' ? Date.parse(stored) : NaN)) === expected;
+  }
+  return String(stored) === String(expected);
 }
 

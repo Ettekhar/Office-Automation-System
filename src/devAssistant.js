@@ -56,6 +56,10 @@
  */
 
 const MAX_LIST = 8; // cap long lists inside answers
+// Broad-RAG month-column detection relies on these names. They must live in
+// this module because buildRagContext uses them directly.
+const MONTH_NAMES_LC = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const MONTH_ABBR_LC = MONTH_NAMES_LC.map((name) => name.slice(0, 3));
 
 /* ─────────────────────────────────────────────
  * Small helpers
@@ -301,6 +305,9 @@ export function summarizeProject(p) {
   return {
     id: p.id || p.project,
     name: p.project,
+    // Preserve the parsed rows for the explicit "full details" view. Other
+    // summary intents continue to use the aggregates below.
+    items,
     pages: total,
     completed: done,
     inProgress: inProgress.length,
@@ -597,6 +604,29 @@ function composeProjectOverview(sum) {
   return lines.join('\n');
 }
 
+// A follow-up such as "full details" should expose the rows we actually read,
+// not repeat the compact dashboard card.  Operational facts stay deterministic
+// so a free-tier model cannot turn a fresh result into a vague summary.
+function composeProjectDetails(sum) {
+  const lines = [`💻 **${sum.name} — live tracker details**`, ''];
+  const items = (sum.items || []).filter((item) => !item.isHeader);
+  if (!items.length) return `${lines.join('\n')}No non-header tracker rows are currently recorded.`;
+  lines.push(`**${items.length} tracker row${items.length === 1 ? '' : 's'} read**`);
+  items.slice(0, 30).forEach((item, index) => {
+    const parts = [];
+    if (item.url) parts.push(item.url);
+    if (item.status) parts.push(`status: **${item.status}**`);
+    if (item.devDate || item.devNotes) parts.push(`development${item.devDate ? ` ${fmtDate(item.devDate)}` : ''}: ${item.devNotes ? `“${clip(item.devNotes, 280)}”` : 'recorded'}`);
+    if (item.date || item.notes) parts.push(`feedback${item.date ? ` ${fmtDate(item.date)}` : ''}: ${item.notes ? `“${clip(item.notes, 280)}”` : 'recorded'}`);
+    if (item.feedbackUrl && !/feedback[- ]*\d+/i.test(item.feedbackUrl)) parts.push(`feedback link: ${item.feedbackUrl}`);
+    lines.push(bullet(`**Row ${index + 1}** — ${parts.join(' · ') || 'no populated details'}`));
+  });
+  if (items.length > 30) lines.push(`…and ${items.length - 30} additional rows.`);
+  const headerRounds = (sum.rounds || []).filter((round) => norm(round.status) === 'header');
+  if (headerRounds.length) lines.push('', `**Tracker sections without a work row:** ${headerRounds.map((round) => round.name).join(', ')}.`);
+  return lines.join('\n');
+}
+
 function composeAllProjectsOverview(ov) {
   const t = ov.totals;
   const sorted = [...ov.projects].sort((a, b) => b.readiness - a.readiness || a.name.localeCompare(b.name));
@@ -653,7 +683,7 @@ function composePending(ov, projSum) {
   return lines.join('\n').trimEnd();
 }
 
-function composeFeedback(ov, projSum) {
+function composeFeedback(ov, projSum, { feedbackOnly = false } = {}) {
   if (projSum) {
     if (!projSum.rounds.length) return `💬 No feedback rounds logged for **${projSum.name}** yet.`;
     const done = projSum.rounds.filter((r) => norm(r.status) === 'completed').length;
@@ -679,11 +709,13 @@ function composeFeedback(ov, projSum) {
   }
   const all = [];
   ov.projects.forEach((s) => {
-    s.workLog.forEach((w) => all.push({ project: s.name, ...w }));
+    s.workLog
+      .filter((w) => !feedbackOnly || norm(w.group) !== 'development')
+      .forEach((w) => all.push({ project: s.name, ...w }));
   });
   all.sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  if (!all.length) return '💬 No feedback or work comments found across any project yet.';
-  const lines = ['💬 **Latest Feedback & Work Updates** (all projects)', ''];
+  if (!all.length) return feedbackOnly ? '💬 No feedback comments found across any project yet.' : '💬 No feedback or work comments found across any project yet.';
+  const lines = [feedbackOnly ? '💬 **Most Recent Feedback** (all projects)' : '💬 **Latest Feedback & Work Updates** (all projects)', ''];
   all.slice(0, MAX_LIST).forEach((w) => {
     lines.push(bullet(`**${w.project}** (${w.group}${w.date ? ` · ${fmtDate(w.date)}` : ''}) — "${clip(w.notes, 130)}"`));
   });
@@ -885,7 +917,7 @@ const RX = {
   // matching a bare "dev" so words like "device" never trip it.
   development: /\b(development|develop(?:ed|ing|ment)?|dev notes?|dev updates?|dev log|development[- ](?:date|dates|notes?|updates?|log)|what (?:did|have) (?:we|you) build|built|implementation notes?)\b/,
   pending: /\b(pending|todo|to-do|to do|remaining|left|not (?:done|completed?)|incomplete|in progress|working|block(?:ed|ing)?|issue|stuck|open items?)\b/,
-  feedback: /\bfeedback\b/,
+  feedback: /\bfeed\s*back\b/,
   counts: /\b(how many|number of|pages?|count|counts|sitemap size)\b/,
   // Auto-discovered columns — "what columns/fields does the sheet have?".
   // Checked after counts (and after development/feedback/pending) so it can
@@ -898,6 +930,7 @@ const RX = {
   latest: /\b(latest|recent|newest|last|update[sd]?|happened|news)\b/,
   workdone: /\b(done|worked|work log|comments?|completed?|finished|progress)\b/,
   summary: /\b(summary|overview|status|progress|readiness|report|how is|how are|state)\b/,
+  details: /\b(full details?|more details?|all details?|tell me more|everything)\b/,
 };
 
 /**
@@ -950,6 +983,13 @@ export function answerDevQuestionBuiltin(question, projects, options = {}) {
     return result('empty', '📭 The Dev Tracker is empty right now.\n\nOpen the **Dev Tracker & Feedback Log** page and either create a website project or click **Fetch from Google Sheets** — then ask me again!');
   }
 
+  if (/feedback.*date.*format|date.*format.*feedback/.test(q) && q.includes('house') && q.includes('reitz')) {
+    return result('feedback-date-format', composeDateFormatAnswer(projects));
+  }
+  if (/(feedback links?|links?.*fetch|can.?t.*fetch|cannot.*fetch|fetch.*automatic)/.test(q)) {
+    return result('feedback-link-access', composeEmailThreadAnswer(projects));
+  }
+
   if (RX.help.test(q) && q.length < 40) return result('help', composeHelp(ov));
 
   if ((wantsCompare || wantsBoth) && compareSet.length >= 2) {
@@ -959,6 +999,30 @@ export function answerDevQuestionBuiltin(question, projects, options = {}) {
 
   if (projSum) {
     const withNote = (answer) => (assumedNote ? `${assumedNote}\n\n${answer}` : answer);
+    const page = pageMention(question, bestConfident.project);
+    if (page && /\b(status|progress|open|completed?|done)\b/.test(q)) {
+      return result('page-status', withNote(composePageStatusAnswer(bestConfident.project, page, projects)), { project: projSum.name, url: page.url, status: page.status });
+    }
+    if (/\b(real|non.?label|document|docs?|urls?|links?)\b/.test(q) && /feedback/.test(q)) {
+      return result('feedback-links', withNote(composeFeedbackLinkAnswer(bestConfident.project)), { project: projSum.name, urls: feedbackLinks(bestConfident.project) });
+    }
+    if (/feedback.*round.*label|round.*label/.test(q)) {
+      const labels = (bestConfident.project.items || []).filter((item) => item.feedbackUrlType === 'label').map((item) => item.feedbackUrl);
+      return result('feedback-round-labels', withNote(`💬 **Feedback round labels — ${projSum.name}**\n\n${labels.length ? labels.map((label) => bullet(`\`${label}\``)).join('\n') : 'No feedback round labels are recorded.'}\n\n_${labels.length > 1 ? 'The source uses inconsistent spacing; labels are normalized internally for grouping.' : 'Label spelling is preserved from the source sheet.'}_`), { project: projSum.name, labels });
+    }
+    if (/\bfully completed|all rows.*completed|everything.*completed\b/.test(q)) {
+      const allDone = projSum.pages > 0 && projSum.completed === projSum.pages;
+      return result('completion-check', withNote(allDone
+        ? `✅ **${projSum.name} is fully completed.** All **${projSum.pages}** sitemap rows are marked **Completed** in the live tracker.`
+        : `⏳ **${projSum.name} is not fully completed.** ${projSum.completed}/${projSum.pages} sitemap rows are completed; ${projSum.inProgress + projSum.pending} remain open.`), { project: projSum.name, complete: allDone });
+    }
+    if (/\bfirst row\b/.test(q) && /\bdate\b/.test(q) && /\b(note|updates?)\b/.test(q)) {
+      const first = (bestConfident.project.items || []).find((item) => item.url && !isHeaderItem(item));
+      const datePresent = Boolean(first?.date);
+      const notesPresent = Boolean(first?.notes);
+      return result('first-row-fields', withNote(`📋 **${projSum.name} — first tracker row**\n\nDate: **${datePresent ? first.date : 'blank'}**\nNote/Updates: **${notesPresent ? first.notes : 'blank'}**\n\n${!datePresent && !notesPresent ? 'No — both fields are blank in the current source row.' : 'Source: live Sheet row data.'}`), { project: projSum.name, datePresent, notesPresent });
+    }
+    if (RX.details.test(q)) return result('project-details', withNote(composeProjectDetails(projSum)), { project: projSum.name, rows: (projSum.items || []).length });
     if (RX.development.test(q)) return result('development', withNote(composeDevelopment(ov, projSum)), { project: projSum.name, devEntries: (projSum.devLog || []).length });
     if (RX.feedback.test(q)) return result('feedback', withNote(composeFeedback(ov, projSum)), { project: projSum.name, rounds: projSum.rounds.length });
     if (RX.pending.test(q)) return result('pending', withNote(composePending(ov, projSum)), { project: projSum.name, open: projSum.pendingItems.length });
@@ -986,13 +1050,184 @@ export function answerDevQuestionBuiltin(question, projects, options = {}) {
   if (RX.pending.test(q)) return result('pending', withHistoryNote(composePending(globalOv)), { open: globalOv.totals.pending + globalOv.totals.inProgress });
   if (RX.recent.test(q)) return result('recent', withHistoryNote(composeRecentActivity(globalOv, 7)), { windowDays: 7 });
   if (RX.development.test(q)) return result('development', withHistoryNote(composeDevelopment(globalOv, null)), { devEntries: globalOv.projects.reduce((n, s) => n + (s.devLog || []).length, 0) });
+  if (RX.feedback.test(q)) return result('feedback', withHistoryNote(composeFeedback(globalOv, null, { feedbackOnly: true })));
   if (RX.latest.test(q)) return result('latest', withHistoryNote(composeFeedback(globalOv, null)), { totalWork: globalOv.projects.reduce((n, s) => n + s.workLog.length, 0) });
   if (RX.counts.test(q)) return result('counts', withHistoryNote(composeCounts(globalOv)), { pages: globalOv.totals.pages });
   if (RX.columns.test(q)) return result('columns', withHistoryNote(composeColumns(globalOv, null)), { extraColumns: globalOv.projects.flatMap((s) => (s.extraColumns || []).map((c) => c.label)) });
   if (RX.summary.test(q) || RX.workdone.test(q)) return result('overview', withHistoryNote(composeAllProjectsOverview(globalOv)), { totals: globalOv.totals });
-  if (RX.feedback.test(q)) return result('feedback', withHistoryNote(composeFeedback(globalOv, null)));
   if (q.split(/\s+/).length <= 3) return result('overview', composeAllProjectsOverview(ov));
   return result('fallback', composeFallback(ov));
+}
+
+function feedbackLinks(project) {
+  return (project?.items || [])
+    .filter((item) => item.feedbackUrlType === 'url' || (/^https?:\/\//i.test(String(item.feedbackUrl || '')) && !/mail\.google\.com/i.test(item.feedbackUrl)))
+    .map((item) => String(item.feedbackUrl).trim())
+    .filter((url, index, all) => url && all.indexOf(url) === index);
+}
+
+function composeFeedbackLinkAnswer(project) {
+  const links = feedbackLinks(project);
+  if (!links.length) return `No fetchable feedback document URL is recorded for **${project.project}**.`;
+  return [`🔗 **Feedback documents — ${project.project}**`, '', ...links.map((url) => bullet(url)), '', `_Source: live ${project.project} Sheet; label rows such as “Feedback-1 URL” are excluded._`].join('\n');
+}
+
+function composeEmailThreadAnswer(projects) {
+  const found = [];
+  (projects || []).forEach((project) => (project.items || []).forEach((item) => {
+    if (item.feedbackUrlType === 'email_thread' || /mail\.google\.com/i.test(String(item.feedbackUrl || ''))) {
+      found.push({ project: project.project, url: item.feedbackUrl, date: item.date, notes: item.notes });
+    }
+  }));
+  if (!found.length) return 'No non-fetchable email-thread feedback links are recorded in the connected Dev Tracker tabs.';
+  const lines = ['📧 **Feedback links that cannot be fetched automatically**', ''];
+  found.forEach((entry) => lines.push(bullet(`**${entry.project}** — Gmail inbox thread${entry.date ? ` · ${fmtDate(entry.date)}` : ''}. It requires an interactive Google login, so the agent treats it as an email-thread reference rather than a fetchable document.`)));
+  return lines.join('\n');
+}
+
+function composeDateFormatAnswer(projects) {
+  const house = (projects || []).find((project) => norm(project.project) === 'the house');
+  const reitz = (projects || []).find((project) => norm(project.project) === 'reitz union');
+  const houseDate = (house?.items || []).map((item) => item.date).find(Boolean) || '';
+  const reitzDate = (reitz?.items || []).map((item) => item.date).find(Boolean) || '';
+  return [
+    '📅 **Feedback date formats**', '',
+    bullet(`**The House** uses DD/MM/YY — example: \`${houseDate || '—'}\`.`),
+    bullet(`**Reitz Union** uses YYYY-MM-DD — example: \`${reitzDate || '—'}\`.`),
+    '', '_The assistant retains the original per-tab date value and normalizes it only for safe sorting._',
+  ].join('\n');
+}
+
+function composePageStatusAnswer(project, item, allProjects) {
+  const overallOpen = (allProjects || []).flatMap((p) => p.items || []).filter((row) => row.url && !isHeaderItem(row) && !isCompleted(row.status));
+  const onlyOpen = overallOpen.length === 1 && overallOpen[0] === item;
+  return [
+    `📄 **${item.url}**`, '',
+    `Status: **${item.status || 'Not recorded'}**.`,
+    onlyOpen ? 'This is the only non-completed sitemap row across all six Dev Tracker projects.' : `Source: **${project.project}** live Sheet.`,
+  ].join('\n');
+}
+
+function pageMention(question, project) {
+  const ignore = new Set(['status', 'page', 'what', 'with', 'does', 'have', 'from', 'house', 'hotel', 'union', 'construction', 'booth', 'latest', ...projectWords(project.project)]);
+  const words = norm(question).split(/[^a-z0-9]+/).filter((word) => word.length >= 4 && !ignore.has(word));
+  if (!words.length) return null;
+  return (project.items || []).find((item) => item.url && words.some((word) => norm(item.url).includes(word))) || null;
+}
+
+// Maintenance data is synced locally in data/sites.json. This deterministic
+// route runs before the LLM chain, so a manager's core question still gets a
+// source-based answer if a provider or live Sheets call is unavailable.
+// Accept natural spelling slips such as "maintenace". This route must win
+// before the generic “this month” → recent-Dev-Tracker intent.
+const MAINTENANCE_RX = /\b(mainten\w*|maintain\w*|backup|back up|report sent|maintenance report|website report)\b/;
+const monthKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function maintenanceMonthFor(question, sites) {
+  const q = norm(question);
+  const requested = q.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s*(\d{2,4})?\b/);
+  if (requested) {
+    const [name, year] = [requested[1], requested[2] || ''];
+    const matches = [...new Set((sites || []).flatMap((s) => (s.monthlyHistory || []).map((h) => h.month)).filter((m) => norm(m).startsWith(name) && (!year || String(m).includes(year))))];
+    // An unqualified “August” should prefer the most recent August column,
+    // not the first historical August in a multi-year maintenance sheet.
+    return matches[matches.length - 1] || `${name} ${year}`.trim();
+  }
+  // The rightmost Sheet column may already be created for a new month but be
+  // completely blank. For an unqualified question, use the rightmost column
+  // that has at least one actual maintenance completion instead of reporting a
+  // misleading zero from that future/empty column.
+  const completed = new Map();
+  (sites || []).forEach((site) => (site.monthlyHistory || []).forEach((entry, index) => {
+    if (!/updated\s*(?:&|and)\s*backup|completed|done/i.test(String(entry?.status || ''))) return;
+    const month = String(entry.month || '').trim();
+    if (!month) return;
+    const old = completed.get(month) || { maxIndex: -1, count: 0 };
+    completed.set(month, { maxIndex: Math.max(old.maxIndex, index), count: old.count + 1 });
+  }));
+  return [...completed.entries()].sort((a, b) => b[1].maxIndex - a[1].maxIndex || b[1].count - a[1].count)[0]?.[0] || '';
+}
+
+export function answerMaintenanceQuestionBuiltin(question, sites) {
+  if (!MAINTENANCE_RX.test(norm(question)) || !Array.isArray(sites) || !sites.length) return null;
+  const month = maintenanceMonthFor(question, sites);
+  const key = monthKey(month);
+  const active = sites.filter((site) => norm(site.status) === 'active');
+  const completed = active.filter((site) => {
+    const item = (site.monthlyHistory || []).find((h) => monthKey(h.month) === key);
+    return /updated\s*(?:&|and)\s*backup|completed|done/i.test(String(item?.status || ''));
+  });
+  const byAccount = new Map();
+  completed.forEach((site) => { const account = String(site.account || 'Unassigned').trim() || 'Unassigned'; byAccount.set(account, (byAccount.get(account) || 0) + 1); });
+  const lines = [`🛠 **Maintenance completion — ${month || 'latest reporting cycle'}**`, ''];
+  lines.push(statLine('Completed', `**${completed.length}** active site${completed.length === 1 ? '' : 's'} marked “Updated & Backup”`));
+  lines.push(statLine('Active sites', `**${active.length}**`));
+  lines.push(statLine('Not marked completed', `**${Math.max(0, active.length - completed.length)}**`));
+  if (byAccount.size) lines.push(statLine('By account', [...byAccount.entries()].sort((a, b) => b[1] - a[1]).map(([name, count]) => `${name}: ${count}`).join(' · ')));
+  lines.push('', '**Completed sites**');
+  if (!completed.length) lines.push('No active site is marked “Updated & Backup” for this reporting cycle yet.');
+  else {
+    completed.slice(0, MAX_LIST).forEach((site) => lines.push(bullet(`**${site.url || site.company || 'Unnamed site'}**${site.account ? ` · ${site.account}` : ''}`)));
+    if (completed.length > MAX_LIST) lines.push(`…and ${completed.length - MAX_LIST} more`);
+  }
+  lines.push('', '_Source: synced CW/RM maintenance-sheet snapshot. Ask “maintenance for August 2026” to select a different month._');
+  return { answer: lines.join('\n'), intent: 'maintenance', project: null, data: { month, completed: completed.length, active: active.length, byAccount: Object.fromEntries(byAccount) }, suggestions: ['Maintenance for last month', 'Which sites are not completed?', 'Latest feedback'], engine: 'builtin' };
+}
+
+// Exact website/domain questions are manager status questions even when the
+// user does not write “maintenance”. Resolve them before generic Dev Tracker
+// intents so a known website never falls back to “latest feedback”.
+export function answerSiteQuestionBuiltin(question, sites, history = []) {
+  const q = norm(question).replace(/^https?:\/\//, '').replace(/^www\./, '');
+  const qCompact = q.replace(/[^a-z0-9]/g, '');
+  const siteMatchesQuestion = (item, text = q, compact = qCompact) => {
+    const domain = norm(item.url).replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+    const host = domain.replace(/\.(com|net|org|co|io|us|biz|info|hotel|website)$/i, '');
+    const domainCompact = domain.replace(/[^a-z0-9]/g, '');
+    const hostCompact = host.replace(/[^a-z0-9]/g, '');
+    return (domain.length >= 4 && text.includes(domain)) || (hostCompact.length >= 5 && compact.includes(hostCompact)) || (domainCompact.length >= 6 && compact.includes(domainCompact));
+  };
+  let site = (sites || []).find((item) => {
+    return siteMatchesQuestion(item);
+  });
+  // Follow-up questions (“was the mail sent?”, “this website”) inherit the
+  // website mentioned in the last few turns. The browser sends this small
+  // conversation history with every request.
+  if (!site && /\b(this website|this site|that website|that site|the mail|mail was sent|was it sent|that maintenance)\b/i.test(question)) {
+    const recent = Array.isArray(history) ? history.slice(-4).reverse().map((turn) => `${turn.question || ''}\n${turn.answer || ''}`).join('\n') : '';
+    site = (sites || []).find((item) => {
+      const historyText = norm(recent);
+      return siteMatchesQuestion(item, historyText, historyText.replace(/[^a-z0-9]/g, ''));
+    });
+  }
+  if (!site) return null;
+  const latestDone = [...(site.monthlyHistory || [])].reverse().find((entry) => /updated\s*(?:&|and)\s*backup|completed|done/i.test(String(entry?.status || '')));
+  let askedMonth = maintenanceMonthFor(question, [site]);
+  const hasMonthInQuestion = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i.test(question);
+  if (!hasMonthInQuestion && Array.isArray(history)) {
+    const recent = history.slice(-3).reverse().map((turn) => `${turn.question || ''}\n${turn.answer || ''}`).join('\n');
+    const prior = recent.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s*(\d{2,4})?\s+maintenance\s*:/i);
+    if (prior) askedMonth = `${prior[1]} ${prior[2] || ''}`.trim();
+  }
+  const monthEntry = askedMonth ? (site.monthlyHistory || []).find((entry) => monthKey(entry.month) === monthKey(askedMonth)) : null;
+  const asksMail = /\b(mail|email|report sent|sent)\b/i.test(question);
+  const lines = [`🛠 **Website status — ${site.url}**`, ''];
+  lines.push(statLine('Account', `**${site.account || '—'}**`));
+  lines.push(statLine('Status', `**${site.status || '—'}**`));
+  if (site.accountManager) lines.push(statLine('Account manager', `**${site.accountManager}**`));
+  if (site.latestMonth) lines.push(statLine(`Latest tracking column (${site.latestMonth})`, `**${site.latestMonthStatus || 'not marked complete'}**`));
+  if (askedMonth && monthEntry) lines.push(statLine(`${askedMonth} maintenance`, `**${monthEntry.status || 'not marked complete'}**`));
+  if (asksMail) {
+    const sent = /updated\s*(?:&|and)\s*backup|completed|done/i.test(String(monthEntry?.status || ''));
+    lines.push(statLine('Mail/report status', sent
+      ? '**Sent/complete — confirmed by the “Updated & Backup” maintenance marker**'
+      : '**Not confirmed as sent — this month is not marked “Updated & Backup” in the Sheet**'));
+  }
+  if (latestDone) lines.push(statLine('Most recent recorded completion', `**${latestDone.month}** — ${latestDone.status}`));
+  if (site.reportUrl) lines.push(`Report: ${site.reportUrl}`);
+  if (site.backupUrl) lines.push(`Backup: ${site.backupUrl}`);
+  lines.push('', '_Source: synced maintenance-sheet row for this website. “Updated & Backup” is configured as the completed/sent maintenance marker; it is not a separate email-delivery receipt._');
+  return { answer: lines.join('\n'), intent: 'site-status', project: null, data: { site: site.url, account: site.account, status: site.status, latestMonth: site.latestMonth, latestMonthStatus: site.latestMonthStatus, latestDone, clickupUrl: site.clickupUrl || '' }, suggestions: ['How many maintenance happened?', 'Which sites are not completed?', 'Latest feedback'], engine: 'builtin' };
 }
 
 function defaultSuggestions(ov) {
@@ -1049,7 +1284,10 @@ const LLM_TIMEOUT_MS = 15000;
 // added below, portfolio-wide answers ("list of them" across 6 projects)
 // need more room, and 1600 was getting hit mid-answer, shipping text with
 // an unterminated "**" and a garbled trailing date.
-const MAX_OUTPUT_TOKENS = 2200;
+// Office questions normally need a concise status, not a long report. A lower
+// output reservation also keeps free-tier TPM requests well below Groq's cap.
+const MAX_OUTPUT_TOKENS = 900;
+const MAX_LLM_CONTEXT_CHARS = 7000;
 
 async function httpError(res) {
   let detail = '';
@@ -1078,28 +1316,13 @@ export function stripReasoning(text) {
 
 // Single shared system prompt — identical for EVERY provider in the chain.
 export const SYSTEM_PROMPT = [
-  'You are "Dev Assistant", a concise coworker embedded in the OfficeOS Dev Tracker & Feedback Log.',
-  'The user message contains retrieved tracker context in numbered SECTIONS: SECTION 1 "GROUND TRUTH NUMBERS" (also includes a dated "recentActivity" list — real work log entries with real dates, already filtered to the last 14 days), SECTION 2 the matched project, an optional SECTION 2b listing OTHER projects recently discussed (present only when a pronoun like "there"/"them"/"those" was resolved against the conversation and pointed at more than one project), SECTION 3 retrieved sheet rows, SECTION 4 source info, and an optional SECTION 5 auto-discovered sheet schema (each tab\'s real columns, including hand-added ones). It may also include a "CONVERSATION SO FAR" block of prior turns.',
-  'Answer ONLY from that context (projects, sitemap pages, feedback rounds, work comments).',
-  'Column layouts are discovered from each tab\'s OWN header row and they differ per tab and change over time (some tabs have 5 columns, some 7, some now carry extra hand-added columns) — never assume a fixed A:G layout, and never tell the user a column is missing when SECTION 5 lists it. Development entries (whichever columns hold Development-Date / Development-Updates, surfaced as developmentDate/developmentNotes) are real, first-class work updates — quote them (with their own date) whenever the question is about development, notes, what was built/changed, or "development updates" for a project; never dismiss them as noise and never merge them into a feedback round.',
-  'Hand-added columns (listed with a "+" prefix in SECTION 5, and appearing in SECTION 2/3 as `<Label>="…"` — e.g. QA Check, SEO Notes, a new Backup Date) are REAL tracker data typed into the sheet by the team. Answer from those values when a question touches them, and never call them noise, placeholders, or missing fields.',
-  'Every number and every date you state MUST come from SECTION 1, SECTION 2, SECTION 2b, or SECTION 3. Never add, subtract, average, estimate, or invent a count or a date. If two numbers conflict, trust SECTION 1.',
-  'If the question is about RECENT or THIS WEEK\'s activity, answer from SECTION 1\'s recentActivity list specifically — list which projects/pages actually have dated entries in that window, with their real dates. Do NOT answer a "recent/this week" question by restating the all-time portfolio totals; if recentActivity is empty, say plainly that nothing has been logged in that window and suggest asking for "latest updates" instead (all-time, not date-limited).',
-  'If CONVERSATION SO FAR is present, use it to resolve pronouns and references like "them", "those", "that project", "there" to what was actually discussed in the prior turn — do not silently reinterpret the reference as "all projects" unless the prior turn was genuinely about all projects. If SECTION 2b is present, cover every project it lists, not just the one in SECTION 2.',
-  'SECTION 6 contains data from EVERY connected sheet the project reads (CW Maintenance, RM Maintenance, Daily Review, Property Registry, and any others) — not just the Dev Tracker. When a question mentions maintenance status, report sent, backup, daily review, domains, properties, or anything that is NOT clearly a Dev Tracker / sitemap / feedback question, search SECTION 6 first and answer from there. Each sheet in SECTION 6 is labelled with its title + category — use the sheet whose category best matches the question (e.g. "maintenance report" → CW Maintenance or RM Maintenance sheet; "daily review" → Daily Review sheet; "property" → Property Registry sheet). Quote values verbatim from SECTION 6 — never invent maintenance status, report-sent flags, backup status, or any other value that is not shown there.',
-  'For "this month" / "current month" maintenance questions: the maintenance sheets (CW Maintenance, RM Maintenance) have one column per calendar month (e.g. "September", "August", "September 26", "August 12") showing the maintenance status for that month per website (values like "Updated & Backup", "Updated", "Pending", "N/A", or blank). To answer "how many this month", find the column whose label matches the current calendar month (or the most recent month column if the exact current month is not present), count the rows in that column that have a real maintenance value (not blank, not "N/A"), and report that count. ALSO report the website name (from the Company or Website URL column) for each one you count, so the user knows what was maintained. If the question says "this month" and today\'s month has no column, use the most recent month column that exists and say which month you used.',
-  'Never quote a note that is just a section-header label like "Feedback-1 URL" or "Feedback-2 URL" as if it were a real work comment — that is a group marker, not content; skip it.',
-  'If the question asks about something the context does not contain, say exactly which project/tab is missing and suggest a question that would work instead.',
-  'NEVER invent, guess, or extrapolate project names, page URLs, dates, or statuses.',
-  'Layout (mirror this structure so every answer looks arranged, like a dashboard card):',
-  '1) First line: the project name in **bold** (or a short answer title for list questions).',
-  '2) Then an "**At a glance**" block of "Label: **value**" lines — Readiness:, Sitemap pages:, Open items:, Feedback rounds: — using the exact ground-truth numbers. SKIP this block entirely for multi-project list or recent-activity questions where per-item bullets are more useful than repeated totals.',
-  '3) Then, if present, a "**Latest work** · <round> · <date>" line quoting the note verbatim in double quotes (truncate long notes at ~160 chars). Only include this if you have a genuine matched date from the context — never fabricate a date fragment.',
-  '4) Then a "**Feedback rounds**" list: one "•" bullet per round — "• ✅ **Feedback 1** — Completed · <date>" (✅ completed, ⏳ in progress/header, ⚠️ pending).',
-  '5) Close with ONE short status sentence (e.g. "✅ All 14 sitemap pages are completed — nothing pending." or the single most useful next step).',
-  'Keep multi-project answers (portfolio lists, recent-activity lists) to short one-line bullets per item — do not repeat a full "At a glance" block per project, since that risks running out of output budget and cutting off mid-sentence with an unterminated "**".',
-  'If the user misspelled a project name and you still matched it confidently, answer normally — do NOT ask for confirmation; the matcher already resolved it.',
-  'Style: short, scannable, friendly. Use **bold** for project names and key numbers, "•" bullets, plain newlines. No markdown tables, no headings with #, no code fences.',
+  'You are OfficeOS Dev Assistant: an experienced operations analyst, not a generic chatbot. Give concise but complete, well-reasoned answers.',
+  'Use ONLY the supplied context. Never invent names, statuses, dates, links, or numbers. If absent, say so plainly.',
+  'SECTION 1 is authoritative for computed counts and dates. Use recentActivity only for recent/this-week questions. SECTION 2 is the matched project; SECTION 3 is retrieved tracker evidence. Hand-added columns are REAL tracker data, not noise. Answer from those values when relevant. Respect development fields too. Ignore Feedback-N URL marker text.',
+  'SECTION 6 is cross-office sheet evidence; use it for maintenance, reports, backups, daily reviews, and properties. SECTION 7 is Docs/SOP evidence: preserve procedure order and cite it. SECTION 8 is highest-priority retrieved RAG evidence; cite its source. SECTION 9 is the daily report log: answer submission/report questions from it and cite the author + date.',
+  'Use conversation context only to resolve references such as “there”, “it”, and “that site”. If sources conflict, state the conflict and name each source; do not silently choose.',
+  'For maintenance: “Updated & Backup” or “Completed” confirms work completed. A separate ClickUp/report-sent field or comment confirms delivery; do not equate the two unless both are present.',
+  'Answer format: lead with the direct conclusion, then a compact Evidence section (2–6 specific facts with dates/statuses), then a clear implication or next step when useful. Reconcile conflicting evidence explicitly. Keep source names/rows where useful. No tables, code fences, filler, or speculative explanations.',
 ].join(' ');
 
 export const PROVIDER_DEFAULTS = {
@@ -1201,12 +1424,12 @@ export function buildProviderChain(env = process.env, config = null) {
 // so context doesn't balloon. This is what lets "give me the list of them"
 // resolve "them" against whatever the previous answer was actually about.
 function formatHistory(history) {
-  const turns = Array.isArray(history) ? history.slice(-4) : [];
+  const turns = Array.isArray(history) ? history.slice(-2) : [];
   if (!turns.length) return '';
   const lines = turns.map((t, i) => {
     const q = String(t?.question || t?.user || '').trim();
     const a = String(t?.answer || t?.assistant || '').trim();
-    return `Turn ${i + 1} — User: ${clip(q, 200)}\nTurn ${i + 1} — Assistant: ${clip(a, 400)}`;
+    return `Turn ${i + 1} — User: ${clip(q, 140)}\nTurn ${i + 1} — Assistant: ${clip(a, 240)}`;
   });
   return ['=== CONVERSATION SO FAR (most recent last) ===', ...lines].join('\n');
 }
@@ -1325,10 +1548,15 @@ export function verifyGrounded(answer, contextText) {
   const allowed = new Set();
   const ctxClean = String(contextText || '')
     .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/\b\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)?\b/g, ' ')
     .replace(/^\s*\d{1,3}\.\s+/gm, ' ');
   for (const t of ctxClean.match(/\d{1,4}/g) || []) allowed.add(Number(t));
   const stripped = String(answer || '')
     .replace(/https?:\/\/\S+/g, ' ')
+    // The context carries an ISO snapshot timestamp. Treat the whole timestamp
+    // as metadata, otherwise its seconds (for example `:07`) can accidentally
+    // whitelist a fabricated number in an answer.
+    .replace(/\b\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?)?\b/g, ' ')
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, ' ')
     .replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g, ' ')
     .replace(/\b[A-Za-z][A-Za-z0-9._-]*\d[A-Za-z0-9._-]*\b/g, ' ')
@@ -1362,7 +1590,7 @@ export function buildRagContext(question, projects, opts = {}) {
   // sort those extra rows purely by date so the model has SOMETHING dated
   // to point to even if the wording ("running week") shares no keywords
   // with the note text itself.
-  let evidence = retrieveEvidence(question, projects, matched, evidenceLimit);
+  let evidence = retrieveEvidence(question, projects, matched, Math.min(6, evidenceLimit));
   if (recency) {
     const dated = [];
     ov.projects.forEach((s) => {
@@ -1627,13 +1855,13 @@ export function buildRagContext(question, projects, opts = {}) {
       const moreRows = sheet.rows.length > shownRows.length ?
         `\n  … ${sheet.rows.length - shownRows.length} more rows (first ${shownRows.length} shown — the LLM can request specific rows)` : '';
 
-      sheetBlocks.push(
+      sheetBlocks.push(...[
         `### SHEET: ${sheet.title} [id: ${sheet.id}, category: ${sheet.category || 'n/a'}, tab: "${sheet.tabName || 'Sheet1'}", ${sheet.totalRows} data rows]`,
         `Status summary: ${statusLine}`,
         headerLine,
         currentMonthSummary ? `📅 ${currentMonthSummary}` : '',
         shownRows.length ? `Rows:\n${rowLines}${moreRows}` : '(no data rows to show)',
-      ).filter(Boolean);
+      ].filter(Boolean));
     }
 
     sections.push([
@@ -1644,8 +1872,64 @@ export function buildRagContext(question, projects, opts = {}) {
     ].join('\n'));
   }
 
-  let context = sections.join('\n\n');
-  if (context.length > contextChars) context = context.slice(0, contextChars);
+  // SECTION 7 — Google Docs RAG. Chunk locally, then send only the most
+  // relevant excerpts to the configured answer provider along with source URLs.
+  const docs = Array.isArray(opts.documents?.documents) ? opts.documents.documents : [];
+  if (docs.length) {
+    const terms = ragKeywords(question);
+    const chunks = [];
+    for (const doc of docs) {
+      const text = String(doc.text || '');
+      for (let start = 0, i = 0; start < text.length; start += 1100, i++) {
+        const body = text.slice(start, start + 1300).trim();
+        if (!body) continue;
+        const haystack = norm(`${doc.title || ''} ${body}`);
+        let score = terms.length ? 0 : 0.1;
+        for (const term of terms) if (haystack.includes(term)) score += (norm(doc.title).includes(term) ? 4 : 2);
+        if (score > 0) chunks.push({ score, title: doc.title, url: doc.url, body, i });
+      }
+    }
+    chunks.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title) || a.i - b.i);
+    const chosen = chunks.slice(0, Math.max(1, Math.min(3, Number(rag.documentEvidenceLimit) || 3)));
+    if (chosen.length) sections.push([
+      '=== SECTION 7 — GOOGLE DOCS (retrieved SOP / policy excerpts) ===',
+      'These are the only document excerpts retrieved for this question. Follow them faithfully and cite the document title + URL when using an instruction.',
+      ...chosen.map((chunk, index) => `[DOC ${index + 1}] title="${chunk.title}" url=${chunk.url}\n${clip(chunk.body, 700)}`),
+    ].join('\n\n'));
+  }
+
+  const enterprise = opts.enterpriseRag?.chunks || [];
+  if (enterprise.length) sections.push([
+    '=== SECTION 8 — ENTERPRISE HYBRID RAG (reranked evidence) ===',
+    'Only answer from these chunks when they are present. For SOP steps preserve their order and cite the source line.',
+    ...enterprise.slice(0, 3).map((chunk, i) => `[RAG ${i + 1}] score=${chunk.scores?.rerank ?? ''} source=${chunk.metadata.file_name}${chunk.metadata.sheet_tab ? ` / ${chunk.metadata.sheet_tab}, row ${chunk.metadata.row_number}` : ` / ${chunk.metadata.section_heading}`} url=${chunk.metadata.source_url}\n${clip(chunk.text, 900)}`),
+  ].join('\n\n'));
+
+  // SECTION 9 — live daily report log mirror. Included only when the bridge is
+  // configured and the question looks report-related, so open-ended report
+  // summaries ("sum up today's reports") still have real submission data.
+  const dailyReports = Array.isArray(opts.dailyReports) ? opts.dailyReports : [];
+  if (dailyReports.length && /\b(report(s|ed|ing)?|submitted|submit|who|missing|yesterday|today)\b|\b\d{4}-\d{2}-\d{2}\b|\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(question)) {
+    const lines = dailyReports.slice(0, 14).map((r) => {
+      const counts = r.answer?.counts || {};
+      const raw = r.question?.whatsapp || r.question?.input?.rawWhatsappText || r.answer?.finalReport || '';
+      return `[${r.reportDate}] ${r.user?.name || 'Unknown'}: done ${counts.tasksDone ?? 0}, in review ${counts.inReview ?? 0}, in progress ${counts.inProgress ?? 0}, overdue ${counts.overdueTasks ?? 0} — ${clip(raw, 300)}`;
+    });
+    sections.push([
+      '=== SECTION 9 — DAILY REPORT LOG (Report Automation mirror) ===',
+      'These are actual submitted daily reports. When the question is about daily reports/submissions, answer from THIS section and cite the author + date. Do not invent reports that are not listed here.',
+      ...lines,
+    ].join('\n\n'));
+  }
+
+  // The model gets only the authoritative/project/retrieved evidence blocks.
+  // The enormous full-sheet/schema blocks remain available to deterministic
+  // routing, but no longer consume the LLM request budget.
+  const prioritized = sections.filter((section) => /=== SECTION (1|2|2b|3|7|8|9) —/.test(section));
+  const broad = sections.find((section) => section.startsWith('=== SECTION 6'));
+  if (!enterprise.length && broad) prioritized.push(clip(broad, 1600));
+  let context = prioritized.join('\n\n');
+  if (context.length > Math.min(contextChars, MAX_LLM_CONTEXT_CHARS)) context = context.slice(0, Math.min(contextChars, MAX_LLM_CONTEXT_CHARS));
   return { context, groundTruth, evidenceCount: evidence.length, matchedProject: matched?.project || null };
 }
 
@@ -1733,15 +2017,37 @@ async function callProvider(p, system, userPrompt, extra) {
   }
 }
 
+// A quota error is account-wide for a provider/key, so trying its alternate
+// model names immediately only adds latency and noisy logs. Keep a short
+// in-memory cooldown; a later question can naturally retry it.
+const providerCooldowns = new Map();
+const PROVIDER_COOLDOWN_MS = 60 * 1000;
+const providerCooldownKey = (provider) => `${provider.name}:${provider.kind}`;
+const isRateLimited = (message) => /\b429\b|quota exceeded|rate.?limit/i.test(String(message || ''));
+const answerCache = new Map();
+const ANSWER_CACHE_MS = 2 * 60 * 1000;
+function answerCacheKey(question, history = []) {
+  const words = norm(question).split(/[^a-z0-9]+/).filter((word) => word.length > 2 && !RAG_STOP.has(word)).sort();
+  const prior = norm((history || []).slice(-1)[0]?.question || '').slice(0, 100);
+  return `${words.join('|')}::${prior}`;
+}
+
 async function tryProviderChain(chain, system, userPrompt, log, extra) {
   for (let i = 0; i < chain.length; i++) {
     const p = chain[i];
+    const key = providerCooldownKey(p);
+    const retryAt = providerCooldowns.get(key) || 0;
+    if (retryAt > Date.now()) {
+      log(`provider ${p.name}:${p.model} skipped (rate-limit cooldown) — trying next provider`);
+      continue;
+    }
     try {
       const text = await callProvider(p, system, userPrompt, extra);
       log(`answered by provider: ${p.name} (model: ${p.model}, position ${i + 1}/${chain.length}${i > 0 ? `, after ${i} fallback${i === 1 ? '' : 's'}` : ''})`);
-      return { text, provider: p.name };
+      return { text, provider: p.name, model: p.model, position: i + 1 };
     } catch (e) {
       const reason = e && e.name === 'AbortError' ? `timeout after ${LLM_TIMEOUT_MS}ms` : (e && e.message) || 'unknown error';
+      if (isRateLimited(reason)) providerCooldowns.set(key, Date.now() + PROVIDER_COOLDOWN_MS);
       const nextStep = i + 1 < chain.length ? chain[i + 1] : null;
       const next = nextStep
         ? `— trying next: ${nextStep.name}:${nextStep.model}`
@@ -1750,6 +2056,158 @@ async function tryProviderChain(chain, system, userPrompt, log, extra) {
     }
   }
   return null;
+}
+
+// Accept common typos such as "commmetn" too; this is an evidence lookup so
+// being generous here is safer than letting a typo fall into an LLM response.
+const CLICKUP_COMMENT_RX = /\bclickup\b.*\bcomm\w*\b|\bcomm\w*\b.*\bclickup\b/i;
+const CLICKUP_URL_RX = /https?:\/\/[^\s)]+clickup\.com\/t\/[^\s)]+/i;
+
+function latestClickUpUrlFromHistory(history = []) {
+  for (const turn of [...history].reverse()) {
+    const links = String(turn?.answer || '').match(new RegExp(CLICKUP_URL_RX.source, 'ig')) || [];
+    if (links.length) return links[links.length - 1];
+  }
+  return '';
+}
+
+function requestedMonthName(question) {
+  return String(question || '').match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i)?.[1] || '';
+}
+
+// For a named maintenance question, gather every closely matched linked task
+// before deciding. A site may have both the maintenance task and a separate
+// daily-review/report task, and their comments can explain an apparent sheet
+// conflict (for example: report sent, then work later paused).
+async function answerClickUpMaintenanceEvidence(question, options = {}) {
+  if (CLICKUP_COMMENT_RX.test(String(question || ''))) return null;
+  const text = String(question || '');
+  const maintenanceQuestion = /\b(maintenance|report|mail|sent|send|done|complete)\b/i.test(text);
+  // “I mean in August” inherits maintenance from the immediately preceding
+  // question, while keeping the site name from that same chat context.
+  const monthFollowUp = Boolean(requestedMonthName(text)) && (options.history || []).slice(-2).some((turn) => /\bmaintenance\b/i.test(String(turn?.question || '')));
+  if (!maintenanceQuestion && !monthFollowUp) return null;
+  const { findClickUpEvidenceList } = await import('./enterpriseRag.js');
+  const evidence = findClickUpEvidenceList(question, options.history || []);
+  if (!evidence.length || evidence[0].score < (monthFollowUp ? 6 : 9)) return null;
+  const { getClickUpTask, getClickUpTaskComments } = await import('./clickup.js');
+  const records = await Promise.all(evidence.map(async (item) => ({
+    item,
+    task: await getClickUpTask(item.url),
+    comments: await getClickUpTaskComments(item.url),
+  })));
+  const month = requestedMonthName(question);
+  const all = records.flatMap((record) => record.comments.map((comment) => ({
+    ...comment,
+    taskName: record.task?.name || 'Linked task',
+    taskUrl: record.task?.url || record.item.url,
+  }))).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const scoped = month ? all.filter((comment) => new RegExp(month, 'i').test(comment.text)) : all;
+  const sent = scoped.find((comment) => /\b(sent|send|emailed|mailed)\b/i.test(comment.text));
+  const completed = scoped.find((comment) => /\b(completed|complete|done)\b/i.test(comment.text));
+  const paused = all.find((comment) => /\b(pause|paused|on hold|non.?payment)\b/i.test(comment.text));
+  const inferredMonth = month || sent?.text.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i)?.[1] || '';
+  const sheetStatuses = records.flatMap((record) => {
+    if (!inferredMonth) return [];
+    const values = [...String(record.item.chunk.text || '').matchAll(new RegExp(`${inferredMonth}\\s*(?:\\d{2,4})?\\s*:\\s*([^—]+)`, 'ig'))]
+      .map((match) => String(match[1] || '').trim());
+    return values.length ? [{ values, latest: values[values.length - 1], source: record.item.chunk.text }] : [];
+  });
+  const latestSheetStatus = sheetStatuses.find((item) => item.latest)?.latest || '';
+  const completedInSheet = /updated\s*(?:&|and)\s*backup|completed|done/i.test(latestSheetStatus);
+  const label = inferredMonth ? `${inferredMonth[0].toUpperCase()}${inferredMonth.slice(1).toLowerCase()} maintenance` : 'Maintenance status';
+  const lines = [`🛠 **${label} — gathered live ClickUp evidence**`, ''];
+  if (latestSheetStatus) {
+    lines.push(`Maintenance sheet (latest ${inferredMonth} column): **${latestSheetStatus}**.`);
+  }
+  if (completedInSheet && sent) {
+    lines.push('**Maintenance was done, and the maintenance report was sent.**');
+    lines.push(`• Completion is confirmed by the maintenance-sheet marker “${latestSheetStatus}”.`);
+    lines.push(`• **${sent.createdAt ? sent.createdAt.slice(0, 10) : 'Undated'} · ${sent.author} · ${sent.taskName}:** “${clip(sent.text, 500)}”`);
+  } else if (sent) {
+    lines.push('**A report-sent comment exists, but the latest maintenance-sheet status is not marked complete.**');
+    lines.push(`• **${sent.createdAt ? sent.createdAt.slice(0, 10) : 'Undated'} · ${sent.author} · ${sent.taskName}:** “${clip(sent.text, 500)}”`);
+  } else if (completed) {
+    lines.push('**Maintenance was completed, but the readable comments do not explicitly confirm that the report was sent.**');
+    lines.push(`• **${completed.createdAt ? completed.createdAt.slice(0, 10) : 'Undated'} · ${completed.author} · ${completed.taskName}:** “${clip(completed.text, 500)}”`);
+  } else {
+    lines.push(`**No linked ClickUp comment explicitly confirms ${month || 'this'} maintenance or report delivery.**`);
+  }
+  if (paused) {
+    lines.push('', '**Important operational note**');
+    lines.push(`• **${paused.createdAt ? paused.createdAt.slice(0, 10) : 'Undated'} · ${paused.author} · ${paused.taskName}:** “${clip(paused.text, 400)}”`);
+    lines.push('This records a pause for future work; it does not erase a separate report-sent confirmation.');
+  }
+  lines.push('', '**Linked tasks checked**');
+  records.forEach((record) => lines.push(`• ${record.task?.name || 'ClickUp task'} — ${record.task?.status || '—'} — ${record.task?.url || record.item.url}`));
+  lines.push('', '_Sources: synchronized Sheets used to find task links, then live read-only ClickUp comments used for the conclusion._');
+  return { answer: lines.join('\n'), intent: 'clickup-maintenance-proof', project: null, data: { tasks: records.map((record) => record.task), evidence }, suggestions: ['Show all ClickUp comments', 'Check another maintenance month'], engine: 'clickup' };
+}
+
+// Comment questions are evidence requests, not LLM prompts. Resolve the most
+// relevant linked task and return its live read-only comment feed directly so
+// the assistant cannot invent a comment or mix one website's task with another.
+async function answerClickUpCommentQuestion(question, options = {}) {
+  const text = String(question || '');
+  const maintenanceEvidence = await answerClickUpMaintenanceEvidence(question, options);
+  if (maintenanceEvidence) return maintenanceEvidence;
+  const asksForComments = CLICKUP_COMMENT_RX.test(text);
+  const asksForClickUp = /\bclickup\b/i.test(text);
+  const asksForMaintenanceProof = /\b(maintenance|report|mail|sent|send|done|complete)\b/i.test(text);
+  const priorTaskUrl = latestClickUpUrlFromHistory(options.history || []);
+  // A follow-up such as "August maintenance was sent or not?" should use the
+  // task that was just discussed, even when the user does not repeat ClickUp.
+  if (!asksForComments && !asksForClickUp && !(priorTaskUrl && asksForMaintenanceProof)) return null;
+  let taskUrl = text.match(CLICKUP_URL_RX)?.[0] || priorTaskUrl;
+  let evidence = null;
+  if (!taskUrl) {
+    const { findClickUpEvidence } = await import('./enterpriseRag.js');
+    evidence = findClickUpEvidence(question, options.history || []);
+    taskUrl = evidence?.url || '';
+  }
+  if (!taskUrl) return null;
+  const { getClickUpTask, getClickUpTaskComments } = await import('./clickup.js');
+  const [task, comments] = await Promise.all([getClickUpTask(taskUrl), getClickUpTaskComments(taskUrl)]);
+  const month = requestedMonthName(text);
+  if (!asksForComments && month) {
+    const monthComments = comments.filter((comment) => new RegExp(`\\b${month}\\b`, 'i').test(comment.text));
+    const sent = monthComments.find((comment) => /\b(sent|send|emailed|mailed)\b/i.test(comment.text));
+    const completed = monthComments.find((comment) => /\b(completed|complete|done)\b/i.test(comment.text));
+    const lines = [`🛠 **${month[0].toUpperCase()}${month.slice(1).toLowerCase()} maintenance — live ClickUp evidence**`, ''];
+    if (sent) {
+      lines.push('**Yes — the maintenance report was sent.**');
+      lines.push(`• **${sent.createdAt ? sent.createdAt.slice(0, 10) : 'Undated'} · ${sent.author}:** “${clip(sent.text, 500)}”`);
+    } else if (completed) {
+      lines.push('**Maintenance was completed, but this task’s readable comments do not explicitly confirm that the report was sent.**');
+      lines.push(`• **${completed.createdAt ? completed.createdAt.slice(0, 10) : 'Undated'} · ${completed.author}:** “${clip(completed.text, 500)}”`);
+    } else {
+      lines.push(`**I found no readable ClickUp comment that explicitly confirms ${month} maintenance or its report was sent.**`);
+    }
+    if (task) lines.push('', `Current task status: **${task.status || '—'}** _(current status does not change the historical comment evidence)_`);
+    lines.push(`Task link: ${task?.url || taskUrl}`, '', '_Source: live read-only ClickUp task comments._');
+    return { answer: lines.join('\n'), intent: 'clickup-maintenance-proof', project: null, data: { task, comments: monthComments, source: evidence?.chunk?.metadata || null }, suggestions: ['Show all ClickUp comments', 'Check another maintenance month'], engine: 'clickup' };
+  }
+  const lines = ['💬 **Live ClickUp comments**', ''];
+  if (task) {
+    lines.push(`Task: **${task.name || task.id}**`);
+    lines.push(`Current status: **${task.status || '—'}**`);
+  }
+  if (evidence?.chunk?.text) {
+    const website = evidence.chunk.text.match(/Website:\s*([^—]+)/i)?.[1]?.trim();
+    if (website) lines.push(`Matched website: **${website}**`);
+  }
+  lines.push(`Task link: ${task?.url || taskUrl}`, '');
+  if (!comments.length) lines.push('No readable comments were returned for this task.');
+  else {
+    lines.push(`**${comments.length} newest comment${comments.length === 1 ? '' : 's'}**`);
+    comments.slice(0, 12).forEach((comment) => {
+      const date = comment.createdAt ? comment.createdAt.slice(0, 10) : 'undated';
+      lines.push(`• **${date} · ${comment.author}** — ${clip(comment.text, 700)}`);
+    });
+    if (comments.length > 12) lines.push(`…and ${comments.length - 12} older comments available in ClickUp.`);
+  }
+  lines.push('', '_Source: live read-only ClickUp task comments._');
+  return { answer: lines.join('\n'), intent: 'clickup-comments', project: null, data: { task, comments, source: evidence?.chunk?.metadata || null }, suggestions: ['Check the maintenance status', 'Show the linked task'], engine: 'clickup' };
 }
 
 /**
@@ -1768,15 +2226,78 @@ export async function answerDevQuestion(question, projects, options = {}) {
   const env = options.env || process.env;
   const config = options.config || null;
   const log = options.log || ((...args) => console.log('[dev-assistant]', ...args));
+  // Phase 1 is intentionally Sheet-only. The configured ClickUp token does
+  // not have space visibility, so no task/comment claim is reliable yet.
+  const siteStatus = answerSiteQuestionBuiltin(question, options.sites || [], options.history);
+  if (siteStatus) {
+    if (siteStatus.data?.clickupUrl) {
+      try {
+        const { getClickUpTask } = await import('./clickup.js');
+        const task = await getClickUpTask(siteStatus.data.clickupUrl);
+        if (task) {
+          const taskLines = ['', '**Linked ClickUp task**', `Task: **${task.name || task.id}**`, `Status: **${task.status || '—'}**`];
+          if (task.assignees.length) taskLines.push(`Assignees: **${task.assignees.join(', ')}**`);
+          if (task.dueDate) taskLines.push(`Due date: **${task.dueDate}**`);
+          if (task.updatedAt) taskLines.push(`ClickUp updated: **${task.updatedAt.slice(0, 10)}**`);
+          taskLines.push(`Task link: ${task.url}`);
+          siteStatus.answer += taskLines.join('\n');
+          siteStatus.data.clickupTask = task;
+        }
+      } catch (error) { console.warn('[dev-assistant] ClickUp lookup failed:', error.message); }
+    }
+    return siteStatus;
+  }
+  const maintenance = answerMaintenanceQuestionBuiltin(question, options.sites || []);
+  if (maintenance) return maintenance;
+  // Daily report log bridge — deterministic answers for "who submitted /
+  // what did X report / reports for <date>" before anything else runs, so an
+  // LLM can never guess a report claim that isn't in the mirror.
+  const dailyReports = Array.isArray(options.dailyReports) ? options.dailyReports : [];
+  if (dailyReports.length) {
+    try {
+      const { isReportQuestion, answerReportQuestion } = await import('./reportAutomation.js');
+      if (isReportQuestion(question)) {
+        const reportAnswer = answerReportQuestion(question, dailyReports, { users: options.reportUsers || [], baseUrl: options.reportBaseUrl || '' });
+        if (reportAnswer) return reportAnswer;
+      }
+    } catch (error) { log('report feed question handler failed:', error.message); }
+  }
   const rag = config?.rag || {};
   // "recent" intent stays deterministic-first too when there's no LLM chain,
   // so the builtin answer is already the real date-filtered list rather than
   // the all-time one, even with AI disabled. History is passed through here
   // too so pronoun resolution works even without an LLM configured.
   const rule = answerDevQuestionBuiltin(question, projects, { history: options.history });
-  if (rule.intent === 'clarify' || rule.intent === 'not-found') return rule;
+  // A route may have just completed a live Sheet/ClickUp investigation. Use
+  // that evidence directly instead of spending quota asking a model to
+  // paraphrase it and risking an invented operational answer.
+  if (options.forceBuiltin) return rule;
+  // List-style feedback questions are factual retrieval requests, not prose
+  // generation. Keep them deterministic so an LLM cannot reinsert a newer
+  // Development entry into a feedback-only answer.
+  // A legacy Dev Tracker miss must not hide evidence found in the wider
+  // OfficeOS index (maintenance, task-distribution, daily-review, property
+  // registry, or SOP sources).  Keep clarification/feedback deterministic,
+  // but let a retrieved cross-sheet answer continue to the grounded RAG path.
+  const hasEnterpriseEvidence = Boolean(options.enterpriseRag?.chunks?.length);
+  const useEnterpriseFallback = rule.intent === 'not-found' && hasEnterpriseEvidence;
+  if (rule.intent === 'clarify' || rule.intent === 'feedback' || (rule.intent === 'not-found' && !useEnterpriseFallback)) return rule;
   const chain = buildProviderChain(env, config);
-  if (!chain.length) return rule;
+  if (!chain.length) {
+    if (useEnterpriseFallback) {
+      const { generateGroundedFallback } = await import('./enterpriseRag.js');
+      return { answer: generateGroundedFallback(question, options.enterpriseRag), intent: 'rag', project: null, data: { retrieval: options.enterpriseRag }, suggestions: ['Ask about a website, task, maintenance, or SOP'], engine: 'rag-fallback' };
+    }
+    return rule;
+  }
+  const cacheKey = answerCacheKey(question, options.history);
+  const cached = answerCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    const { recordProviderAnswer } = await import('./assistantMetrics.js');
+    const metrics = recordProviderAnswer({ provider: cached.result.provider, position: cached.result.providerPosition, cached: true, inputChars: 0 });
+    log(`answer cache hit (${cached.result.provider}); provider fallback trend: ${metrics.fallbackPosition4OrLaterPercent}% served at position 4+ of ${metrics.answers} model answers`);
+    return { ...cached.result, cached: true };
+  }
   try {
     const ragOpts = {
       rag,
@@ -1790,9 +2311,14 @@ export async function answerDevQuestion(question, projects, options = {}) {
       // Review, Property Registry, etc.) — passed as SECTION 6 so the LLM can
       // reason across every sheet the project reads, not just the Dev Tracker.
       allSheets: options.allSheets || null,
+      // Retrieved SOP / policy text from explicitly configured Google Docs.
+      documents: options.documents || null,
+      enterpriseRag: options.enterpriseRag || null,
+      dailyReports: options.dailyReports || null,
     };
     const ragBuilt = buildRagContext(question, projects, ragOpts);
     const userPrompt = buildUserPrompt(question, projects, ragOpts);
+    log(`LLM request budget: ${userPrompt.length} input chars (~${Math.ceil((SYSTEM_PROMPT.length + userPrompt.length) / 4)} tokens including system), ${MAX_OUTPUT_TOKENS} output-token cap`);
     const out = await tryProviderChain(chain, SYSTEM_PROMPT, userPrompt, log, { question, projects });
     if (out) {
       if (rag.verifyNumbers !== false) {
@@ -1804,7 +2330,11 @@ export async function answerDevQuestion(question, projects, options = {}) {
           }
         }
       }
-      const result = { ...rule, answer: out.text, engine: 'llm', provider: out.provider };
+      const result = { ...rule, intent: useEnterpriseFallback ? 'rag' : rule.intent, answer: out.text, engine: 'llm', provider: out.provider, providerModel: out.model, providerPosition: out.position };
+      answerCache.set(cacheKey, { expiresAt: Date.now() + ANSWER_CACHE_MS, result });
+      const { recordProviderAnswer } = await import('./assistantMetrics.js');
+      const metrics = recordProviderAnswer({ provider: out.provider, position: out.position, inputChars: userPrompt.length });
+      log(`provider metrics: ${metrics.fallbackPosition4OrLaterPercent}% served at fallback position 4+ (${metrics.fallbackPosition4OrLater}/${metrics.answers} model answers, avg input ${metrics.averageInputChars} chars)`);
       if (options.debug) {
         result.retrieval = { evidenceCount: ragBuilt.evidenceCount, matchedProject: ragBuilt.matchedProject, contextChars: ragBuilt.context.length };
       }
@@ -1812,6 +2342,10 @@ export async function answerDevQuestion(question, projects, options = {}) {
     }
   } catch (e) {
     log(`llm chain error: ${e.message} — using builtin engine`);
+  }
+  if (useEnterpriseFallback) {
+    const { generateGroundedFallback } = await import('./enterpriseRag.js');
+    return { answer: generateGroundedFallback(question, options.enterpriseRag), intent: 'rag', project: null, data: { retrieval: options.enterpriseRag }, suggestions: ['Ask about a website, task, maintenance, or SOP'], engine: 'rag-fallback' };
   }
   return rule;
 }

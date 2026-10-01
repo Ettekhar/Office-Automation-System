@@ -68,6 +68,41 @@ npm run dry-run
 npm run send
 ```
 
+## Google Docs / SOP assistant
+
+OfficeOS can answer from the connected Google Sheets **and** your SOP/policy
+Google Docs. In **AI Settings → Google Docs / SOP sources**, paste individual
+Google Doc links or a shared Drive-folder link, save, then use **Test Docs &
+folders**. The service account must have Viewer access to every Doc/folder, and
+the Google Cloud project must have both the **Google Docs API** and **Google
+Drive API** enabled. The assistant reads the sources only; it retrieves the
+most relevant excerpts for each question and cites the Google Doc it used.
+
+For deployment-only setup, put comma-separated Doc IDs/URLs in
+`RAG_GOOGLE_DOC_IDS` and folder IDs/URLs in `RAG_GOOGLE_DRIVE_FOLDER_IDS`.
+These values and the service-account key are secrets and must not be committed.
+
+## Enterprise RAG sync and evaluation
+
+The production retrieval layer is local-first: a JSON vector index in
+`data/rag-index.json`, Gemini `text-embedding-004` when configured (with an
+offline deterministic fallback), hybrid vector + BM25 retrieval, and a
+heading-aware reranker. This keeps costs low and supports exact project names,
+sheet rows, SOP headings, and citations without another hosted database.
+
+Run `npm run sync:rag` after adding or changing connected Sheets/Docs. In
+production, schedule that command or `POST /api/master/rag/sync` after daily
+Sheet updates and weekly SOP updates. Run `npm run eval:rag` after each change:
+it logs the selected chunks, source metadata, hybrid/rerank scores, and
+citation readiness for 15 realistic manager/employee prompts.
+
+If the app directory is read-only, set `RAG_INDEX_PATH` to a writable,
+persistent directory before running the sync/evaluator.
+
+For a long-running Node deployment, setting `RAG_SYNC_INTERVAL_MS=21600000`
+refreshes the index every six hours. Use the protected sync endpoint instead
+when your hosting platform provides its own cron scheduler.
+
 Read the summary at the end of each run — it tells you how many rows were
 skipped and why (inactive, not marked done this month, no contact email, or
 no matching report tab found), so you can spot data issues in the sheet

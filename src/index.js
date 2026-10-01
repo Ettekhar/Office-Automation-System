@@ -10,8 +10,11 @@ import {
   isValidWebsiteUrl,
   parseContacts,
   rowsToHtmlTable,
+  resolveConditionalNotes,
 } from './reportUtils.js';
 import { buildEmail, sendReportEmail } from './mailer.js';
+import { getConditionalNotes } from './db.js';
+import { completeClickUpMaintenanceTask } from './clickup.js';
 
 
 const SEND = process.argv.includes('--send');
@@ -121,12 +124,17 @@ async function processAccount(acct) {
     try {
       const reportRows = await getTabValues(matchedTab, 'A1:D200', acct.spreadsheetId);
       const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
+      const conditionalNotes = resolveConditionalNotes(
+        reportRows,
+        getConditionalNotes({ account: acct.key, enabledOnly: true }),
+      );
       const { subject, html } = buildEmail({
         websiteUrl,
         reportMonth,
         reportHtml,
         hasAdditionalIssues,
         hasPremiumPlugins,
+        conditionalNotes,
         accountKey: acct.key,
       });
 
@@ -143,6 +151,21 @@ async function processAccount(acct) {
         accountKey: acct.key,
       });
       console.log(`${SEND ? '✅ Sent' : '📝 Would send'} [${acct.key}]: ${websiteUrl} -> ${contacts.join(', ')} (tab: "${matchedTab}")`);
+
+      if (row[cols.TIME_TRACK_URL]) {
+        try {
+          await completeClickUpMaintenanceTask({
+            timeTrackUrl: row[cols.TIME_TRACK_URL],
+            websiteUrl,
+            accountManager: row[cols.AM],
+            monthName: reportMonth ? `${reportMonth.month} ${reportMonth.year}` : null,
+            dryRun: !SEND,
+          });
+        } catch (cuErr) {
+          console.warn(`[ClickUp] Notice for ${websiteUrl}:`, cuErr.message);
+        }
+      }
+
       sent++;
 
       await sleep(300);

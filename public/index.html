@@ -7,6 +7,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      try {
+        const saved = localStorage.getItem('officeos_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
@@ -81,6 +89,24 @@
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
           Send Selected (<span id="selectedCountText">0</span>)
+        </button>
+
+        <!-- Theme Toggle (Dark / Light Mode) -->
+        <button id="theme-toggle-btn" class="btn-theme-toggle" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+          <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </button>
       </div>
     </header>
@@ -228,6 +254,60 @@
         </div>
       </div>
 
+      <!-- ClickUp Bulk Actions Bar -->
+      <div id="cuBulkBar" class="cu-bulk-bar">
+        <!-- Left: Logo + step labels -->
+        <div class="cu-bulk-left">
+          <span class="cu-bulk-logo" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M4.5 22.5 10.2 18.1c1.3 1.4 3.3 2.2 5.8 2.2s4.5-.8 5.8-2.2l5.7 4.4A15.5 15.5 0 0 1 16 27.5 15.5 15.5 0 0 1 4.5 22.5z" fill="#7B68EE"/><path d="M9.6 14.5 16 8.1l6.4 6.4-2.5 2.5L16 13l-3.9 3.9-2.5-2.4z" fill="#49CCF9"/></svg>
+          </span>
+          <div class="cu-bulk-label-group">
+            <span class="cu-bulk-title">ClickUp</span>
+            <span id="cuBulkTaskCount" class="cu-bulk-count">— sites with task URLs</span>
+          </div>
+        </div>
+
+        <!-- Center: Two-step action flow -->
+        <div class="cu-bulk-center">
+          <!-- Step 1: Load -->
+          <div class="cu-step-group">
+            <span class="cu-step-num">1</span>
+            <button id="cuLoadPreviewBtn" class="btn cu-btn-load" title="Load fresh Account Manager addresses and task statuses from ClickUp — shows a preview before sending">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Load &amp; Preview ClickUp
+            </button>
+            <span id="cuPreviewReadyBadge" class="cu-step-badge hidden">✓ Loaded</span>
+          </div>
+
+          <span class="cu-step-arrow">→</span>
+
+          <!-- Step 2: Send -->
+          <div class="cu-step-group">
+            <span class="cu-step-num">2</span>
+            <button id="cuSendAllClickUpBtn" class="btn cu-btn-send-cu disabled" disabled title="Load the preview first (Step 1), then send all ClickUp messages">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send All to ClickUp
+            </button>
+            <button id="cuSendSelectedClickUpBtn" class="btn cu-btn-sync hidden" title="Send ClickUp messages for selected rows only">
+              Send Selected (<span id="cuSyncSelectedCount">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Mode pill -->
+        <div class="cu-bulk-right">
+          <span class="cu-bulk-mode-label">Also send email?</span>
+          <div class="cu-mode-seg" role="group" aria-label="Send mode">
+            <button class="cu-mode-btn active" data-mode="email+clickup" id="modeEmailClickUp" title="Post ClickUp comment AND send the client email">
+              ✉ + ClickUp
+            </button>
+            <button class="cu-mode-btn" data-mode="clickup" id="modeClickUpOnly" title="Post ClickUp comment only — no email to client">
+              ClickUp only
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Sites Data Table -->
       <section class="table-container">
         <table class="data-table">
@@ -242,13 +322,14 @@
               <th>Month Status</th>
               <th>Contact Email(s)</th>
               <th>Report Tab</th>
+              <th class="col-timetrack" title="ClickUp Time Track &mdash; the &quot;Maintenance time tracking ClickUp URL&quot; column">Time Track</th>
               <th>CMS / AM</th>
               <th width="130" style="text-align: right;">Action</th>
             </tr>
           </thead>
           <tbody id="sitesTableBody">
             <tr>
-              <td colspan="9" class="table-loading">
+              <td colspan="10" class="table-loading">
                 <div class="spinner"></div>
                 <p>Loading spreadsheet data...</p>
               </td>
@@ -291,6 +372,117 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Conditional Email Notes -->
+      <!-- Lets an operator declare "if a report tab mentions <condition>, add this
+           message above Best Regards". The link is read from the sheet cell, so
+           each site links to its own document and the tab stays the source of
+           truth. See src/reportUtils.js resolveConditionalNotes(). -->
+      <section class="history-section" id="conditionalNotesSection">
+        <div class="history-header">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Conditional Email Notes
+          </h3>
+          <span class="history-count" id="condNotesCountBadge">0 notes</span>
+        </div>
+
+        <p style="margin:0 0 6px; font-size:12.5px; color:var(--text-muted, #6b7280); line-height:1.6;">
+          <b>Where the link goes &mdash; you choose the words.</b> Wrap the exact words that
+          should become the link in <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">{{link:&hellip;}}</code>.
+          The recipient sees your sentence unchanged, with only those words clickable.
+          Starting from &ldquo;&hellip;remediation details are available here.&rdquo;:
+        </p>
+        <div style="margin:0 0 10px; font-size:12.5px; color:var(--text-muted, #6b7280); line-height:1.9; border-left:3px solid var(--border, #d1d5db); padding-left:12px;">
+          <div>Link on <em>here</em> &nbsp;&rarr;&nbsp; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">&hellip;details are available {{link:here}}.</code></div>
+          <div>Link on <em>available</em> &nbsp;&rarr;&nbsp; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">&hellip;details are {{link:available}} here.</code></div>
+          <div>Link on <em>both</em> &nbsp;&rarr;&nbsp; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">&hellip;details are {{link:available here}}.</code></div>
+          <div>Different wording &nbsp;&rarr;&nbsp; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">&hellip;details are {{link:available in the audit report}}.</code></div>
+          <div>Several links in one message &nbsp;&rarr;&nbsp; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">{{link:first}} and {{link:second}}</code> both work.</div>
+        </div>
+        <p style="margin:0 0 6px; font-size:12.5px; color:var(--text-muted, #6b7280); line-height:1.6;">
+          <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">{{link}}</code> with no words links the word
+          <em>here</em>. A blank line starts a new paragraph; a single line break becomes
+          a line break. With <b>no marker at all</b>, the link falls back to the last
+          standalone <em>here</em> &mdash; which is why the message already registered works
+          unchanged.
+        </p>
+        <p style="margin:0 0 10px; font-size:12.5px; color:var(--text-muted, #6b7280); line-height:1.6;">
+          <b>The link URL is not typed here.</b> It always comes from the report tab cell
+          <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">a11y:https://&hellip;</code>,
+          so each site links to its own document. The <b>condition is any keyword you
+          like</b> &mdash; <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">a11y</code>,
+          <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">link</code>,
+          <code style="background:#f3f4f6; padding:1px 5px; border-radius:3px;">ADA Review</code> &mdash; just put the same word
+          in the cell. A cell with the word on its own (no link) still adds the message,
+          unlinked.
+        </p>
+
+        <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+          <div class="workspace-selector-wrapper" style="margin:0;">
+            <label id="condNotesSheetsLabel" for="condSheetCW">Applies to:</label>
+            <div class="cond-sheets" role="group" aria-labelledby="condNotesSheetsLabel" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+              <label class="cond-sheet" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="condSheetCW" value="CW" checked style="margin:0; cursor:pointer;" />
+                <span>&#9671;&nbsp; CW Maintenance</span>
+              </label>
+              <label class="cond-sheet" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="condSheetRM" value="RM" style="margin:0; cursor:pointer;" />
+                <span>&#9670;&nbsp; RM Maintenance</span>
+              </label>
+              <button type="button" id="condSheetsBothBtn" class="btn btn-secondary btn-sm" title="Tick or untick both sheets">Both sheets</button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted,#6b7280); margin:-8px 0 14px;">
+          One note can go to both sheets. Tick the sheets you want it on &mdash; adding
+          or editing writes the same message to each of them, so the two can never drift
+          apart. Unticking a sheet and saving does not remove it from that sheet; use
+          <em>Remove</em> for that.
+        </p>
+
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th style="width:130px;">Condition</th>
+                <th style="width:150px;">Sheets</th>
+                <th>Message added to the email</th>
+                <th style="width:90px;">State</th>
+                <th style="width:170px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="condNotesTableBody">
+              <tr>
+                <td colspan="5" class="history-empty">Loading&hellip;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--border, #e5e7eb);">
+          <div style="flex:0 0 200px;">
+            <label for="condNoteConditionInput" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">
+              Condition
+            </label>
+            <input id="condNoteConditionInput" type="text" placeholder="e.g. a11y"
+                   style="width:100%; padding:8px 10px; border:1px solid var(--border, #d1d5db); border-radius:6px; font-size:13px; background:var(--bg, #fff); color:inherit;" />
+          </div>
+          <div style="flex:1 1 380px;">
+            <label for="condNoteMessageInput" style="display:block; font-size:12px; font-weight:600; margin-bottom:4px;">
+              Message
+            </label>
+            <textarea id="condNoteMessageInput" rows="2"
+                      placeholder="We reviewed the latest ADA accessibility audit&hellip; available {{link:here}}."
+                      style="width:100%; padding:8px 10px; border:1px solid var(--border, #d1d5db); border-radius:6px; font-size:13px; resize:vertical; background:var(--bg, #fff); color:inherit; font-family:inherit;"></textarea>
+          </div>
+          <button id="condNoteAddBtn" class="btn btn-primary">Add Note</button>
         </div>
       </section>
     </main>
@@ -340,6 +532,80 @@
           </div>
         </div>
 
+        <!-- ClickUp Task & Account Manager Sync Panel -->
+        <div id="clickupSyncPanel" class="clickup-sync-card">
+          <div class="clickup-card-header">
+            <div class="clickup-header-title">
+              <span class="clickup-logo-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.5 17.5L5 15.5C6.5 17.3 8.8 18.5 11.5 18.5C14.2 18.5 16.5 17.3 18 15.5L20.5 17.5C18.3 20.3 15.1 22 11.5 22C7.9 22 4.7 20.3 2.5 17.5Z"/>
+                  <path d="M11.5 6.5C13.2 6.5 14.7 7.2 15.8 8.3L18.6 5.5C16.8 3.7 14.3 2.5 11.5 2.5C8.7 2.5 6.2 3.7 4.4 5.5L7.2 8.3C8.3 7.2 9.8 6.5 11.5 6.5Z"/>
+                </svg>
+              </span>
+              <strong>ClickUp Maintenance Task Sync</strong>
+              <span id="clickupTaskStatusBadge" class="cu-badge cu-badge-pending">Checking Status...</span>
+            </div>
+            <div class="clickup-header-actions">
+              <button id="viewAllAmsBtn" class="btn btn-xs btn-outline" type="button" title="View all verified Account Managers and fresh ClickUp addresses">
+                👥 View All AMs (17)
+              </button>
+              <button id="refreshClickUpBtn" class="btn-icon-sm" type="button" title="Refresh ClickUp Task Status">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="clickup-card-body">
+            <!-- Details Grid -->
+            <div class="cu-details-grid">
+              <div class="cu-detail-item">
+                <span class="cu-detail-label">ClickUp Time-Track Task:</span>
+                <span id="cuTaskLinkContainer" class="cu-detail-val">
+                  <span id="cuTaskId">Loading...</span>
+                  <a id="cuTaskExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="cu-ext-link hidden" title="Open task in ClickUp">
+                    ↗ Open
+                  </a>
+                </span>
+              </div>
+              <div class="cu-detail-item">
+                <span class="cu-detail-label">Live Task Status:</span>
+                <span class="cu-detail-val">
+                  <span id="cuLiveStatusPill" class="cu-status-pill">Unknown</span>
+                  <span class="cu-status-arrow">➜</span>
+                  <span class="cu-status-pill cu-status-pill-closed">Closed</span>
+                </span>
+              </div>
+              <div class="cu-detail-item cu-item-am">
+                <span class="cu-detail-label">Sheet Account Manager:</span>
+                <span id="cuAmName" class="cu-detail-val fw-semibold">—</span>
+              </div>
+              <div class="cu-detail-item cu-item-am-resolved">
+                <span class="cu-detail-label">Resolved ClickUp User:</span>
+                <span id="cuAmResolvedBadge" class="cu-detail-val">
+                  <span class="cu-user-mention">@Resolving...</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Comment Preview -->
+            <div class="cu-comment-preview-wrap">
+              <div class="cu-comment-preview-label">
+                <span>💬 Notification Comment Preview (with live @mentions):</span>
+                <span id="cuSafetyGuardBadge" class="cu-safety-badge">🛡️ Safety Guard Active</span>
+              </div>
+              <div id="cuCommentPreviewText" class="cu-comment-preview-box">
+                Loading comment preview...
+              </div>
+            </div>
+
+            <!-- Execution Status Banner (during send) -->
+            <div id="cuLiveFeedbackBanner" class="cu-feedback-banner hidden"></div>
+          </div>
+        </div>
+
         <!-- Mode Tabs: Visual Preview vs HTML Editor -->
         <div class="editor-tabs">
           <button id="tabVisualPreview" class="editor-tab active">
@@ -374,6 +640,16 @@
 
       <div class="modal-footer">
         <div class="modal-footer-left">
+          <div class="send-options-group">
+            <label class="send-opt-checkbox" title="Send email maintenance report to client recipients">
+              <input type="checkbox" id="optSendEmail" checked>
+              <span>📧 Send Client Email</span>
+            </label>
+            <label class="send-opt-checkbox" title="Post completion comment mentioning Account Manager & close task in ClickUp">
+              <input type="checkbox" id="optSyncClickUp" checked>
+              <span>🟣 Post ClickUp & Close</span>
+            </label>
+          </div>
           <span id="modalStatusText" class="modal-status-text">Ready to send</span>
         </div>
         <div class="modal-footer-actions">
@@ -385,12 +661,138 @@
             </svg>
             Save Custom Changes
           </button>
+          <button id="modalSyncClickUpOnlyBtn" class="btn btn-purple" title="Only update ClickUp task and post comment without sending client email">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.5 17.5L5 15.5C6.5 17.3 8.8 18.5 11.5 18.5C14.2 18.5 16.5 17.3 18 15.5L20.5 17.5C18.3 20.3 15.1 22 11.5 22C7.9 22 4.7 20.3 2.5 17.5Z"/>
+            </svg>
+            Sync ClickUp Alone
+          </button>
           <button id="modalSendSingleBtn" class="btn btn-success">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"></line>
               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
             </svg>
-            Send This Email Now
+            <span id="modalSendBtnLabel">Send Email + ClickUp</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Manager Directory Modal -->
+  <div id="amDirectoryModal" class="modal-backdrop hidden">
+    <div class="modal-window modal-compact am-directory-window">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <h2>👥 Account Manager Directory</h2>
+          <span id="amCountBadge" class="tag tag-tab">17 Verified ClickUp Members</span>
+        </div>
+        <button id="closeAmModalBtn" class="btn-icon" title="Close Directory">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="am-search-bar">
+          <input type="text" id="amSearchInput" placeholder="Search account manager by name or fresh email address..." />
+        </div>
+        <div class="fyi-banner">
+          <span class="fyi-badge">FYI Watcher</span>
+          <span><strong>Md Atiar Rahman Ovi</strong> (ID: <code>49039188</code>, <code>ovi@razibmarketing.net</code>) - Automatically mentioned in all completion comments.</span>
+        </div>
+        <div class="am-table-container">
+          <table class="am-directory-table">
+            <thead>
+              <tr>
+                <th>Account Manager</th>
+                <th>ClickUp User ID</th>
+                <th>Fresh Email Address</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="amDirectoryTableBody">
+              <tr><td colspan="4" style="text-align:center;padding:20px;">Loading account managers...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-footer-left">
+          <span class="text-muted text-xs">All names are automatically matched against the Google Sheet AM column.</span>
+        </div>
+        <div class="modal-footer-actions">
+          <button id="closeAmModalBottomBtn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ClickUp Bulk Preview Modal -->
+  <div id="cuBulkPreviewModal" class="modal-backdrop hidden">
+    <div class="modal-window modal-wide">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M4.5 22.5 10.2 18.1c1.3 1.4 3.3 2.2 5.8 2.2s4.5-.8 5.8-2.2l5.7 4.4A15.5 15.5 0 0 1 16 27.5 15.5 15.5 0 0 1 4.5 22.5z" fill="#7B68EE"/><path d="M9.6 14.5 16 8.1l6.4 6.4-2.5 2.5L16 13l-3.9 3.9-2.5-2.4z" fill="#49CCF9"/></svg>
+          <h2>ClickUp Bulk Preview</h2>
+          <span id="cuBulkPreviewCount" class="tag tag-tab">Loading...</span>
+        </div>
+        <button id="closeCuBulkModalBtn" class="btn-icon" title="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding:0;">
+        <!-- Loading state -->
+        <div id="cuBulkPreviewLoading" style="text-align:center;padding:48px 24px;">
+          <div class="spinner" style="margin:0 auto 16px;"></div>
+          <p style="color:var(--text-muted);font-size:14px;" id="cuBulkLoadingLabel">Loading fresh Account Manager data and task statuses...</p>
+          <p style="color:var(--text-muted);font-size:12px;margin-top:6px;">This checks ClickUp once per task (5-min cache — no rate limit issues)</p>
+        </div>
+
+        <!-- Preview table (shown after load) -->
+        <div id="cuBulkPreviewTable" class="hidden">
+          <div style="padding:16px 20px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border-color);">
+            <div style="font-size:13px;color:var(--text-muted);">
+              Review the ClickUp message that will be posted for each site, then click <strong style="color:#e2e8f0;">Send All to ClickUp</strong> below.
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
+              <span id="cuBulkReadyCount" class="cu-badge cu-badge-ready" style="font-size:11px;">0 Ready</span>
+              <span id="cuBulkWarningCount" class="cu-badge cu-badge-pending" style="font-size:11px;display:none;">0 Warnings</span>
+              <span id="cuBulkNoTaskCount" class="cu-badge cu-badge-no-task" style="font-size:11px;">0 No Task URL</span>
+            </div>
+          </div>
+          <div style="max-height:420px;overflow-y:auto;">
+            <table class="data-table" style="font-size:12px;">
+              <thead>
+                <tr>
+                  <th width="36"><input type="checkbox" id="cuBulkSelectAll" title="Select all" checked></th>
+                  <th>Website</th>
+                  <th>Account Manager</th>
+                  <th>Task ID</th>
+                  <th>Current Status</th>
+                  <th>Comment to Post</th>
+                </tr>
+              </thead>
+              <tbody id="cuBulkPreviewTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="modal-footer" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="cuBulkSendModeTag" class="tag" style="font-size:11px;background:rgba(123,104,238,0.15);border-color:rgba(123,104,238,0.4);color:#c4b5fd;">✉ + ClickUp mode</span>
+          <span id="cuBulkDryRunTag" class="cu-badge cu-badge-pending" style="font-size:10px;">🛡️ Dry-Run Active</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button id="cuBulkCancelBtn" class="btn btn-secondary">Cancel</button>
+          <button id="cuBulkSendBtn" class="btn cu-btn-send-cu" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span id="cuBulkSendBtnLabel">Send to ClickUp</span>
           </button>
         </div>
       </div>
@@ -510,5 +912,20 @@
 
 
   <script src="/app.js"></script>
+  <script>
+    (function () {
+      const toggleBtn = document.getElementById('theme-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          const current = document.documentElement.getAttribute('data-theme') || 'dark';
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          try {
+            localStorage.setItem('officeos_theme', next);
+          } catch (e) {}
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

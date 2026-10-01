@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-16T07:18:21.532Z",
+  "updatedAt": "2026-09-17T17:10:03.944Z",
   "spreadsheets": {
     "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78": {
       "spreadsheetId": "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78",
       "label": "Dev Tracker Sheet",
-      "discoveredAt": "2026-09-16T07:18:21.528Z",
+      "discoveredAt": "2026-09-17T17:10:03.941Z",
       "tabCount": 6,
       "tabs": [
         {
@@ -91,461 +91,2292 @@
             ]
           ],
           "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
-        },
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE": {
+      "spreadsheetId": "19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE",
+      "label": "CW Maintenance",
+      "discoveredAt": "2026-09-17T17:09:57.833Z",
+      "tabCount": 80,
+      "tabs": [
         {
-          "title": "Nines Hotel",
-          "headerRowIndex": 0,
-          "headerRowNumber": 1,
+          "title": "Website List",
+          "headerRowIndex": 1,
+          "headerRowNumber": 2,
           "headers": [
-            "URL",
-            "Status",
-            "Feedbacks URL",
-            "Date",
-            "Note/Updates"
+            "Note:",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Note",
+            "Website URL",
+            "Maintenance Task ClickUp URL",
+            "Maintenance Report URL",
+            "Backup URL",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23",
+            "July 23",
+            "Augus 23",
+            "September 23",
+            "October 23",
+            "November 23",
+            "December 23",
+            "January 24",
+            "February24",
+            "March 24",
+            "April 24",
+            "May 24",
+            "June 24",
+            "July 16",
+            "August 12",
+            "September 3",
+            "October 2024",
+            "November 2024",
+            "December 24",
+            "January 25",
+            "February 25",
+            "March 25",
+            "April 25",
+            "May 25",
+            "Jun",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September 26"
           ],
-          "signature": "1d1mvxp-42",
-          "profile": "devTracker",
+          "signature": "2v95y-623",
+          "profile": "maintenance",
           "columns": [
-            {
-              "key": "url",
-              "label": "URL",
-              "index": 0,
-              "kind": "url",
-              "extra": false
-            },
             {
               "key": "status",
               "label": "Status",
-              "index": 1,
+              "index": 0,
               "kind": "status",
               "extra": false
             },
             {
-              "key": "feedbackUrl",
-              "label": "Feedback URL",
+              "key": "cms",
+              "label": "CMS",
+              "index": 1,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "company",
+              "label": "Company",
+              "index": 2,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "contact",
+              "label": "Contact",
+              "index": 3,
+              "kind": "email",
+              "extra": false
+            },
+            {
+              "key": "accountManager",
+              "label": "A/C Manager",
+              "index": 4,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "note",
+              "label": "Note",
+              "index": 5,
+              "kind": "longtext",
+              "extra": false
+            },
+            {
+              "key": "websiteUrl",
+              "label": "Website URL",
+              "index": 6,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupUrl",
+              "label": "ClickUp URL",
+              "index": 7,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "reportUrl",
+              "label": "Report URL",
+              "index": 8,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "backupUrl",
+              "label": "Backup URL",
+              "index": 9,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "september3",
+              "label": "September 3",
+              "index": 40,
+              "kind": "text",
+              "extra": true
+            }
+          ],
+          "extras": [
+            {
+              "key": "september3",
+              "label": "September 3",
+              "index": 40,
+              "kind": "text"
+            }
+          ],
+          "months": [
+            {
+              "index": 10,
+              "label": "March 22",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2022
+            },
+            {
+              "index": 11,
+              "label": "April 22",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2022
+            },
+            {
+              "index": 12,
+              "label": "May 22",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2022
+            },
+            {
+              "index": 13,
+              "label": "June 22",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2022
+            },
+            {
+              "index": 14,
+              "label": "July 22",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2022
+            },
+            {
+              "index": 15,
+              "label": "August 22",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2022
+            },
+            {
+              "index": 16,
+              "label": "September 22",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2022
+            },
+            {
+              "index": 17,
+              "label": "October 22",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2022
+            },
+            {
+              "index": 18,
+              "label": "November 22",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2022
+            },
+            {
+              "index": 19,
+              "label": "December 22",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2022
+            },
+            {
+              "index": 20,
+              "label": "January 23",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2023
+            },
+            {
+              "index": 21,
+              "label": "February 23",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2023
+            },
+            {
+              "index": 22,
+              "label": "March 23",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2023
+            },
+            {
+              "index": 23,
+              "label": "April 23",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2023
+            },
+            {
+              "index": 24,
+              "label": "May 23",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2023
+            },
+            {
+              "index": 25,
+              "label": "June 23",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2023
+            },
+            {
+              "index": 26,
+              "label": "July 23",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2023
+            },
+            {
+              "index": 27,
+              "label": "Augus 23",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2023
+            },
+            {
+              "index": 28,
+              "label": "September 23",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2023
+            },
+            {
+              "index": 29,
+              "label": "October 23",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2023
+            },
+            {
+              "index": 30,
+              "label": "November 23",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2023
+            },
+            {
+              "index": 31,
+              "label": "December 23",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2023
+            },
+            {
+              "index": 32,
+              "label": "January 24",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2024
+            },
+            {
+              "index": 33,
+              "label": "February24",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2024
+            },
+            {
+              "index": 34,
+              "label": "March 24",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2024
+            },
+            {
+              "index": 35,
+              "label": "April 24",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2024
+            },
+            {
+              "index": 36,
+              "label": "May 24",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2024
+            },
+            {
+              "index": 37,
+              "label": "June 24",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2024
+            },
+            {
+              "index": 38,
+              "label": "July 16",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2016
+            },
+            {
+              "index": 39,
+              "label": "August 12",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2012
+            },
+            {
+              "index": 41,
+              "label": "October 2024",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2024
+            },
+            {
+              "index": 42,
+              "label": "November 2024",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2024
+            },
+            {
+              "index": 43,
+              "label": "December 24",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2024
+            },
+            {
+              "index": 44,
+              "label": "January 25",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2025
+            },
+            {
+              "index": 45,
+              "label": "February 25",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2025
+            },
+            {
+              "index": 46,
+              "label": "March 25",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2025
+            },
+            {
+              "index": 47,
+              "label": "April 25",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2025
+            },
+            {
+              "index": 48,
+              "label": "May 25",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2025
+            },
+            {
+              "index": 49,
+              "label": "Jun",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 50,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 51,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 52,
+              "label": "September",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": null
+            },
+            {
+              "index": 53,
+              "label": "October",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": null
+            },
+            {
+              "index": 54,
+              "label": "November",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": null
+            },
+            {
+              "index": 55,
+              "label": "December",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": null
+            },
+            {
+              "index": 56,
+              "label": "January",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": null
+            },
+            {
+              "index": 57,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 58,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 59,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 60,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 61,
+              "label": "June",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 62,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 63,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 64,
+              "label": "September 26",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2026
+            }
+          ],
+          "fields": {
+            "cms": 1,
+            "company": 2,
+            "contact": 3,
+            "accountManager": 4,
+            "note": 5,
+            "websiteUrl": 6,
+            "reportUrl": 8,
+            "backupUrl": 9,
+            "clickupUrl": 7,
+            "status": 0,
+            "domainExpiry": -1,
+            "backupDate": -1
+          },
+          "dataRowCount": 18,
+          "sampleRows": [
+            [
+              "Deactive",
+              "",
+              "CW",
+              "",
+              "",
+              "",
+              "qualityinnparkersburg.com",
+              "",
+              "",
+              "",
+              "N/A",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "CW",
+              "taion@razibmarketing.net",
+              "Mohammed",
+              "",
+              "governorsinnnd.com",
+              "https://app.clickup.com/t/868a6gkvn",
+              "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1610374045#gid=1610374045",
+              "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "CW",
+              "taion@razibmarketing.net",
+              "N/A (Support Team)",
+              "",
+              "cogwheelmarketing.com",
+              "https://app.clickup.com/t/868b8ubug",
+              "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1224146003#gid=1224146003",
+              "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ]
+          ],
+          "columnsText": "• Status (col 1, status), • CMS (col 2, text), • Company (col 3, text), • Contact (col 4, email), • A/C Manager (col 5, text), • Note (col 6, longtext), • Website URL (col 7, url), • ClickUp URL (col 8, url), • Report URL (col 9, url), • Backup URL (col 10, url), + September 3 (col 41, text)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY": {
+      "spreadsheetId": "1Fbb-SY2fU0HXFdnJ_OQoHb_AwlFzdk39jWOo3kFMcjY",
+      "label": "RM Maintenance",
+      "discoveredAt": "2026-09-17T17:09:58.833Z",
+      "tabCount": 25,
+      "tabs": [
+        {
+          "title": "Website List",
+          "headerRowIndex": 1,
+          "headerRowNumber": 2,
+          "headers": [
+            "",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Website URL",
+            "Maintenance Task ClickUp Link",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23",
+            "July 23",
+            "Augus 23",
+            "September 23",
+            "October 23",
+            "November 23",
+            "December 23",
+            "January 24",
+            "February24",
+            "March 24",
+            "April 24",
+            "May 24",
+            "June 24",
+            "July 24",
+            "August 24",
+            "September 24",
+            "October 24",
+            "November 24",
+            "December 24",
+            "January 25",
+            "February",
+            "March",
+            "April",
+            "May",
+            "Jun",
+            "July",
+            "August",
+            "September",
+            "octobor",
+            "November",
+            "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September 26"
+          ],
+          "signature": "ygzg3b-566",
+          "profile": "maintenance",
+          "columns": [
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 0,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "cms",
+              "label": "CMS",
+              "index": 1,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "company",
+              "label": "Company",
+              "index": 2,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "contact",
+              "label": "Contact",
+              "index": 3,
+              "kind": "email",
+              "extra": false
+            },
+            {
+              "key": "accountManager",
+              "label": "A/C Manager",
+              "index": 4,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "websiteUrl",
+              "label": "Website URL",
+              "index": 5,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupUrl",
+              "label": "ClickUp URL",
+              "index": 6,
+              "kind": "url",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [
+            {
+              "index": 7,
+              "label": "March 22",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2022
+            },
+            {
+              "index": 8,
+              "label": "April 22",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2022
+            },
+            {
+              "index": 9,
+              "label": "May 22",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2022
+            },
+            {
+              "index": 10,
+              "label": "June 22",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2022
+            },
+            {
+              "index": 11,
+              "label": "July 22",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2022
+            },
+            {
+              "index": 12,
+              "label": "August 22",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2022
+            },
+            {
+              "index": 13,
+              "label": "September 22",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2022
+            },
+            {
+              "index": 14,
+              "label": "October 22",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2022
+            },
+            {
+              "index": 15,
+              "label": "November 22",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2022
+            },
+            {
+              "index": 16,
+              "label": "December 22",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2022
+            },
+            {
+              "index": 17,
+              "label": "January 23",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2023
+            },
+            {
+              "index": 18,
+              "label": "February 23",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2023
+            },
+            {
+              "index": 19,
+              "label": "March 23",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2023
+            },
+            {
+              "index": 20,
+              "label": "April 23",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2023
+            },
+            {
+              "index": 21,
+              "label": "May 23",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2023
+            },
+            {
+              "index": 22,
+              "label": "June 23",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2023
+            },
+            {
+              "index": 23,
+              "label": "July 23",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2023
+            },
+            {
+              "index": 24,
+              "label": "Augus 23",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2023
+            },
+            {
+              "index": 25,
+              "label": "September 23",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2023
+            },
+            {
+              "index": 26,
+              "label": "October 23",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2023
+            },
+            {
+              "index": 27,
+              "label": "November 23",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2023
+            },
+            {
+              "index": 28,
+              "label": "December 23",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2023
+            },
+            {
+              "index": 29,
+              "label": "January 24",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2024
+            },
+            {
+              "index": 30,
+              "label": "February24",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2024
+            },
+            {
+              "index": 31,
+              "label": "March 24",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2024
+            },
+            {
+              "index": 32,
+              "label": "April 24",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2024
+            },
+            {
+              "index": 33,
+              "label": "May 24",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2024
+            },
+            {
+              "index": 34,
+              "label": "June 24",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2024
+            },
+            {
+              "index": 35,
+              "label": "July 24",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2024
+            },
+            {
+              "index": 36,
+              "label": "August 24",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2024
+            },
+            {
+              "index": 37,
+              "label": "September 24",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2024
+            },
+            {
+              "index": 38,
+              "label": "October 24",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2024
+            },
+            {
+              "index": 39,
+              "label": "November 24",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2024
+            },
+            {
+              "index": 40,
+              "label": "December 24",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2024
+            },
+            {
+              "index": 41,
+              "label": "January 25",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2025
+            },
+            {
+              "index": 42,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 43,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 44,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 45,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 46,
+              "label": "Jun",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 47,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 48,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 49,
+              "label": "September",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": null
+            },
+            {
+              "index": 50,
+              "label": "octobor",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": null
+            },
+            {
+              "index": 51,
+              "label": "November",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": null
+            },
+            {
+              "index": 52,
+              "label": "December",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": null
+            },
+            {
+              "index": 53,
+              "label": "January",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": null
+            },
+            {
+              "index": 54,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 55,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 56,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 57,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 58,
+              "label": "June",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 59,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 60,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 61,
+              "label": "September 26",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2026
+            }
+          ],
+          "fields": {
+            "cms": 1,
+            "company": 2,
+            "contact": 3,
+            "accountManager": 4,
+            "websiteUrl": 5,
+            "clickupUrl": 6,
+            "status": 0,
+            "note": -1,
+            "reportUrl": -1,
+            "backupUrl": -1,
+            "domainExpiry": -1,
+            "backupDate": -1
+          },
+          "dataRowCount": 18,
+          "sampleRows": [
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "taion@razibmarketing.net,medul@razibmarketing.net",
+              "",
+              "razibmarketing.com",
+              "https://app.clickup.com/t/868e2028e",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "taion@razibmarketing.net,medul@razibmarketing.net",
+              "",
+              "https://groundupmusicfestival.com/",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "taion@razibmarketing.net,medul@razibmarketing.net",
+              "Mohammed",
+              "https://mdmhotelsusa.com/",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ]
+          ],
+          "columnsText": "• Status (col 1, status), • CMS (col 2, text), • Company (col 3, text), • Contact (col 4, email), • A/C Manager (col 5, text), • Website URL (col 6, url), • ClickUp URL (col 7, url)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU": {
+      "spreadsheetId": "1VnI5ZxVr5QykBOwYDOLp_1bbCpApfc0Jwljf01Q7djU",
+      "label": "Master Tracker & Distribution",
+      "discoveredAt": "2026-09-17T17:10:00.682Z",
+      "tabCount": 5,
+      "tabs": [
+        {
+          "title": "Distribution and Work Sheet",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "Task Name",
+            "ClickUp Link",
+            "Website",
+            "Task Type",
+            "Assignee",
+            "Status",
+            "Priority",
+            "Account Manager",
+            "Assigned Date",
+            "Client Due Date",
+            "Days Left",
+            "Blockers/Notes",
+            "",
+            "Daily Report Distribution",
+            "Week",
+            "",
+            "Clients",
+            "Support Hour",
+            "Total Hours Spent",
+            "Billable Hours",
+            "SEO Task Hours",
+            "SEO Spend Hours",
+            "Client Approval Request"
+          ],
+          "signature": "10954j1-278",
+          "profile": "generic",
+          "columns": [
+            {
+              "key": "name",
+              "label": "Name",
+              "index": 0,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "clickupLink",
+              "label": "ClickUp Link",
+              "index": 1,
+              "kind": "url",
+              "extra": true
+            },
+            {
+              "key": "url",
+              "label": "URL",
               "index": 2,
               "kind": "url",
               "extra": false
             },
             {
-              "key": "date",
-              "label": "Feedback-Date",
+              "key": "taskType",
+              "label": "Task Type",
               "index": 3,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "contact",
+              "label": "Contact",
+              "index": 4,
+              "kind": "email",
+              "extra": false
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 5,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "priority",
+              "label": "Priority",
+              "index": 6,
+              "kind": "status",
+              "extra": true
+            },
+            {
+              "key": "accountManager",
+              "label": "Account Manager",
+              "index": 7,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "date",
+              "label": "Date",
+              "index": 8,
               "kind": "date",
               "extra": false
             },
             {
+              "key": "clientDueDate",
+              "label": "Client Due Date",
+              "index": 9,
+              "kind": "date",
+              "extra": true
+            },
+            {
+              "key": "daysLeft",
+              "label": "Days Left",
+              "index": 10,
+              "kind": "text",
+              "extra": true
+            },
+            {
               "key": "notes",
-              "label": "Feedback-Notes",
-              "index": 4,
+              "label": "Notes",
+              "index": 11,
               "kind": "longtext",
               "extra": false
+            },
+            {
+              "key": "dailyReportDistribution",
+              "label": "Daily Report Distribution",
+              "index": 13,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "week",
+              "label": "Week",
+              "index": 14,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "clients",
+              "label": "Clients",
+              "index": 16,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "supportHour",
+              "label": "Support Hour",
+              "index": 17,
+              "kind": "number",
+              "extra": true
+            },
+            {
+              "key": "totalHoursSpent",
+              "label": "Total Hours Spent",
+              "index": 18,
+              "kind": "number",
+              "extra": true
+            },
+            {
+              "key": "billableHours",
+              "label": "Billable Hours",
+              "index": 19,
+              "kind": "number",
+              "extra": true
+            },
+            {
+              "key": "seoTaskHours",
+              "label": "SEO Task Hours",
+              "index": 20,
+              "kind": "number",
+              "extra": true
+            },
+            {
+              "key": "seoSpendHours",
+              "label": "SEO Spend Hours",
+              "index": 21,
+              "kind": "number",
+              "extra": true
+            },
+            {
+              "key": "clientApprovalRequest",
+              "label": "Client Approval Request",
+              "index": 22,
+              "kind": "text",
+              "extra": true
             }
           ],
-          "extras": [],
+          "extras": [
+            {
+              "key": "clickupLink",
+              "label": "ClickUp Link",
+              "index": 1,
+              "kind": "url"
+            },
+            {
+              "key": "taskType",
+              "label": "Task Type",
+              "index": 3,
+              "kind": "text"
+            },
+            {
+              "key": "priority",
+              "label": "Priority",
+              "index": 6,
+              "kind": "status"
+            },
+            {
+              "key": "accountManager",
+              "label": "Account Manager",
+              "index": 7,
+              "kind": "text"
+            },
+            {
+              "key": "clientDueDate",
+              "label": "Client Due Date",
+              "index": 9,
+              "kind": "date"
+            },
+            {
+              "key": "daysLeft",
+              "label": "Days Left",
+              "index": 10,
+              "kind": "text"
+            },
+            {
+              "key": "dailyReportDistribution",
+              "label": "Daily Report Distribution",
+              "index": 13,
+              "kind": "text"
+            },
+            {
+              "key": "week",
+              "label": "Week",
+              "index": 14,
+              "kind": "text"
+            },
+            {
+              "key": "clients",
+              "label": "Clients",
+              "index": 16,
+              "kind": "text"
+            },
+            {
+              "key": "supportHour",
+              "label": "Support Hour",
+              "index": 17,
+              "kind": "number"
+            },
+            {
+              "key": "totalHoursSpent",
+              "label": "Total Hours Spent",
+              "index": 18,
+              "kind": "number"
+            },
+            {
+              "key": "billableHours",
+              "label": "Billable Hours",
+              "index": 19,
+              "kind": "number"
+            },
+            {
+              "key": "seoTaskHours",
+              "label": "SEO Task Hours",
+              "index": 20,
+              "kind": "number"
+            },
+            {
+              "key": "seoSpendHours",
+              "label": "SEO Spend Hours",
+              "index": 21,
+              "kind": "number"
+            },
+            {
+              "key": "clientApprovalRequest",
+              "label": "Client Approval Request",
+              "index": 22,
+              "kind": "text"
+            }
+          ],
           "months": [],
           "fields": {
-            "url": 0,
-            "status": 1,
-            "feedbackUrl": 2,
-            "date": 3,
-            "notes": 4,
-            "devDate": -1,
-            "devNotes": -1
+            "url": 2,
+            "status": 5,
+            "contact": 4,
+            "name": 0,
+            "date": 8,
+            "notes": 11
           },
           "dataRowCount": 19,
           "sampleRows": [
             [
+              "LLM Txt Generation / Update",
+              "https://app.clickup.com/t/868ha7561",
+              "Hotel Dela Poste",
+              "SEO",
+              "Md Atiar Rahman Ovi",
+              "Client Review",
+              "Low",
+              "Holly",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Sezan Ahmed",
+              "1",
+              "",
+              "MHG"
+            ],
+            [
+              "",
+              "https://app.clickup.com/t/868ha80f6",
+              "Project Farmhouse",
+              "Website Update",
+              "Md Atiar Rahman Ovi",
+              "Client Review",
+              "Low",
+              "Nicole",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Tarikul Islam",
+              "2",
+              "",
+              "Milford Hospitality Group",
+              "2h",
+              "",
+              "",
+              "1h",
+              "",
+              "If any individual support task is expected to exceed 1 hour, approval must be obtained from the Account Manager before proceeding. Additionally, if the total time spent on support tasks reaches the client's allocated support hours, we must request the client's approval before continuing, as any additional time will be billed accordingly."
+            ],
+            [
+              "",
+              "https://app.clickup.com/t/868hawmp3",
+              "Apple Valley Restaurant",
+              "Website Update",
+              "Md Atiar Rahman Ovi",
+              "Completed",
+              "Low",
+              "Jacob",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Nahid Jubail Medul",
+              "3",
+              "",
+              "Hotel Fauchere - MHG",
+              "2h",
+              "",
+              "",
+              "1h"
+            ]
+          ],
+          "columnsText": "• Name (col 1, text), + ClickUp Link (col 2, url), • URL (col 3, url), + Task Type (col 4, text), • Contact (col 5, email), • Status (col 6, status), + Priority (col 7, status), + Account Manager (col 8, text), • Date (col 9, date), + Client Due Date (col 10, date), + Days Left (col 11, text), • Notes (col 12, longtext), + Daily Report Distribution (col 14, text), + Week (col 15, text), + Clients (col 17, text), + Support Hour (col 18, number), + Total Hours Spent (col 19, number), + Billable Hours (col 20, number), + SEO Task Hours (col 21, number), + SEO Spend Hours (col 22, number), + Client Approval Request (col 23, text)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs": {
+      "spreadsheetId": "1C4jSa49P6LHEN8ywh92fOgBPif6OSKuXx8PoRONtWzs",
+      "label": "Daily Review Sheet",
+      "discoveredAt": "2026-09-17T17:10:01.892Z",
+      "tabCount": 8,
+      "tabs": [
+        {
+          "title": "Toufiq",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "Website URL",
+            "Company",
+            "Maintenance",
+            "Maintenance Report Sent",
+            "ClickUp Link",
+            "GA4 Report",
+            "Newsletter Mail",
+            "Form Submission Mail",
+            "Client Response",
+            "Booking Engine",
+            "UPTimeRobot Monitoring",
+            "Cloudflare issues"
+          ],
+          "signature": "1ojsquu-188",
+          "profile": "generic",
+          "columns": [
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 0,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "name",
+              "label": "Name",
+              "index": 1,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "maintenance",
+              "label": "Maintenance",
+              "index": 2,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "maintenanceReportSent",
+              "label": "Maintenance Report Sent",
+              "index": 3,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "clickupLink",
+              "label": "ClickUp Link",
+              "index": 4,
+              "kind": "url",
+              "extra": true
+            },
+            {
+              "key": "ga4Report",
+              "label": "GA4 Report",
+              "index": 5,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "newsletterMail",
+              "label": "Newsletter Mail",
+              "index": 6,
+              "kind": "email",
+              "extra": true
+            },
+            {
+              "key": "formSubmissionMail",
+              "label": "Form Submission Mail",
+              "index": 7,
+              "kind": "email",
+              "extra": true
+            },
+            {
+              "key": "clientResponse",
+              "label": "Client Response",
+              "index": 8,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "bookingEngine",
+              "label": "Booking Engine",
+              "index": 9,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "uptimerobotMonitoring",
+              "label": "UPTimeRobot Monitoring",
+              "index": 10,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "cloudflareIssues",
+              "label": "Cloudflare Issues",
+              "index": 11,
+              "kind": "text",
+              "extra": true
+            }
+          ],
+          "extras": [
+            {
+              "key": "maintenance",
+              "label": "Maintenance",
+              "index": 2,
+              "kind": "text"
+            },
+            {
+              "key": "maintenanceReportSent",
+              "label": "Maintenance Report Sent",
+              "index": 3,
+              "kind": "text"
+            },
+            {
+              "key": "clickupLink",
+              "label": "ClickUp Link",
+              "index": 4,
+              "kind": "url"
+            },
+            {
+              "key": "ga4Report",
+              "label": "GA4 Report",
+              "index": 5,
+              "kind": "text"
+            },
+            {
+              "key": "newsletterMail",
+              "label": "Newsletter Mail",
+              "index": 6,
+              "kind": "email"
+            },
+            {
+              "key": "formSubmissionMail",
+              "label": "Form Submission Mail",
+              "index": 7,
+              "kind": "email"
+            },
+            {
+              "key": "clientResponse",
+              "label": "Client Response",
+              "index": 8,
+              "kind": "text"
+            },
+            {
+              "key": "bookingEngine",
+              "label": "Booking Engine",
+              "index": 9,
+              "kind": "text"
+            },
+            {
+              "key": "uptimerobotMonitoring",
+              "label": "UPTimeRobot Monitoring",
+              "index": 10,
+              "kind": "text"
+            },
+            {
+              "key": "cloudflareIssues",
+              "label": "Cloudflare Issues",
+              "index": 11,
+              "kind": "text"
+            }
+          ],
+          "months": [],
+          "fields": {
+            "name": 1,
+            "url": 0,
+            "status": -1,
+            "contact": -1,
+            "date": -1,
+            "notes": -1
+          },
+          "dataRowCount": 19,
+          "sampleRows": [
+            [
+              "https://femalefoundersinhospitality.com/",
+              "CW",
+              "Completed",
+              "No",
+              "https://app.clickup.com/t/10554421/868cbv8zb",
+              "No GA4 Tag",
+              "",
+              "N/A",
+              "No RFP form",
+              "N/A",
+              "Yes",
+              "No"
+            ],
+            [
+              " https://toastedbarrelbar.com/",
+              "CW",
+              "Completed",
+              "No",
+              "https://app.clickup.com/t/10554421/868a83ww4",
+              "No",
+              "",
+              "",
+              "No",
+              "",
+              "Yes",
+              "No"
+            ],
+            [
+              "https://seaworthynola.com/",
+              "CW",
+              "Completed",
+              "No",
+              "https://app.clickup.com/t/10554421/8689y8yu8",
+              "No",
+              "MailChimp",
+              "info@seaworthynola.com",
+              "Client Responded",
+              "https://www.opentable.com/r/seaworthy-new-orleans-2?corrid=edd65d66-feb8-47e7-8d4d-0f80fc80c3eb&avt=eyJ2IjoyLCJtIjowLCJwIjowLCJzIjowLCJuIjowfQ",
+              "Yes",
+              "No"
+            ]
+          ],
+          "columnsText": "• URL (col 1, url), • Name (col 2, text), + Maintenance (col 3, text), + Maintenance Report Sent (col 4, text), + ClickUp Link (col 5, url), + GA4 Report (col 6, text), + Newsletter Mail (col 7, email), + Form Submission Mail (col 8, email), + Client Response (col 9, text), + Booking Engine (col 10, text), + UPTimeRobot Monitoring (col 11, text), + Cloudflare Issues (col 12, text)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY": {
+      "spreadsheetId": "1sWz7sNsQmi0xigD2AiMbxbC0lHDbKyQIGOB_jrrNJzY",
+      "label": "Property Registry Sheet",
+      "discoveredAt": "2026-09-17T17:10:02.705Z",
+      "tabCount": 1,
+      "tabs": [
+        {
+          "title": "Sheet1",
+          "headerRowIndex": 0,
+          "headerRowNumber": 1,
+          "headers": [
+            "Property Name",
+            "Property URL",
+            "Property Type",
+            "Stauts",
+            "SEO",
+            "H&M",
+            "Task Assigned to SEO",
+            "Task Assigned to WEB"
+          ],
+          "signature": "qbbw23-97",
+          "profile": "generic",
+          "columns": [
+            {
+              "key": "name",
+              "label": "Name",
+              "index": 0,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "url",
+              "label": "URL",
+              "index": 1,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "propertyType",
+              "label": "Property Type",
+              "index": 2,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "stauts",
+              "label": "Stauts",
+              "index": 3,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "seo",
+              "label": "SEO",
+              "index": 4,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "hM",
+              "label": "H&M",
+              "index": 5,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "taskAssignedToSeo",
+              "label": "Task Assigned To SEO",
+              "index": 6,
+              "kind": "text",
+              "extra": true
+            },
+            {
+              "key": "taskAssignedToWeb",
+              "label": "Task Assigned To WEB",
+              "index": 7,
+              "kind": "text",
+              "extra": true
+            }
+          ],
+          "extras": [
+            {
+              "key": "propertyType",
+              "label": "Property Type",
+              "index": 2,
+              "kind": "text"
+            },
+            {
+              "key": "stauts",
+              "label": "Stauts",
+              "index": 3,
+              "kind": "text"
+            },
+            {
+              "key": "seo",
+              "label": "SEO",
+              "index": 4,
+              "kind": "text"
+            },
+            {
+              "key": "hM",
+              "label": "H&M",
+              "index": 5,
+              "kind": "text"
+            },
+            {
+              "key": "taskAssignedToSeo",
+              "label": "Task Assigned To SEO",
+              "index": 6,
+              "kind": "text"
+            },
+            {
+              "key": "taskAssignedToWeb",
+              "label": "Task Assigned To WEB",
+              "index": 7,
+              "kind": "text"
+            }
+          ],
+          "months": [],
+          "fields": {
+            "url": 1,
+            "name": 0,
+            "status": -1,
+            "contact": -1,
+            "date": -1,
+            "notes": -1
+          },
+          "dataRowCount": 19,
+          "sampleRows": [
+            [
+              "The Nines Portland (Sage)\n",
               "https://www.thenines.com/",
-              "Completed",
-              "Feedback-1 URL",
-              "2026-08-04",
-              "Completed the remaining content updates in the document.\nAddressed the recent feedback related to image changes across the website plugins.\nUpdated the History page slider section.\nThe History page slider is still using dummy data.\nWe need to request the content and corresponding images for each year to replace the dummy data.\nSome of the Events are added as client requested"
+              "Soft Vanity",
+              "Active",
+              "Yes",
+              "Under Development"
             ],
             [
-              "https://www.thenines.com/amenities/",
-              "Completed",
-              "https://docs.google.com/document/d/1cn0I6Js509w6bETodUz_a0UZzbXqOldMrCjmcdEOTVM/edit?pli=1&tab=t.0#heading=h.6fwf6gxl58vz"
+              "The Alexandrian (Sage)",
+              "https://www.thealexandrian.com/",
+              "Soft Vanity",
+              "Active",
+              "Yes",
+              "No"
             ],
             [
-              "https://www.thenines.com/accommodations/",
-              "Completed"
+              "Curtis Denver (Sage)",
+              "https://www.thecurtis.com/",
+              "Soft Vanity",
+              "Active",
+              "Yes",
+              "No"
             ]
           ],
-          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
-        },
-        {
-          "title": "Sara Paris  Booth ",
-          "headerRowIndex": 0,
-          "headerRowNumber": 1,
-          "headers": [
-            "URL",
-            "Status",
-            "Feedbacks URL",
-            "Date",
-            "Note/Updates"
-          ],
-          "signature": "1d1mvxp-42",
-          "profile": "devTracker",
-          "columns": [
-            {
-              "key": "url",
-              "label": "URL",
-              "index": 0,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "status",
-              "label": "Status",
-              "index": 1,
-              "kind": "status",
-              "extra": false
-            },
-            {
-              "key": "feedbackUrl",
-              "label": "Feedback URL",
-              "index": 2,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "date",
-              "label": "Feedback-Date",
-              "index": 3,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "notes",
-              "label": "Feedback-Notes",
-              "index": 4,
-              "kind": "longtext",
-              "extra": false
-            }
-          ],
-          "extras": [],
-          "months": [],
-          "fields": {
-            "url": 0,
-            "status": 1,
-            "feedbackUrl": 2,
-            "date": 3,
-            "notes": 4,
-            "devDate": -1,
-            "devNotes": -1
-          },
-          "dataRowCount": 9,
-          "sampleRows": [
-            [
-              "https://sgpbco.com/",
-              "Completed",
-              "Feedback-1 URL",
-              "2026-08-04",
-              "1. are updating the cta button for each Homes property page with CPT- in progress. 2. we will also add a short code for displaying Images on the homes single page - TO DO"
-            ],
-            [
-              "https://sgpbco.com/about/",
-              "Completed",
-              "https://docs.google.com/document/d/1spCuYsydkyH1rZnx8PJYLSx_4_cAWZ9Y/edit",
-              "2026-08-05",
-              "1. added custom  scf field for the cta section to the bottom for each homes 2. custom  gallery for the homes 3. responsive issues fixed"
-            ],
-            [
-              "https://sgpbco.com/studio/",
-              "Completed",
-              "",
-              "2026-08-06",
-              "1. TO DO - Data Entry : Homes page"
-            ]
-          ],
-          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
-        },
-        {
-          "title": "Bunting& Murray Construction",
-          "headerRowIndex": 0,
-          "headerRowNumber": 1,
-          "headers": [
-            "URL",
-            "Status",
-            "Feedbacks URL",
-            "Date",
-            "Note/Updates"
-          ],
-          "signature": "1d1mvxp-42",
-          "profile": "devTracker",
-          "columns": [
-            {
-              "key": "url",
-              "label": "URL",
-              "index": 0,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "status",
-              "label": "Status",
-              "index": 1,
-              "kind": "status",
-              "extra": false
-            },
-            {
-              "key": "feedbackUrl",
-              "label": "Feedback URL",
-              "index": 2,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "date",
-              "label": "Feedback-Date",
-              "index": 3,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "notes",
-              "label": "Feedback-Notes",
-              "index": 4,
-              "kind": "longtext",
-              "extra": false
-            }
-          ],
-          "extras": [],
-          "months": [],
-          "fields": {
-            "url": 0,
-            "status": 1,
-            "feedbackUrl": 2,
-            "date": 3,
-            "notes": 4,
-            "devDate": -1,
-            "devNotes": -1
-          },
-          "dataRowCount": 12,
-          "sampleRows": [
-            [
-              "https://lightcoral-dolphin-755291.hostingersite.com/",
-              "Completed",
-              "Feedback-1 URL"
-            ],
-            [
-              "https://lightcoral-dolphin-755291.hostingersite.com/about-us/",
-              "Completed",
-              "\n\n\n\n\n\nhttps://docs.google.com/spreadsheets/d/1ePma_uymuypov6hL3qA-Pv6EoQ6KHQZc/edit?gid=1840994945#gid=1840994945",
-              "28/08/26",
-              "Worked on the new feedback.. almost complete but there is some dependency..need images of Coleman Bunting,  Justin Morgan .. all other are commented in the given sheet.... Also Client asked to removed some section to the homepage...Need To verify them before removing the homepage sections."
-            ],
-            [
-              "https://lightcoral-dolphin-755291.hostingersite.com/services/",
-              "Completed",
-              "",
-              "29/08/26",
-              "Feedback Completed"
-            ]
-          ],
-          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Feedback URL (col 3, url), • Feedback-Date (col 4, date), • Feedback-Notes (col 5, longtext)"
-        },
-        {
-          "title": "The House",
-          "headerRowIndex": 0,
-          "headerRowNumber": 1,
-          "headers": [
-            "URL",
-            "Status",
-            "Development--Date",
-            "Development--Updates",
-            "Feedbacks URL",
-            "Feedback--Date",
-            "Feedbacks -- Note/Updates"
-          ],
-          "signature": "85ggco-98",
-          "profile": "devTracker",
-          "columns": [
-            {
-              "key": "url",
-              "label": "URL",
-              "index": 0,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "status",
-              "label": "Status",
-              "index": 1,
-              "kind": "status",
-              "extra": false
-            },
-            {
-              "key": "devDate",
-              "label": "Development-Date",
-              "index": 2,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "devNotes",
-              "label": "Development-Updates",
-              "index": 3,
-              "kind": "longtext",
-              "extra": false
-            },
-            {
-              "key": "feedbackUrl",
-              "label": "Feedback URL",
-              "index": 4,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "date",
-              "label": "Feedback-Date",
-              "index": 5,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "notes",
-              "label": "Feedback-Notes",
-              "index": 6,
-              "kind": "longtext",
-              "extra": false
-            }
-          ],
-          "extras": [],
-          "months": [],
-          "fields": {
-            "url": 0,
-            "status": 1,
-            "devDate": 2,
-            "devNotes": 3,
-            "feedbackUrl": 4,
-            "date": 5,
-            "notes": 6
-          },
-          "dataRowCount": 3,
-          "sampleRows": [
-            [
-              "https://thehouse.cogwheelmarketing.site/",
-              "Completed",
-              "",
-              "",
-              "Feedback-1 URL",
-              "03/09/26",
-              "The House Homepage email feedback completed"
-            ],
-            [
-              "https://thehouse.cogwheelmarketing.site/home-2/",
-              "Completed"
-            ],
-            [
-              "",
-              "",
-              "",
-              "",
-              "Feedback-2 URL"
-            ]
-          ],
-          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Development-Date (col 3, date), • Development-Updates (col 4, longtext), • Feedback URL (col 5, url), • Feedback-Date (col 6, date), • Feedback-Notes (col 7, longtext)"
-        },
-        {
-          "title": "Reitz Union",
-          "headerRowIndex": 0,
-          "headerRowNumber": 1,
-          "headers": [
-            "URL",
-            "Status",
-            "Development--Date",
-            "Development--Updates",
-            "Feedbacks URL",
-            "Feedback--Date",
-            "Feedbacks -- Note/Updates"
-          ],
-          "signature": "85ggco-98",
-          "profile": "devTracker",
-          "columns": [
-            {
-              "key": "url",
-              "label": "URL",
-              "index": 0,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "status",
-              "label": "Status",
-              "index": 1,
-              "kind": "status",
-              "extra": false
-            },
-            {
-              "key": "devDate",
-              "label": "Development-Date",
-              "index": 2,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "devNotes",
-              "label": "Development-Updates",
-              "index": 3,
-              "kind": "longtext",
-              "extra": false
-            },
-            {
-              "key": "feedbackUrl",
-              "label": "Feedback URL",
-              "index": 4,
-              "kind": "url",
-              "extra": false
-            },
-            {
-              "key": "date",
-              "label": "Feedback-Date",
-              "index": 5,
-              "kind": "date",
-              "extra": false
-            },
-            {
-              "key": "notes",
-              "label": "Feedback-Notes",
-              "index": 6,
-              "kind": "longtext",
-              "extra": false
-            }
-          ],
-          "extras": [],
-          "months": [],
-          "fields": {
-            "url": 0,
-            "status": 1,
-            "devDate": 2,
-            "devNotes": 3,
-            "feedbackUrl": 4,
-            "date": 5,
-            "notes": 6
-          },
-          "dataRowCount": 16,
-          "sampleRows": [
-            [
-              "https://thereitzunion.cogwheelmarketing.com/",
-              "Completed",
-              "2026-09-15",
-              "All the pages are completed",
-              "Feedback-1 URL",
-              "2026-08-28",
-              "Changes all given images & some feedbacks from siana in homepage 1 and home page 2"
-            ],
-            [
-              "https://thereitzunion.cogwheelmarketing.com/home-2/",
-              "Completed"
-            ],
-            [
-              "https://thereitzunion.cogwheelmarketing.com/faqs/",
-              "Completed"
-            ]
-          ],
-          "columnsText": "• URL (col 1, url), • Status (col 2, status), • Development-Date (col 3, date), • Development-Updates (col 4, longtext), • Feedback URL (col 5, url), • Feedback-Date (col 6, date), • Feedback-Notes (col 7, longtext)"
+          "columnsText": "• Name (col 1, text), • URL (col 2, url), + Property Type (col 3, text), + Stauts (col 4, text), + SEO (col 5, text), + H&M (col 6, text), + Task Assigned To SEO (col 7, text), + Task Assigned To WEB (col 8, text)"
         }
       ],
       "skippedTabs": [],

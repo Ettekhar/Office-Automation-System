@@ -88,7 +88,9 @@ export function labelForSpreadsheet(spreadsheetId) {
 export async function discoverTabSchema(spreadsheetId, tabName, opts = {}) {
   const sample = Math.max(0, Math.min(10, Number(opts.sampleRows ?? 3)));
   const wanted = String(opts.profile || 'auto');
-  const rows = await getTabValues(tabName, `A1:Z${Math.max(20, sample + 10)}`, spreadsheetId);
+  // Match the application reader's width: hand-added columns beyond Z are
+  // still part of the schema and must be visible to the assistant.
+  const rows = await getTabValues(tabName, `A1:ZZ${Math.max(20, sample + 10)}`, spreadsheetId);
   const list = Array.isArray(rows) ? rows : [];
   const detected = detectHeaderRow(list, { profile: wanted });
   const cols = resolveColumns(detected.headerRow, { profile: detected.profile, tabName });

@@ -7,8 +7,10 @@ const S = {
   view: null,
   users: [],          // cached user list
   tableMode: 'smart', // 'smart'|'full'
+  mySitesMode: 'normal', // 'normal'|'maintenance' — My Sites user view
 };
 try { S.tableMode = localStorage.getItem('officeos_table_mode') || 'smart'; } catch { }
+try { S.mySitesMode = localStorage.getItem('officeos_mysites_mode') || 'normal'; } catch { }
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -22,11 +24,30 @@ const sidebarNavEl = $('sidebar-nav');
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function api(url, opts = {}) {
   const r = await fetch(url, {
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-officeos-role': S.role || '',
+      'x-officeos-user': S.userName || '',
+      'x-officeos-user-id': S.userId || '',
+      ...(opts.headers || {}),
+    },
     ...opts,
   });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+  if (!r.ok) {
+    // Prefer the server's human `message` over its machine `error` code. The
+    // backend goes to the trouble of writing a real explanation — "Cannot assign
+    // to unknown or inactive user(s): Tarikul. Choose an active user." — and
+    // this was discarding it in favour of the bare code, so the toast read
+    // "INACTIVE_ASSIGNEE" and the reason never reached the person who needed it.
+    // The code is still available on e.code for programmatic checks.
+    const e = new Error(data.message || data.error || `HTTP ${r.status}`);
+    e.code = data.error || `HTTP_${r.status}`;
+    // On optimistic-lock rejection (409) the server includes the CURRENT record
+    // so the caller can re-render instead of clobbering a concurrent edit.
+    if (r.status === 409 && data.current) { e.current = data.current; if (!data.error) e.code = 'STALE_VERSION'; }
+    throw e;
+  }
   return data;
 }
 const GET = url => api(url);
@@ -164,7 +185,66 @@ function priorityBadge(p) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function userOptions(selectedId = '') {
-  return S.users.map(u => `<option value="${u.id}" ${u.id === selectedId ? 'selected' : ''}>${esc(u.name)} (${u.role})</option>`).join('');
+  // Locked list, same rule as the assignee grids below (assigneeInputAttrs):
+  // an inactive user who is NOT the current selection must not be offered,
+  // because the server rejects the whole save with INACTIVE_ASSIGNEE. The
+  // current selection is kept even when inactive, so saving never silently
+  // rewrites an existing value to blank.
+  return S.users.map(u => {
+    const inactive = !isActiveUser(u);
+    const locked = inactive && u.id !== selectedId;
+    return `<option value="${u.id}" ${u.id === selectedId ? 'selected' : ''}${locked ? ' disabled' : ''}>${esc(u.name)}${inactive ? ' (deactivated)' : ''}</option>`;
+  }).join('');
+}
+
+// ─── Deactivated users in assignee pickers ────────────────────────────────────
+// The backend refuses a new assignment for a deactivated account
+// (assertActiveAssignees -> 400 INACTIVE_ASSIGNEE, server.js:149) and it refuses
+// the WHOLE request, so a single inactive name in the list blocks every other
+// assignee in the same save too. These pickers must not offer what the server
+// will reject.
+//
+// But they must NOT simply drop inactive users from the markup. Every one of
+// these grids submits the COMPLETE set of checked boxes as the new assignee
+// list, so omitting an inactive user who is currently assigned would silently
+// REMOVE them the next time somebody saves an unrelated field (company, A/C
+// manager) on that same site. The rule, in one place:
+//
+//   active, any                     -> ordinary checkbox
+//   inactive, NOT currently assigned -> DISABLED. Cannot be added; the server
+//                                      would reject the entire save.
+//   inactive, already assigned       -> left ENABLED and checked, labelled
+//                                      "(deactivated)". They are already assigned
+//                                      so they belong in the submission either
+//                                      way, and staying enabled is what allows
+//                                      somebody to deliberately unassign them.
+//                                      A disabled box could be neither kept nor
+//                                      removed, which is strictly worse.
+function isActiveUser(u) { return !!u && u.active !== false; }
+
+/**
+ * Decision for one checkbox in a site-assignee grid.
+ * @returns {{checked: boolean, locked: boolean, suffix: string}}
+ */
+function assigneeCheckState(u, isAssigned) {
+  if (isActiveUser(u)) return { checked: !!isAssigned, locked: false, suffix: '' };
+  return { checked: !!isAssigned, locked: !isAssigned, suffix: ' (deactivated)' };
+}
+
+/**
+ * The same decision rendered as HTML attribute fragments, so the four grids
+ * cannot drift apart on which of them forgot the rule.
+ * @returns {{checked: string, disabled: string, title: string, suffix: string}}
+ */
+function assigneeInputAttrs(u, isAssigned) {
+  const st = assigneeCheckState(u, isAssigned);
+  return {
+    checked: st.checked ? ' checked' : '',
+    disabled: st.locked ? ' disabled' : '',
+    // esc() escapes " so the name cannot break out of the attribute.
+    title: st.locked ? ` title="${esc(u.name)} is deactivated — cannot be newly assigned"` : '',
+    suffix: st.suffix,
+  };
 }
 function shortUrl(url, max = 38) {
   const s = (url || '').replace(/^https?:\/\//, '').replace(/^www\./, '');
@@ -189,6 +269,7 @@ function getNavSvg(key) {
     'sync': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>`,
     'sheet-manager': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
     'ai-settings': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6l2.1 2.1"/><path d="M16.3 16.3l2.1 2.1"/><path d="M18.4 5.6l-2.1 2.1"/><path d="M7.7 16.3l-2.1 2.1"/></svg>`,
+    'audit-log': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`,
     'custom-sheet': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>`,
   };
   return map[key] || `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>`;
@@ -229,6 +310,7 @@ const NAV_SECTIONS = {
       items: [
         { id: 'user-mgmt', icon: 'user-mgmt', label: 'Team Members' },
         { id: 'send-emails', icon: 'send-emails', label: 'Email Reports' },
+        { id: 'audit-log', icon: 'audit-log', label: 'Change History' },
       ],
     },
   ],
@@ -256,6 +338,7 @@ const NAV_SECTIONS = {
       items: [
         { id: 'user-mgmt', icon: 'user-mgmt', label: 'User Management' },
         { id: 'send-emails', icon: 'send-emails', label: 'Email Reports' },
+        { id: 'audit-log', icon: 'audit-log', label: 'Change History' },
         { id: 'sync', icon: 'sync', label: 'Sheets Sync' },
         { id: 'sheet-manager', icon: 'sheet-manager', label: 'Sheet Manager', badge: 'Super' },
         { id: 'ai-settings', icon: 'ai-settings', label: 'AI Settings', badge: 'Super' },
@@ -308,6 +391,7 @@ const viewFns = {
   'dev-projects': viewDevProjects,
   'user-mgmt': viewUserMgmt,
   'send-emails': viewSendEmails,
+  'audit-log': viewAuditLog,
   'sync': viewSync,
   'sheet-manager': viewSheetManager,
   'ai-settings': viewAiSettings,
@@ -492,46 +576,70 @@ async function initLanding() {
     }
   } catch { }
 
-  // Load real users
+  // Load real users — populate dropdown with real IDs and pre-select saved user
+  let loadedUsers = [];
   try {
     const { users } = await GET('/api/master/users');
     if (users && users.length > 0) {
       S.users = users;
-      const activeUsers = users.filter(u => u.active !== false);
-      nameSelect.innerHTML = activeUsers.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+      loadedUsers = users.filter(u => u.active !== false);
+      const _sv = JSON.parse(localStorage.getItem('officeos_session') || '{}');
+      nameSelect.innerHTML = loadedUsers.map(u => {
+        const isSaved = (_sv.userId && u.id === _sv.userId) ||
+                        (!_sv.userId && _sv.userName && u.name.toLowerCase() === _sv.userName.toLowerCase());
+        return `<option value="${u.id}"${isSaved ? ' selected' : ''}>${esc(u.name)}</option>`;
+      }).join('');
     }
   } catch { }
 
-  // Auto-restore session if previously entered and not explicitly switched/logged out
+  function handleEnter() {
+    sessionStorage.removeItem('officeos_logged_out');
+    const role = $('role-select').value;
+    S.role = role;
+    const nameOpt = nameSelect.options[nameSelect.selectedIndex];
+    if (role === 'user') {
+      const selectedName = nameOpt ? nameOpt.text.trim() : defaultNames[0];
+      const selectedId   = nameOpt ? nameOpt.value.trim() : '';
+      const resolvedUser = S.users?.find(u => u.name.toLowerCase() === selectedName.toLowerCase()) || null;
+      S.userName = resolvedUser ? resolvedUser.name : selectedName;
+      S.userId   = resolvedUser ? resolvedUser.id   : (selectedId || null);
+    } else {
+      S.userName = role === 'admin' ? 'Admin' : 'Superadmin';
+      S.userId   = null;
+    }
+    try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch { }
+    enterApp();
+  }
+
+  // Always attach enter button listener
+  const enterBtn = $('enter-btn');
+  if (enterBtn) {
+    enterBtn.onclick = handleEnter;
+  }
+
+  // Auto-restore session if previously entered and not explicitly logged out
   try {
     const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
     const isManualLogout = sessionStorage.getItem('officeos_logged_out');
     if (saved.role && !isManualLogout) {
       S.role = saved.role;
-      S.userName = saved.userName || (saved.role === 'admin' ? 'Admin' : 'Superadmin');
-      S.userId = saved.userId || null;
+      if (saved.role === 'user') {
+        const matchById   = loadedUsers.find(u => u.id   === saved.userId);
+        const matchByName = loadedUsers.find(u => u.name.toLowerCase() === (saved.userName || '').toLowerCase());
+        const resolved    = matchById || matchByName || null;
+        S.userName = resolved ? resolved.name : (saved.userName || 'User');
+        S.userId   = resolved ? resolved.id   : null;
+        if (resolved && resolved.id !== saved.userId) {
+          try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+        }
+      } else {
+        S.userName = saved.userName || (saved.role === 'admin' ? 'Admin' : 'Superadmin');
+        S.userId   = saved.userId || null;
+      }
       enterApp();
       return;
     }
   } catch { }
-
-  $('enter-btn').addEventListener('click', () => {
-    sessionStorage.removeItem('officeos_logged_out');
-    const role = $('role-select').value;
-    S.role = role;
-    if (role === 'user') {
-      const nameOpt = nameSelect.options[nameSelect.selectedIndex];
-      S.userName = nameOpt ? nameOpt.text : defaultNames[0];
-      S.userId = nameOpt ? (nameOpt.value || null) : null;
-    } else {
-      const nameOpt = nameSelect.options[nameSelect.selectedIndex];
-      S.userName = nameOpt ? nameOpt.text : (role === 'admin' ? 'Admin' : 'Superadmin');
-      S.userId = nameOpt ? (nameOpt.value || null) : null;
-    }
-    // Save session
-    try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch { }
-    enterApp();
-  });
 }
 
 function enterApp() {
@@ -604,7 +712,7 @@ function enterApp() {
 }
 
 // ─── Active Month Selector Dropdown ──────────────────────────────────────────
-let currentActiveMonth = 'August';
+let currentActiveMonth = (typeof localStorage !== 'undefined' && localStorage.getItem('activeMonth')) || 'September 26';
 let _monthDropdownOpen = false;
 
 async function updateActiveMonthUI() {
@@ -612,6 +720,7 @@ async function updateActiveMonthUI() {
     const data = await GET('/api/master/months');
     if (data.activeMonth) {
       currentActiveMonth = data.activeMonth;
+      try { localStorage.setItem('activeMonth', currentActiveMonth); } catch {}
       const lbl = $('active-month-label');
       if (lbl) lbl.textContent = currentActiveMonth;
     }
@@ -638,11 +747,15 @@ async function selectMonth(monthName) {
   try {
     await POST('/api/master/months/select', { monthName });
     currentActiveMonth = monthName;
+    try { localStorage.setItem('activeMonth', currentActiveMonth); } catch {}
     const lbl = $('active-month-label');
     if (lbl) lbl.textContent = monthName;
-    toast(`📅 Active month switched to "${monthName}" — status syncs will now target this month`, 'success', 4000);
-    // Re-populate the dropdown to update active highlight
+    toast(`📅 Switched to "${monthName}" — refreshing data for this month…`, 'info', 3000);
     await updateActiveMonthUI();
+    // Re-navigate active page so all data reloads for the selected month
+    const _activeNav = document.querySelector('.nav-item.active');
+    const _curView = _activeNav?.dataset?.view || null;
+    if (_curView) navigate(_curView);
   } catch (e) {
     toast(e.message, 'error');
   }
@@ -1328,7 +1441,13 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
       applyBtn.disabled = true;
       applyBtn.textContent = 'Applying…';
       try {
-        await POST('/api/master/daily-review/batch', { ids, updates });
+        // Optimistic lock: send last-seen updatedAt per selected row. If any row
+        // changed elsewhere, the server aborts the batch (409) without writing.
+        const expectedUpdatedAtMap = {};
+        containerEl.querySelectorAll('tr[data-id]').forEach(tr => {
+          if (ids.includes(tr.dataset.id) && tr.dataset.updatedAt) expectedUpdatedAtMap[tr.dataset.id] = tr.dataset.updatedAt;
+        });
+        await POST('/api/master/daily-review/batch', { ids, updates, expectedUpdatedAtMap });
         ids.forEach(id => {
           const row = containerEl.querySelector(`tr[data-id="${id}"]`);
           if (row) {
@@ -1354,7 +1473,7 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
             }
           }
         });
-        toast(`Bulk updated ${ids.length} sites!`, 'success');
+        toast(`⚡ Bulk updated ${ids.length} sites & synced to Google Sheets!`, 'success', 3500);
         recalcStats();
         rowCheckboxes.forEach(cb => cb.checked = false);
         updateDock();
@@ -1405,7 +1524,8 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
       const value = sel.value;
       sel.className = `select-ga4-status ${/no|n\/a/i.test(value) ? 'val-dim' : ''}`;
       try {
-        await PUT(`/api/master/daily-review/${rowId}`, { ga4: value });
+        const tr = sel.closest('tr');
+        await PUT(`/api/master/daily-review/${rowId}`, { ga4: value, expectedUpdatedAt: tr?.dataset?.updatedAt || undefined });
         toast('GA4 status updated', 'success');
       } catch (err) { toast(err.message, 'error'); }
     });
@@ -1553,7 +1673,7 @@ async function viewMySites() {
   let noticeBannerHtml = '';
   try {
     const [data, nHtml] = await Promise.all([
-      GET(`/api/master/daily-review?userId=${S.userId}&user=${encodeURIComponent(S.userName)}`),
+      GET(`/api/master/daily-review${S.userId ? `?userId=${encodeURIComponent(S.userId)}&user=${encodeURIComponent(S.userName)}` : `?user=${encodeURIComponent(S.userName)}`}&month=${encodeURIComponent(currentActiveMonth || '')}`),
       getNoticeBannerHtml()
     ]);
     rows = data.rows || [];
@@ -1565,6 +1685,7 @@ async function viewMySites() {
   const pending = rows.filter(r => !['completed', 'in_progress'].includes(r.maintenanceStatus)).length;
   const pct = rows.length ? Math.round(completed / rows.length * 100) : 0;
   const isSmart = S.tableMode !== 'full';
+  const isMaint = S.mySitesMode === 'maintenance';
 
   mainEl.innerHTML = `
     <div class="fade-in">
@@ -1582,10 +1703,16 @@ async function viewMySites() {
           <div class="card-actions">
             <span class="completion-pct-text" style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
             <div class="progress-wrap" style="width:120px"><div class="progress-fill completion-progress-fill" style="width:${pct}%"></div></div>
+            <div class="view-mode-toggle" id="my-sites-mode-toggle" data-tooltip="My Sites view mode">
+              <button class="btn btn-sm mode-btn ${!isMaint ? 'active' : ''}" data-mysite-mode="normal" title="Normal checklist view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Normal Mode</button>
+              <button class="btn btn-sm mode-btn ${isMaint ? 'active' : ''}" data-mysite-mode="maintenance" title="Maintenance view — URL, company, status, ClickUp, sheet & account manager" style="display:inline-flex;align-items:center;gap:5px">${getSvg('shield', 11)} Maintenance Mode</button>
+            </div>
+            ${isMaint ? '' : `
             <div class="view-mode-toggle" id="table-mode-toggle">
               <button class="btn btn-sm mode-btn ${isSmart ? 'active' : ''}" data-mode="smart" title="Smart Fit — compact 7-column view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('zap', 11)} Smart Fit</button>
               <button class="btn btn-sm mode-btn ${!isSmart ? 'active' : ''}" data-mode="full" title="Full Spread — all 14 columns visible" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Full Spread</button>
             </div>
+            `}
             <button id="export-csv-btn" class="btn btn-secondary btn-sm" title="Export this checklist to CSV" style="display:inline-flex;align-items:center;gap:5px">
               ${getSvg('download', 12)} Export CSV
             </button>
@@ -1608,9 +1735,23 @@ async function viewMySites() {
         </div>
 
         <div class="table-wrap">
-          <table class="${isSmart ? 'table-smart-fit' : 'table-full-spread'}">
+          <table class="${isMaint ? 'table-maint-mode' : (isSmart ? 'table-smart-fit' : 'table-full-spread')}">
             <thead>
-              ${isSmart ? `
+              ${isMaint ? `
+                <tr>
+                  <th class="col-select" style="text-align:center">
+                    <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
+                  </th>
+                  <th class="col-url">Website URL</th>
+                  <th class="col-company">Company</th>
+                  <th class="col-maint">Maintenance Status</th>
+                  <th class="col-clickup">ClickUp Link</th>
+                  <th class="col-timetrack">ClickUp Time Track</th>
+                  <th class="col-sheet">Website Sheet</th>
+                  <th class="col-acm">Account Manager</th>
+                  <th class="col-actions" style="text-align:right">Actions</th>
+                </tr>
+              ` : isSmart ? `
                 <tr>
                   <th class="col-select" style="text-align:center">
                     <input type="checkbox" class="select-all-checkbox" title="Select all sites" />
@@ -1632,6 +1773,7 @@ async function viewMySites() {
                   <th>Maintenance</th>
                   <th>Report Sent</th>
                   <th>ClickUp Link</th>
+                  <th>ClickUp Time Track</th>
                   <th>GA4 Report</th>
                   <th>Newsletter Mail</th>
                   <th>Form Submission Mail</th>
@@ -1644,7 +1786,7 @@ async function viewMySites() {
               `}
             </thead>
             <tbody id="sites-tbody">
-              ${rows.map((r, i) => siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}
+              ${rows.map((r, i) => isMaint ? maintSiteRow(r, i) : siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}
             </tbody>
           </table>
         </div>
@@ -1741,9 +1883,21 @@ async function viewMySites() {
     });
   });
 
+  // My Sites mode switcher (Normal vs Maintenance)
+  document.querySelectorAll('#my-sites-mode-toggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mysiteMode;
+      S.mySitesMode = mode;
+      try { localStorage.setItem('officeos_mysites_mode', mode); } catch { }
+      viewMySites();
+    });
+  });
+
   // Export CSV
   $('export-csv-btn').addEventListener('click', () => {
-    exportChecklistCsv(rows, `Daily_Maintenance_${S.userName}_${new Date().toISOString().slice(0, 10)}.csv`);
+    const filename = `Daily_Maintenance_${S.userName}_${new Date().toISOString().slice(0, 10)}.csv`;
+    if (isMaint) exportMaintenanceCsv(rows, filename);
+    else exportChecklistCsv(rows, filename);
   });
 
   // Status dropdown auto-save
@@ -1753,10 +1907,16 @@ async function viewMySites() {
       const value = e.target.value;
       const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'Yes': 'sent', 'No': 'no' };
       const isMaint = field === 'maintenanceStatus' || field === 'maintenanceRaw';
+      const statusKey = isMaint ? 'maintenanceStatus' : 'reportSentStatus';
+      const rawKey = isMaint ? 'maintenanceRaw' : 'reportSentRaw';
       try {
+        const tr = e.target.closest('tr');
         await PUT(`/api/master/daily-review/${rowId}`, {
-          [field]: normMap[value] || value,
-          [field + 'Raw']: value,
+          [statusKey]: normMap[value] || value,
+          [rawKey]: value,
+          maintenanceStatus: isMaint ? (normMap[value] || value) : undefined,
+          maintenanceRaw: isMaint ? value : undefined,
+          expectedUpdatedAt: (rows.find(r => r.id === rowId) || {}).updatedAt || tr?.dataset?.updatedAt || undefined,
         });
         if (isMaint) {
           const sheetVal = (value === 'Completed' || value === 'completed') ? 'Updated & Backup' : value;
@@ -1835,7 +1995,7 @@ async function viewMySites() {
 function exportChecklistCsv(rows, filename) {
   const headers = [
     '#', 'Website URL', 'Company', 'Maintenance', 'Maintenance Report Sent',
-    'ClickUp Link', 'GA4 Report', 'Newsletter Mail', 'Form Submission Mail',
+    'ClickUp Link', 'ClickUp Time Track', 'GA4 Report', 'Newsletter Mail', 'Form Submission Mail',
     'Client Response', 'Booking Engine', 'UPTimeRobot Monitoring', 'Cloudflare issues'
   ];
 
@@ -1849,6 +2009,7 @@ function exportChecklistCsv(rows, filename) {
       r.maintenanceRaw || r.maintenanceStatus || '',
       r.reportSentRaw || r.reportSentStatus || '',
       r.clickupLink || '',
+      r.clickupTimeTrackUrl || '',
       r.ga4 || '',
       r.newsletterMail || '',
       r.formSubmissionMail || '',
@@ -1872,15 +2033,62 @@ function exportChecklistCsv(rows, filename) {
   toast('📥 Checklist exported to CSV', 'success');
 }
 
+function exportMaintenanceCsv(rows, filename) {
+  const headers = [
+    'Website URL', 'Company', 'Maintenance Status', 'ClickUp Link', 'ClickUp Time Track',
+    'Website Sheet', 'Account Manager'
+  ];
+
+  const lines = [headers.map(h => `"${h}"`).join(',')];
+
+  rows.forEach(r => {
+    const row = [
+      r.siteUrl || '',
+      r.siteAccount || r.company || '',
+      r.maintenanceRaw || r.maintenanceStatus || '',
+      r.clickupLink || '',
+      r.clickupTimeTrackUrl || '',
+      r.reportUrl || '',
+      r.accountManager || ''
+    ];
+    lines.push(row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+  });
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📥 Maintenance list exported to CSV', 'success');
+}
+
 function siteRow(r, i, mode = (S.tableMode || 'smart')) {
-  const maintOpts = ['Completed', 'In Progress', 'To Do', 'Pending'].map(o =>
-    `<option ${r.maintenanceRaw === o ? 'selected' : ''}>${o}</option>`).join('');
+  // Build maintenance dropdown — maintenanceStatus (from month overlay) is the source of truth
+  // maintenanceRaw may be "" for months where work hasn't started yet
+  const _mStatus = (r.maintenanceStatus || '').toLowerCase();
+  const _mRaw    = (r.maintenanceRaw || '').trim();
+  const maintOpts = [
+    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress') },
+    { val: 'Completed',   label: 'Completed',     sel: _mStatus === 'completed'   || _mRaw === 'Completed'   },
+    { val: 'In Progress', label: 'In Progress',    sel: _mStatus === 'in_progress' || _mRaw === 'In Progress' },
+    { val: 'To Do',       label: 'To Do',          sel: _mRaw === 'To Do' },
+    { val: 'Pending',     label: 'Pending',         sel: _mRaw === 'Pending' },
+  ].map(o => `<option value="${o.val}" ${o.sel ? 'selected' : ''}>${o.label}</option>`).join('');
   const sentOpts = ['Yes', 'No', 'To Do'].map(o =>
     `<option ${r.reportSentRaw === o ? 'selected' : ''}>${o}</option>`).join('');
 
   // 1. ClickUp Link
   const cuLink = r.clickupLink
     ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup" title="${esc(r.clickupLink)}">⚡ ClickUp</a>`
+    : '<span class="dim-dash">—</span>';
+
+  // 1b. ClickUp Time Track (CW "Maintenance time tracking ClickUp URL" column)
+  const ttLink = r.clickupTimeTrackUrl
+    ? `<a href="${esc(r.clickupTimeTrackUrl)}" target="_blank" class="btn-timetrack" title="${esc(r.clickupTimeTrackUrl)}">⏱ Time Track</a>`
     : '<span class="dim-dash">—</span>';
 
   // 2. GA4 Report (Interactive Status Dropdown matching custom design)
@@ -1990,7 +2198,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
 
   if (mode === 'smart') {
     return `
-      <tr class="smart-row" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+      <tr class="smart-row" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-updated-at="${esc(r.updatedAt || '')}">
         <td class="col-select" style="text-align:center">
           <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
         </td>
@@ -2014,9 +2222,10 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         </td>
         <td class="col-links" data-col="clickup">
           <div class="quick-links-grp">
+            ${ttLink !== '<span class="dim-dash">—</span>' ? ttLink : ''}
             ${cuLink !== '<span class="dim-dash">—</span>' ? cuLink : ''}
             ${bookHtml !== '<span class="dim-dash">—</span>' ? bookHtml : ''}
-            ${cuLink === '<span class="dim-dash">—</span>' && bookHtml === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
+            ${cuLink === '<span class="dim-dash">—</span>' && bookHtml === '<span class="dim-dash">—</span>' && ttLink === '<span class="dim-dash">—</span>' ? '<span class="dim-dash">—</span>' : ''}
           </div>
         </td>
         <td class="col-integ" data-col="ga4">
@@ -2042,6 +2251,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
               <div class="dbc-row"><span class="dbc-lbl">Full URL:</span> <a href="${esc(r.siteUrl)}" target="_blank" class="dbc-val">${esc(r.siteUrl)} ↗</a></div>
               <div class="dbc-row"><span class="dbc-lbl">Company:</span> <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'}">${esc(co)} Maintenance</span></div>
               <div class="dbc-row"><span class="dbc-lbl">ClickUp:</span> ${r.clickupLink ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup">⚡ View Task ↗</a>` : '<span class="dim-dash">—</span>'}</div>
+              <div class="dbc-row"><span class="dbc-lbl">Time Track:</span> ${r.clickupTimeTrackUrl ? `<a href="${esc(r.clickupTimeTrackUrl)}" target="_blank" class="btn-timetrack">⏱ Time Track ↗</a>` : '<span class="dim-dash">—</span>'}</div>
             </div>
             <div class="detail-bento-card">
               <div class="dbc-head">🛠️ Review &amp; Report</div>
@@ -2086,6 +2296,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
       <td data-col="maintenance"><select class="status-select select-maint" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
       <td data-col="report"><select class="status-select select-sent" data-row-id="${r.id}" data-field="reportSentStatus">${sentOpts}</select></td>
       <td data-col="clickup">${cuLink}</td>
+      <td data-col="timetrack">${ttLink}</td>
       <td data-col="ga4">${ga4SelectHtml}</td>
       <td data-col="newsletter">${newsHtml}</td>
       <td data-col="form">${formHtml}</td>
@@ -2095,6 +2306,74 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
       <td data-col="cloudflare">${cfHtml}</td>
       <td data-col="actions">
         <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit all columns" style="display:inline-flex;align-items:center;gap:5px">${getSvg('edit', 12)} Edit</button>
+      </td>
+    </tr>`;
+}
+
+// Maintenance-mode row (My Sites): URL, company, status, ClickUp, per-site sheet, account manager
+function maintSiteRow(r, i) {
+  const _mStatus = (r.maintenanceStatus || '').toLowerCase();
+  const _mRaw    = (r.maintenanceRaw || '').trim();
+  const maintOpts = [
+    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress') },
+    { val: 'Completed',   label: 'Completed',     sel: _mStatus === 'completed'   || _mRaw === 'Completed'   },
+    { val: 'In Progress', label: 'In Progress',    sel: _mStatus === 'in_progress' || _mRaw === 'In Progress' },
+    { val: 'To Do',       label: 'To Do',          sel: _mRaw === 'To Do' },
+    { val: 'Pending',     label: 'Pending',         sel: _mRaw === 'Pending' },
+  ].map(o => `<option value="${o.val}" ${o.sel ? 'selected' : ''}>${o.label}</option>`).join('');
+
+  // ClickUp link (same treatment as siteRow)
+  const cuLink = r.clickupLink
+    ? `<a href="${esc(r.clickupLink)}" target="_blank" class="btn-clickup" title="${esc(r.clickupLink)}">⚡ ClickUp</a>`
+    : '<span class="dim-dash">—</span>';
+
+  // ClickUp time-tracking link (CW "Maintenance time tracking ClickUp URL" column)
+  const ttLink = r.clickupTimeTrackUrl
+    ? `<a href="${esc(r.clickupTimeTrackUrl)}" target="_blank" class="btn-timetrack" title="${esc(r.clickupTimeTrackUrl)}">⏱ Time Track</a>`
+    : '<span class="dim-dash">—</span>';
+
+  // Individual website sheet link (CW/RM spreadsheet tab, named after the website URL)
+  const sheetLink = r.reportUrl
+    ? `<a href="${esc(r.reportUrl)}" target="_blank" class="btn-sheet" title="${esc(r.reportUrl)}">📊 Sheet ↗</a>`
+    : '<span class="dim-dash">—</span>';
+
+  // Account manager name from the CW/RM sheet (A/C Manager column)
+  const acm = (r.accountManager || '').trim();
+  const acmHtml = acm
+    ? `<span class="cell-text-badge badge-accent" title="Account Manager: ${esc(acm)}">${esc(acm)}</span>`
+    : '<span class="dim-dash">—</span>';
+
+  const isOnline = r.uptimeStatus === 'online';
+  const isOffline = r.uptimeStatus === 'offline';
+  const netSt = isOffline ? 'offline' : (isOnline ? 'online' : 'pending');
+  const liveBall = `<span class="live-network-icon ${netSt}" id="live-dot-${r.id}" title="${isOffline ? 'Website Offline / Down' : (isOnline ? 'Website Active & Online' : 'Website Status: Unknown')}">${getSvg('network', 11)}</span>`;
+  const co = (r.siteAccount || r.company || 'CW').trim();
+
+  return `
+    <tr data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+      <td class="col-select" style="text-align:center">
+        <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
+      </td>
+      <td class="url-cell" data-col="url">
+        <div class="site-identity-cell">
+          ${liveBall}
+          <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'} badge-xs">${esc(co)}</span>
+          <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
+            ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
+          </a>
+          <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+        </div>
+      </td>
+      <td data-col="company"><span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'}">${esc(co)}</span></td>
+      <td data-col="maintenance"><select class="status-select select-maint" data-row-id="${r.id}" data-field="maintenanceStatus">${maintOpts}</select></td>
+      <td data-col="clickup">${cuLink}</td>
+      <td data-col="timetrack">${ttLink}</td>
+      <td data-col="sheet">${sheetLink}</td>
+      <td data-col="acm">${acmHtml}</td>
+      <td data-col="actions" style="text-align:right">
+        <div class="actions-grp" style="justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit row data" style="display:inline-flex;align-items:center;gap:4px">${getSvg('edit', 12)}</button>
+        </div>
       </td>
     </tr>`;
 }
@@ -2128,6 +2407,10 @@ function editDailyReviewRowModal(row, onSaved) {
       <div class="form-group">
         <label class="form-label">ClickUp Task Link</label>
         <input class="form-input" id="edr-clickup" value="${esc(row.clickupLink || '')}" placeholder="https://app.clickup.com/t/...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ClickUp Time Track</label>
+        <input class="form-input" id="edr-timetrack" value="${esc(row.clickupTimeTrackUrl || '')}" placeholder="https://app.clickup.com/...time tracking sheet">
       </div>
       <div class="form-group">
         <label class="form-label">GA4 Report</label>
@@ -2173,6 +2456,7 @@ function editDailyReviewRowModal(row, onSaved) {
           reportSentRaw: sentRaw,
           reportSentStatus: normMap[sentRaw] || 'no',
           clickupLink: $('edr-clickup').value.trim(),
+          clickupTimeTrackUrl: $('edr-timetrack').value.trim(),
           ga4: $('edr-ga4').value.trim(),
           newsletterMail: $('edr-newsletter').value.trim(),
           formSubmissionMail: $('edr-form').value.trim(),
@@ -2235,12 +2519,14 @@ async function viewOverview() {
   let stats = {}, summary = [];
   let noticeBannerHtml = '';
   let sheetCredsData = { credentials: [] };
+  let reportStatus = { rows: [], latestDate: null, today: '', count: 0, configured: false, freshness: {} };
   try {
-    [stats, { summary }, noticeBannerHtml, sheetCredsData] = await Promise.all([
+    [stats, { summary }, noticeBannerHtml, sheetCredsData, reportStatus] = await Promise.all([
       GET('/api/master/stats'),
-      GET('/api/master/summary'),
+      GET(`/api/master/summary?month=${encodeURIComponent(currentActiveMonth || '')}`),
       getNoticeBannerHtml(),
-      GET(`/api/master/sheet-credentials?role=${S.role}&progress=1`).catch(() => ({ credentials: [] }))
+      GET(`/api/master/sheet-credentials?role=${S.role}&progress=1`).catch(() => ({ credentials: [] })),
+      GET(`/api/master/report-status?role=${encodeURIComponent(S.role || '')}`).catch(() => ({ rows: [], latestDate: null, today: '', count: 0, configured: false, freshness: {} }))
     ]);
   } catch (e) { toast(e.message, 'error'); }
 
@@ -2282,6 +2568,43 @@ async function viewOverview() {
                 <span>📧 ${u.reportSent} sent</span>
               </div>
             </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-header" style="flex-wrap:wrap;gap:10px">
+          <span class="card-title">📋 Daily Report Status</span>
+          <div class="card-actions">
+            ${reportStatus.configured ? `
+              <span style="font-size:12px;color:var(--text-muted)">
+                ${reportStatus.count} report(s) · latest ${reportStatus.latestDate ? esc(reportStatus.latestDate) : '—'}
+                ${reportStatus.freshness?.updatedAt ? `· synced ${esc((reportStatus.freshness.updatedAt || '').slice(0, 16).replace('T', ' '))}` : ''}
+              </span>` : '<span style="font-size:12px;color:var(--text-muted)">Report Automation feed not configured</span>'}
+          </div>
+        </div>
+        <div class="card-body">
+          ${reportStatus.configured && reportStatus.rows.length ? `
+            <div class="table-wrap">
+              <table class="table-smart-fit">
+                <thead>
+                  <tr><th>User</th><th>Latest Report</th><th>✅ Done</th><th>🔍 In Review</th><th>🔄 In Progress</th><th>⚠️ Overdue</th></tr>
+                </thead>
+                <tbody>
+                  ${reportStatus.rows.map(r => `
+                    <tr>
+                      <td style="font-weight:500">${esc(r.user)}</td>
+                      <td>
+                        ${r.reportDate ? `${esc(r.reportDate)}` : '<span style="color:var(--text-muted)">no report</span>'}
+                        ${r.reportDate === reportStatus.today ? ' <span class="badge badge-success" style="font-size:10.5px">today</span>' : ''}
+                      </td>
+                      <td>${r.submitted ? r.tasksDone : '<span style="color:var(--text-muted)">—</span>'}</td>
+                      <td>${r.submitted ? r.inReview : '<span style="color:var(--text-muted)">—</span>'}</td>
+                      <td>${r.submitted ? r.inProgress : '<span style="color:var(--text-muted)">—</span>'}</td>
+                      <td>${r.submitted ? (r.overdueTasks > 0 ? `<span style="color:var(--danger, #e5484d)">${r.overdueTasks}</span>` : r.overdueTasks) : '<span style="color:var(--text-muted)">—</span>'}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>` : (reportStatus.configured ? '<div class="empty-state" style="text-align:center;padding:24px">No daily reports in the log yet</div>' : '<div class="empty-state" style="text-align:center;padding:24px">Connect the Report Automation feed in <b>AI Settings → Report Feed</b> to see per-user daily statuses here.</div>')}
         </div>
       </div>
 
@@ -2340,42 +2663,602 @@ async function viewOverview() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: ALL USERS (Admin/Superadmin)
 // ═══════════════════════════════════════════════════════════════════════════════
+let _persistedTeamView = 'directory';
+let _persistedActiveMemberId = null;
+
 async function viewAllUsers() {
-  setPage('Team Progress', 'Click a user to see their sites');
+  setPage('Team Progress & Website Assignments', 'Centralized directory of all websites, team assignments, and maintenance progress');
+
+  let teamMainView = _persistedTeamView || 'directory'; // 'directory' (1st default view) | 'member-checklists' (existing view)
+  let sites = [];
+  let users = [];
   let summary = [];
+  let dailyReviewRows = [];
   let noticeBannerHtml = '';
-  try {
-    const [sData, nHtml] = await Promise.all([
-      GET('/api/master/summary'),
-      getNoticeBannerHtml()
-    ]);
-    summary = sData.summary || [];
-    noticeBannerHtml = nHtml;
-  } catch (e) { toast(e.message, 'error'); }
 
-  const tabs = summary.filter(u => u.total > 0);
-  if (!tabs.length) { mainEl.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><p>No data synced yet.</p></div>`; return; }
+  let selectedSiteIds = new Set();
+  let dirSearch = '';
+  let dirUserFilter = 'all'; // 'all' | 'unassigned' | userId
+  let dirAcctFilter = 'all'; // 'all' | 'CW' | 'RM'
+  let dirStatusFilter = 'all'; // 'all' | 'completed' | 'in_progress' | 'todo'
+  let activeMemberId = _persistedActiveMemberId || null;
 
-  const firstUser = tabs[0];
-  mainEl.innerHTML = `
-    <div class="fade-in">
-      ${noticeBannerHtml}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-        ${tabs.map((u, i) => `
-          <button class="btn ${i === 0 ? 'btn-primary' : 'btn-secondary'} user-tab-btn" data-uid="${u.userId}" data-uname="${esc(u.user)}">
-            ${esc(u.user)} <span class="badge badge-${u.pct >= 100 ? 'success' : u.pct > 50 ? 'info' : 'warning'}">${u.pct}%</span>
-          </button>`).join('')}
-      </div>
-      <div id="user-sites-panel"></div>
-    </div>`;
+  async function loadData() {
+    try {
+      const [sData, uData, sumData, nHtml, drData] = await Promise.all([
+        GET('/api/master/sites'),
+        GET('/api/master/users'),
+        GET(`/api/master/summary?month=${encodeURIComponent(currentActiveMonth || '')}`),
+        getNoticeBannerHtml(),
+        GET(`/api/master/daily-review?month=${encodeURIComponent(currentActiveMonth || '')}`).catch(() => ({ rows: [] }))
+      ]);
+      sites = sData.sites || [];
+      users = uData.users || S.users || [];
+      summary = sumData.summary || [];
+      noticeBannerHtml = nHtml || '';
+      dailyReviewRows = drData.rows || [];
+      if (!activeMemberId && summary.length) {
+        activeMemberId = summary[0].userId;
+      }
+    } catch (e) {
+      toast('Failed to load team data: ' + e.message, 'error');
+    }
+  }
 
-  mainEl.querySelectorAll('.btn-open-notices').forEach(btn => btn.addEventListener('click', openNoticeBoardModal));
+  await loadData();
 
+  function render() {
+    if (teamMainView === 'directory') {
+      renderTeamDirectory();
+    } else {
+      renderMemberChecklists();
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // VIEW 1: DEDICATED WEBSITES & ASSIGNEES DIRECTORY (1st Default Screen)
+  // ══════════════════════════════════════════════════════════════════════════
+  function renderTeamDirectory() {
+    const userMap = new Map(users.map(u => [u.id, u]));
+    // Assignment targets must be active users. Keep the full `users` list for
+    // displaying existing assignments, but never offer a deactivated account
+    // as a new assignee (the server enforces the same rule).
+    const activeUsers = users.filter(u => u.active !== false);
+    const q = dirSearch.toLowerCase().trim();
+
+    // Map sites with assignees and daily-review status
+    const siteItems = sites.map(s => {
+      const assigned = (s.assignedUsers || []).map(uid => userMap.get(uid)).filter(Boolean);
+      const dr = dailyReviewRows.find(r => r.siteId === s.id || (r.siteUrl && s.url && r.siteUrl.toLowerCase() === s.url.toLowerCase()));
+      const maintStatus = dr?.maintenanceStatus || 'todo';
+      const reportSent = dr?.reportSentStatus === 'sent' || dr?.reportSentRaw === 'Yes';
+      return {
+        site: s,
+        assigned,
+        dr,
+        maintStatus,
+        reportSent,
+      };
+    });
+
+    const totalSites = siteItems.length;
+    const assignedCount = siteItems.filter(it => it.assigned.length > 0).length;
+    const unassignedCount = totalSites - assignedCount;
+    const completedCount = siteItems.filter(it => it.maintStatus === 'completed').length;
+    const overallPct = totalSites > 0 ? Math.round((completedCount / totalSites) * 100) : 0;
+
+    // Filter sites
+    const filtered = siteItems.filter(it => {
+      // User filter
+      if (dirUserFilter === 'unassigned') {
+        if (it.assigned.length > 0) return false;
+      } else if (dirUserFilter !== 'all') {
+        if (!it.site.assignedUsers || !it.site.assignedUsers.includes(dirUserFilter)) return false;
+      }
+
+      // Account filter
+      if (dirAcctFilter !== 'all' && (it.site.account || 'CW') !== dirAcctFilter) return false;
+
+      // Status filter
+      if (dirStatusFilter !== 'all' && it.maintStatus !== dirStatusFilter) return false;
+
+      // Search query
+      if (q) {
+        const inUrl = (it.site.url || '').toLowerCase().includes(q);
+        const inComp = (it.site.company || '').toLowerCase().includes(q);
+        const inAssignees = it.assigned.some(u => (u.name || '').toLowerCase().includes(q));
+        if (!inUrl && !inComp && !inAssignees) return false;
+      }
+
+      return true;
+    });
+
+    mainEl.innerHTML = `
+      <div class="fade-in team-dir-container">
+        <!-- Top Executive Header -->
+        <div class="team-dir-header">
+          <div>
+            <div class="team-dir-title">
+              <span>👥 Team Progress &amp; Website Assignments</span>
+              <span class="dev-sync-tag">Live Sync</span>
+            </div>
+            <div class="team-dir-sub">
+              View all websites and their assigned team members. Select multiple websites to assign or reassign them in bulk.
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btn-add-multiple-sites-modal">
+              <span>➕ Add Websites to Assignee</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-goto-member-checklists" title="Open the per-member checklist spreadsheet">
+              <span>👥 View Member Checklists &amp; Daily Review →</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-team-refresh" title="Refresh data">
+              <span id="refresh-icon">🔄</span> Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Strip: Instant Team Context -->
+        <div class="team-dir-kpis">
+          <div class="team-dir-kpi">
+            <span class="team-dir-kpi-lbl">Total Websites</span>
+            <span class="team-dir-kpi-val">${totalSites}</span>
+          </div>
+          <div class="team-dir-kpi">
+            <span class="team-dir-kpi-lbl">Assigned Sites</span>
+            <span class="team-dir-kpi-val" style="color:var(--accent)">${assignedCount}</span>
+          </div>
+          <div class="team-dir-kpi" style="${unassignedCount > 0 ? 'border-color:rgba(245,158,11,0.4);background:rgba(245,158,11,0.04)' : ''}">
+            <span class="team-dir-kpi-lbl">Unassigned Sites</span>
+            <span class="team-dir-kpi-val" style="color:#f59e0b">${unassignedCount}</span>
+          </div>
+          <div class="team-dir-kpi">
+            <span class="team-dir-kpi-lbl">Team Members</span>
+            <span class="team-dir-kpi-val">${activeUsers.length}</span>
+          </div>
+          <div class="team-dir-kpi">
+            <span class="team-dir-kpi-lbl">Maintenance Complete</span>
+            <span class="team-dir-kpi-val" style="color:var(--success)">${completedCount} (${overallPct}%)</span>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="team-dir-filter-bar">
+          <div class="team-dir-filter-left">
+            <!-- User Filter Chips -->
+            <button class="site-tab-pill ${dirUserFilter === 'all' ? 'active' : ''}" data-ufilter="all">
+              All Sites (${totalSites})
+            </button>
+            <button class="site-tab-pill pill-warn ${dirUserFilter === 'unassigned' ? 'active' : ''}" data-ufilter="unassigned" style="${unassignedCount > 0 ? 'border-color:#f59e0b;color:#f59e0b' : ''}">
+              ⚠️ Unassigned (${unassignedCount})
+            </button>
+            ${activeUsers.map(u => {
+              const uSiteCount = sites.filter(s => (s.assignedUsers || []).includes(u.id)).length;
+              return `
+                <button class="site-tab-pill ${dirUserFilter === u.id ? 'active' : ''}" data-ufilter="${u.id}">
+                  ${esc(u.name)} (${uSiteCount})
+                </button>`;
+            }).join('')}
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <!-- Account Filter -->
+            <select class="form-select" id="dir-acct-select" style="padding:4px 8px;font-size:12px;height:30px">
+              <option value="all" ${dirAcctFilter === 'all' ? 'selected' : ''}>All Accounts</option>
+              <option value="CW" ${dirAcctFilter === 'CW' ? 'selected' : ''}>CW</option>
+              <option value="RM" ${dirAcctFilter === 'RM' ? 'selected' : ''}>RM</option>
+            </select>
+
+            <!-- Status Filter -->
+            <select class="form-select" id="dir-status-select" style="padding:4px 8px;font-size:12px;height:30px">
+              <option value="all" ${dirStatusFilter === 'all' ? 'selected' : ''}>All Status</option>
+              <option value="completed" ${dirStatusFilter === 'completed' ? 'selected' : ''}>🟢 Completed</option>
+              <option value="in_progress" ${dirStatusFilter === 'in_progress' ? 'selected' : ''}>🟡 In Progress</option>
+              <option value="todo" ${dirStatusFilter === 'todo' ? 'selected' : ''}>⚪ To Do</option>
+            </select>
+
+            <!-- Search input -->
+            <div class="search-bar" style="max-width:200px">
+              <input id="dir-search-input" class="search-input" placeholder="Search site or assignee…" value="${esc(dirSearch)}">
+            </div>
+
+            ${(dirSearch || dirUserFilter !== 'all' || dirAcctFilter !== 'all' || dirStatusFilter !== 'all') ? `
+              <button class="btn btn-ghost btn-sm" id="btn-dir-reset-filters" style="font-size:11px;padding:3px 7px" title="Reset all filters">
+                ✕ Reset
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Directory Table -->
+        <div class="team-dir-table-wrap">
+          <table class="team-dir-table">
+            <thead>
+              <tr>
+                <th style="width:40px;text-align:center">
+                  <input type="checkbox" id="dir-select-all" ${filtered.length > 0 && filtered.every(it => selectedSiteIds.has(it.site.id)) ? 'checked' : ''} title="Select all visible sites">
+                </th>
+                <th style="width:260px">Website URL</th>
+                <th style="width:160px">Company</th>
+                <th style="width:65px">Acct</th>
+                <th>Assignee(s)</th>
+                <th style="width:140px">Maintenance</th>
+                <th style="width:90px">Report</th>
+                <th style="width:120px;text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.length > 0 ? filtered.map(it => {
+                const s = it.site;
+                const isSelected = selectedSiteIds.has(s.id);
+                return `
+                  <tr class="${isSelected ? 'active-row' : ''}">
+                    <td style="text-align:center">
+                      <input type="checkbox" class="dir-site-checkbox" value="${s.id}" ${isSelected ? 'checked' : ''}>
+                    </td>
+                    <td>
+                      <div style="font-weight:600;font-family:var(--font-mono);font-size:12.5px;color:var(--text-primary)">
+                        ${esc(shortUrl(s.url, 38))}
+                      </div>
+                      <div style="font-size:11px;color:var(--text-muted)">
+                        ${s.accountManager ? 'ACM: ' + esc(s.accountManager) : ''}
+                        ${s.cms ? ' · ' + esc(s.cms) : ''}
+                      </div>
+                    </td>
+                    <td style="color:var(--text-secondary);font-size:12px">
+                      ${esc(s.company || '—')}
+                    </td>
+                    <td>
+                      <span class="badge badge-${s.account === 'CW' ? 'cw' : 'rm'}">${esc(s.account || 'CW')}</span>
+                    </td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                        ${it.assigned.length > 0 ? it.assigned.map(u => `
+                          <button class="team-assignee-badge btn-quick-assign-site" data-site-id="${s.id}" title="Click to manage assignees for this website">
+                            <span>👤</span>
+                            <span>${esc(u.name)}</span>
+                          </button>
+                        `).join('') : `
+                          <button class="team-assignee-badge unassigned btn-quick-assign-site" data-site-id="${s.id}" title="Click to assign team members">
+                            <span>⚠️ Unassigned</span>
+                            <span style="font-size:10px">+ Assign</span>
+                          </button>
+                        `}
+                      </div>
+                    </td>
+                    <td>
+                      ${statusBadge(it.maintStatus)}
+                    </td>
+                    <td>
+                      <span class="badge badge-${it.reportSent ? 'success' : 'dim'}" style="font-size:11px">
+                        ${it.reportSent ? '✓ Sent' : '✉ No'}
+                      </span>
+                    </td>
+                    <td style="text-align:right">
+                      <button class="btn btn-ghost btn-sm btn-quick-assign-site" data-site-id="${s.id}" title="Assign users to this site">
+                        👤 Assign
+                      </button>
+                      <a href="${esc(s.url)}" target="_blank" class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:11px" title="Open website">
+                        Open ↗
+                      </a>
+                    </td>
+                  </tr>`;
+              }).join('') : `
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:48px 20px;color:var(--text-muted)">
+                    <div style="font-size:28px;margin-bottom:8px">🔍</div>
+                    <div>No websites match your current filters.</div>
+                  </td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Floating Bulk Assign Dock -->
+        <div class="team-bulk-dock ${selectedSiteIds.size === 0 ? 'hidden' : ''}" id="team-bulk-dock">
+          <div class="team-bulk-dock-count">
+            <span>✓</span>
+            <span><strong id="bulk-dock-num">${selectedSiteIds.size}</strong> websites selected</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--text-muted)">Assign to:</span>
+            <select class="form-select" id="dock-target-user" style="padding:4px 8px;font-size:12px;height:32px;background:var(--bg-surface-2);color:var(--text-primary);min-width:140px">
+              <option value="">— Select Assignee —</option>
+              ${activeUsers.map(u => `<option value="${u.id}">👤 ${esc(u.name)}</option>`).join('')}
+            </select>
+
+            <select class="form-select" id="dock-assign-mode" style="padding:4px 8px;font-size:12px;height:32px;background:var(--bg-surface-2);color:var(--text-primary)">
+              <option value="add">➕ Add to Assignee</option>
+              <option value="replace">🔁 Replace Assignees</option>
+              <option value="remove">❌ Remove from Assignee</option>
+            </select>
+
+            <button class="btn btn-primary btn-sm" id="btn-apply-bulk-dock">
+              Apply Assignment
+            </button>
+
+            <button class="btn btn-ghost btn-sm" id="btn-cancel-bulk-dock" style="color:var(--text-muted)">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>`;
+
+    attachTeamDirectoryListeners();
+  }
+
+  function attachTeamDirectoryListeners() {
+    // Switch to member checklists view
+    $('btn-goto-member-checklists')?.addEventListener('click', () => {
+      teamMainView = 'member-checklists'; _persistedTeamView = 'member-checklists';
+      render();
+    });
+
+    // Refresh
+    $('btn-team-refresh')?.addEventListener('click', async () => {
+      const icon = $('refresh-icon');
+      if (icon) icon.classList.add('rotating');
+      toast('Refreshing websites and assignments...', 'info');
+      await loadData();
+      render();
+    });
+
+    // Add Multiple Websites to Assignee modal
+    $('btn-add-multiple-sites-modal')?.addEventListener('click', () => {
+      openAddMultipleWebsitesToAssigneeModal(null, async () => {
+        await loadData();
+        render();
+      });
+    });
+
+    // User filter chips
+    mainEl.querySelectorAll('.site-tab-pill[data-ufilter]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        dirUserFilter = pill.dataset.ufilter;
+        render();
+      });
+    });
+
+    // Account & status dropdowns
+    $('dir-acct-select')?.addEventListener('change', (e) => {
+      dirAcctFilter = e.target.value;
+      render();
+    });
+    $('dir-status-select')?.addEventListener('change', (e) => {
+      dirStatusFilter = e.target.value;
+      render();
+    });
+
+    // Search
+    $('dir-search-input')?.addEventListener('input', (e) => {
+      dirSearch = e.target.value;
+      render();
+    });
+
+    // Reset filters
+    $('btn-dir-reset-filters')?.addEventListener('click', () => {
+      dirSearch = '';
+      dirUserFilter = 'all';
+      dirAcctFilter = 'all';
+      dirStatusFilter = 'all';
+      render();
+    });
+
+    // Checkboxes
+    const selectAll = $('dir-select-all');
+    if (selectAll) {
+      selectAll.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        const visibleCheckboxes = mainEl.querySelectorAll('.dir-site-checkbox');
+        visibleCheckboxes.forEach(cb => {
+          cb.checked = isChecked;
+          if (isChecked) selectedSiteIds.add(cb.value);
+          else selectedSiteIds.delete(cb.value);
+        });
+        updateBulkDockState();
+      });
+    }
+
+    mainEl.querySelectorAll('.dir-site-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        if (cb.checked) selectedSiteIds.add(cb.value);
+        else selectedSiteIds.delete(cb.value);
+        updateBulkDockState();
+      });
+    });
+
+    function updateBulkDockState() {
+      const dock = $('team-bulk-dock');
+      const numEl = $('bulk-dock-num');
+      if (dock && numEl) {
+        numEl.textContent = selectedSiteIds.size;
+        dock.classList.toggle('hidden', selectedSiteIds.size === 0);
+      }
+    }
+
+    // Bulk dock apply
+    $('btn-apply-bulk-dock')?.addEventListener('click', async () => {
+      const targetUserId = $('dock-target-user')?.value;
+      const mode = $('dock-assign-mode')?.value || 'add';
+      if (!targetUserId) {
+        toast('Please select an assignee from the dropdown first', 'warning');
+        return;
+      }
+      if (selectedSiteIds.size === 0) {
+        toast('Please select at least one website', 'warning');
+        return;
+      }
+
+      const user = users.find(u => u.id === targetUserId);
+      const userName = user ? user.name : 'User';
+      const siteIds = Array.from(selectedSiteIds);
+      const modeLabel = mode === 'add' ? 'Assign' : mode === 'replace' ? 'Reassign' : 'Unassign';
+
+      // Confirmation step before any change is written (explicit, cancellable).
+      openModal(`${modeLabel} ${siteIds.length} ${siteIds.length === 1 ? 'website' : 'websites'} to ${esc(userName)}?`, `
+        <div style="margin:4px 0 12px">
+          <p style="margin:0 0 6px"><b>${siteIds.length}</b> record(s) will be updated.</p>
+          <p style="margin:0;font-size:13px;color:var(--text-muted)">
+            ${mode === 'add' ? `Add ${esc(userName)} to the assignees of ${siteIds.length} selected site(s). Existing assignees are kept.`
+              : mode === 'replace' ? `Replace the assignees of ${siteIds.length} selected site(s) with ${esc(userName)}.`
+              : `Remove ${esc(userName)} from ${siteIds.length} selected site(s).`}
+          </p>
+          <p style="margin:10px 0 0;font-size:12px;color:var(--text-muted)">This change is recorded in the audit log.</p>
+        </div>`, [
+        { label: 'Cancel', cls: 'btn btn-ghost', onClick: () => closeModal() },
+        {
+          label: `Confirm ${modeLabel}`,
+          cls: 'btn btn-primary',
+          id: 'btn-confirm-bulk-assign',
+          onClick: async () => {
+            closeModal();
+            toast(`Assigning ${siteIds.length} websites to ${userName}...`, 'info');
+            try {
+              const res = await POST('/api/master/sites/bulk-assign', {
+                siteIds,
+                userIds: [targetUserId],
+                mode,
+                // Optimistic lock: last-seen updatedAt per selected site. If any
+                // changed since this page loaded, the server rejects the whole
+                // batch (409) instead of silently clobbering a concurrent edit.
+                expectedUpdatedAtMap: Object.fromEntries(
+                  siteIds.map(id => [id, (sites.find(s => s.id === id) || {}).updatedAt])
+                    .filter(([, u]) => !!u)
+                ),
+              });
+              if (res.success) {
+                const parts = [`✅ ${res.assigned ?? res.count ?? 0} updated`];
+                if (res.skipped > 0) parts.push(`${res.skipped} skipped`);
+                if (res.failed > 0) parts.push(`${res.failed} failed`);
+                toast(parts.join(' · '), 'success', 5000);
+                selectedSiteIds.clear();
+                await loadData();
+                render();
+              }
+            } catch (err) {
+              toast('Failed to bulk assign: ' + err.message, 'error');
+            }
+          },
+        },
+      ]);
+    });
+
+    $('btn-cancel-bulk-dock')?.addEventListener('click', () => {
+      selectedSiteIds.clear();
+      render();
+    });
+
+    // Quick assign on row
+    mainEl.querySelectorAll('.btn-quick-assign-site').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const siteId = btn.dataset.siteId;
+        const site = sites.find(s => s.id === siteId);
+        if (site) {
+          openQuickAssignSiteModal(site, async () => {
+            await loadData();
+            render();
+          });
+        }
+      });
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // VIEW 2: MEMBER CHECKLISTS & DAILY REVIEW TABLE (Current View Preserved)
+  // ══════════════════════════════════════════════════════════════════════════
+  function renderMemberChecklists() {
+    const tabs = summary.filter(u => u.total > 0);
+    if (!tabs.length) {
+      mainEl.innerHTML = `
+        <div class="fade-in">
+          <button class="btn btn-secondary btn-sm" id="btn-back-to-team-dir" style="margin-bottom:16px">
+            ← Back to Websites &amp; Assignees Directory
+          </button>
+          <div class="empty-state"><div class="empty-icon">👥</div><p>No member checklist data synced yet.</p></div>
+        </div>`;
+      $('btn-back-to-team-dir')?.addEventListener('click', () => {
+        teamMainView = 'directory'; _persistedTeamView = 'directory'; _persistedTeamView = 'directory';
+        render();
+      });
+      return;
+    }
+
+    const currentTabUser = tabs.find(u => u.userId === activeMemberId) || tabs[0];
+    activeMemberId = currentTabUser.userId;
+
+    mainEl.innerHTML = `
+      <div class="fade-in">
+        <!-- Top Return Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding:12px 18px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn btn-primary btn-sm" id="btn-back-to-team-dir">
+              <span>← Back to Websites &amp; Assignees</span>
+            </button>
+            <span style="font-size:13px;font-weight:600;color:var(--text-primary)">
+              Member Checklists &amp; Daily Review
+            </span>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-assign-sites-to-user-top">
+            ➕ Add Multiple Websites to ${esc(currentTabUser.user)}
+          </button>
+        </div>
+
+        ${noticeBannerHtml}
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          ${tabs.map(u => `
+            <button class="btn ${u.userId === activeMemberId ? 'btn-primary' : 'btn-secondary'} user-tab-btn" data-uid="${u.userId}" data-uname="${esc(u.user)}">
+              ${esc(u.user)} <span class="badge badge-${u.pct >= 100 ? 'success' : u.pct > 50 ? 'info' : 'warning'}">${u.pct}%</span>
+            </button>`).join('')}
+        </div>
+        <div id="user-sites-panel"></div>
+      </div>`;
+
+    $('btn-back-to-team-dir')?.addEventListener('click', () => {
+      teamMainView = 'directory';
+      render();
+    });
+
+    $('btn-assign-sites-to-user-top')?.addEventListener('click', () => {
+      openAddMultipleWebsitesToAssigneeModal(currentTabUser.userId, async () => {
+        await loadData();
+        render();
+      });
+    });
+
+    mainEl.querySelectorAll('.btn-open-notices').forEach(btn => btn.addEventListener('click', openNoticeBoardModal));
+
+    mainEl.querySelectorAll('.user-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeMemberId = btn.dataset.uid; _persistedActiveMemberId = btn.dataset.uid;
+        mainEl.querySelectorAll('.user-tab-btn').forEach(b => {
+          b.className = b.dataset.uid === activeMemberId ? 'btn btn-primary user-tab-btn' : 'btn btn-secondary user-tab-btn';
+        });
+        loadUser(btn.dataset.uid, btn.dataset.uname);
+      });
+    });
+
+    loadUser(currentTabUser.userId, currentTabUser.user);
+  }
+
+  const _userRowsCache = new Map();
   async function loadUser(userId, userName) {
     const panel = $('user-sites-panel');
-    panel.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+    if (!panel) return;
+    const cacheKey = `${userId}_${currentActiveMonth}`;
+    const cachedRows = _userRowsCache.get(cacheKey);
+    // Only show loading placeholder if we have never loaded this user's data for this month
+    if (!cachedRows) {
+      panel.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><p>Loading…</p></div>';
+    }
     try {
-      const { rows } = await GET(`/api/master/daily-review?userId=${userId}&user=${encodeURIComponent(userName)}`);
+      const { rows } = await GET(`/api/master/daily-review?userId=${userId}&user=${encodeURIComponent(userName)}&month=${encodeURIComponent(currentActiveMonth || '')}`);
+      _userRowsCache.set(cacheKey, rows);
       const u = summary.find(x => x.userId === userId) || {};
       const isSmart = S.tableMode !== 'full';
       panel.innerHTML = `
@@ -2417,6 +3300,7 @@ async function viewAllUsers() {
                     <th>Maintenance</th>
                     <th>Report Sent</th>
                     <th>ClickUp Link</th>
+                    <th>ClickUp Time Track</th>
                     <th>GA4 Report</th>
                     <th>Newsletter Mail</th>
                     <th>Form Submission Mail</th>
@@ -2452,22 +3336,25 @@ async function viewAllUsers() {
                 <option value="Completed">Completed</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Pending">Pending</option>
-                <option value="No GA4 Tag">No GA4 Tag</option>
                 <option value="N/A">N/A</option>
               </select>
-              <button class="btn btn-primary btn-sm" id="btn-apply-bulk">Apply Updates</button>
-              <button class="btn btn-secondary btn-sm" id="btn-bulk-uptime" title="Check uptime for all selected sites">↺ Check Uptime</button>
-              <button class="btn btn-ghost btn-sm" id="btn-clear-selection" title="Clear selection">✕</button>
+              <select class="form-select select-sm select-newsletter-status" id="bulk-newsletter-status" style="width:125px;border-radius:6px">
+                <option value="">— Newsletter —</option>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Pending">Pending</option>
+                <option value="N/A">N/A</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="bulk-apply-btn">Apply</button>
+              <button class="btn btn-ghost btn-sm" id="bulk-clear-btn" style="color:#8a8f98">Cancel</button>
             </div>
           </div>
         </div>`;
 
-      // Mode toggle
-      panel.querySelectorAll('#user-table-mode-toggle .mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const mode = btn.dataset.mode;
-          S.tableMode = mode;
-          try { localStorage.setItem('officeos_table_mode', mode); } catch { }
+      // Mode toggles
+      panel.querySelectorAll('#user-table-mode-toggle .mode-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          S.tableMode = b.dataset.mode;
           loadUser(userId, userName);
         });
       });
@@ -2476,7 +3363,7 @@ async function viewAllUsers() {
       const assignBtn = $('btn-assign-sites-to-user');
       if (assignBtn) {
         assignBtn.addEventListener('click', () => {
-          openAssignSitesToUserModal(userId, userName, () => loadUser(userId, userName));
+          openAddMultipleWebsitesToAssigneeModal(userId, () => loadUser(userId, userName));
         });
       }
 
@@ -2489,7 +3376,7 @@ async function viewAllUsers() {
         });
       });
 
-      // Quick 1-click toggle for Report Sent
+      // Quick toggle for Report Sent
       panel.querySelectorAll('.btn-report-toggle').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
@@ -2525,7 +3412,6 @@ async function viewAllUsers() {
         });
       });
 
-      // Click on smart-row to toggle detail accordion
       panel.querySelectorAll('tr.smart-row').forEach(tr => {
         tr.addEventListener('click', (e) => {
           if (['A', 'BUTTON', 'SELECT', 'INPUT'].includes(e.target.tagName) || e.target.closest('button, a, select, input')) return;
@@ -2541,45 +3427,290 @@ async function viewAllUsers() {
         });
       });
 
-      // Wire up status dropdowns
       panel.querySelectorAll('.status-select').forEach(sel => {
         sel.addEventListener('change', async e => {
           const { rowId, field } = e.target.dataset;
           const value = e.target.value;
-          const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'Yes': 'sent', 'No': 'no' };
-          const isMaint = field === 'maintenanceStatus' || field === 'maintenanceRaw';
+          const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','Yes':'sent','No':'no' };
           try {
+            const isMaint = field === 'maintenanceStatus' || field === 'maintenanceRaw';
             await PUT(`/api/master/daily-review/${rowId}`, {
               [field]: normMap[value] || value,
               [field + 'Raw']: value,
+              maintenanceStatus: isMaint ? (normMap[value] || value) : undefined,
+              maintenanceRaw: isMaint ? value : undefined,
             });
             if (isMaint) {
               const sheetVal = (value === 'Completed' || value === 'completed') ? 'Updated & Backup' : value;
-              toast(`⚡ Status saved & synced to Google Sheet (${sheetVal})`, 'success', 3000);
+              toast(`⚡ Status saved & synced to Google Sheets (${sheetVal})`, 'success', 3000);
             } else {
-              toast('Status updated', 'success');
+              toast('⚡ Status saved & synced to Google Sheets', 'success', 3000);
             }
           } catch (err) { toast(err.message, 'error'); }
         });
       });
 
-      // Initialize Quick Uptime, Bulk Edit, and Live Recalculation
       initChecklistTable(panel, false, userId);
-
-    } catch (e) { panel.innerHTML = `<div class="empty-state"><p>${esc(e.message)}</p></div>`; }
+    } catch (e) {
+      panel.innerHTML = `<div class="card" style="padding:20px;color:var(--danger)">Failed to load: ${esc(e.message)}</div>`;
+    }
   }
 
-  mainEl.querySelectorAll('.user-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      mainEl.querySelectorAll('.user-tab-btn').forEach(b => b.className = 'btn btn-secondary user-tab-btn');
-      btn.className = 'btn btn-primary user-tab-btn';
-      loadUser(btn.dataset.uid, btn.dataset.uname);
-    });
-  });
-  loadUser(firstUser.userId, firstUser.user);
+  // Initial render
+  render();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: ADD MULTIPLE WEBSITES TO AN ASSIGNEE
+// ══════════════════════════════════════════════════════════════════════════
+async function openAddMultipleWebsitesToAssigneeModal(preselectedUserId, onSaved) {
+  let sites = [];
+  let users = [];
+  try {
+    const [sData, uData] = await Promise.all([
+      GET('/api/master/sites'),
+      GET('/api/master/users')
+    ]);
+    sites = sData.sites || [];
+    users = uData.users || S.users || [];
+  } catch (e) { toast(e.message, 'error'); return; }
+
+  let currentUserId = preselectedUserId || (users[0] ? users[0].id : '');
+  let modalFilter = 'all'; // 'all' | 'unassigned' | 'cw' | 'rm'
+  let modalSearch = '';
+
+  function getCheckedSiteIds() {
+    return new Set([...document.querySelectorAll('.modal-multi-site-checkbox:checked')].map(cb => cb.value));
+  }
+
+  function renderModalBody() {
+    const user = users.find(u => u.id === currentUserId);
+    const q = modalSearch.toLowerCase().trim();
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Target Assignee Selector -->
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" style="font-weight:600">Select Team Member (Assignee) *</label>
+          <select class="form-select" id="m-assignee-select" style="font-size:13px;font-weight:600">
+            ${users.map(u => `
+              <option value="${u.id}" ${u.id === currentUserId ? 'selected' : ''}>
+                👤 ${esc(u.name)} (${esc(u.role || 'user')})
+              </option>
+            `).join('')}
+          </select>
+          <span style="font-size:11px;color:var(--text-muted)">
+            Select which websites will be assigned to <strong>${esc(user ? user.name : 'this user')}</strong>.
+          </span>
+        </div>
+
+        <!-- Toolbar: Search & Filter Chips -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:8px 12px;background:var(--bg-surface-2);border-radius:var(--radius)">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn btn-xs ${modalFilter === 'all' ? 'btn-primary' : 'btn-secondary'} m-filter-btn" data-mfilter="all">All Sites (${sites.length})</button>
+            <button type="button" class="btn btn-xs ${modalFilter === 'unassigned' ? 'btn-primary' : 'btn-secondary'} m-filter-btn" data-mfilter="unassigned">Unassigned Only</button>
+            <button type="button" class="btn btn-xs ${modalFilter === 'assigned' ? 'btn-primary' : 'btn-secondary'} m-filter-btn" data-mfilter="assigned">Currently Assigned</button>
+            <button type="button" class="btn btn-xs ${modalFilter === 'cw' ? 'btn-primary' : 'btn-secondary'} m-filter-btn" data-mfilter="cw">CW</button>
+            <button type="button" class="btn btn-xs ${modalFilter === 'rm' ? 'btn-primary' : 'btn-secondary'} m-filter-btn" data-mfilter="rm">RM</button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-m-select-all" style="font-size:11px">Select All Visible</button>
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-m-clear-all" style="font-size:11px">Clear Visible</button>
+          </div>
+        </div>
+
+        <div class="search-bar" style="width:100%">
+          <input id="m-site-search" class="search-input" placeholder="Search websites or company…" value="${esc(modalSearch)}">
+        </div>
+
+        <!-- Websites Checklist -->
+        <div id="modal-sites-checklist" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;border:1px solid var(--border);border-radius:var(--radius);padding:8px">
+          ${renderChecklistRows()}
+        </div>
+      </div>`;
+  }
+
+  function renderChecklistRows() {
+    const q = modalSearch.toLowerCase().trim();
+    const filteredSites = sites.filter(s => {
+      const isAssigned = (s.assignedUsers || []).includes(currentUserId);
+      const isUnassigned = !(s.assignedUsers && s.assignedUsers.length > 0);
+      const acct = (s.account || 'CW').toLowerCase();
+
+      if (modalFilter === 'unassigned' && !isUnassigned) return false;
+      if (modalFilter === 'assigned' && !isAssigned) return false;
+      if (modalFilter === 'cw' && acct !== 'cw') return false;
+      if (modalFilter === 'rm' && acct !== 'rm') return false;
+
+      if (q) {
+        const u = (s.url || '').toLowerCase();
+        const c = (s.company || '').toLowerCase();
+        if (!u.includes(q) && !c.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (!filteredSites.length) {
+      return '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px">No websites match your search or filter.</div>';
+    }
+
+    return filteredSites.map(s => {
+      const isAssigned = (s.assignedUsers || []).includes(currentUserId);
+      const otherAssignees = (s.assignedUsers || []).filter(id => id !== currentUserId).map(id => {
+        const u = users.find(x => x.id === id);
+        return u ? u.name : 'User';
+      });
+
+      return `
+        <label class="user-check-item m-site-check-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;background:var(--bg-surface)">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <input type="checkbox" class="modal-multi-site-checkbox" value="${s.id}" ${isAssigned ? 'checked' : ''}>
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:12.5px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                ${esc(shortUrl(s.url, 42))}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted)">
+                ${esc(s.company || '—')} · ${esc(s.account || 'CW')}
+                ${otherAssignees.length ? `<span style="color:var(--accent)"> · Also: ${esc(otherAssignees.join(', '))}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <span class="badge badge-${(s.account || 'CW') === 'CW' ? 'cw' : 'rm'}">${esc(s.account || 'CW')}</span>
+        </label>`;
+    }).join('');
+  }
+
+  function wireModalEvents() {
+    $('m-assignee-select')?.addEventListener('change', (e) => {
+      currentUserId = e.target.value;
+      const listEl = $('modal-sites-checklist');
+      if (listEl) listEl.innerHTML = renderChecklistRows();
+      wireChecklistEvents();
+    });
+
+    document.querySelectorAll('.m-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalFilter = btn.dataset.mfilter;
+        document.querySelectorAll('.m-filter-btn').forEach(b => {
+          b.className = b.dataset.mfilter === modalFilter ? 'btn btn-xs btn-primary m-filter-btn' : 'btn btn-xs btn-secondary m-filter-btn';
+        });
+        const listEl = $('modal-sites-checklist');
+        if (listEl) listEl.innerHTML = renderChecklistRows();
+        wireChecklistEvents();
+      });
+    });
+
+    $('m-site-search')?.addEventListener('input', (e) => {
+      modalSearch = e.target.value;
+      const listEl = $('modal-sites-checklist');
+      if (listEl) listEl.innerHTML = renderChecklistRows();
+      wireChecklistEvents();
+    });
+
+    $('btn-m-select-all')?.addEventListener('click', () => {
+      document.querySelectorAll('.modal-multi-site-checkbox').forEach(cb => cb.checked = true);
+    });
+
+    $('btn-m-clear-all')?.addEventListener('click', () => {
+      document.querySelectorAll('.modal-multi-site-checkbox').forEach(cb => cb.checked = false);
+    });
+
+    wireChecklistEvents();
+  }
+
+  function wireChecklistEvents() {
+    // Keep state responsive
+  }
+
+  openModal('➕ Add Multiple Websites to Assignee', renderModalBody(), [
+    { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+    {
+      label: 'Save Assignments',
+      cls: 'btn btn-primary',
+      onClick: async () => {
+        if (!currentUserId) {
+          toast('Please select an assignee first', 'warning');
+          return;
+        }
+        const user = users.find(u => u.id === currentUserId);
+        const userName = user ? user.name : 'User';
+        const checkedSiteIds = new Set([...document.querySelectorAll('.modal-multi-site-checkbox:checked')].map(cb => cb.value));
+
+        let updatedCount = 0;
+        toast(`Saving website assignments for ${userName}...`, 'info');
+        try {
+          for (const s of sites) {
+            const isCurrentlyAssigned = (s.assignedUsers || []).includes(currentUserId);
+            const shouldBeAssigned = checkedSiteIds.has(s.id);
+            if (isCurrentlyAssigned !== shouldBeAssigned) {
+              let newUserIds = (s.assignedUsers || []).filter(uid => uid !== currentUserId);
+              if (shouldBeAssigned) newUserIds.push(currentUserId);
+              await POST(`/api/master/sites/${s.id}/assign`, { userIds: newUserIds });
+              updatedCount++;
+            }
+          }
+          toast(`✅ Successfully updated ${updatedCount} website assignments for ${userName}!`, 'success');
+          closeModal();
+          if (onSaved) onSaved();
+        } catch (err) {
+          toast('Failed to save assignments: ' + err.message, 'error');
+        }
+      }
+    }
+  ]);
+
+  setTimeout(wireModalEvents, 50);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL: QUICK ASSIGN SINGLE SITE
+// ══════════════════════════════════════════════════════════════════════════════
+async function openQuickAssignSiteModal(site, onSaved) {
+  let users = [];
+  try {
+    const uData = await GET('/api/master/users');
+    users = uData.users || S.users || [];
+  } catch (e) { toast(e.message, 'error'); return; }
+
+  const currentAssigned = site.assignedUsers || [];
+
+  openModal(`Assign Users: ${shortUrl(site.url, 40)}`, `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+      Select which team members are assigned to <strong>${esc(site.url)}</strong> (${esc(site.company || '—')}):
+    </div>
+    <div class="user-assign-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:8px">
+      ${users.map(u => {
+        const a = assigneeInputAttrs(u, currentAssigned.includes(u.id));
+        return `
+        <label class="user-check-item" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-surface-2);border-radius:var(--radius-sm);${a.disabled ? 'opacity:.55;cursor:not-allowed' : 'cursor:pointer'}">
+          <input type="checkbox" class="site-quick-user-cb" value="${u.id}"${a.checked}${a.disabled}${a.title}>
+          <span style="font-size:12.5px;font-weight:600">${esc(u.name)}${a.suffix}</span>
+        </label>
+      `;
+      }).join('')}
+    </div>
+  `, [
+    { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+    {
+      label: 'Save',
+      cls: 'btn btn-primary',
+      onClick: async () => {
+        const selected = [...document.querySelectorAll('.site-quick-user-cb:checked')].map(cb => cb.value);
+        try {
+          await POST(`/api/master/sites/${site.id}/assign`, { userIds: selected });
+          toast(`✅ Updated assignees for ${shortUrl(site.url, 25)}`, 'success');
+          closeModal();
+          if (onSaved) onSaved();
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      }
+    }
+  ]);
+}
+
+
 // VIEW: SITES (Admin/Superadmin)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewSites() {
@@ -3039,13 +4170,17 @@ function openAddSiteModal() {
       <div class="form-group">
         <label class="form-label">Assign Developers / Team Members</label>
         <div class="user-assign-grid">
-          ${S.users.map(u => `
-            <label class="user-check-item">
-              <input type="checkbox" class="modal-new-assignee" value="${u.id}">
+          ${S.users.map(u => {
+            // New site: nobody is assigned yet, so every deactivated user is locked.
+            const a = assigneeInputAttrs(u, false);
+            return `
+            <label class="user-check-item"${a.disabled ? ' style="opacity:.55;cursor:not-allowed"' : ''}>
+              <input type="checkbox" class="modal-new-assignee" value="${u.id}"${a.disabled}${a.title}>
               <span class="user-check-avatar">${esc((u.name || 'U')[0].toUpperCase())}</span>
-              <span class="user-check-name">${esc(u.name)}</span>
+              <span class="user-check-name">${esc(u.name)}${a.suffix}</span>
             </label>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
       </div>
       <div class="form-group">
@@ -3104,16 +4239,19 @@ function openAssignModal(siteId, site, onSaved) {
       <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-all-users">Clear All</button>
     </div>
     <div class="user-assign-grid">
-      ${S.users.map(u => `
-        <label class="user-check-item">
-          <input type="checkbox" class="user-assign-checkbox" value="${u.id}" ${currentAssigned.includes(u.id) ? 'checked' : ''}>
+      ${S.users.map(u => {
+        const a = assigneeInputAttrs(u, currentAssigned.includes(u.id));
+        return `
+        <label class="user-check-item"${a.disabled ? ' style="opacity:.55;cursor:not-allowed"' : ''}>
+          <input type="checkbox" class="user-assign-checkbox" value="${u.id}"${a.checked}${a.disabled}${a.title}>
           <span class="user-check-avatar">${esc((u.name || 'U')[0].toUpperCase())}</span>
           <div>
-            <div class="user-check-name">${esc(u.name)}</div>
+            <div class="user-check-name">${esc(u.name)}${a.suffix}</div>
             <div class="user-check-role">${esc(u.role)}</div>
           </div>
         </label>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
   `, [
     { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
@@ -3135,10 +4273,17 @@ function openAssignModal(siteId, site, onSaved) {
     const selAll = $('btn-select-all-users');
     const clrAll = $('btn-clear-all-users');
     if (selAll) selAll.addEventListener('click', () => {
-      document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = true);
+      // Skip locked (disabled) boxes. Assigning .checked from script DOES work on
+      // a disabled input — the attribute only blocks the user — so without this
+      // guard "Select All" would tick every deactivated user and the save would
+      // come back 400 INACTIVE_ASSIGNEE, taking the whole assignment with it.
+      // That is the same offer-the-server-will-refuse bug, one click away.
+      document.querySelectorAll('.user-assign-checkbox').forEach(cb => { if (!cb.disabled) cb.checked = true; });
     });
     if (clrAll) clrAll.addEventListener('click', () => {
-      document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = false);
+      // Deliberately includes disabled boxes: clearing everything is the one
+      // intentional way to drop an already-assigned deactivated user.
+      document.querySelectorAll('.user-assign-checkbox').forEach(cb => { cb.checked = false; });
     });
   }, 50);
 }
@@ -3241,13 +4386,20 @@ function editSiteModal(id, site) {
        </select></div>
      <div class="form-group"><label class="form-label">Assign Users</label>
        <div class="user-assign-grid">
-         ${S.users.map(u => `
-           <label class="user-check-item">
-             <input type="checkbox" class="modal-edit-assignee" value="${u.id}" ${currentAssigned.includes(u.id) ? 'checked' : ''}>
-             <span class="user-check-avatar">${esc((u.name || 'U')[0].toUpperCase())}</span>
-             <span class="user-check-name">${esc(u.name)}</span>
-           </label>
-         `).join('')}
+          ${S.users.map(u => {
+            // THIS grid is why inactive users must NOT simply be filtered out:
+            // the save below submits the complete checked set as assignedUsers,
+            // so an assigned-but-inactive user has to stay checked and enabled
+            // or they would be silently dropped by an unrelated company/ACM edit.
+            const a = assigneeInputAttrs(u, currentAssigned.includes(u.id));
+            return `
+            <label class="user-check-item"${a.disabled ? ' style="opacity:.55;cursor:not-allowed"' : ''}>
+              <input type="checkbox" class="modal-edit-assignee" value="${u.id}"${a.checked}${a.disabled}${a.title}>
+              <span class="user-check-avatar">${esc((u.name || 'U')[0].toUpperCase())}</span>
+              <span class="user-check-name">${esc(u.name)}${a.suffix}</span>
+            </label>
+          `;
+          }).join('')}
        </div>
      </div>`,
     [
@@ -3770,8 +4922,14 @@ async function viewDevProjects() {
   const SHEET_URL = 'https://docs.google.com/spreadsheets/d/14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78/edit?gid=0#gid=0';
   let projects = [];
   let activeIdx = 0;
+  let activeMainView = 'quick-view'; // 'quick-view' | 'projects-workspace'
+  let quickViewMode = 'sites'; // 'sites' (1 row per website) | 'stream' (chronological linear feed)
+  let qvTimeSort = 'recent'; // 'recent' (most recent date 1st) | 'oldest' | 'name' | 'updates'
+  let qvTimeRange = 'all'; // 'all' | '7d' | '30d' | '90d'
+  let qvStatusFilter = 'all'; // 'all' | 'completed' | 'in_progress' | 'pending'
   let activeSubTab = 'feedback'; // 'feedback' | 'sitemap' | 'sheet'
   let sitemapSearch = '';
+  let qvSearch = '';
 
   async function loadData(fresh = false) {
     try {
@@ -3806,14 +4964,500 @@ async function viewDevProjects() {
     return;
   }
 
+  function parseDateToSortable(dStr, fallback) {
+    const raw = (dStr || fallback || '').trim();
+    if (!raw) return 0;
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      const t = Date.parse(raw);
+      if (!isNaN(t)) return t;
+    }
+    const dmy = raw.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/);
+    if (dmy) {
+      let day = parseInt(dmy[1], 10);
+      let month = parseInt(dmy[2], 10) - 1;
+      let year = parseInt(dmy[3], 10);
+      if (year < 100) year += 2000;
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) return d.getTime();
+    }
+    const t = Date.parse(raw);
+    if (!isNaN(t)) return t;
+    return 0;
+  }
+
+  function formatDisplayDate(dStr, fallback) {
+    const raw = (dStr || fallback || '').trim();
+    if (!raw) return 'No date set';
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      try {
+        const parts = raw.split('T')[0].split('-');
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch (e) {
+        return raw;
+      }
+    }
+    const dmy = raw.match(/^(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/);
+    if (dmy) {
+      let day = parseInt(dmy[1], 10);
+      let month = parseInt(dmy[2], 10) - 1;
+      let year = parseInt(dmy[3], 10);
+      if (year < 100) year += 2000;
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+    }
+    return raw;
+  }
+
+  function getAllRecentUpdates() {
+    const list = [];
+    projects.forEach((p, pIdx) => {
+      (p.items || []).forEach((item, itemIdx) => {
+        const hasNotes = Boolean(item.notes && item.notes.trim().length > 0);
+        const hasDevNotes = Boolean(item.devNotes && item.devNotes.trim().length > 0);
+        const hasDate = Boolean((item.date && item.date.trim().length > 0) || (item.devDate && item.devDate.trim().length > 0));
+
+        if (hasNotes || hasDevNotes || (hasDate && item.status)) {
+          const effectiveDate = item.devDate || item.date || '';
+          const sortTime = parseDateToSortable(effectiveDate, item.updatedAt);
+          list.push({
+            project: p.project,
+            projectId: p.id,
+            projectIdx: pIdx,
+            item,
+            itemIdx,
+            effectiveDate,
+            displayDate: formatDisplayDate(effectiveDate, item.updatedAt),
+            sortTime,
+            status: item.status || 'Pending',
+            feedbackGroup: item.feedbackGroup || '',
+            url: item.url || '',
+            docLink: (item.feedbackUrl && item.feedbackUrl.startsWith('http')) ? item.feedbackUrl : '',
+            notes: item.notes || '',
+            devNotes: item.devNotes || '',
+            devDate: item.devDate || '',
+            feedbackDate: item.date || '',
+          });
+        }
+      });
+    });
+
+    list.sort((a, b) => {
+      if (b.sortTime !== a.sortTime) return b.sortTime - a.sortTime;
+      return (b.item.rowNum || 0) - (a.item.rowNum || 0);
+    });
+
+    return list;
+  }
+
+  function getWebsitesPulse(allUpdates) {
+    const list = projects.map((p, pIdx) => {
+      const siteUpdates = allUpdates.filter(u => u.projectIdx === pIdx);
+      const latest = siteUpdates[0] || null;
+      const pageCount = (p.items || []).filter(it => it.url && !it.isHeader).length;
+      const completedPages = (p.items || []).filter(it => it.url && !it.isHeader && (it.status || '').toLowerCase() === 'completed').length;
+      return {
+        project: p.project,
+        projectIdx: pIdx,
+        projectId: p.id,
+        pageCount,
+        completedPages,
+        totalUpdates: siteUpdates.length,
+        latest,
+      };
+    });
+
+    if (qvTimeSort === 'recent') {
+      list.sort((a, b) => {
+        const timeA = a.latest?.sortTime || 0;
+        const timeB = b.latest?.sortTime || 0;
+        return timeB - timeA;
+      });
+    } else if (qvTimeSort === 'oldest') {
+      list.sort((a, b) => {
+        const timeA = a.latest?.sortTime || 0;
+        const timeB = b.latest?.sortTime || 0;
+        return timeA - timeB;
+      });
+    } else if (qvTimeSort === 'name') {
+      list.sort((a, b) => a.project.localeCompare(b.project));
+    } else if (qvTimeSort === 'updates') {
+      list.sort((a, b) => b.totalUpdates - a.totalUpdates);
+    }
+
+    return list;
+  }
+
   function render() {
+    const allUpdates = getAllRecentUpdates();
+    const sitePulses = getWebsitesPulse(allUpdates);
+
+    if (activeMainView === 'quick-view') {
+      renderQuickView(allUpdates, sitePulses);
+    } else {
+      renderProjectsWorkspaceView(allUpdates);
+    }
+  }
+
+  function renderQuickView(allUpdates, sitePulses) {
+    const q = qvSearch.toLowerCase().trim();
+    const refNow = Date.now();
+
+    const matchesTimeRange = (time) => {
+      if (qvTimeRange === 'all') return true;
+      if (!time) return false;
+      const diffDays = (refNow - time) / (1000 * 60 * 60 * 24);
+      if (qvTimeRange === '7d') return diffDays >= -2 && diffDays <= 7;
+      if (qvTimeRange === '30d') return diffDays >= -2 && diffDays <= 30;
+      if (qvTimeRange === '90d') return diffDays >= -2 && diffDays <= 90;
+      return true;
+    };
+
+    const matchesStatus = (st) => {
+      if (qvStatusFilter === 'all') return true;
+      const s = (st || '').toLowerCase();
+      if (qvStatusFilter === 'completed') return s === 'completed';
+      if (qvStatusFilter === 'in_progress') return s === 'in_progress';
+      if (qvStatusFilter === 'pending') return s !== 'completed' && s !== 'in_progress';
+      return true;
+    };
+
+    const filteredSites = sitePulses.filter(sp => {
+      if (!matchesTimeRange(sp.latest?.sortTime)) return false;
+      if (qvStatusFilter !== 'all') {
+        const siteStatus = sp.latest?.status || (sp.completedPages === sp.pageCount && sp.pageCount > 0 ? 'Completed' : 'Pending');
+        if (!matchesStatus(siteStatus)) return false;
+      }
+      if (!q) return true;
+      const inName = sp.project.toLowerCase().includes(q);
+      const inWork = (sp.latest?.notes || '').toLowerCase().includes(q) || (sp.latest?.devNotes || '').toLowerCase().includes(q);
+      const inDate = (sp.latest?.displayDate || '').toLowerCase().includes(q);
+      return inName || inWork || inDate;
+    });
+
+    let filteredStream = allUpdates.filter(u => {
+      if (!matchesTimeRange(u.sortTime)) return false;
+      if (!matchesStatus(u.status)) return false;
+      if (!q) return true;
+      const inName = u.project.toLowerCase().includes(q);
+      const inWork = (u.notes || '').toLowerCase().includes(q) || (u.devNotes || '').toLowerCase().includes(q);
+      const inUrl = (u.url || '').toLowerCase().includes(q);
+      const inDate = (u.displayDate || '').toLowerCase().includes(q);
+      return inName || inWork || inUrl || inDate;
+    });
+
+    if (qvTimeSort === 'oldest') {
+      filteredStream = [...filteredStream].sort((a, b) => a.sortTime - b.sortTime);
+    } else if (qvTimeSort === 'name') {
+      filteredStream = [...filteredStream].sort((a, b) => a.project.localeCompare(b.project));
+    }
+
+    const latestOverall = allUpdates[0];
+    const completedTasks = allUpdates.filter(u => (u.status || '').toLowerCase() === 'completed').length;
+
+    mainEl.innerHTML = `
+      <div class="fade-in dev-qv-container">
+        <!-- Executive Top Bar -->
+        <div class="dev-qv-header">
+          <div class="dev-qv-title-group">
+            <div class="dev-qv-title">
+              <span>⚡ Dev Tracker — Quick View</span>
+            </div>
+            <span class="dev-sync-tag">Live Google Sheets</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btn-goto-workspace">
+              <span>📂 Open Full Projects &amp; Sitemaps (${projects.length} Sites) →</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-dev-refresh" title="Pull fresh updates directly from Google Sheets">
+              <span id="refresh-icon">🔄</span> Refresh Sheet
+            </button>
+            <a class="dev-sheet-link-btn" href="${SHEET_URL}" target="_blank" title="Open Google Sheet in new tab">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+              Open Sheet ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- KPI Strip: Instant Context in 1 Line -->
+        <div class="dev-qv-kpis">
+          <div class="dev-qv-kpi-card">
+            <span class="dev-qv-kpi-label">Connected Websites</span>
+            <span class="dev-qv-kpi-val">${projects.length}</span>
+          </div>
+          <div class="dev-qv-kpi-card">
+            <span class="dev-qv-kpi-label">Total Work Logs</span>
+            <span class="dev-qv-kpi-val">${allUpdates.length}</span>
+          </div>
+          <div class="dev-qv-kpi-card">
+            <span class="dev-qv-kpi-label">Completed Tasks</span>
+            <span class="dev-qv-kpi-val" style="color:var(--success)">${completedTasks}</span>
+          </div>
+          <div class="dev-qv-kpi-card">
+            <span class="dev-qv-kpi-label">Most Recent Activity</span>
+            <span class="dev-qv-kpi-val" style="font-size:14px">${esc(latestOverall?.displayDate || 'None')}</span>
+          </div>
+        </div>
+
+        <!-- Filter & View Switcher Bar with Time Filters -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--bg-surface);padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <button class="dev-subnav-btn ${quickViewMode === 'sites' ? 'active' : ''}" id="btn-qv-mode-sites">
+              🌐 Websites Pulse (${filteredSites.length})
+            </button>
+            <button class="dev-subnav-btn ${quickViewMode === 'stream' ? 'active' : ''}" id="btn-qv-mode-stream">
+              ⚡ Chronological Stream (${filteredStream.length})
+            </button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <!-- Time Sort Filter -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:var(--text-muted);font-weight:600">Sort:</span>
+              <select class="form-select" id="qv-sort-select" style="padding:4px 8px;font-size:12px;height:30px;min-width:180px">
+                <option value="recent" ${qvTimeSort === 'recent' ? 'selected' : ''}>🕒 Most Recent Date (1st)</option>
+                <option value="oldest" ${qvTimeSort === 'oldest' ? 'selected' : ''}>⏳ Oldest Date (1st)</option>
+                <option value="name" ${qvTimeSort === 'name' ? 'selected' : ''}>🔤 Website Name (A-Z)</option>
+                <option value="updates" ${qvTimeSort === 'updates' ? 'selected' : ''}>📊 Most Updates Logged</option>
+              </select>
+            </div>
+
+            <!-- Time Range Filter -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:var(--text-muted);font-weight:600">Time:</span>
+              <select class="form-select" id="qv-range-select" style="padding:4px 8px;font-size:12px;height:30px">
+                <option value="all" ${qvTimeRange === 'all' ? 'selected' : ''}>All Dates</option>
+                <option value="7d" ${qvTimeRange === '7d' ? 'selected' : ''}>Last 7 Days</option>
+                <option value="30d" ${qvTimeRange === '30d' ? 'selected' : ''}>Last 30 Days</option>
+                <option value="90d" ${qvTimeRange === '90d' ? 'selected' : ''}>Last 90 Days</option>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:var(--text-muted);font-weight:600">Status:</span>
+              <select class="form-select" id="qv-status-select" style="padding:4px 8px;font-size:12px;height:30px">
+                <option value="all" ${qvStatusFilter === 'all' ? 'selected' : ''}>All</option>
+                <option value="completed" ${qvStatusFilter === 'completed' ? 'selected' : ''}>🟢 Completed</option>
+                <option value="in_progress" ${qvStatusFilter === 'in_progress' ? 'selected' : ''}>🟡 In Progress</option>
+                <option value="pending" ${qvStatusFilter === 'pending' ? 'selected' : ''}>⚪ Pending</option>
+              </select>
+            </div>
+
+            <!-- Search input -->
+            <div class="search-bar" style="max-width:180px">
+              <input id="qv-search-input" class="search-input" placeholder="Search…" value="${esc(qvSearch)}">
+            </div>
+
+            ${(qvSearch || qvTimeRange !== 'all' || qvStatusFilter !== 'all' || qvTimeSort !== 'recent') ? `
+              <button class="btn btn-ghost btn-sm" id="btn-qv-reset-filters" style="font-size:11px;padding:3px 7px" title="Reset all filters">
+                ✕ Reset
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Content Mode 1: Website Pulse (1 row per website) -->
+        ${quickViewMode === 'sites' ? `
+          <div class="dev-qv-board">
+            <div class="dev-qv-board-header">
+              <span>Website</span>
+              <span>Recent Work Done</span>
+              <span style="text-align:center">Status</span>
+              <span style="text-align:right">Action</span>
+            </div>
+
+            ${filteredSites.length > 0 ? filteredSites.map(sp => {
+              const u = sp.latest;
+              const workText = u ? (u.notes || u.devNotes || 'Work logged without notes') : 'No work logged yet';
+              const dateText = u?.displayDate || '—';
+              const status = u?.status || (sp.completedPages === sp.pageCount && sp.pageCount > 0 ? 'Completed' : 'Pending');
+
+              return `
+                <div class="dev-qv-row">
+                  <!-- Col 1: Website -->
+                  <div class="dev-qv-site-cell">
+                    <div class="dev-qv-site-name btn-jump-to-project" data-proj-idx="${sp.projectIdx}" title="Click to view ${esc(sp.project)} full workspace">
+                      <span>💻</span>
+                      <span>${esc(sp.project)}</span>
+                    </div>
+                    <div class="dev-qv-site-meta">
+                      <span>${sp.pageCount} pages</span>
+                      <span>•</span>
+                      <span>${sp.totalUpdates} updates</span>
+                      ${sp.completedPages === sp.pageCount && sp.pageCount > 0 ? '<span style="color:var(--success);font-weight:600">Ready</span>' : ''}
+                    </div>
+                  </div>
+
+                  <!-- Col 2: Recent Work Done -->
+                  <div class="dev-qv-work-cell">
+                    <div class="dev-qv-work-desc" title="${esc(workText)}">
+                      ${u ? esc(workText) : '<span style="color:var(--text-muted);font-style:italic">No feedback or development update recorded yet</span>'}
+                    </div>
+                    ${u ? `
+                      <div class="dev-qv-work-meta">
+                        <span class="dev-qv-date-pill">📅 ${esc(dateText)}</span>
+                        ${u.feedbackGroup ? `<span style="color:var(--text-secondary);font-size:11px">💬 ${esc(u.feedbackGroup)}</span>` : ''}
+                        ${u.url ? `<a href="${esc(u.url)}" target="_blank" class="url-cell" style="font-size:11px;color:var(--accent);text-decoration:none">🔗 ${esc(shortUrl(u.url, 28))}</a>` : ''}
+                        ${u.docLink ? `<a href="${esc(u.docLink)}" target="_blank" style="font-size:11px;color:var(--text-muted)">📄 Doc ↗</a>` : ''}
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <!-- Col 3: Status -->
+                  <div style="text-align:center">
+                    ${statusBadge(status)}
+                  </div>
+
+                  <!-- Col 4: Action Button -->
+                  <div class="dev-qv-actions-cell">
+                    <button class="btn btn-secondary btn-sm btn-jump-to-project" data-proj-idx="${sp.projectIdx}">
+                      Open →
+                    </button>
+                  </div>
+                </div>`;
+            }).join('') : `
+              <div style="padding:40px 20px;text-align:center;color:var(--text-muted)">
+                <div style="font-size:28px;margin-bottom:8px">🔍</div>
+                <div>No website updates match your current filters.</div>
+                <button class="btn btn-secondary btn-sm" id="btn-empty-reset" style="margin-top:12px">Clear Filters</button>
+              </div>
+            `}
+          </div>
+        ` : ''}
+
+        <!-- Content Mode 2: Stream (Linear single-line chronological feed) -->
+        ${quickViewMode === 'stream' ? `
+          <div class="dev-qv-stream">
+            <div class="dev-qv-board-header" style="grid-template-columns:100px 180px 1fr 110px 80px;display:grid">
+              <span>Date</span>
+              <span>Website</span>
+              <span>What Was Updated</span>
+              <span>Status</span>
+              <span style="text-align:right">Action</span>
+            </div>
+
+            ${filteredStream.length > 0 ? filteredStream.map(u => `
+              <div class="dev-qv-stream-item">
+                <span class="dev-qv-date-pill">📅 ${esc(u.displayDate)}</span>
+                <span style="font-weight:600;color:var(--text-primary);cursor:pointer" class="btn-jump-to-project" data-proj-idx="${u.projectIdx}">
+                  💻 ${esc(u.project)}
+                </span>
+                <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)" title="${esc(u.notes || u.devNotes)}">
+                  ${esc(u.notes || u.devNotes || '—')}
+                </div>
+                <div>${statusBadge(u.status)}</div>
+                <div style="text-align:right">
+                  <button class="btn btn-ghost btn-sm btn-jump-to-project" data-proj-idx="${u.projectIdx}">
+                    Open →
+                  </button>
+                </div>
+              </div>
+            `).join('') : `
+              <div style="padding:40px 20px;text-align:center;color:var(--text-muted)">
+                <div style="font-size:28px;margin-bottom:8px">🔍</div>
+                <div>No updates match your current filters.</div>
+                <button class="btn btn-secondary btn-sm" id="btn-empty-reset" style="margin-top:12px">Clear Filters</button>
+              </div>
+            `}
+          </div>
+        ` : ''}
+      </div>`;
+
+    attachQuickViewListeners(allUpdates);
+  }
+
+  function attachQuickViewListeners(allUpdates) {
+    // Mode switchers
+    $('btn-qv-mode-sites')?.addEventListener('click', () => {
+      quickViewMode = 'sites';
+      render();
+    });
+    $('btn-qv-mode-stream')?.addEventListener('click', () => {
+      quickViewMode = 'stream';
+      render();
+    });
+
+    // Go to full workspace
+    $('btn-goto-workspace')?.addEventListener('click', () => {
+      activeMainView = 'projects-workspace';
+      render();
+    });
+
+    // Time sort filter
+    $('qv-sort-select')?.addEventListener('change', (e) => {
+      qvTimeSort = e.target.value;
+      render();
+    });
+
+    // Time range filter
+    $('qv-range-select')?.addEventListener('change', (e) => {
+      qvTimeRange = e.target.value;
+      render();
+    });
+
+    // Status filter
+    $('qv-status-select')?.addEventListener('change', (e) => {
+      qvStatusFilter = e.target.value;
+      render();
+    });
+
+    // Reset filters
+    const resetAll = () => {
+      qvSearch = '';
+      qvTimeSort = 'recent';
+      qvTimeRange = 'all';
+      qvStatusFilter = 'all';
+      render();
+    };
+    $('btn-qv-reset-filters')?.addEventListener('click', resetAll);
+    $('btn-empty-reset')?.addEventListener('click', resetAll);
+
+    // Search input
+    $('qv-search-input')?.addEventListener('input', (e) => {
+      qvSearch = e.target.value;
+      render();
+    });
+
+    // Refresh Sheet
+    $('btn-dev-refresh')?.addEventListener('click', async () => {
+      const icon = $('refresh-icon');
+      if (icon) icon.classList.add('rotating');
+      toast('Pulling latest updates directly from Google Sheets...', 'info');
+      try {
+        await POST('/api/master/dev-projects/fetch-live');
+        await loadData(true);
+        toast('Google Sheets sync complete!', 'success');
+        render();
+      } catch (e) {
+        toast('Failed to refresh from Sheet: ' + e.message, 'error');
+      } finally {
+        if (icon) icon.classList.remove('rotating');
+      }
+    });
+
+    // Jump to specific project workspace
+    mainEl.querySelectorAll('.btn-jump-to-project').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pIdx = parseInt(btn.dataset.projIdx, 10);
+        if (!isNaN(pIdx) && projects[pIdx]) {
+          activeIdx = pIdx;
+          activeMainView = 'projects-workspace';
+          render();
+        }
+      });
+    });
+  }
+
+  function renderProjectsWorkspaceView(allUpdates) {
     const proj = projects[activeIdx] || projects[0];
     const items = proj.items || [];
 
-    // Categorize items
     const sitemapItems = items.filter(it => it.url && !it.isHeader);
 
-    // Group items into feedback rounds
     const feedbackGroupsMap = new Map();
     items.forEach((it, origIdx) => {
       const g = it.feedbackGroup || 'General';
@@ -3823,7 +5467,6 @@ async function viewDevProjects() {
       feedbackGroupsMap.get(g).push({ ...it, origIdx });
     });
 
-    // Extract sorted feedback rounds (newest / highest round first)
     const feedbackRounds = Array.from(feedbackGroupsMap.entries()).map(([groupName, groupItems]) => {
       const docLink = groupItems.find(it => it.feedbackUrl && it.feedbackUrl.startsWith('http'))?.feedbackUrl || '';
       const dates = groupItems.map(it => it.date).filter(Boolean);
@@ -3834,11 +5477,6 @@ async function viewDevProjects() {
       const roundStatus = isCompleted ? 'Completed' : (hasInProgress ? 'In Progress' : (statuses[0] || 'Pending'));
 
       const workEntries = groupItems.filter(it => it.notes && it.notes.trim().length > 0);
-      // Development-Date / Development-Updates live in sheet columns C/D and are
-      // NOT part of the feedback round's comment log (which is F/G). A single
-      // sheet row can carry both, so they are collected separately and always
-      // rendered — otherwise the two Development columns a user adds by hand
-      // never appear anywhere in the dashboard.
       const devEntries = groupItems.filter(it => it.devNotes && it.devNotes.trim().length > 0);
 
       return {
@@ -3858,6 +5496,26 @@ async function viewDevProjects() {
 
     mainEl.innerHTML = `
       <div class="fade-in">
+        <!-- Top Workspace Bar with Return Button -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding:12px 18px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn btn-primary btn-sm" id="btn-back-to-quickview">
+              <span>← Back to Quick View</span>
+            </button>
+            <span style="font-size:13px;font-weight:600;color:var(--text-primary)">
+              Project Workspace: <strong>${esc(proj.project)}</strong>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn btn-secondary btn-sm" id="btn-dev-refresh">
+              <span id="refresh-icon">🔄</span> Refresh Sheet
+            </button>
+            <a class="dev-sheet-link-btn" href="${SHEET_URL}" target="_blank">
+              Open Sheet ↗
+            </a>
+          </div>
+        </div>
+
         <!-- Top Action Bar -->
         <div class="dev-header-actions">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3875,26 +5533,19 @@ async function viewDevProjects() {
             <span class="dev-sync-tag" title="Connected to Google Sheet ID: 14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78">
               Live Google Sheets Sync
             </span>
-            <button class="btn btn-secondary btn-sm" id="btn-dev-refresh" title="Pull fresh updates directly from Google Sheets">
-              <span id="refresh-icon">🔄</span> Refresh Sheet
-            </button>
-            <a class="dev-sheet-link-btn" href="${SHEET_URL}" target="_blank" title="Open Google Sheet in new tab">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-              Open Sheet ↗
-            </a>
           </div>
         </div>
 
         <!-- Project Selector Pills -->
         <div class="dev-project-pills">
           ${projects.map((p, i) => {
-      const pageCount = (p.items || []).filter(it => it.url && !it.isHeader).length;
-      return `
+            const pageCount = (p.items || []).filter(it => it.url && !it.isHeader).length;
+            return `
               <button class="dev-project-pill ${i === activeIdx ? 'active' : ''}" data-idx="${i}">
                 <span>💻 ${esc(p.project)}</span>
                 <span class="dev-pill-badge">${pageCount} pages</span>
               </button>`;
-    }).join('')}
+          }).join('')}
           <button class="btn btn-ghost btn-sm" id="btn-pill-add-website" style="align-self:center;margin-left:4px" title="Create new website project">
             + New Site
           </button>
@@ -3925,7 +5576,7 @@ async function viewDevProjects() {
         <!-- Sub-View Tabs -->
         <div class="dev-subnav-tabs">
           <button class="dev-subnav-btn ${activeSubTab === 'feedback' ? 'active' : ''}" data-subtab="feedback">
-            💬 Feedback & Work Log (${feedbackRounds.length})
+            💬 Feedback &amp; Work Log (${feedbackRounds.length})
           </button>
           <button class="dev-subnav-btn ${activeSubTab === 'sitemap' ? 'active' : ''}" data-subtab="sitemap">
             🗺️ Website Sitemap / Pages (${totalPages})
@@ -3941,7 +5592,7 @@ async function viewDevProjects() {
         </div>
       </div>`;
 
-    attachEventListeners(proj, feedbackRounds);
+    attachWorkspaceEventListeners(proj, feedbackRounds, allUpdates);
   }
 
   function renderSubTabContent(proj, items, sitemapItems, feedbackRounds) {
@@ -3973,7 +5624,6 @@ async function viewDevProjects() {
 
           ${feedbackRounds.map(round => `
             <div class="feedback-round-card">
-              <!-- Header -->
               <div class="feedback-round-header">
                 <div class="feedback-round-title-row">
                   <div class="feedback-round-title">
@@ -3998,7 +5648,6 @@ async function viewDevProjects() {
                 </div>
               </div>
 
-              <!-- Work Updates & Comments List -->
               <div class="feedback-work-list">
                 ${round.workEntries.length > 0 ? round.workEntries.map(entry => `
                   <div class="feedback-work-entry">
@@ -4067,7 +5716,7 @@ async function viewDevProjects() {
 
       return `
         <div class="card">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:gap;gap:12px">
             <div style="display:flex;align-items:center;gap:10px">
               <span class="card-title">🗺️ Website Sitemap (${sitemapItems.length} pages)</span>
             </div>
@@ -4148,10 +5797,6 @@ async function viewDevProjects() {
     }
 
     if (activeSubTab === 'sheet') {
-      // Columns are resolved from the tab's OWN header row (server-side:
-      // tabSchema.js), so this table renders whatever the sheet actually has —
-      // 5 columns, 7 columns, or 9 after someone adds two by hand. Nothing here
-      // is hardcoded to A:G any more.
       const sheetCols = proj.columns || {};
       const extras = proj.extraColumns || sheetCols.extras || [];
       const colLetter = (i) => (typeof i === 'number' && i >= 0 && i < 26 ? String.fromCharCode(65 + i) : '?');
@@ -4221,7 +5866,12 @@ async function viewDevProjects() {
     return '';
   }
 
-  function attachEventListeners(proj, feedbackRounds) {
+  function attachWorkspaceEventListeners(proj, feedbackRounds, allUpdates) {
+    $('btn-back-to-quickview')?.addEventListener('click', () => {
+      activeMainView = 'quick-view';
+      render();
+    });
+
     mainEl.querySelectorAll('.dev-project-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         activeIdx = parseInt(btn.dataset.idx, 10);
@@ -4244,7 +5894,7 @@ async function viewDevProjects() {
         if (container) {
           const sitemapItems = (proj.items || []).filter(it => it.url && !it.isHeader);
           container.innerHTML = renderSubTabContent(proj, proj.items || [], sitemapItems, feedbackRounds);
-          attachEventListeners(proj, feedbackRounds);
+          attachWorkspaceEventListeners(proj, feedbackRounds, allUpdates);
         }
       });
     }
@@ -4321,7 +5971,8 @@ async function viewDevProjects() {
     });
   }
 
-  // ── Modal: Create New Website Project with Sitemap & Feedback ──
+
+    // ── Modal: Create New Website Project with Sitemap & Feedback ──
   function openCreateWebsiteModal() {
     const today = new Date().toISOString().split('T')[0];
 
@@ -5094,6 +6745,152 @@ function viewSendEmails() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: CHANGE HISTORY / AUDIT LOG (Admin + Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewAuditLog() {
+  setPage('Change History', 'Who changed what, when, and from which source');
+  if (S.role !== 'admin' && S.role !== 'superadmin') {
+    mainEl.innerHTML = '<div class="empty-state"><p>Admin access required.</p></div>';
+    return;
+  }
+  mainEl.innerHTML = `
+    <div class="fade-in" style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="audit-entity-filter" class="form-select" style="padding:6px 10px;font-size:13px;background:var(--bg-surface-2, #161b27);color:var(--text-primary, #e2e8f0);border:1px solid var(--border, #2d3748);border-radius:8px">
+            <option value="">All entities</option>
+            <option value="site">Sites</option>
+            <option value="user">Users</option>
+            <option value="daily-review">Daily Review</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btn-audit-refresh">🔄 Refresh</button>
+          <span id="audit-count" style="font-size:12px;color:var(--text-muted, #94a3b8)"></span>
+        </div>
+      </div>
+      <div id="audit-table-wrap" style="background:var(--card-bg, #1a1f2c);border:1px solid var(--border, #2d3748);border-radius:10px;overflow:hidden">
+        <div style="padding:18px;text-align:center;color:var(--text-muted, #94a3b8);font-size:13px">
+          <div class="loading-spinner" style="margin:0 auto 10px"></div>Loading change history…
+        </div>
+      </div>
+      <div id="conflicts-wrap" style="background:var(--card-bg, #1a1f2c);border:1px solid var(--border, #2d3748);border-radius:10px;overflow:hidden">
+        <div style="padding:18px;text-align:center;color:var(--text-muted, #94a3b8);font-size:13px">
+          <div class="loading-spinner" style="margin:0 auto 10px"></div>Loading sync conflicts…
+        </div>
+      </div>
+    </div>`;
+
+  // Load flagged sheet-vs-DB conflicts (divergences the sync did NOT silently resolve).
+  const loadConflicts = async () => {
+    const wrap = $('conflicts-wrap');
+    try {
+      const q = new URLSearchParams({ role: S.role, limit: '500' });
+      const data = await GET('/api/master/sync-conflicts?' + q.toString());
+      const list = data.conflicts || [];
+      const stats = data.stats || { open: 0, count: 0 };
+      if (!list.length) {
+        wrap.innerHTML = `<div style="padding:14px 18px;font-size:12.5px;color:var(--text-muted, #94a3b8);border-bottom:1px solid var(--border, #2d3748)">
+          <strong style="color:var(--text-primary, #e2e8f0)">⚠ Sync conflicts</strong> — none recorded. Conflicts only appear when the sync finds a non-empty sheet value that disagrees with a previously stored non-empty value.
+        </div>`;
+        return;
+      }
+      const rows = list.map(c => `
+        <tr>
+          <td style="padding:8px 10px;white-space:nowrap">${new Date(c.at).toLocaleString()}</td>
+          <td style="padding:8px 10px">${esc(c.entity)}</td>
+          <td style="padding:8px 10px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.label)}">${esc(c.label)}</td>
+          <td style="padding:8px 10px">${esc(c.field)}</td>
+          <td style="padding:8px 10px;color:#fbbf24" title="Sheet value">${esc(c.sheetValue)}</td>
+          <td style="padding:8px 10px" title="DB value">${esc(c.dbValue)}</td>
+          <td style="padding:8px 10px;font-size:11px;color:var(--text-muted, #94a3b8)">${esc(c.sheetSource)}<br>→ ${esc(c.dbSource)}</td>
+          <td style="padding:8px 10px">
+            ${c.state === 'open'
+              ? `<button class="btn btn-xs" data-ack="${c.id}" style="padding:3px 10px;font-size:11px">Acknowledge</button>`
+              : `<span style="font-size:11px;color:var(--success, #10b981)">✓ acknowledged${c.acknowledgedBy ? ' by ' + esc(c.acknowledgedBy) : ''}</span>`}
+          </td>
+        </tr>`).join('');
+      wrap.innerHTML = `<div style="padding:14px 18px;border-bottom:1px solid var(--border, #2d3748)">
+          <strong style="color:var(--text-primary, #e2e8f0)">⚠ Sync conflicts</strong>
+          <span style="font-size:12px;color:var(--text-muted, #94a3b8)"> — divergences the sync refused to silently resolve. Sheet value (amber) vs stored DB value. Policy keeps the sheet value during sync; acknowledge after review. </span>
+          <span style="font-size:12px;color:#fbbf24;margin-left:8px">${stats.open} open / ${stats.count} total</span>
+        </div>
+        <div style="overflow:auto;max-height:340px"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
+          <thead><tr style="background:var(--bg-surface-2, #161b27);text-align:left;color:var(--text-muted, #94a3b8);font-size:11px;text-transform:uppercase;letter-spacing:0.4px">
+            <th style="padding:8px 10px">When</th><th style="padding:8px 10px">Entity</th><th style="padding:8px 10px">Item</th>
+            <th style="padding:8px 10px">Field</th><th style="padding:8px 10px">Sheet → DB</th><th style="padding:8px 10px">Source</th><th style="padding:8px 10px">State</th>
+          </tr></thead><tbody>${rows}</tbody></table></div>`;
+      wrap.querySelectorAll('[data-ack]').forEach(btn => btn.addEventListener('click', async () => {
+        const id = btn.dataset.ack;
+        try {
+          await POST(`/api/master/sync-conflicts/${id}/ack?role=${encodeURIComponent(S.role)}`, { actorName: S.userName, actorId: S.userId });
+          toast('Conflict acknowledged', 'success', 2000);
+          loadConflicts();
+        } catch (e) { toast('Failed: ' + e.message, 'error'); }
+      }));
+    } catch (e) {
+      wrap.innerHTML = `<div style="padding:18px;text-align:center;color:#f87171;font-size:13px">Failed to load sync conflicts: ${esc(e.message)}</div>`;
+    }
+  };
+
+  const load = async () => {
+    const entity = $('audit-entity-filter')?.value || '';
+    try {
+      const q = new URLSearchParams({ role: S.role, limit: '1000' });
+      if (entity) q.set('entity', entity);
+      const data = await GET('/api/master/audit-log?' + q.toString());
+      const entries = data.entries || [];
+      $('audit-count').textContent = `Showing latest ${entries.length} of ${data.total || entries.length} change(s)`;
+      const wrap = $('audit-table-wrap');
+      if (!entries.length) {
+        wrap.innerHTML = `<div style="padding:22px;text-align:center;color:var(--text-muted, #94a3b8);font-size:13px">No changes recorded yet. Changes made in Team Progress, All Sites, Daily Review and User Management will appear here.</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <div style="overflow:auto;max-height:calc(100vh - 210px)">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px">
+            <thead>
+              <tr style="background:var(--bg-surface-2, #161b27);text-align:left;color:var(--text-muted, #94a3b8);font-size:11px;text-transform:uppercase;letter-spacing:0.4px">
+                <th style="padding:10px 14px">When</th>
+                <th style="padding:10px 14px">Who</th>
+                <th style="padding:10px 14px">Action</th>
+                <th style="padding:10px 14px">Entity</th>
+                <th style="padding:10px 14px">Field</th>
+                <th style="padding:10px 14px">Old value</th>
+                <th style="padding:10px 14px">New value</th>
+                <th style="padding:10px 14px">Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map(e => {
+                const when = e.at ? new Date(e.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+                const actionBadge = e.action?.startsWith('assignment') ? 'warning' : e.action === 'delete' ? 'danger' : (e.action === 'create' ? 'success' : 'dim');
+                const label = e.label ? `<div style="font-size:11px;color:var(--text-muted, #94a3b8);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.label)}</div>` : '';
+                return `
+                <tr style="border-top:1px solid var(--border, #242d3d)">
+                  <td style="padding:10px 14px;white-space:nowrap;color:var(--text-muted, #94a3b8)">${esc(when)}</td>
+                  <td style="padding:10px 14px;white-space:nowrap"><span style="font-weight:600">${esc(e.actor || '—')}</span></td>
+                  <td style="padding:10px 14px;white-space:nowrap"><span class="badge badge-${actionBadge}">${esc(e.action || '—')}</span></td>
+                  <td style="padding:10px 14px;white-space:nowrap">${esc(e.entity || '—')}${label}</td>
+                  <td style="padding:10px 14px;white-space:nowrap"><code style="font-size:11px;background:var(--bg-surface-2, #161b27);padding:2px 6px;border-radius:5px">${esc(e.field || '—')}</code></td>
+                  <td style="padding:10px 14px;max-width:220px;color:var(--text-muted, #94a3b8);font-size:12px"><div style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(e.oldValue ?? '∅')}</div></td>
+                  <td style="padding:10px 14px;max-width:220px;font-size:12px"><div style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(e.newValue ?? '∅')}</div></td>
+                  <td style="padding:10px 14px;white-space:nowrap;color:var(--text-muted, #94a3b8);font-size:11px">${esc(e.source || '—')}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } catch (err) {
+      $('audit-table-wrap').innerHTML = `<div style="padding:22px;text-align:center;color:#f87171;font-size:13px">Failed to load change history: ${esc(err.message)}</div>`;
+    }
+  };
+
+  await load();
+  await loadConflicts();
+  $('audit-entity-filter')?.addEventListener('change', load);
+  $('btn-audit-refresh')?.addEventListener('click', () => { load(); loadConflicts(); });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: SYNC FROM SHEETS (Superadmin)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewSync() {
@@ -5126,6 +6923,8 @@ async function viewSync() {
           <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;line-height:1.7">
             Imports from all 6 Google Sheets, <strong>merges relationships</strong> (sites ↔ users ↔ tasks ↔ domains),
             and saves everything locally. Takes 2–4 minutes due to API rate limits.
+            Use <strong>Dry Run</strong> first: it computes the exact diff (added / changed / removed)
+            and <strong>writes nothing</strong> — the safety net before a real sync.
           </p>
           <div id="sync-progress-wrap" class="hidden" style="margin-bottom:20px">
             <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px">
@@ -5136,19 +6935,26 @@ async function viewSync() {
             <div class="sync-log" id="sync-log"></div>
           </div>
           <div id="sync-result" class="hidden"></div>
-          <button class="btn btn-primary" id="sync-btn" style="padding:12px 28px;font-size:15px">🔄 Start Full Sync</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="sync-dry-btn" style="padding:12px 28px;font-size:15px">🔍 Dry Run (no writes)</button>
+            <button class="btn btn-ghost" id="sync-btn" style="padding:12px 28px;font-size:15px">🔄 Start Full Sync</button>
+          </div>
         </div>
       </div>
     </div>`;
 
-  $('sync-btn').addEventListener('click', async () => {
-    const btn = $('sync-btn');
-    btn.disabled = true; btn.textContent = '⏳ Syncing…';
+  const runSync = async (dry) => {
+    const realBtn = $('sync-btn'), dryBtn = $('sync-dry-btn');
+    for (const b of [realBtn, dryBtn]) { b.disabled = true; }
+    dryBtn.textContent = dry ? '⏳ Dry run…' : '🔍 Dry Run (no writes)';
+    realBtn.textContent = dry ? '🔄 Start Full Sync' : '⏳ Syncing…';
     $('sync-progress-wrap').classList.remove('hidden');
     $('sync-result').classList.add('hidden');
     const bar = $('sync-pct-bar'), step = $('sync-step-text'), pct = $('sync-pct-text'), log = $('sync-log');
+    log.innerHTML = '';
     try {
-      const resp = await fetch('/api/master/sync', { method: 'POST', headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' }, body: '{}' });
+      const url = '/api/master/sync' + (dry ? '?dryRun=1' : '');
+      const resp = await fetch(url, { method: 'POST', headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' }, body: '{}' });
       const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
         const { value, done } = await reader.read(); if (done) break;
@@ -5167,15 +6973,53 @@ async function viewSync() {
               bar.style.width = '100%'; pct.textContent = '100%';
               $('sync-result').classList.remove('hidden');
               const c = msg.counts || {};
-              $('sync-result').innerHTML = `
-                <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:16px;color:var(--success);font-size:13px">
-                  ✅ Sync complete in ${msg.elapsed}s<br>
-                  <span style="color:var(--text-muted);font-size:12px">
-                    ${c.sites || 0} sites · ${c.dailyReviewRows || 0} daily rows · ${c.tasks || 0} tasks · ${c.properties || 0} properties · ${c.devProjects || 0} dev projects
-                  </span>
-                </div>`;
-              btn.textContent = '🔄 Sync Again'; btn.disabled = false;
-              $('sync-status').classList.remove('hidden'); $('sync-status-text').textContent = 'Synced just now';
+              if (msg.dryRun) {
+                // Dry-run: render the would-change diff (nothing was written).
+                const diffRows = (msg.diff || []).map(d => `
+                  <tr>
+                    <td style="padding:6px 8px;text-align:left">${esc(d.collection)}</td>
+                    <td style="padding:6px 8px">${d.current}</td>
+                    <td style="padding:6px 8px">${d.wouldBe}</td>
+                    <td style="padding:6px 8px;color:var(--success, #10b981)">+${d.added}</td>
+                    <td style="padding:6px 8px">${d.updated}</td>
+                    <td style="padding:6px 8px;color:var(--danger, #f87171)">−${d.removed}</td>
+                  </tr>`).join('');
+                const conflictNote = msg.conflictsCount > 0
+                  ? `<p style="margin-top:10px;font-size:12px;color:#fbbf24">⚠ ${msg.conflictsCount} conflict(s) would be flagged (sheet vs DB disagree). See Change History → Sync Conflicts.</p>`
+                  : `<p style="margin-top:10px;font-size:12px;color:var(--text-muted, #94a3b8)">No sheet-vs-DB conflicts detected.</p>`;
+                $('sync-result').innerHTML = `
+                  <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:16px;font-size:13px;color:#fbbf24">
+                    🔍 DRY RUN complete in ${msg.elapsed}s — <strong>nothing was written</strong>
+                    <span style="color:var(--text-muted, #94a3b8);font-size:12px">(${c.sites || 0} sites · ${c.dailyReviewRows || 0} daily rows · ${c.tasks || 0} tasks · ${c.properties || 0} properties · ${c.devProjects || 0} dev projects)</span>
+                    <table style="width:100%;margin-top:12px;border-collapse:collapse;text-align:center;font-size:12px;color:var(--text, #e2e8f0)">
+                      <thead><tr style="color:var(--text-muted, #94a3b8)">
+                        <th style="padding:6px 8px;text-align:left">Collection</th>
+                        <th style="padding:6px 8px">Current</th>
+                        <th style="padding:6px 8px">Would be</th>
+                        <th style="padding:6px 8px">Added</th>
+                        <th style="padding:6px 8px">Changed</th>
+                        <th style="padding:6px 8px">Removed</th>
+                      </tr></thead>
+                      <tbody>${diffRows || '<tr><td colspan="6" style="padding:10px;color:var(--text-muted, #94a3b8)">No diff data</td></tr>'}</tbody>
+                    </table>
+                    ${conflictNote}
+                  </div>`;
+                realBtn.textContent = '🔄 Start Full Sync'; realBtn.disabled = false;
+                dryBtn.textContent = '🔍 Dry Run (no writes)'; dryBtn.disabled = false;
+              } else {
+                // Real sync: success summary.
+                $('sync-result').innerHTML = `
+                  <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:16px;color:var(--success);font-size:13px">
+                    ✅ Sync complete in ${msg.elapsed}s<br>
+                    <span style="color:var(--text-muted);font-size:12px">
+                      ${c.sites || 0} sites · ${c.dailyReviewRows || 0} daily rows · ${c.tasks || 0} tasks · ${c.properties || 0} properties · ${c.devProjects || 0} dev projects
+                    </span>
+                    ${msg.conflictsCount > 0 ? `<p style="margin-top:8px;font-size:12px;color:#fbbf24">⚠ ${msg.conflictsCount} sheet-vs-DB conflict(s) flagged — review in Change History → Sync Conflicts.</p>` : ''}
+                  </div>`;
+                realBtn.textContent = '🔄 Sync Again'; realBtn.disabled = false;
+                dryBtn.textContent = '🔍 Dry Run (no writes)'; dryBtn.disabled = false;
+                $('sync-status').classList.remove('hidden'); $('sync-status-text').textContent = 'Synced just now';
+              }
             }
             if (msg.error) throw new Error(msg.error);
           } catch { }
@@ -5184,10 +7028,13 @@ async function viewSync() {
     } catch (e) {
       $('sync-result').classList.remove('hidden');
       $('sync-result').innerHTML = `<div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:16px;color:var(--danger)">${esc(e.message)}</div>`;
-      btn.textContent = '🔄 Retry Sync'; btn.disabled = false;
+      for (const b of [realBtn, dryBtn]) { b.disabled = false; }
+      realBtn.textContent = '🔄 Retry Sync'; dryBtn.textContent = '🔍 Dry Run (no writes)';
       toast(e.message, 'error');
     }
-  });
+  };
+  $('sync-dry-btn').addEventListener('click', () => runSync(true));
+  $('sync-btn').addEventListener('click', () => runSync(false));
 }
 
 // ─── Linear Keyboard Shortcuts (C for Create, F for Filter, / for Search) ───
@@ -7108,6 +8955,63 @@ async function viewAiSettings() {
         </div>
       </div>`;
   }
+  // A separate Worker owns the operations handbook index. OfficeOS only asks
+  // its /chat endpoint for SOP/process questions; Sheet tracker questions keep
+  // their live-Sheet route and no source data is written to the Worker.
+  function handbookEditor() {
+    const h = cfg.handbook || {};
+    const state = h.configured ? 'CONNECTED' : 'NOT CONFIGURED';
+    const colour = h.configured ? '#22c55e' : '#f59e0b';
+    return `
+      <div style="${BOX};margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:13px;font-weight:700">📚 Operations Handbook</div>
+          <span class="badge" style="font-size:10.5px;color:${colour};border-color:${colour}66">${state}</span>
+          <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="handbook-enabled" ${h.enabled !== false ? 'checked' : ''}> use handbook for SOP/process questions</label>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin:7px 0 11px">Connect the deployed <code>razib-operations-rag</code> Worker. The chatbot calls only <code>/chat</code>; this settings page tests only <code>/health</code>. It never sends Sheet contents or calls <code>/ingest</code>/<code>/admin</code>.</div>
+        <div style="display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:9px;align-items:end">
+          <label style="font-size:11px;color:var(--text-muted)">Deployed Worker base URL
+            <input id="handbook-url" value="${esc(h.workerUrl || '')}" placeholder="https://razib-operations-rag.<account>.workers.dev" style="width:100%;margin-top:4px;font-family:ui-monospace,monospace;font-size:11.5px">
+          </label>
+          <button class="btn btn-secondary btn-sm" id="handbook-test">🔍 Test connection</button>
+        </div>
+        <div id="handbook-res" style="font-size:12px;margin-top:9px;color:var(--text-muted)">${h.tokenConfigured ? 'Read-only worker token is present in server environment.' : 'No worker token configured (fine when the Worker /chat endpoint is public).'}</div>
+      </div>`;
+  }
+  // Daily Report Feed — read-only bridge to the Report Automation Worker's
+  // /api/report-log. The service token is stored server-side and masked like
+  // provider keys; the button only ever calls the test endpoint.
+  function reportFeedEditor() {
+    const ra = cfg.reportAutomation || {};
+    const state = ra.configured ? 'CONNECTED' : 'NOT CONFIGURED';
+    const colour = ra.configured ? '#22c55e' : '#f59e0b';
+    const mirrorTxt = ra.mirrorCount
+      ? `mirror: ${ra.mirrorCount} report(s) · updated ${fmtDate(ra.mirrorUpdatedAt)}${ra.mirrorLatestDate ? ' · latest ' + esc(ra.mirrorLatestDate) : ''}`
+      : 'no mirror synced yet — save, then ask the chat or run RAG sync';
+    return `
+      <div style="${BOX};margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:13px;font-weight:700">📋 Daily Report Feed</div>
+          <span class="badge" style="font-size:10.5px;color:${colour};border-color:${colour}66">${state}</span>
+          <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" id="ra-enabled" ${ra.enabled !== false ? 'checked' : ''}> feed the daily report log to the chat</label>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin:7px 0 11px">Lets the chat read the team’s submitted daily reports from the Report Automation Worker (<code>/api/report-log</code>). Questions like “who hasn’t submitted today”, “what did Taion report yesterday”, or “reports for 2026-08-30” are answered from this feed with the author + date cited. Read-only; the service token never leaves the server.</div>
+        <div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(240px,.8fr) auto;gap:9px;align-items:end">
+          <label style="font-size:11px;color:var(--text-muted)">Worker base URL
+            <input id="ra-url" value="${esc(ra.baseUrl || '')}" placeholder="https://report-automation.<account>.workers.dev" style="width:100%;margin-top:4px;font-family:ui-monospace,monospace;font-size:11.5px">
+          </label>
+          <label style="font-size:11px;color:var(--text-muted)">API key (service token)
+            <input type="password" id="ra-key" value="" placeholder="${ra.hasKey ? '••••••• ' + esc(ra.keyMasked || '') + ' — saved key active' : 'Paste service token…'}" style="width:100%;margin-top:4px;font-family:ui-monospace,monospace;font-size:11.5px" autocomplete="off">
+          </label>
+          <button class="btn btn-secondary btn-sm" id="ra-test">🔍 Test feed</button>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;margin-top:9px;flex-wrap:wrap;font-size:12px;color:var(--text-muted)">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="ra-fresh" ${ra.freshOnAsk ? 'checked' : ''}> re-read the worker before every question</label>
+          <span id="ra-res">${mirrorTxt}</span>
+        </div>
+      </div>`;
+  }
 // "Choose which Google Sheet the AI fetches" — superadmin only.
   function sourceEditor() {
     const s = cfg.source || {};
@@ -7170,6 +9074,8 @@ function render() {
         </div>
 
         ${sourceEditor()}
+        ${handbookEditor()}
+        ${reportFeedEditor()}
         ${orderEditor()}
         ${ragEditor()}
 
@@ -7223,6 +9129,21 @@ function render() {
       evidenceLimit: Number($('rag-evidence')?.value) || 0,
       contextChars: Number($('rag-chars')?.value) || 20000,
     };
+  }
+
+  function collectHandbook() {
+    return { enabled: $('handbook-enabled')?.checked !== false, workerUrl: ($('handbook-url')?.value || '').trim() };
+  }
+
+  function collectReportFeed() {
+    const d = {};
+    if ($('ra-enabled')) d.enabled = $('ra-enabled').checked !== false;
+    const url = ($('ra-url')?.value || '').trim();
+    if (url) d.baseUrl = url;
+    const key = ($('ra-key')?.value || '').trim();
+    if (key) d.apiKey = key;
+    if ($('ra-fresh')) d.freshOnAsk = $('ra-fresh').checked === true;
+    return d;
   }
 
   function renderTabs(allTabs, perTab) {
@@ -7281,6 +9202,27 @@ function wire() {
     });
     $('src-test')?.addEventListener('click', () => testSource(true));
     $('src-sheet-id')?.addEventListener('change', () => testSource(true));
+    $('handbook-test')?.addEventListener('click', async () => {
+      const btn = $('handbook-test'), res = $('handbook-res');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Testing…'; }
+      if (res) { res.textContent = 'Checking the Worker health endpoint…'; res.style.color = 'var(--text-muted)'; }
+      try {
+        const r = await POST('/api/master/assistant-config/test-handbook', { role: 'superadmin', handbook: collectHandbook() });
+        const result = r.result || {};
+        if (res) { res.textContent = (result.ok ? '✓ ' : '✗ ') + (result.message || 'No response'); res.style.color = result.ok ? '#22c55e' : '#f87171'; }
+      } catch (e) { if (res) { res.textContent = '✗ ' + (e.message || 'Test failed'); res.style.color = '#f87171'; } }
+      finally { if (btn) { btn.disabled = false; btn.textContent = '🔍 Test connection'; } }
+    });
+    $('ra-test')?.addEventListener('click', async () => {
+      const btn = $('ra-test'), res = $('ra-res');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Testing…'; }
+      if (res) { res.textContent = 'Reading the Report Automation log…'; res.style.color = 'var(--text-muted)'; }
+      try {
+        const r = await POST('/api/master/assistant-config/test-report-feed', { role: 'superadmin', reportAutomation: collectReportFeed() });
+        if (res) { res.textContent = (r.success ? '✓ ' : '✗ ') + (r.message || 'No response'); res.style.color = r.success ? '#22c55e' : '#f87171'; }
+      } catch (e) { if (res) { res.textContent = '✗ ' + (e.message || 'Test failed'); res.style.color = '#f87171'; } }
+      finally { if (btn) { btn.disabled = false; btn.textContent = '🔍 Test feed'; } }
+    });
 
     Array.from(mainEl.querySelectorAll('.ai-test')).forEach((b) => b.addEventListener('click', () => runProvider(b.dataset.name, false)));
     Array.from(mainEl.querySelectorAll('.ai-save-test')).forEach((b) => b.addEventListener('click', () => runProvider(b.dataset.name, true)));
@@ -7339,6 +9281,8 @@ function wire() {
         tabs: Array.from(selected),
         freshOnAsk: $('src-fresh')?.checked === true,
       },
+      handbook: collectHandbook(),
+      reportAutomation: collectReportFeed(),
       rag: collectRag(),
     };
     try {

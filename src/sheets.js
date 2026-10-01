@@ -97,6 +97,12 @@ import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
 import fs from 'fs';
 import { config } from './config.js';
+// getSheetCredentials is the single source of truth for which spreadsheet each
+// tab lives in. It was referenced bare in syncDailyReviewToSheet() and
+// batchUpdateDailyReview(), but never imported, so every Daily Review write died
+// on "getSheetCredentials is not defined" and the reconcile pass logged the
+// failure per user while appearing to continue.
+import { getSheetCredentials } from './db.js';
 import {
   resolveColumns,
   rowWidth,
@@ -104,10 +110,12 @@ import {
   inferColumnKind,
   headerKey,
 } from './tabSchema.js';
+import { resolveUserTabUrlColumn, getUserTabFallbackUrlColumn } from './columnMap.js';
 import {
   cacheGet,
   cacheSet,
   tabTitlesCacheKey,
+  tabMetaCacheKey,
   tabValuesCacheKey,
   invalidateCache,
   invalidateCacheForSpreadsheet,
@@ -242,6 +250,35 @@ export async function listTabTitles(spreadsheetId = null) {
   });
 }
 
+/**
+ * Returns [{ title, sheetId (gid) }] for every tab so callers can build
+ * deep links like ...edit#gid={gid}. Cached with its own key, same 5-min TTL.
+ */
+export async function listTabMeta(spreadsheetId = null) {
+  const targetId = spreadsheetId || config.spreadsheetId;
+  const cacheKey = tabMetaCacheKey(targetId);
+
+  const cached = cacheGet(cacheKey);
+  if (cached !== undefined) return cached;
+
+  return enqueue(cacheKey, async () => {
+    const fresh = cacheGet(cacheKey);
+    if (fresh !== undefined) return fresh;
+
+    const sheets = await getSheetsClient();
+    const meta = await withRetry(() =>
+      sheets.spreadsheets.get({ spreadsheetId: targetId })
+    );
+    const tabs = meta.data.sheets.map((s) => ({
+      title: s.properties.title,
+      gid: s.properties.sheetId,
+    }));
+    cacheSet(cacheKey, tabs);
+    console.log(`[sheets] fetched tab meta for ${targetId} (${tabs.length} tabs)`);
+    return tabs;
+  });
+}
+
 /** Returns the full 2D array of values for a given tab. */
 export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
@@ -281,6 +318,97 @@ export function colIndexToA1(colIndex) {
     temp = Math.floor(temp / 26) - 1;
   }
   return letter;
+}
+
+/**
+ * Resolve a tab NAME to the NUMERIC sheet id that batchUpdate requests need.
+ *
+ * repeatCell ranges take sheets[].properties.sheetId — a small integer, not the
+ * spreadsheet id and not the tab name. Passing the spreadsheet id here produces
+ * a request the API accepts and silently applies to the wrong place, or to
+ * nothing, so this lookup is deliberately explicit and returns null rather than
+ * guessing when the tab is not found.
+ */
+export async function getTabSheetId(spreadsheetId, tabName) {
+  const targetId = spreadsheetId || config.spreadsheetId;
+  const sheets = await getSheetsClient();
+  const res = await withRetry(() =>
+    sheets.spreadsheets.get({
+      spreadsheetId: targetId,
+      fields: 'sheets(properties(sheetId,title))',
+    })
+  );
+  const hit = (res?.data?.sheets || []).find((s) => (s.properties || {}).title === tabName);
+  const id = hit?.properties?.sheetId;
+  return Number.isInteger(id) ? id : null;
+}
+
+/**
+ * Apply pre-planned background-format requests in ONE batchUpdate call.
+ *
+ * Takes the output of rowHighlight.planRowHighlightRequests() verbatim rather
+ * than rebuilding ranges here, so the dry run and the real write cannot diverge.
+ * Throws on API failure — the caller decides whether that is fatal, because a
+ * colour that failed to apply must be reported rather than swallowed.
+ */
+export async function applyRowBackgrounds(spreadsheetId, requests) {
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return { success: true, applied: 0, skipped: 'no-requests' };
+  }
+  const targetId = spreadsheetId || config.spreadsheetId;
+  const sheets = await getSheetsClient();
+  const res = await withRetry(() =>
+    sheets.spreadsheets.batchUpdate({
+      spreadsheetId: targetId,
+      requestBody: { requests },
+    })
+  );
+  invalidateCacheForSpreadsheet(targetId);
+  return {
+    success: true,
+    applied: requests.length,
+    replies: Array.isArray(res?.data?.replies) ? res.data.replies.length : null,
+  };
+}
+
+/**
+ * Read the effective background colour of every cell in an A1 range.
+ *
+ * Returns { rowIndex: { colIndex: '#RRGGBB' } } — 1-based row, 0-based column —
+ * with only the cells that actually carry a fill. Used to make the row-highlight
+ * repair pass idempotent, so it does not re-paint rows that are already correct.
+ *
+ * Two API quirks are baked in here because both fail silently otherwise:
+ *   - `includeGridData` with no `fields` returns formatting but NO values, so a
+ *     mask is mandatory.
+ *   - the same unbounded read is rejected outright; a `ranges` scope is
+ *     mandatory. Verified 2026-09-26 against the live workbook.
+ */
+export async function getRangeBackgroundColors(spreadsheetId, tabName, a1Range) {
+  const targetId = spreadsheetId || config.spreadsheetId;
+  const sheets = await getSheetsClient();
+  const res = await withRetry(() =>
+    sheets.spreadsheets.get({
+      spreadsheetId: targetId,
+      includeGridData: true,
+      ranges: [`'${tabName}'!${a1Range}`],
+      fields: 'sheets(data(rowData(values(userEnteredFormat.backgroundColor))))',
+    })
+  );
+  const rowData = res?.data?.sheets?.[0]?.data?.[0]?.rowData || [];
+  const out = {};
+  rowData.forEach((rd, r) => {
+    (rd.values || []).forEach((c, col) => {
+      const bg = c?.userEnteredFormat?.backgroundColor;
+      if (!bg) return;
+      const hex = [bg.red || 0, bg.green || 0, bg.blue || 0]
+        .map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0'))
+        .join('');
+      if (!out[r + 1]) out[r + 1] = {};
+      out[r + 1][col] = `#${hex}`.toUpperCase();
+    });
+  });
+  return out;
 }
 
 /** Updates a single cell or range in a given sheet tab */
@@ -890,7 +1018,11 @@ export async function syncSiteStatusToSheet({ account, siteUrl, month, status })
     sheetStatusValue = 'Updated & Backup';
   } else if (sLow === 'in_progress' || sLow === 'in progress') {
     sheetStatusValue = 'In Progress';
-  } else if (sLow === 'todo' || sLow === 'pending' || sLow === 'to do') {
+  } else if (sLow === 'todo' || sLow === 'to do') {
+    sheetStatusValue = 'To Do';
+  } else if (sLow === 'pending') {
+    sheetStatusValue = 'Pending';
+  } else if (!status) {
     sheetStatusValue = '';
   }
 
@@ -909,6 +1041,379 @@ export async function syncSiteStatusToSheet({ account, siteUrl, month, status })
     month: headers[monthColIdx],
     status: sheetStatusValue,
   };
+}
+
+/**
+ * dailyReviewMaintenanceCellValue — the canonical "what text goes in a Daily
+ * Review Maintenance cell" mapping, extracted so the assignment write-back and
+ * the batch sync cannot drift apart.
+ *
+ * The DB stores a normalized enum (todo | in_progress | completed | pending)
+ * alongside the human text it was parsed from (maintenanceRaw). The enum is an
+ * internal token: writing it verbatim would put "todo" into a column where every
+ * existing row reads "To Do" / "In Progress" / "Completed". So prefer the human
+ * raw text when we have it, and only fall back to the enum's label otherwise.
+ *
+ * Note this intentionally differs from the ACCOUNT-sheet mapper above, which
+ * renders `completed` as "Updated & Backup" for the month columns. The two
+ * sheets do use different wording for the month columns, but inside a Daily
+ * Review tab the team treats "Updated & Backup" and "Completed" as the same
+ * state and prefers "Completed" (confirmed 2026-09-26), so the tab mapper folds
+ * the account phrasing onto "Completed" rather than writing both.
+ */
+/**
+ * The maintenance-state vocabulary now lives in ./maintenanceStatus.js, which has
+ * no dependencies. It is IMPORTED (not merely re-exported) because this file's own
+ * mappers below call normalizeMaintenanceStatusText and read
+ * MAINTENANCE_DONE_WORDS. A bare `export { x } from '...'` creates no local
+ * binding, so the mappers would throw ReferenceError at call time - which is
+ * exactly the failure mode that once killed every Daily Review write.
+ *
+ * The local duplicate of MAINTENANCE_DONE_WORDS that used to sit above this
+ * comment has been deleted, so there is one definition of "done", not two that
+ * can drift apart.
+ *
+ * The move exists because server.js needs the rank guard for the reconcile path
+ * and cannot import this file statically (googleapis is loaded at the top of it,
+ * and server.js reaches this module through a dynamic import).
+ *
+ * See ./maintenanceStatus.js for normalizeMaintenanceStatusText,
+ * maintenanceStatusRank, findMonthlyHistoryEntry and shouldWriteReconciledStatus.
+ */
+import { normalizeMaintenanceStatusText, maintenanceStatusRank, MAINTENANCE_DONE_WORDS } from './maintenanceStatus.js';
+
+export { normalizeMaintenanceStatusText, maintenanceStatusRank, MAINTENANCE_DONE_WORDS };
+
+export function dailyReviewMaintenanceCellValue(rec = {}) {
+  const raw = rec.maintenanceRaw !== undefined && rec.maintenanceRaw !== null ? String(rec.maintenanceRaw).trim() : '';
+  if (raw) return normalizeMaintenanceStatusText(raw);
+  const s = String(rec.maintenanceStatus || '').toLowerCase().trim();
+  if (MAINTENANCE_DONE_WORDS.has(s)) return 'Completed';
+  if (s === 'in_progress' || s === 'in progress') return 'In Progress';
+  if (s === 'todo' || s === 'to do') return 'To Do';
+  if (s === 'pending') return 'Pending';
+  return '';
+}
+
+/**
+ * dailyReviewReportSentCellValue — the same contract for the
+ * "Maintenance Report Sent" column: prefer the human text (reportSentRaw),
+ * otherwise collapse the enum to the two states these tabs actually use.
+ *
+ * The enum carries more states than the column does (no | todo | pending | yes).
+ * Writing the token would put "pending" in a column whose existing rows read
+ * "No" / "To Do" / "Yes", so the fallback collapses to the verified binary.
+ *
+ * The affirmative token is accepted as BOTH "yes" and "sent": the live DB stores
+ * "yes" (measured 2026-09-26: no|pending|todo|yes, zero "sent"), while the
+ * pre-existing check here only compared against "sent" and so rendered every
+ * "yes" row as "No". Anything else falls back to "No"; empty stays empty rather
+ * than defaulting to "No".
+ */
+export function dailyReviewReportSentCellValue({ reportSentRaw, reportSentStatus } = {}) {
+  if (reportSentRaw !== undefined && reportSentRaw !== null) {
+    const raw = String(reportSentRaw).trim();
+    if (raw) return raw;
+  }
+  if (reportSentStatus) {
+    const s = String(reportSentStatus).toLowerCase().trim();
+    return (s === 'yes' || s === 'sent') ? 'Yes' : 'No';
+  }
+  return '';
+}
+
+/**
+ * batchUpdateDailyReviewTab()
+ *
+ * Efficiently writes multiple maintenance status updates to a single user tab
+ * in the Daily Review Google Sheet using ONE batchUpdate API call.
+ */
+export async function batchUpdateDailyReviewTab({ userName, updates }) {
+  if (!userName || !updates || updates.length === 0) return { success: true, written: 0 };
+
+  // Skip inactive users
+  try {
+    const { getUsers } = await import('./db.js');
+    const u = (getUsers ? getUsers() : []).find(x => (x.name || '').toLowerCase() === (userName || '').toLowerCase());
+    if (u && u.active === false) {
+      console.log(`[batch-sync] Skipping "${userName}" (inactive user)`);
+      return { success: true, written: 0, skipped: true };
+    }
+  } catch {}
+
+  // Sheet manager is the single source of truth for which spreadsheet this is.
+  // No hardcoded fallback: a missing credential must fail loudly rather than
+  // silently write to a stale/wrong sheet.
+  const creds = getSheetCredentials();
+  const item = creds.find(c => c.key === 'DAILY_REVIEW' || c.id === 'daily-review');
+  if (!item || !item.spreadsheetId) {
+    throw new Error(
+      '[batch-sync] DAILY_REVIEW sheet is not configured in the sheet manager. ' +
+      'Add the Daily Review spreadsheet in Sheet Manager before writing.'
+    );
+  }
+  const sheetId = item.spreadsheetId;
+
+  const sheets = await getSheetsClient();
+  let tabRows;
+  try {
+    const res = await withRetry(() =>
+      sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `'${userName}'!A1:ZZ500`,
+      })
+    );
+    tabRows = res.data.values || [];
+  } catch (e) {
+    throw new Error(`[batch-sync] Could not read tab "${userName}": ${e.message}`);
+  }
+
+  if (tabRows.length < 1) return { success: false, error: `Tab "${userName}" empty` };
+
+  const h = tabRows[0];
+
+  // Canonical website-column resolution — the SAME resolver the assignment
+  // write-back uses, so the two paths can never disagree about which column
+  // holds the website. This replaces the per-user hardcodes (medul -> 1,
+  // sabbir/taion -> 0) after verifying on 2026-09-25 that the resolver returns
+  // the identical column for all 8 live tabs while also closing two traps the
+  // old header fallback walked into: on Sabbir the column titled "Website"
+  // holds account labels ("CW"), and on Taion "Booking / Reservstion Link"
+  // classifies as a url. Never guesses: an unresolved column is a loud failure.
+  const urlResolution = resolveUserTabUrlColumn({
+    headers: h,
+    rows: tabRows.slice(1),
+    fallbackIndex: getUserTabFallbackUrlColumn(userName),
+  });
+  if (urlResolution.col == null) {
+    return {
+      success: false,
+      error: `Tab "${userName}" website column could not be resolved (${urlResolution.via}) — refusing to guess`,
+    };
+  }
+  const urlCol = urlResolution.col;
+
+  const maintCol = (() => {
+    const exact = h.findIndex(x => x && x.trim().toLowerCase() === 'maintenance');
+    if (exact !== -1) return exact;
+    return h.findIndex(x => x && x.toLowerCase().includes('maintenance'));
+  })();
+
+  if (maintCol === -1) {
+    console.warn(`[batch-sync] "${userName}" tab has no Maintenance column`);
+    return { success: false, error: 'No Maintenance column found' };
+  }
+
+  const normUrl = u => (u || '').toLowerCase()
+    .replace(/^https?:\/\//g, '').replace(/^www\./g, '').replace(/\/+$/g, '').trim();
+
+  const urlToRow = new Map();
+  for (let i = 1; i < tabRows.length; i++) {
+    const raw = normUrl(tabRows[i][urlCol] || '');
+    if (raw) urlToRow.set(raw, i + 1);
+  }
+
+  const batchData = [];
+  for (const upd of updates) {
+    let sheetRow = (upd.rowIndex && upd.rowIndex >= 2) ? upd.rowIndex : null;
+    if (!sheetRow) {
+      const normSite = normUrl(upd.siteUrl || '');
+      if (normSite) {
+        sheetRow = urlToRow.get(normSite);
+        if (!sheetRow) {
+          for (const [k, v] of urlToRow) {
+            if (k.includes(normSite) || normSite.includes(k)) { sheetRow = v; break; }
+          }
+        }
+      }
+    }
+
+    if (!sheetRow) {
+      console.warn(`[batch-sync] "${upd.siteUrl}" not found in ${userName} tab — skipping`);
+      continue;
+    }
+
+    let cellVal = dailyReviewMaintenanceCellValue(upd);
+
+    const colLetter = colIndexToA1(maintCol);
+    batchData.push({
+      range: `'${userName}'!${colLetter}${sheetRow}`,
+      values: [[cellVal]],
+    });
+  }
+
+  if (batchData.length === 0) return { success: true, written: 0 };
+
+  invalidateCacheForSpreadsheet(sheetId);
+  await withRetry(() =>
+    sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: sheetId,
+      requestBody: {
+        valueInputOption: 'USER_ENTERED',
+        data: batchData,
+      },
+    })
+  );
+
+  console.log(`[batch-sync] ✅ ${userName} tab: wrote ${batchData.length} cell(s) in 1 API call`);
+  return { success: true, written: batchData.length };
+}
+
+/**
+ * syncStatusToDailyReviewSheet()
+ *
+ * Writes a maintenance and/or report-sent status update back to the
+ * user's tab in the Daily Review Google Sheet.
+ */
+export async function syncStatusToDailyReviewSheet({
+  userName,
+  siteUrl,
+  rowIndex,
+  maintenanceStatus,
+  maintenanceRaw,
+  reportSentStatus,
+  reportSentRaw,
+}) {
+  if (!userName || (!maintenanceStatus && !maintenanceRaw && !reportSentStatus && !reportSentRaw)) {
+    return { success: false, error: 'userName and at least one status field are required' };
+  }
+
+  // Skip inactive users
+  try {
+    const { getUsers } = await import('./db.js');
+    const u = (getUsers ? getUsers() : []).find(x => (x.name || '').toLowerCase() === (userName || '').toLowerCase());
+    if (u && u.active === false) {
+      console.log(`[daily-review-sync] Skipping "${userName}" (inactive user)`);
+      return { success: true, skipped: true };
+    }
+  } catch {}
+
+  // Sheet manager is the single source of truth (no hardcoded fallback).
+  const creds = getSheetCredentials();
+  const item = creds.find(c => c.key === 'DAILY_REVIEW' || c.id === 'daily-review');
+  if (!item || !item.spreadsheetId) {
+    throw new Error(
+      '[daily-review-sync] DAILY_REVIEW sheet is not configured in the sheet manager. ' +
+      'Add the Daily Review spreadsheet in Sheet Manager before writing.'
+    );
+  }
+  const dailyReviewSheetId = item.spreadsheetId;
+
+  const sheets = await getSheetsClient();
+  const tabName = userName;
+
+  let tabRows;
+  try {
+    const res = await withRetry(() =>
+      sheets.spreadsheets.values.get({
+        spreadsheetId: dailyReviewSheetId,
+        range: `'${tabName}'!A1:ZZ500`,
+      })
+    );
+    tabRows = res.data.values || [];
+  } catch (e) {
+    throw new Error(`[daily-review-sync] Could not read tab "${tabName}": ${e.message}`);
+  }
+
+  if (tabRows.length < 1) {
+    return { success: false, error: `Tab "${tabName}" is empty in Daily Review sheet` };
+  }
+
+  const h = tabRows[0];
+
+  // Same canonical website-column resolution as batchUpdateDailyReviewTab and
+  // the assignment write-back (see columnMap.resolveUserTabUrlColumn). Replaces
+  // the duplicated per-user hardcodes; verified identical on all 8 live tabs.
+  const urlResolution = resolveUserTabUrlColumn({
+    headers: h,
+    rows: tabRows.slice(1),
+    fallbackIndex: getUserTabFallbackUrlColumn(userName),
+  });
+  if (urlResolution.col == null) {
+    return {
+      success: false,
+      error: `Tab "${tabName}" website column could not be resolved (${urlResolution.via}) — refusing to guess`,
+    };
+  }
+  const urlCol = urlResolution.col;
+
+  const maintCol = (() => {
+    const exact = h.findIndex(x => x && x.trim().toLowerCase() === 'maintenance');
+    if (exact !== -1) return exact;
+    return h.findIndex(x => x && x.toLowerCase().includes('maintenance'));
+  })();
+
+  const sentCol = (() => {
+    for (const c of ['maintenance report sent', 'report sent', 'sent']) {
+      const i = h.findIndex(x => x && x.toLowerCase().includes(c));
+      if (i !== -1) return i;
+    }
+    return -1;
+  })();
+
+  let sheetRow = (rowIndex && rowIndex >= 2) ? rowIndex : null;
+  if (!sheetRow) {
+    const normSearch = (siteUrl || '')
+      .toLowerCase()
+      .replace(/^https?:\/\//g, '')
+      .replace(/^www\./g, '')
+      .replace(/\/+$/g, '')
+      .trim();
+
+    for (let i = 1; i < tabRows.length; i++) {
+      const rawUrl = (tabRows[i][urlCol] || '')
+        .toLowerCase()
+        .replace(/^https?:\/\//g, '')
+        .replace(/^www\./g, '')
+        .replace(/\/+$/g, '')
+        .trim();
+      if (rawUrl && (rawUrl === normSearch || rawUrl.includes(normSearch) || normSearch.includes(rawUrl))) {
+        sheetRow = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (!sheetRow) {
+    console.warn(`[daily-review-sync] Site "${siteUrl}" not found in tab "${tabName}"`);
+    return { success: false, error: `Site "${siteUrl}" not found in ${tabName} tab` };
+  }
+
+  let sheetMaintValue = null;
+  if (maintenanceRaw !== undefined && maintenanceRaw !== '') {
+    sheetMaintValue = maintenanceRaw;
+  } else if (maintenanceStatus) {
+    const s = maintenanceStatus.toLowerCase();
+    if (s === 'completed') sheetMaintValue = 'Completed';
+    else if (s === 'in_progress') sheetMaintValue = 'In Progress';
+    else if (s === 'todo' || s === 'to do') sheetMaintValue = 'To Do';
+    else if (s === 'pending') sheetMaintValue = 'Pending';
+    else sheetMaintValue = maintenanceStatus;
+  }
+
+  let sheetSentValue = dailyReviewReportSentCellValue({ reportSentRaw, reportSentStatus });
+
+  const updates = [];
+  if (sheetMaintValue !== null && maintCol !== -1) {
+    updates.push({ cell: `${colIndexToA1(maintCol)}${sheetRow}`, value: sheetMaintValue });
+  }
+  if (sheetSentValue !== null && sentCol !== -1) {
+    updates.push({ cell: `${colIndexToA1(sentCol)}${sheetRow}`, value: sheetSentValue });
+  }
+
+  if (updates.length === 0) {
+    return { success: false, error: 'No writable columns found' };
+  }
+
+  invalidateCacheForSpreadsheet(dailyReviewSheetId);
+  const written = [];
+  for (const u of updates) {
+    await updateSheetCell(dailyReviewSheetId, tabName, u.cell, u.value);
+    written.push(u.cell);
+    console.log(`[daily-review-sync] ✅ ${tabName} tab: "${siteUrl}" cell ${u.cell} = "${u.value}"`);
+  }
+
+  return { success: true, tab: tabName, row: sheetRow, cells: written };
 }
 
 export const DEV_TRACKER_SPREADSHEET_ID = '14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78';

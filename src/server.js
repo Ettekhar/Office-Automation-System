@@ -9,12 +9,66 @@ import {
   generateAllPreviews,
   sendSingleEmail,
 } from './dashboardApi.js';
+import {
+  getAccountManagersList,
+  getClickUpTaskPreview,
+  completeClickUpMaintenanceTask,
+} from './clickup.js';
 import { invalidateCache, getCacheStatus } from './sheetsCache.js';
+import { syncAssignmentToUserTabs } from './assignmentWriteBack.js';
+import { findMonthlyHistoryEntry, shouldWriteReconciledStatus, maintenanceStatusRank } from './maintenanceStatus.js';
+import * as db from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.resolve(__dirname, '../public');
 const DEFAULT_PORT = Number(process.env.PORT || 3000);
+
+function overlayMonthStatus(rows, month, sites = null) {
+  if (!month) return rows;
+  const mLower = month.trim().toLowerCase();
+  const siteList = sites || (db.getSites ? db.getSites({}) : []);
+  const normMap = {
+    'updated & backup': 'completed', 'completed': 'completed',
+    'in progress': 'in_progress', 'to do': 'todo', 'todo': 'todo',
+    'pending': 'pending', '': 'todo',
+  };
+  return rows.map(row => {
+    const site = siteList.find(s => {
+      const sUrl = (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const rUrl = (row.siteUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      return sUrl === rUrl || sUrl.includes(rUrl) || rUrl.includes(sUrl);
+    });
+    if (!site) return row;
+    const history = site.monthlyHistory || [];
+    // Strict month matching. The old inline lookup used substring tests, under
+    // which asking for "sep" matched the 2022 entry "September 22" - whose empty
+    // status was then read as "not done". Returns null when nothing matches,
+    // and null means "leave this row alone", which is always the safe outcome.
+    const entry = findMonthlyHistoryEntry(history, month);
+    if (!entry) return row;
+    const rawVal = (entry.status || '').trim();
+    const normVal = normMap[(rawVal || '').toLowerCase()] || 'todo';
+    return {
+      ...row,
+      maintenanceStatus: normVal,
+      maintenanceRaw: rawVal || '',
+      _origMaintenanceRaw: row.maintenanceRaw || '',
+      _hadMonthEntry: true,
+    };
+  });
+}
+
+// Reconcile debounce: limit CW/RM->Daily-Review sync to once per user+month per 5 min
+const _reconcileLastRun = new Map();
+const RECONCILE_COOLDOWN_MS = 30 * 1000;
+function shouldReconcile(userName, month) {
+  const key = String(userName).toLowerCase() + '|' + String(month).toLowerCase();
+  const last = _reconcileLastRun.get(key) || 0;
+  if (Date.now() - last < RECONCILE_COOLDOWN_MS) return false;
+  _reconcileLastRun.set(key, Date.now());
+  return true;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -23,6 +77,9 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
 };
 
@@ -46,9 +103,73 @@ function sendJson(res, statusCode, data) {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-OfficeOS-Role, X-OfficeOS-User, X-OfficeOS-User-Id',
   });
   res.end(JSON.stringify(data));
+}
+
+/**
+ * Resolve the acting user for audit logging. Trust order:
+ * explicit body actorName/actorId → forwarder headers set by the UI →
+ * query params → fallback "admin". The UI sends X-OfficeOS-* headers on
+ * every request, so manual changes are attributed to the real operator.
+ */
+function actorFrom(req, b, reqUrl) {
+  const h = (n) => (req.headers[n] || '').toString().trim();
+  const q = (n) => (reqUrl?.searchParams?.get(n) || '').trim();
+  return {
+    name: String(b?.actorName || h('x-officeos-user') || q('user') || 'admin').slice(0, 100),
+    id: String(b?.actorId || h('x-officeos-user-id') || q('userId') || '').slice(0, 100),
+    role: String(h('x-officeos-role') || q('role') || '').slice(0, 40),
+  };
+}
+
+/**
+ * Optimistic-lock guard for mutation routes.
+ *
+ * A client that already loaded a record sends its last-seen `updatedAt` (the UI
+ * attaches `expectedUpdatedAt`). When the stored record has since changed, the
+ * write would silently overwrite someone else's edit — so we reject with 409
+ * and hand back the current record so the UI can re-render instead of clobber.
+ * When the client sends no expectation, behavior is unchanged (last-write-wins).
+ */
+function assertFresh(before, b, res, entity) {
+  const expected = b && b.expectedUpdatedAt;
+  if (expected === undefined || expected === null || expected === '') return true;
+  if (before && db.assertRecordFresh(before, expected)) return true;
+  sendJson(res, 409, {
+    error: 'STALE_VERSION',
+    message: 'This record was changed by someone else since you loaded it. Refresh to see the latest — your edit was NOT applied and no data was lost.',
+    entity,
+    id: before ? before.id : undefined,
+    current: before || null,
+  });
+  return false;
+}
+
+/**
+ * Assignment targets must be real, active users. The UI hides inactive users
+ * from the assignee picker, but the API is also protected so a stale tab or a
+ * hand-written request cannot create a new assignment for a deactivated account.
+ * `remove` is intentionally allowed to name an inactive user: unassigning an old
+ * inactive assignment is cleanup, not a new assignment.
+ */
+function assertActiveAssignees(res, userIds) {
+  const ids = Array.isArray(userIds) ? userIds : [];
+  if (!ids.length) return true;
+  const byId = new Map((db.getUsers() || []).map((u) => [u.id, u]));
+  const invalid = ids.filter((id) => {
+    const user = byId.get(id);
+    return !user || user.active === false;
+  });
+  if (!invalid.length) return true;
+  const names = invalid.map((id) => byId.get(id)?.name || id);
+  sendJson(res, 400, {
+    error: 'INACTIVE_ASSIGNEE',
+    message: `Cannot assign to unknown or inactive user(s): ${names.join(', ')}. Choose an active user.`,
+    users: names,
+  });
+  return false;
 }
 
 function serveStatic(res, filePath) {
@@ -179,6 +300,53 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // API Route: Get all Account Managers directory (names, IDs, fresh email addresses)
+    if (pathname === '/api/clickup/account-managers' && method === 'GET') {
+      const data = getAccountManagersList();
+      sendJson(res, 200, { success: true, ...data });
+      return;
+    }
+
+    // API Route: Preview ClickUp task readiness, AM resolution & comment preview
+    if (pathname === '/api/clickup/preview-task' && method === 'GET') {
+      const timeTrackUrl = reqUrl.searchParams.get('timeTrackUrl') || '';
+      const websiteUrl = reqUrl.searchParams.get('websiteUrl') || '';
+      const accountManager = reqUrl.searchParams.get('accountManager') || '';
+      const month = reqUrl.searchParams.get('month') || '';
+      const data = await getClickUpTaskPreview({
+        timeTrackUrl,
+        websiteUrl,
+        accountManager,
+        monthName: month,
+      });
+      sendJson(res, 200, { success: true, ...data });
+      return;
+    }
+
+    // API Route: Sync / Close ClickUp task alone (without sending email)
+    if (pathname === '/api/clickup/sync-task' && method === 'POST') {
+      const body = await parseBody(req);
+      const {
+        timeTrackUrl,
+        websiteUrl,
+        accountManager,
+        monthName,
+        month,
+        dryRun = false,
+      } = body;
+
+      const result = await completeClickUpMaintenanceTask({
+        timeTrackUrl: timeTrackUrl || body.clickupTimeTrackUrl,
+        websiteUrl: websiteUrl || 'website',
+        accountManager: accountManager || body.am,
+        monthName: monthName || month,
+        dryRun: Boolean(dryRun),
+      });
+
+      sendJson(res, 200, { success: true, result });
+      return;
+    }
+
     // API Route: Send single email
     if (pathname === '/api/send-single' && method === 'POST') {
       const body = await parseBody(req);
@@ -188,6 +356,11 @@ const server = http.createServer(async (req, res) => {
         html: body.html,
         dryRun: Boolean(body.dryRun),
         accountKey: body.account || body.accountKey || 'CW',
+        websiteUrl: body.websiteUrl,
+        timeTrackUrl: body.timeTrackUrl || body.clickupTimeTrackUrl,
+        accountManager: body.accountManager || body.am,
+        monthName: body.month || body.monthName,
+        syncClickUp: body.syncClickUp !== false,
       });
       sendJson(res, 200, result);
       return;
@@ -211,12 +384,17 @@ const server = http.createServer(async (req, res) => {
             html: item.html,
             dryRun,
             accountKey: item.account || item.accountKey || 'CW',
+            websiteUrl: item.websiteUrl,
+            timeTrackUrl: item.timeTrackUrl || item.clickupTimeTrackUrl,
+            accountManager: item.accountManager || item.am,
+            monthName: item.month || item.monthName,
           });
           results.push({
             websiteUrl: item.websiteUrl,
             account: item.account || 'CW',
             success: true,
             to: item.to,
+            clickup: sent.clickup,
           });
         } catch (err) {
           results.push({
@@ -231,6 +409,101 @@ const server = http.createServer(async (req, res) => {
       }
 
       sendJson(res, 200, { success: true, results });
+      return;
+    }
+
+    // ── Conditional email notes ────────────────────────────────────────────
+    // A condition registered here is detected in a site's report tab as a cell
+    // shaped "<condition>:<link>", and adds its message above "Best Regards,".
+    //
+    // No role gate, deliberately: every route in this server is unauthenticated,
+    // so gating only these four would imply a protection the rest of the app does
+    // not have. Attribution instead comes from actorFrom(), and every mutation is
+    // written to the audit log.
+    if (pathname === '/api/conditional-notes' && method === 'GET') {
+      const account = reqUrl.searchParams.get('account') || null;
+      sendJson(res, 200, { notes: db.getConditionalNotes(account ? { account } : {}) });
+      return;
+    }
+
+    if (pathname === '/api/conditional-notes' && method === 'POST') {
+      const body = await parseBody(req);
+      const actor = actorFrom(req, body, reqUrl);
+      try {
+        // "accounts" (one or many) is the panel's shape: one action, every sheet
+        // the operator ticked. "account" (single) still works, so the CLI and any
+        // existing caller are unaffected.
+        const many = Array.isArray(body.accounts)
+          ? body.accounts
+          : (body.accounts ? [body.accounts] : null);
+        if (many) {
+          const result = db.setConditionalNoteForAccounts({
+            accounts: many,
+            condition: body.condition,
+            message: body.message,
+            enabled: body.enabled !== false,
+            actor: actor.name,
+            actorId: actor.id,
+          });
+          sendJson(res, 200, { success: true, ...result });
+        } else {
+          const note = db.createConditionalNote({
+            account: body.account || 'CW',
+            condition: body.condition,
+            message: body.message,
+            enabled: body.enabled !== false,
+            actor: actor.name,
+            actorId: actor.id,
+          });
+          sendJson(res, 200, { success: true, note });
+        }
+      } catch (err) {
+        sendJson(res, 400, { error: err.message });
+      }
+      return;
+    }
+
+    if (pathname === '/api/conditional-notes/update' && method === 'POST') {
+      const body = await parseBody(req);
+      if (!body.id) {
+        sendJson(res, 400, { error: 'id is required' });
+        return;
+      }
+      const actor = actorFrom(req, body, reqUrl);
+      try {
+        // Only forward the fields the caller actually sent, so an unrelated
+        // update cannot blank out a field it never mentioned.
+        const patch = {};
+        for (const f of ['account', 'condition', 'message', 'enabled']) {
+          if (body[f] !== undefined) patch[f] = body[f];
+        }
+        const note = db.updateConditionalNote(body.id, patch, {
+          actor: actor.name,
+          actorId: actor.id,
+        });
+        sendJson(res, 200, { success: true, note });
+      } catch (err) {
+        sendJson(res, err.message.startsWith('Conditional note not found') ? 404 : 400, {
+          error: err.message,
+        });
+      }
+      return;
+    }
+
+    if (pathname === '/api/conditional-notes/delete' && method === 'POST') {
+      const body = await parseBody(req);
+      if (!body.id) {
+        sendJson(res, 400, { error: 'id is required' });
+        return;
+      }
+      const actor = actorFrom(req, body, reqUrl);
+      const removed = db.deleteConditionalNote(body.id, {
+        actor: actor.name,
+        actorId: actor.id,
+      });
+      sendJson(res, removed ? 200 : 404, removed
+        ? { success: true }
+        : { error: `Conditional note not found: ${body.id}` });
       return;
     }
 
@@ -297,9 +570,17 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/master/months/select' && method === 'POST') {
         const b = await body();
         if (!b.monthName) return err(400, 'monthName required');
+        const mName = b.monthName.trim();
         const meta = db.getMeta();
-        db.setMeta({ ...meta, activeMonth: b.monthName.trim() });
-        return ok({ success: true, activeMonth: b.monthName.trim() });
+        db.setMeta({ ...meta, activeMonth: mName });
+        try {
+          const allDr = db.getDailyReview();
+          const overlaid = overlayMonthStatus(allDr, mName);
+          db.setDailyReview(overlaid);
+        } catch (e) {
+          console.warn('[months/select save daily-review error]:', e.message);
+        }
+        return ok({ success: true, activeMonth: mName });
       }
 
       // POST /api/master/add-month — create new column in CW & RM sheets + set as active
@@ -388,8 +669,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       // ── SYNC (Superadmin) ─────────────────────────────────────
+      // Supports dry-run: ?dryRun=1 or body {dryRun:true} → full import +
+      // diff report, zero writes (see syncFromSheets.syncAll).
       if (pathname === '/api/master/sync' && method === 'POST') {
         const isSSE = req.headers.accept?.includes('text/event-stream');
+        const dryRun = reqUrl.searchParams.get('dryRun') === '1'
+          || (await parseBody(req).catch(() => ({}))).dryRun === true;
         if (isSSE) {
           res.writeHead(200, {
             'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
@@ -398,13 +683,13 @@ const server = http.createServer(async (req, res) => {
           const { syncAll, onProgress } = await import('./syncFromSheets.js');
           onProgress((step, pct) => res.write(`data: ${JSON.stringify({ step, pct })}\n\n`));
           try {
-            const result = await syncAll();
+            const result = await syncAll({ dryRun });
             res.write(`data: ${JSON.stringify({ done: true, ...result })}\n\n`);
           } catch (e) { res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`); }
           return res.end();
         }
         const { syncAll } = await import('./syncFromSheets.js');
-        try { return ok(await syncAll()); }
+        try { return ok(await syncAll({ dryRun })); }
         catch (e) { return err(500, e.message); }
       }
 
@@ -417,29 +702,199 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/master/users' && method === 'POST') {
         const b = await body();
         if (!b.name) return err(400, 'name required');
-        try { return ok({ user: db.createUser(b) }); }
+        try {
+          const user = db.createUser(b);
+          const actor = actorFrom(req, b, reqUrl);
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'create', entity: 'user', entityId: user.id, label: user.name,
+            field: 'all', oldValue: null, newValue: `${user.name} (${user.role})`,
+            source: 'User Management', reason: 'Team member created',
+          });
+          return ok({ user });
+        }
         catch (e) { return err(400, e.message); }
       }
       // PUT /api/master/users/:id  (superadmin)
       if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
         const b = await body();
-        try { return ok({ user: db.updateUser(id, b) }); }
+        try {
+          const before = db.getUserById(id);
+          const user = db.updateUser(id, b);
+          const fields = ['name', 'role', 'email', 'active'];
+          for (const f of fields) {
+            if (before && b[f] !== undefined && String(before[f] ?? '') !== String(b[f] ?? '')) {
+              const actor = actorFrom(req, b, reqUrl);
+              db.appendAuditLog({
+                actor: actor.name, actorId: actor.id,
+                action: 'update', entity: 'user', entityId: user.id, label: user.name,
+                field: f, oldValue: before[f] ?? '', newValue: b[f] ?? '',
+                source: 'User Management', reason: 'User edited',
+              });
+            }
+          }
+          return ok({ user });
+        }
         catch (e) { return err(404, e.message); }
+      }
+
+      // POST /api/master/sites/bulk-assign — assign multiple sites to users (admin+)
+      if (pathname === '/api/master/sites/bulk-assign' && method === 'POST') {
+        const b = await body();
+        const { siteIds, userIds, mode = 'add' } = b;
+        if (!Array.isArray(siteIds) || !Array.isArray(userIds)) {
+          return err(400, 'siteIds and userIds arrays required');
+        }
+        if (!['add', 'replace', 'remove'].includes(mode)) {
+          return err(400, `mode must be one of: add, replace, remove (got "${mode}")`);
+        }
+        if (mode !== 'remove' && !assertActiveAssignees(res, userIds)) return;
+        const updated = [];
+        const skipped = [];
+        const failed = [];
+        const writeBack = [];
+        const actor = actorFrom(req, b, reqUrl);
+        const wbDryRun = !!(b.dryRun || reqUrl?.searchParams?.get('dryRun') === '1');
+        // Optimistic-lock pre-check: read every site up front and reject the
+        // WHOLE request with 409 if any of them changed since the client
+        // loaded them — a partial bulk operation must never silently clobber
+        // a concurrent edit. Supports per-site expectations (expectedUpdatedAtMap)
+        // and a single blanket expectation (expectedUpdatedAt).
+        {
+          const stale = [];
+          for (const sId of siteIds) {
+            const site = db.getSiteById(sId);
+            if (!site) continue;
+            const expected = (b.expectedUpdatedAtMap && b.expectedUpdatedAtMap[sId])
+              || b.expectedUpdatedAt;
+            if (expected && !db.assertRecordFresh(site, expected)) stale.push(site);
+          }
+          if (stale.length) {
+            sendJson(res, 409, {
+              error: 'STALE_VERSION',
+              message: `${stale.length} of ${siteIds.length} selected site(s) changed since you loaded them (someone else edited them). No assignments were made. Refresh and re-select.`,
+              entity: 'site',
+              staleCount: stale.length,
+              current: stale,
+            });
+            return;
+          }
+        }
+        for (const sId of siteIds) {
+          const site = db.getSiteById(sId);
+          if (!site) { skipped.push({ siteId: sId, reason: 'site not found' }); continue; }
+          let newUsers = Array.isArray(site.assignedUsers) ? [...site.assignedUsers] : [];
+          if (mode === 'add') {
+            newUsers = [...new Set([...newUsers, ...userIds])];
+          } else if (mode === 'replace') {
+            newUsers = [...userIds];
+          } else if (mode === 'remove') {
+            newUsers = newUsers.filter(uid => !userIds.includes(uid));
+          }
+          const changed = JSON.stringify([...site.assignedUsers].sort()) !== JSON.stringify([...newUsers].sort());
+          try {
+            // A dry run must commit NOTHING. Previously only the sheet side was
+            // suppressed here, so ?dryRun=1 still wrote assignedUsers to the DB
+            // while answering as a preview — live data mutated behind a "dry run"
+            // label. Report the plan against a synthetic record instead.
+            if (wbDryRun) {
+              updated.push({ ...site, assignedUsers: newUsers });
+              if (changed) {
+                const plan = await syncAssignmentToUserTabs({
+                  site: { ...site, assignedUsers: newUsers },
+                  beforeUserIds: site.assignedUsers || [], afterUserIds: newUsers,
+                  actor, source: 'Team Progress UI (bulk, dry run)', dryRun: true,
+                });
+                writeBack.push({ siteId: sId, ...plan });
+              }
+              continue;
+            }
+            const saved = db.assignUsersToSite(sId, newUsers);
+            updated.push(saved);
+            if (changed) {
+              const before = (site.assignedUsers || []).map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)';
+              const after = newUsers.map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)';
+              db.appendAuditLog({
+                actor: actor.name, actorId: actor.id, source: 'Team Progress UI',
+                action: `assignment:${mode}`, entity: 'site', entityId: sId, label: site.url,
+                field: 'assignedUsers', oldValue: before, newValue: after,
+                reason: `Bulk ${mode === 'add' ? 'assign' : mode === 'replace' ? 'reassign' : 'unassign'} ${userIds.length} user(s)`,
+              });
+              // DB→Sheets write-back: make the Daily Review per-user tab reflect
+              // the assignment (append on add, soft-remove on remove) and persist
+              // each row's location so reconcile stops skipping the site.
+              try {
+                const rep = await syncAssignmentToUserTabs({
+                  site, beforeUserIds: site.assignedUsers || [], afterUserIds: newUsers,
+                  actor, source: 'Team Progress UI (bulk)', dryRun: false,
+                });
+                writeBack.push({ siteId: sId, ...rep });
+              } catch (e) {
+                // Never let a sheet problem undo (or mask) a committed DB assignment.
+                console.warn(`[bulk-assign] user-tab write-back failed for ${sId}:`, e.message);
+                writeBack.push({ siteId: sId, failed: [{ reason: 'writeback-threw', error: e.message }] });
+              }
+            }
+          } catch (err) {
+            console.warn('[bulk-assign] site error:', sId, err.message);
+            failed.push({ siteId: sId, reason: err.message });
+          }
+        }
+        return ok({
+          success: true,
+          count: updated.length,
+          assigned: updated.length,
+          skipped: skipped.length,
+          failed: failed.length,
+          skippedDetails: skipped,
+          failedDetails: failed,
+          dryRun: wbDryRun,
+          ...(wbDryRun ? { note: 'Dry run: no DB and no sheet writes were made. `sites` shows the state that WOULD result.' } : {}),
+          userTabWriteBack: writeBack,
+          sites: updated,
+        });
       }
       // DELETE /api/master/users/:id  (superadmin)
       if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'DELETE') {
         const id = pathname.split('/').pop();
+        const b = await body();
+        const before = db.getUserById(id);
         db.deleteUser(id);
+        if (before) {
+          const actor = actorFrom(req, b, reqUrl);
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'delete', entity: 'user', entityId: id, label: before.name,
+            field: 'all', oldValue: `${before.name} (${before.role})`, newValue: null,
+            source: 'User Management', reason: 'Team member deleted',
+          });
+        }
         return ok({ success: true });
       }
 
       // ── SITES ──────────────────────────────────────────────────
-      // GET /api/master/sites?userId=&account=
+      // GET /api/master/sites?userId=&account=&month=
       if (pathname === '/api/master/sites' && method === 'GET') {
         const userId  = reqUrl.searchParams.get('userId');
         const account = reqUrl.searchParams.get('account');
-        return ok({ sites: db.getSites({ userId, account }) });
+        const month   = reqUrl.searchParams.get('month') || db.getActiveMonth();
+        let sites = db.getSites({ userId, account });
+        // Resolve latestMonthStatus from monthlyHistory for the requested month
+        if (month) {
+          sites = sites.map(s => {
+            // Strict matcher, same as the reconcile path. The previous substring
+            // version reported the 2022 entry for a "sep" query, so this endpoint
+            // displayed a stale month as if it were the selected one. No match
+            // simply leaves latestMonthStatus absent, which is honest.
+            const entry = findMonthlyHistoryEntry(s.monthlyHistory || [], month);
+            if (entry) {
+              return { ...s, latestMonthStatus: entry.status || '', latestMonth: entry.month };
+            }
+            return s;
+          });
+        }
+        return ok({ sites });
       }
       // POST /api/master/sites  (admin+)
       if (pathname === '/api/master/sites' && method === 'POST') {
@@ -469,6 +924,8 @@ const server = http.createServer(async (req, res) => {
         const id = pathname.split('/')[4];
         const b = await body();
         try {
+          const before = db.getSiteById(id);
+          if (!assertFresh(before, b, res, 'site')) return;
           const site = db.toggleSiteStatus(id, b.status);
           // Two-way sync: update Column A in respected Google Sheet
           import('./sheets.js').then(({ updateSiteStatusInSheet }) => {
@@ -478,7 +935,15 @@ const server = http.createServer(async (req, res) => {
               status: site.status,
             }).catch(err => console.warn('[sheet update site status error]:', err.message));
           }).catch(() => {});
-
+          if (before && before.status !== site.status) {
+            const actor = actorFrom(req, b, reqUrl);
+            db.appendAuditLog({
+              actor: actor.name, actorId: actor.id,
+              action: 'update', entity: 'site', entityId: site.id, label: site.url,
+              field: 'status', oldValue: before.status, newValue: site.status,
+              source: 'Site status toggle', reason: 'Status changed via All Sites / Team Progress',
+            });
+          }
           return ok({ site });
         } catch (e) {
           return err(404, e.message);
@@ -488,10 +953,68 @@ const server = http.createServer(async (req, res) => {
       if (/^\/api\/master\/sites\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
         const b = await body();
+        if (Array.isArray(b.assignedUsers) && !assertActiveAssignees(res, b.assignedUsers)) return;
         try {
+          const before = db.getSiteById(id);
+          if (!assertFresh(before, b, res, 'site')) return;
+          // Capture the REAL prior assignees from the pre-update record.
+          // updateSite() spreads `b` into the site, so reading assignedUsers
+          // after that call would always yield the NEW list and make the change
+          // check (and therefore the audit + write-back) unreachable.
+          const beforeUsers = [...((before && before.assignedUsers) || [])];
+          const dryRun = !!(b.dryRun || reqUrl?.searchParams?.get('dryRun') === '1');
+          // A dry run must commit NOTHING — see the note in bulk-assign above.
+          // updateSite() spreads `b` in, so a dry run cannot call it at all.
+          if (dryRun) {
+            const planned = { ...(before || {}), ...b, assignedUsers: Array.isArray(b.assignedUsers) ? [...b.assignedUsers] : beforeUsers };
+            let plan = null;
+            if (Array.isArray(b.assignedUsers)
+              && JSON.stringify([...beforeUsers].sort()) !== JSON.stringify([...b.assignedUsers].sort())) {
+              plan = await syncAssignmentToUserTabs({
+                site: planned, beforeUserIds: beforeUsers, afterUserIds: b.assignedUsers,
+                actor: actorFrom(req, b, reqUrl), source: 'Site edit form (dry run)', dryRun: true,
+              });
+            }
+            return ok({ dryRun: true, site: planned, userTabWriteBack: plan, note: 'Dry run: no DB and no sheet writes were made.' });
+          }
           let site = db.updateSite(id, b);
+          let userTabWriteBack = null;
           if (Array.isArray(b.assignedUsers)) {
             site = db.assignUsersToSite(id, b.assignedUsers);
+            if (JSON.stringify([...beforeUsers].sort()) !== JSON.stringify([...(site.assignedUsers || [])].sort())) {
+              const actor = actorFrom(req, b, reqUrl);
+              db.appendAuditLog({
+                actor: actor.name, actorId: actor.id,
+                action: 'assignment:replace', entity: 'site', entityId: site.id, label: site.url,
+                field: 'assignedUsers', oldValue: beforeUsers.map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)', newValue: (site.assignedUsers || []).map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)',
+                source: 'Site edit form', reason: 'Assignees changed while editing site',
+              });
+              // DB→Sheets write-back: append newly assigned sites into each
+              // assignee's Daily Review tab, soft-remove the ones dropped, and
+              // persist every row location so reconcile stops skipping them.
+              try {
+                userTabWriteBack = await syncAssignmentToUserTabs({
+                  site, beforeUserIds: beforeUsers, afterUserIds: site.assignedUsers || [],
+                  actor, source: 'Site edit form',
+                  dryRun: false,
+                });
+              } catch (e) {
+                console.warn(`[site-update] user-tab write-back failed for ${id}:`, e.message);
+                userTabWriteBack = { failed: [{ reason: 'writeback-threw', error: e.message }] };
+              }
+            }
+          }
+          const editableFields = ['cms', 'company', 'contact', 'accountManager', 'note', 'clickupUrl', 'reportUrl', 'backupUrl', 'domainExpiry'];
+          for (const f of editableFields) {
+            if (b[f] !== undefined && before && String(before[f] || '') !== String(b[f] || '')) {
+              const actor = actorFrom(req, b, reqUrl);
+              db.appendAuditLog({
+                actor: actor.name, actorId: actor.id,
+                action: 'update', entity: 'site', entityId: site.id, label: site.url,
+                field: f, oldValue: before[f] || '', newValue: b[f] || '',
+                source: 'Site edit form', reason: 'Field edited',
+              });
+            }
           }
           if (b.status) {
             import('./sheets.js').then(({ updateSiteStatusInSheet }) => {
@@ -512,7 +1035,7 @@ const server = http.createServer(async (req, res) => {
               }).catch(err => console.warn('[sheet-sync error]:', err.message));
             }).catch(() => {});
           }
-          return ok({ site });
+          return ok({ site, userTabWriteBack });
         }
         catch (e) { return err(404, e.message); }
       }
@@ -521,7 +1044,49 @@ const server = http.createServer(async (req, res) => {
         const id = pathname.split('/')[4];
         const b = await body();
         if (!Array.isArray(b.userIds)) return err(400, 'userIds array required');
-        try { return ok({ site: db.assignUsersToSite(id, b.userIds) }); }
+        if (!assertActiveAssignees(res, b.userIds)) return;
+        try {
+          const before = db.getSiteById(id);
+          if (!assertFresh(before, b, res, 'site')) return;
+          const dryRun = !!(b.dryRun || reqUrl?.searchParams?.get('dryRun') === '1');
+          const changed = !!before && JSON.stringify([...(before.assignedUsers || [])].sort()) !== JSON.stringify([...b.userIds].sort());
+          // A dry run must commit NOTHING — see the note in bulk-assign above.
+          if (dryRun) {
+            let plan = null;
+            if (changed) {
+              plan = await syncAssignmentToUserTabs({
+                site: { ...before, assignedUsers: [...b.userIds] },
+                beforeUserIds: before.assignedUsers || [], afterUserIds: b.userIds,
+                actor: actorFrom(req, b, reqUrl), source: 'Quick assign (dry run)', dryRun: true,
+              });
+            }
+            return ok({ dryRun: true, site: before, userTabWriteBack: plan, note: 'Dry run: no DB and no sheet writes were made.' });
+          }
+          const site = db.assignUsersToSite(id, b.userIds);
+          let userTabWriteBack = null;
+          if (changed) {
+            const actor = actorFrom(req, b, reqUrl);
+            db.appendAuditLog({
+              actor: actor.name, actorId: actor.id,
+              action: 'assignment:replace', entity: 'site', entityId: site.id, label: site.url,
+              field: 'assignedUsers',
+              oldValue: (before.assignedUsers || []).map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)',
+              newValue: (site.assignedUsers || []).map(uid => db.getUserById(uid)?.name || uid).join(', ') || '(none)',
+              source: 'Quick assign', reason: 'Assignees changed via quick-assign',
+            });
+            try {
+              userTabWriteBack = await syncAssignmentToUserTabs({
+                site, beforeUserIds: before.assignedUsers || [], afterUserIds: site.assignedUsers || [],
+                actor, source: 'Quick assign',
+                dryRun: false,
+              });
+            } catch (e) {
+              console.warn(`[quick-assign] user-tab write-back failed for ${id}:`, e.message);
+              userTabWriteBack = { failed: [{ reason: 'writeback-threw', error: e.message }] };
+            }
+          }
+          return ok({ site, userTabWriteBack });
+        }
         catch (e) { return err(404, e.message); }
       }
 
@@ -585,11 +1150,270 @@ const server = http.createServer(async (req, res) => {
       }
 
       // ── DAILY REVIEW ───────────────────────────────────────────
-      // GET /api/master/daily-review?userId=&userName=
+      // GET /api/master/daily-review?userId=&user=&month=
       if (pathname === '/api/master/daily-review' && method === 'GET') {
         const userId   = reqUrl.searchParams.get('userId');
         const userName = reqUrl.searchParams.get('user') || reqUrl.searchParams.get('userName');
-        return ok({ rows: db.getDailyReview({ userId, userName }) });
+        const month    = reqUrl.searchParams.get('month') || db.getActiveMonth();
+        let rows = db.getDailyReview({ userId, userName });
+
+        // Overlay maintenanceStatus from the CW/RM sheet's monthlyHistory for the
+        // selected month. This ensures that when "September 26" is chosen and that
+        // column is empty in the sheet, the status shows as blank/todo — NOT the
+        // stale value carried over from the Daily Review tab's Maintenance column.
+        if (month) {
+          const sites  = db.getSites({});
+          rows = rows.map(row => {
+            const site    = sites.find(s => {
+              const sUrl = (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+              const rUrl = (row.siteUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+              return sUrl === rUrl || sUrl.includes(rUrl) || rUrl.includes(sUrl);
+            });
+            if (!site) return row;
+            // Strict month matching - see the note on findMonthlyHistoryEntry().
+            // The previous substring lookup here let "sep" resolve to the 2022
+            // entry "September 22", and that entry's EMPTY status then overwrote
+            // completed cells with "To Do". No match means leave the row alone.
+            const entry = findMonthlyHistoryEntry(site.monthlyHistory || [], month);
+            if (!entry) return row; // month not found in history → keep as-is
+            // Found the month column — use its value (may be empty string = not done yet)
+            const rawVal = (entry.status || '').trim();
+            const normMap = {
+              'updated & backup': 'completed', 'completed': 'completed',
+              'in progress': 'in_progress', 'to do': 'todo', 'todo': 'todo',
+              'pending': 'pending', '': 'todo',
+            };
+            const normVal = normMap[(rawVal || '').toLowerCase()] || 'todo';
+            // Track original stored value for reconcile comparison (_hadMonthEntry)
+            return {
+              ...row,
+              maintenanceStatus: normVal,
+              maintenanceRaw: rawVal || '',
+              _origMaintenanceRaw: row.maintenanceRaw || '',
+              _hadMonthEntry: true,
+              // Carried so a refusal log can name the month it refused for. Without
+              // it the log had to say "the selected month", which is the least
+              // useful thing to read when a blank column did the damage.
+              _monthLabel: month,
+            };
+          });
+        }
+
+        // ── Background reconcile: CW/RM sheet is source of truth (BATCHED) ─────────
+        // Groups all mismatched rows by userName and writes them all in ONE batchUpdate
+        // call per user tab — not one API call per row. Also rate-limited per user+month.
+        if (month) {
+          // RANK GUARD. A mismatch is not automatically a write. "Higher wins":
+          // if the cell already records further-along work than the month status
+          // does, the cell is kept and the row is reported, not overwritten. This
+          // is what makes an empty month status mean "no information" rather than
+          // "not done" — an empty value ranks 0, so it can never displace a real
+          // status. Without it this path destroyed recorded work.
+          const reconcileDecisions = rows.map(row => {
+            if (!row._hadMonthEntry) return null;
+            const curRaw = (row._origMaintenanceRaw || '').trim();
+            const newRaw = (row.maintenanceRaw || '').trim();
+            if (curRaw.toLowerCase() === newRaw.toLowerCase()) return null;
+            const decision = shouldWriteReconciledStatus({
+              incomingRaw: newRaw,
+              // THE HONEST SOURCE, NOT THE DISPLAY VALUE. The overlay above sets
+              // maintenanceStatus to "todo" for a blank month column (normMap[''])
+              // so the UI has something to render. Passing that in here made a
+              // blank source look like a real "todo", which made incomingStatus
+              // truthy and skipped the guard's empty-source branch entirely:
+              //   from = rank("To Do") = 1, to = rank("" || "todo") = 1, 1 < 1 false
+              // so a month column that says NOTHING was waved through and written
+              // over recorded work. Verified on 2026-09-27: it blanked "To Do" on
+              // Saiful!21. A blank source must reach the guard as a blank status,
+              // or the guard cannot see that it carries no information.
+              incomingStatus: newRaw ? row.maintenanceStatus : null,
+              currentRaw: curRaw,
+            });
+            return { row, decision };
+          });
+
+          // ONLY rows the guard actually approved go to the writer. This line used
+          // to be `.filter(Boolean).map(d => d.row)`, which kept refused rows too —
+          // harmless only because the restore block below put the old value back
+          // first, so they were written as no-ops. Filtering on the decision rather
+          // than on presence is what makes "refused" mean "not written at all".
+          const mismatchRows = reconcileDecisions.filter(Boolean).filter(d => d.decision.write).map(d => d.row);
+          // EVERY refusal, not just one reason string. Matching on
+          // 'downgrade-refused' alone meant the empty-source refusals fell through
+          // the restore block below and kept the blank value on the row.
+          const refusedDowngrades = reconcileDecisions.filter(Boolean).filter(d => !d.decision.write);
+
+          for (const d of refusedDowngrades) {
+            const monthVal = (d.row.maintenanceRaw || '').trim();
+            const kept = d.row._origMaintenanceRaw;
+            // from/to only exist for the rank-compare refusals. An empty-source
+            // refusal has no ranks, and printing "undefined -> undefined" for the
+            // one case that silently blanked real work was exactly backwards: the
+            // vaguer the log, the less likely anyone reads it.
+            const via = d.decision.from != null
+              ? `${d.decision.from} -> ${d.decision.to}`
+              : 'no information in the month column';
+            const why = monthVal === ''
+              ? `month column "${d.row._monthLabel || 'selected month'}" is blank, which is not "not done"`
+              : `month status "${monthVal}" would downgrade recorded work`;
+            console.log(
+              `[reconcile] keeping "${kept}" on ${d.row.userName} ` +
+              `(row ${d.row.rowIndex ?? '?'}): ${why} (${via}) [${d.decision.reason}]`
+            );
+          }
+
+          // Put the recorded value BACK on the row for every refused downgrade.
+          // Without this the guard would only stop the sheet write while the API
+          // still returned "To Do", so the UI would display a downgrade that was
+          // never persisted - the cell would read Completed and the screen would
+          // say To Do. Refusing means refusing everywhere, not just at the writer.
+          if (refusedDowngrades.length) {
+            const restore = new Map(refusedDowngrades.map(d => [d.row.id, d.row._origMaintenanceRaw]));
+            rows = rows.map(row => {
+              if (!restore.has(row.id)) return row;
+              const kept = restore.get(row.id);
+              const normMap = {
+                'updated & backup': 'completed', 'completed': 'completed',
+                'in progress': 'in_progress', 'to do': 'todo', 'todo': 'todo',
+                'pending': 'pending', '': 'todo',
+              };
+              return { ...row, maintenanceRaw: kept, maintenanceStatus: normMap[kept.toLowerCase()] || row.maintenanceStatus };
+            });
+          }
+          if (mismatchRows.length > 0) {
+            // Persist reconciled statuses immediately to daily-review.json on disk
+            try {
+              const allDr = db.getDailyReview();
+              const rowMap = new Map(rows.map(r => [r.id, r]));
+              let updatedAny = false;
+              allDr.forEach(r => {
+                const upd = rowMap.get(r.id);
+                if (!upd) return;
+                // Same rank guard on the persisted copy. The sheet writer is
+                // already protected; this stops a refused downgrade from
+                // reaching disk and then being treated as the new truth on the
+                // next read, which would make the loss permanent.
+                if (r.maintenanceRaw && !upd.maintenanceRaw) return;
+                if (upd.maintenanceRaw &&
+                    r.maintenanceRaw &&
+                    r.maintenanceRaw.toLowerCase() !== upd.maintenanceRaw.toLowerCase() &&
+                    maintenanceStatusRank(upd.maintenanceRaw) < maintenanceStatusRank(r.maintenanceRaw)) {
+                  return;
+                }
+                if (r.maintenanceStatus !== upd.maintenanceStatus || r.maintenanceRaw !== upd.maintenanceRaw) {
+                  r.maintenanceStatus = upd.maintenanceStatus;
+                  r.maintenanceRaw = upd.maintenanceRaw;
+                  r.updatedAt = new Date().toISOString();
+                  updatedAny = true;
+                }
+              });
+              if (updatedAny) db.setDailyReview(allDr);
+            } catch (err) {
+              console.warn('[db save daily-review reconcile error]:', err.message);
+            }
+            // Group by userName
+            const byUser = {};
+            mismatchRows.forEach(row => {
+              if (!row.userName) return;
+              (byUser[row.userName] = byUser[row.userName] || []).push(row);
+            });
+
+            // Fire ONE batch call per user (only if not already reconciled recently)
+            import('./sheets.js').then(async ({ batchUpdateDailyReviewTab }) => {
+              // Build active-user name set from DB
+              const activeUsers = new Set(
+                (db.getUsers ? db.getUsers() : [])
+                  .filter(u => u.active !== false)
+                  .map(u => (u.name || '').toLowerCase())
+              );
+              for (const [uName, uRows] of Object.entries(byUser)) {
+                // Skip inactive users — no write-back to their sheet tabs
+                if (activeUsers.size > 0 && !activeUsers.has(uName.toLowerCase())) {
+                  console.log('[reconcile] Skipping ' + uName + ' (inactive user)');
+                  continue;
+                }
+                if (typeof shouldReconcile === 'function' && !shouldReconcile(uName, month)) {
+                  console.log('[reconcile] Skipping ' + uName + ' (cooldown active)');
+                  continue;
+                }
+                const updates = uRows.map(r => ({
+                  siteUrl: r.siteUrl,
+                  rowIndex: r.rowIndex,
+                  maintenanceRaw: r.maintenanceRaw,
+                  maintenanceStatus: r.maintenanceStatus,
+                }));
+                console.log('[reconcile] ' + uName + ': ' + updates.length + ' mismatched row(s) for "' + month + '" — 1 batch call');
+                await batchUpdateDailyReviewTab({ userName: uName, updates })
+                  .catch(err => console.warn('[reconcile] ' + uName + ': ' + err.message));
+              }
+            }).catch(() => {});
+          }
+        }
+
+        // ── Enrich rows with maintenance-mode fields (account manager, per-site
+        //    CW/RM sheet link, account name) resolved from the site registry ──
+        // Per-site sheet links: when a site has no stored reportUrl (RM's
+        // "Website List" has no REPORT_URL column), resolve its own tab in that
+        // account's spreadsheet (tabs named after the URL) and build a deep link.
+        const maintSites = db.getSites ? db.getSites({}) : [];
+        const { findMatchingTab } = await import('./reportUtils.js');
+        const { listTabMeta } = await import('./sheets.js');
+        const { getAccountConfig } = await import('./config.js');
+        const tabMetaCache = {}; // spreadsheetId → { titles, gidByTitle }
+
+        async function resolveSheetLink(site) {
+          if (site.reportUrl) return site.reportUrl;
+          const acct = getAccountConfig(site.account || 'CW');
+          if (tabMetaCache[acct.spreadsheetId] === undefined) {
+            try {
+              const tabs = await listTabMeta(acct.spreadsheetId);
+              tabMetaCache[acct.spreadsheetId] = {
+                titles: (tabs || []).map(t => t.title),
+                gidByTitle: new Map((tabs || []).map(t => [t.title, t.gid])),
+              };
+            } catch (e) {
+              console.warn('[maint] tab meta fallback failed: ' + e.message);
+              tabMetaCache[acct.spreadsheetId] = null;
+            }
+          }
+          const meta = tabMetaCache[acct.spreadsheetId];
+          if (!meta) return '';
+          const matched = findMatchingTab(meta.titles, site.url, acct.masterTabName);
+          const gid = matched ? meta.gidByTitle.get(matched) : undefined;
+          return matched && gid !== undefined
+            ? `https://docs.google.com/spreadsheets/d/${acct.spreadsheetId}/edit#gid=${gid}`
+            : '';
+        }
+
+        const findMaintSite = (row) =>
+          (row.siteId && maintSites.find(s => s.id === row.siteId)) ||
+          maintSites.find(s => {
+            const sUrl = (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const rUrl = (row.siteUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+            return sUrl === rUrl || sUrl.includes(rUrl) || rUrl.includes(sUrl);
+          }) ||
+          null;
+
+        const enriched = [];
+        for (const row of rows) {
+          const site = findMaintSite(row);
+          if (!site) {
+            enriched.push({ ...row, accountManager: '', reportUrl: '', siteAccount: '' });
+            continue;
+          }
+          const reportUrl = await resolveSheetLink(site);
+          enriched.push({
+            ...row,
+            accountManager: site.accountManager || '',
+            clickupTimeTrackUrl: site.clickupTimeTrackUrl || row.clickupTimeTrackUrl || '',
+            reportUrl,
+            siteAccount: site.account || row.company || '',
+          });
+        }
+        rows = enriched;
+
+        const clientRows = rows.map(({ _origMaintenanceRaw, _hadMonthEntry, ...r }) => r);
+        return ok({ rows: clientRows });
       }
       // GET /api/master/daily-review-all
       if (pathname === '/api/master/daily-review-all' && method === 'GET') {
@@ -601,7 +1425,9 @@ const server = http.createServer(async (req, res) => {
       }
       // GET /api/master/summary — per-user completion stats
       if (pathname === '/api/master/summary' && method === 'GET') {
-        const rows = db.getDailyReview();
+        const month = reqUrl.searchParams.get('month') || db.getActiveMonth();
+        const baseRows = db.getDailyReview();
+        const rows = month ? overlayMonthStatus(baseRows, month) : baseRows;
         const users = db.getUsers().filter(u => u.active !== false);
         const summary = users.map(u => {
           const uRows = rows.filter(r => r.userId === u.id);
@@ -618,22 +1444,217 @@ const server = http.createServer(async (req, res) => {
         });
         return ok({ summary });
       }
+      // GET /api/master/report-status — per-user daily report status for the
+      // admin/superadmin dashboard. Fed from the Report Automation mirror
+      // (refreshed first when stale) so each user's latest Done · In Review ·
+      // In Progress · Overdue counts reflect the Worker log accurately.
+      if (pathname === '/api/master/report-status' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        const config = db.getAssistantConfig();
+        const ra = config.reportAutomation || {};
+        try {
+          const { syncReportMirror, loadReportMirror, isReportMirrorStale, perUserReportStatus, reportMirrorSummary, todayInTeamTZ } = await import('./reportAutomation.js');
+          let mirror = loadReportMirror();
+          if (ra.enabled !== false && ra.baseUrl && ra.apiKey && isReportMirrorStale(mirror)) {
+            mirror = await syncReportMirror({ config: ra, refresh: true });
+          }
+          const roster = db.getUsers().filter(u => u.active !== false).map(u => u.name);
+          const { rows, latestDate, count } = perUserReportStatus(mirror.items || [], roster);
+          const summary = reportMirrorSummary();
+          return ok({
+            rows,
+            latestDate,
+            count,
+            today: todayInTeamTZ(),
+            freshness: {
+              updatedAt: mirror.updatedAt || null,
+              mirrorCount: summary.count,
+              latestDate: summary.latestDate,
+            },
+            configured: Boolean(ra.baseUrl && ra.apiKey && ra.enabled !== false),
+          });
+        } catch (e) {
+          return err(500, `Report status unavailable: ${e.message}`);
+        }
+      }
+      // GET /api/master/audit-log — change history (admin+). Supports optional
+      // ?entity= & ?entityId= filters and ?limit= (default 500, newest first).
+      if (pathname === '/api/master/audit-log' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        const limit = Number(reqUrl.searchParams.get('limit') || 500);
+        const entity = reqUrl.searchParams.get('entity') || '';
+        const entityId = reqUrl.searchParams.get('entityId') || '';
+        let entries = db.getAuditLog(limit <= 0 || limit > 5000 ? 5000 : limit);
+        if (entity) entries = entries.filter(e => e.entity === entity);
+        if (entityId) entries = entries.filter(e => e.entityId === entityId);
+        return ok({ entries, total: db.auditLogStats().count });
+      }
+      // GET /api/master/audit-log/stats — aggregate counts (admin+)
+      if (pathname === '/api/master/audit-log/stats' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        return ok(db.auditLogStats());
+      }
+      // GET /api/master/sync-conflicts — divergences the sync refused to silently
+      // resolve (admin+). ?state=open|acknowledged filters.
+      if (pathname === '/api/master/sync-conflicts' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        const state = reqUrl.searchParams.get('state') || '';
+        const limit = Number(reqUrl.searchParams.get('limit') || 500);
+        let list = db.getSyncConflicts({ state: state || undefined });
+        return ok({ conflicts: list.slice(0, limit <= 0 ? 500 : limit), stats: db.syncConflictStats() });
+      }
+      // GET /api/master/sync-conflicts/stats — counts (admin+)
+      if (pathname === '/api/master/sync-conflicts/stats' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        return ok(db.syncConflictStats());
+      }
+      // POST /api/master/sync-conflicts/:id/ack — acknowledge a flagged conflict
+      // after the operator has reviewed it (admin+). Audited.
+      if (/^\/api\/master\/sync-conflicts\/([^/]+)\/ack$/.test(pathname) && method === 'POST') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        const id = pathname.split('/')[4];
+        const b = await body().catch(() => ({}));
+        try {
+          const conflict = db.acknowledgeSyncConflict(id, actorFrom(req, b, reqUrl).name);
+          db.appendAuditLog({
+            actor: actorFrom(req, b, reqUrl).name, actorId: actorFrom(req, b, reqUrl).id,
+            action: 'acknowledge', entity: 'sync-conflict', entityId: id,
+            label: `${conflict.entity}:${conflict.label}`,
+            field: conflict.field,
+            oldValue: JSON.stringify({ sheetValue: conflict.sheetValue, dbValue: conflict.dbValue }),
+            newValue: 'acknowledged',
+            source: 'Change History / Sync Conflicts', reason: 'Operator reviewed flagged divergence and accepted the sync policy',
+          });
+          return ok({ conflict });
+        } catch (e) { return err(404, e.message); }
+      }
+      // GET /api/master/user-aliases — the explicit name→canonical alias table
+      // used to resolve the same person across sheets (admin+, read-only).
+      if (pathname === '/api/master/user-aliases' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        return ok({ aliases: db.getUserAliases() });
+      }
+      // GET /api/master/sheets/cache-status — confirms the Sheets caching /
+      // rate-limit layers are live (admin+): TTL, cache hit/miss counters, queue.
+      if (pathname === '/api/master/sheets/cache-status' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
+        return ok(getCacheStatus());
+      }
       // PUT /api/master/daily-review/:id  (user: their own row)
       if (/^\/api\/master\/daily-review\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
         const b = await body();
         try {
+          // Optimistic lock: the UI passes the row's last-seen updatedAt so a
+          // stale editor can't silently overwrite a newer value.
+          const before = db.getDailyReview().find(r => r.id === id);
+          if (!before) return err(404, `Daily review row not found: ${id}`);
+          if (!assertFresh(before, b, res, 'daily-review')) return;
+
+          // Normalize raw status fields if needed
+          if (!b.maintenanceRaw && b.maintenanceStatusRaw) b.maintenanceRaw = b.maintenanceStatusRaw;
+          if (!b.reportSentRaw && b.reportSentStatusRaw) b.reportSentRaw = b.reportSentStatusRaw;
+
           const updatedRow = db.updateDailyReviewRow(id, b);
-          // If status changed, sync to Google Sheet in background
+
+          // Audit the meaningful status fields (a row PUT may also carry
+          // maintenance-mode fields; only record actual value changes).
+          {
+            const fieldMap = [
+              { f: 'maintenanceStatus', label: 'maintenance' },
+              { f: 'maintenanceRaw', label: 'maintenance (raw)' },
+              { f: 'reportSentStatus', label: 'report sent' },
+              { f: 'reportSentRaw', label: 'report sent (raw)' },
+              { f: 'ga4', label: 'GA4' },
+              { f: 'newsletterMail', label: 'newsletter' },
+              { f: 'formSubmissionMail', label: 'form' },
+              { f: 'bookingLink', label: 'booking' },
+              { f: 'cloudflare', label: 'cloudflare' },
+              { f: 'clientResponse', label: 'client response' },
+              { f: 'uptimeRobot', label: 'uptime robot' },
+            ];
+            for (const { f, label } of fieldMap) {
+              if (before && b[f] !== undefined && String(before[f] ?? '') !== String(b[f] ?? '')) {
+                const actor = actorFrom(req, b, reqUrl);
+                db.appendAuditLog({
+                  actor: actor.name || updatedRow.userName || 'user', actorId: actor.id || updatedRow.userId,
+                  action: 'update', entity: 'daily-review', entityId: updatedRow.id, label: `${updatedRow.siteUrl} (${updatedRow.userName})`,
+                  field: label, oldValue: before[f] ?? '', newValue: b[f] ?? '',
+                  source: 'Daily Review editor', reason: 'Row updated in Daily Review',
+                });
+              }
+            }
+          }
+
+          // Also keep site.monthlyHistory in sync for the active month so subsequent queries reflect it
           if (b.maintenanceStatus || b.maintenanceRaw) {
-            import('./sheets.js').then(({ syncSiteStatusToSheet }) => {
-              const statusVal = b.maintenanceRaw || b.maintenanceStatus;
-              syncSiteStatusToSheet({
-                account: updatedRow.company || 'CW',
-                siteUrl: updatedRow.siteUrl,
-                month: db.getActiveMonth(),
-                status: statusVal,
-              }).catch(err => console.warn('[sheet-sync background error]:', err.message));
+            try {
+              const activeMonth = db.getActiveMonth();
+              const mRaw = b.maintenanceRaw || (b.maintenanceStatus === 'completed' ? 'Completed' : b.maintenanceStatus === 'in_progress' ? 'In Progress' : 'To Do');
+              const sites = db.getSites({});
+              const site = sites.find(s => {
+                const sUrl = (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+                const rUrl = (updatedRow.siteUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+                return sUrl === rUrl || sUrl.includes(rUrl) || rUrl.includes(sUrl);
+              });
+              if (site) {
+                const history = site.monthlyHistory || [];
+                const mLower = activeMonth.trim().toLowerCase();
+                const hIdx = history.findIndex(h => (h.month || '').trim().toLowerCase() === mLower);
+                const valToWrite = mRaw === 'Completed' ? 'Updated & Backup' : mRaw;
+                if (hIdx !== -1) {
+                  history[hIdx].status = valToWrite;
+                } else {
+                  history.push({ month: activeMonth, status: valToWrite });
+                }
+                site.monthlyHistory = history;
+                site.latestMonth = activeMonth;
+                site.latestMonthStatus = mRaw;
+                db.updateSite(site.id, site);
+              }
+            } catch (err) {
+              console.warn('[db updateSite monthlyHistory error]:', err.message);
+            }
+          }
+
+          // Bi-directional sync: write to BOTH the CW/RM Maintenance sheet AND the Daily Review sheet
+          if (b.maintenanceStatus || b.maintenanceRaw || b.reportSentStatus || b.reportSentRaw) {
+            import('./sheets.js').then(({ syncSiteStatusToSheet, syncStatusToDailyReviewSheet }) => {
+              const activeMonth = db.getActiveMonth();
+              // 1. CW/RM Maintenance sheet — correct month column
+              if (b.maintenanceStatus || b.maintenanceRaw) {
+                syncSiteStatusToSheet({
+                  account: updatedRow.company || 'CW',
+                  siteUrl: updatedRow.siteUrl,
+                  month: activeMonth,
+                  status: b.maintenanceRaw || b.maintenanceStatus,
+                }).catch(err => console.warn('[cw-rm-sync error]:', err.message));
+              }
+              // 2. Daily Review sheet — user tab Maintenance + Report Sent columns (ACTIVE USERS ONLY)
+              if (updatedRow.userName) {
+                const u = (db.getUsers ? db.getUsers() : []).find(x => (x.name || '').toLowerCase() === (updatedRow.userName || '').toLowerCase() || x.id === updatedRow.userId);
+                if (!u || u.active !== false) {
+                  syncStatusToDailyReviewSheet({
+                    userName: updatedRow.userName,
+                    siteUrl: updatedRow.siteUrl,
+                    rowIndex: updatedRow.rowIndex,
+                    maintenanceStatus: b.maintenanceStatus,
+                    maintenanceRaw: b.maintenanceRaw,
+                    reportSentStatus: b.reportSentStatus,
+                    reportSentRaw: b.reportSentRaw,
+                  }).catch(err => console.warn('[daily-review-sync error]:', err.message));
+                } else {
+                  console.log('[daily-review-sync] Skipping ' + updatedRow.userName + ' (inactive user)');
+                }
+              }
             }).catch(() => {});
           }
           return ok({ row: updatedRow });
@@ -644,19 +1665,62 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/master/daily-review/batch' && method === 'POST') {
         const b = await body();
         if (!Array.isArray(b.ids) || !b.ids.length) return err(400, 'ids array required');
+        // Optional optimistic lock: when the client sends last-seen updatedAt
+        // per row id, any stale row aborts the whole batch before any write.
+        if (b.expectedUpdatedAtMap && typeof b.expectedUpdatedAtMap === 'object') {
+          const stale = [];
+          const all = db.getDailyReview();
+          for (const id of b.ids) {
+            const expected = b.expectedUpdatedAtMap[id];
+            if (!expected) continue;
+            const row = all.find(r => r.id === id);
+            if (row && !db.assertRecordFresh(row, expected)) stale.push(row);
+          }
+          if (stale.length) {
+            sendJson(res, 409, {
+              error: 'STALE_VERSION',
+              message: `${stale.length} row(s) changed since you loaded them. No rows were updated. Refresh and retry.`,
+              entity: 'daily-review', staleCount: stale.length, current: stale,
+            });
+            return;
+          }
+        }
         const rows = db.updateDailyReviewBatch(b.ids, b.updates || {});
-        // If maintenance status was updated in batch, sync each to sheet
-        if (b.updates?.maintenanceStatus || b.updates?.maintenanceRaw) {
-          import('./sheets.js').then(async ({ syncSiteStatusToSheet }) => {
-            const statusVal = b.updates.maintenanceRaw || b.updates.maintenanceStatus;
+        // Bi-directional batch sync: CW/RM Maintenance sheet + Daily Review sheet per row
+        if (b.updates?.maintenanceStatus || b.updates?.maintenanceRaw || b.updates?.reportSentStatus || b.updates?.reportSentRaw) {
+          import('./sheets.js').then(async ({ syncSiteStatusToSheet, syncStatusToDailyReviewSheet }) => {
             const activeM = db.getActiveMonth();
+            const activeUsersSet = new Set(
+              (db.getUsers ? db.getUsers() : [])
+                .filter(u => u.active !== false)
+                .map(u => (u.name || '').toLowerCase())
+            );
             for (const r of rows) {
-              await syncSiteStatusToSheet({
-                account: r.company || 'CW',
-                siteUrl: r.siteUrl,
-                month: activeM,
-                status: statusVal,
-              }).catch(() => {});
+              // 1. CW/RM Maintenance sheet month column
+              if (b.updates?.maintenanceStatus || b.updates?.maintenanceRaw) {
+                await syncSiteStatusToSheet({
+                  account: r.company || 'CW',
+                  siteUrl: r.siteUrl,
+                  month: activeM,
+                  status: b.updates.maintenanceRaw || b.updates.maintenanceStatus,
+                }).catch(() => {});
+              }
+              // 2. Daily Review sheet user tab (ACTIVE USERS ONLY)
+              if (r.userName) {
+                if (activeUsersSet.size > 0 && !activeUsersSet.has((r.userName || '').toLowerCase())) {
+                  console.log('[daily-review-sync] Skipping ' + r.userName + ' (inactive user)');
+                  continue;
+                }
+                await syncStatusToDailyReviewSheet({
+                  userName: r.userName,
+                  siteUrl: r.siteUrl,
+                  rowIndex: r.rowIndex,
+                  maintenanceStatus: b.updates.maintenanceStatus,
+                  maintenanceRaw: b.updates.maintenanceRaw,
+                  reportSentStatus: b.updates.reportSentStatus,
+                  reportSentRaw: b.updates.reportSentRaw,
+                }).catch(() => {});
+              }
             }
           }).catch(() => {});
         }
@@ -795,6 +1859,15 @@ const server = http.createServer(async (req, res) => {
         } catch (e) {
           console.warn('[dev-assistant] Boot all-sheets fetch failed:', e.message);
         }
+        let documentMeta = { documents: [], errors: [], configured: false };
+        try {
+          const { fetchGoogleDocuments } = await import('./docsRag.js');
+          documentMeta = await fetchGoogleDocuments(config.documents);
+        } catch (e) {
+          console.warn('[dev-assistant] Document source boot failed:', e.message);
+          documentMeta.errors = [{ error: e.message }];
+        }
+        const documentSummary = { configured: Boolean(documentMeta.configured), documentCount: documentMeta.documents?.length || 0, errors: documentMeta.errors || [], fetchedAt: documentMeta.fetchedAt || '' };
         if (role !== 'superadmin') {
           return ok({
             engine: meta.aiAvailable ? 'llm' : 'builtin',
@@ -803,10 +1876,10 @@ const server = http.createServer(async (req, res) => {
             suggestions: meta.suggestions,
             schemaText,
             detectedColumns: discoverExtraColumns(projs),
-            allSheets: allSheetsMeta,
+            allSheets: allSheetsMeta, documents: documentSummary,
           });
         }
-        return ok({ ...meta, schemaText, detectedColumns: discoverExtraColumns(projs), allSheets: allSheetsMeta });
+        return ok({ ...meta, schemaText, detectedColumns: discoverExtraColumns(projs), allSheets: allSheetsMeta, documents: documentSummary });
       }
 
       // POST /api/master/dev-assistant { question, fresh? } — ask the assistant
@@ -816,8 +1889,71 @@ const server = http.createServer(async (req, res) => {
         if (!q) return err(400, 'question required');
         const config = db.getAssistantConfig();
         let projs = db.getDevProjects();
+        const history = Array.isArray(b.history) ? b.history.slice(-6).map((turn) => ({ question: String(turn?.question || '').slice(0, 500), answer: String(turn?.answer || '').slice(0, 2000) })) : [];
+        const steps = [];
+        // Project questions are live investigations, not snapshot summaries.
+        // Resolve an explicit name first; “full details” inherits one project
+        // from the immediately preceding conversation when unambiguous.
+        const { matchProject, resolveHistoryProjects } = await import('./devAssistant.js');
+        let liveProject = matchProject(q, projs);
+        if (!liveProject && /\b(full details?|more details?|details?|tell me more|latest|update)\b/i.test(q)) {
+          const fromHistory = resolveHistoryProjects(history, projs);
+          if (fromHistory.length === 1) liveProject = fromHistory[0];
+        }
+        let effectiveQuestion = q;
+        if (liveProject && !matchProject(q, projs) && /\b(full details?|more details?|details?|tell me more)\b/i.test(q)) {
+          effectiveQuestion = `${q} for ${liveProject.project}`;
+        }
+        let liveData = { attempted: false, fresh: false, project: liveProject?.project || '', error: '' };
+        if (liveProject) {
+          liveData.attempted = true;
+          steps.push({ label: `Reading live ${liveProject.project} sheet…`, status: 'running' });
+          try {
+            const { fetchDevTrackerSheetData } = await import('./sheets.js');
+            const [live] = await fetchDevTrackerSheetData({ tabs: [liveProject.project], forceRefresh: true });
+            if (!live) throw new Error('the tab returned no readable project rows');
+            projs = projs.map((project) => project.project === live.project ? live : project);
+            db.setDevProjects(projs);
+            liveProject = live;
+            liveData.fresh = true;
+            steps[steps.length - 1].status = 'done';
+          } catch (e) {
+            liveData.error = e.message;
+            steps[steps.length - 1].status = 'fallback';
+            steps[steps.length - 1].detail = 'Live read failed; using the last synced snapshot.';
+            console.warn('[dev-assistant] Live project read failed, using snapshot:', e.message);
+          }
+        }
+        // The v2 Dev Tracker acceptance questions are Sheet-only. For a
+        // portfolio question with no project name (for example “how many open
+        // items?”), refresh the six tabs once and answer deterministically;
+        // do not let a provider paraphrase an old snapshot.
+        const devTrackerPortfolioQuestion = !liveProject
+          && /\b(open items?|pending|in progress|fully completed|all rows|feedback|development|sitemap|events?[ -]?happenings|projects?)\b/i.test(q)
+          && !/\b(maintenance|backup|report sent|clickup|daily review)\b/i.test(q);
+        if (devTrackerPortfolioQuestion) {
+          liveData.attempted = true;
+          steps.push({ label: 'Reading all six live Dev Tracker tabs…', status: 'running' });
+          try {
+            const { fetchDevTrackerSheetData } = await import('./sheets.js');
+            const live = await fetchDevTrackerSheetData({ forceRefresh: true });
+            if (!live?.length) throw new Error('the Dev Tracker returned no readable project rows');
+            projs = live;
+            db.setDevProjects(projs);
+            liveData.fresh = true;
+            steps[steps.length - 1].status = 'done';
+          } catch (e) {
+            liveData.error = e.message;
+            steps[steps.length - 1].status = 'fallback';
+            steps[steps.length - 1].detail = 'Live read failed; using the last synced snapshot.';
+            console.warn('[dev-assistant] Live Dev Tracker read failed, using snapshot:', e.message);
+          }
+        }
         let schemaRefreshed = false;
-        if (b.fresh === true || config.source.freshOnAsk === true) {
+        // A targeted live investigation already re-read its exact tab. Keep a
+        // manual refresh capable of reading all tabs, but avoid seven needless
+        // reads on every named-project question.
+        if (!liveProject && (b.fresh === true || config.source.freshOnAsk === true)) {
           try {
             const { fetchDevTrackerSheetData } = await import('./sheets.js');
             const live = await fetchDevTrackerSheetData();
@@ -840,6 +1976,16 @@ const server = http.createServer(async (req, res) => {
         // the assistant knows about columns/tabs added by hand after this code
         // was written. Cheap: cached in memory + data/sheet-schema.json.
         const schemaText = await assistantSchemaText(config);
+        // SOP/process questions can be answered by the dedicated handbook
+        // index. Decide this before the wider Sheet/Docs retrieval so a simple
+        // procedure question does not spend LLM quota building unrelated
+        // tracker context. If the Worker is unavailable we still fall through
+        // to the normal OfficeOS evidence path below.
+        let handbookIntent = false;
+        try {
+          const { shouldUseHandbook } = await import('./handbookRag.js');
+          handbookIntent = shouldUseHandbook(effectiveQuestion, { liveProject: Boolean(liveProject) });
+        } catch (e) { console.warn('[dev-assistant] Handbook intent detection failed:', e.message); }
 
         // Broad RAG: also fetch a compact summary from ALL connected sheets
         // (CW Maintenance, RM Maintenance, Daily Review, Property Registry, etc.)
@@ -847,17 +1993,129 @@ const server = http.createServer(async (req, res) => {
         // just the Dev Tracker.  This is a separate data block passed to the LLM
         // as SECTION 6 — it does NOT replace the existing dev-projects flow.
         let allSheetsSummary = null;
+        if (!liveProject && !handbookIntent) {
+          try {
+            const { fetchAllSheetsSummary } = await import('./sheets.js');
+            allSheetsSummary = await fetchAllSheetsSummary();
+          } catch (e) {
+            console.warn('[dev-assistant] All-sheets fetch failed:', e.message);
+          }
+        }
+        let documents = { documents: [], errors: [], configured: false };
+        if (!liveProject) {
+          try {
+            const { fetchGoogleDocuments } = await import('./docsRag.js');
+            documents = await fetchGoogleDocuments(config.documents, { refresh: b.fresh === true || config.documents?.freshOnAsk === true });
+          } catch (e) {
+            console.warn('[dev-assistant] Document retrieval failed:', e.message);
+            documents.errors = [{ error: e.message }];
+          }
+        }
+        let enterpriseRag = null;
         try {
-          const { fetchAllSheetsSummary } = await import('./sheets.js');
-          allSheetsSummary = await fetchAllSheetsSummary();
+          const { retrieveRag, sourceTypeForQuestion } = await import('./enterpriseRag.js');
+          enterpriseRag = await retrieveRag(effectiveQuestion, { sourceType: sourceTypeForQuestion(effectiveQuestion), candidateLimit: 20, limit: 5 });
+        } catch (e) { console.warn('[dev-assistant] Enterprise RAG retrieval failed:', e.message); }
+
+        // Daily Report Feed bridge: mirror the Report Automation log so chat can
+        // answer "who hasn't submitted today", "what did X report yesterday", etc.
+        // Refresh when the config says so, when the requester forces fresh data,
+        // or the first time a report question arrives with an empty mirror.
+        let dailyReports = [];
+        let reportMirrorErr = '';
+        const ra = config.reportAutomation || {};
+        const wantsFreshReports = Boolean(b.fresh) || ra.freshOnAsk === true;
+        try {
+          const { syncReportMirror, loadReportMirror, isReportMirrorStale } = await import('./reportAutomation.js');
+          const currentMirror = loadReportMirror();
+          if (ra.enabled !== false && ra.baseUrl && ra.apiKey && (wantsFreshReports || isReportMirrorStale(currentMirror))) {
+            const synced = await syncReportMirror({ config: ra, refresh: true });
+            dailyReports = synced.items || [];
+          } else {
+            dailyReports = (currentMirror.items || []).filter((i) => i.reportDate && i.user?.name);
+          }
         } catch (e) {
-          console.warn('[dev-assistant] All-sheets fetch failed:', e.message);
+          console.warn('[dev-assistant] Report mirror sync failed:', e.message);
+          reportMirrorErr = e.message;
+        }
+        if (ra.enabled !== false && (reportMirrorErr || dailyReports.length)) {
+          steps.push({ label: 'Daily report log', status: reportMirrorErr ? 'fallback' : 'done', detail: reportMirrorErr ? reportMirrorErr : `${dailyReports.length} report(s) read from ${ra.baseUrl || 'Report Automation'}` });
         }
 
-        return ok(await answerDevQuestion(q, projs, {
-          config, schemaText, debug: role === 'superadmin',
-          allSheets: allSheetsSummary,
-        }));
+        // ClickUp is deliberately disabled for this Sheet-only phase. The
+        // available token can authenticate but cannot enumerate any spaces,
+        // lists, tasks, or comments, so using it would create false evidence.
+        // Re-enable only after workspace access is proven in a separate phase.
+        const clickUpEvidence = []; // Phase 2 only: no ClickUp call in the Sheet-only agent.
+
+        let handbookResult = null;
+        try {
+          const { askHandbook } = await import('./handbookRag.js');
+          if (handbookIntent) {
+            steps.push({ label: 'Checking Operations Handbook', status: 'working', detail: 'Read-only SOP retrieval' });
+            handbookResult = await askHandbook(effectiveQuestion, config);
+            const step = steps[steps.length - 1];
+            step.status = handbookResult.ok ? 'complete' : 'fallback';
+            step.detail = handbookResult.ok ? `Found ${handbookResult.sources?.length || 0} cited handbook source(s).` : handbookResult.reason === 'not-configured' ? 'Handbook Worker is not configured.' : 'Handbook unavailable; continuing with OfficeOS evidence.';
+          }
+        } catch (e) { console.warn('[dev-assistant] Handbook retrieval failed:', e.message); }
+
+        let answer;
+        if (handbookResult?.ok) {
+          const { formatHandbookAnswer } = await import('./handbookRag.js');
+          answer = { answer: formatHandbookAnswer(handbookResult), intent: 'handbook', project: null, data: { sources: handbookResult.sources, nextActions: handbookResult.nextActions }, suggestions: handbookResult.nextActions || [], engine: 'handbook-worker', cached: handbookResult.cached === true };
+        } else if (handbookIntent && handbookResult?.reason === 'not-configured') {
+          answer = {
+            answer: '📚 **Operations Handbook is not connected yet.**\n\nOfficeOS is ready to use it, but it needs the deployed `razib-operations-rag` Worker URL first. In **AI Settings → Operations Handbook**, paste the Worker base URL, save it, then use **Test connection**. The Worker must also have completed its initial handbook crawl before it can answer SOP questions.',
+            intent: 'handbook-not-configured', project: null, data: {}, suggestions: ['Open AI Settings', 'Connect the Operations Handbook Worker'], engine: 'builtin',
+          };
+        } else {
+          answer = await answerDevQuestion(effectiveQuestion, projs, {
+            config, schemaText, debug: role === 'superadmin',
+            allSheets: allSheetsSummary, documents, sites: db.getSites(), enterpriseRag,
+            history, forceBuiltin: Boolean(liveData.fresh),
+            dailyReports, reportUsers: db.getUsers(), reportBaseUrl: ra.baseUrl || '',
+          });
+        }
+        if (liveData.fresh) answer.answer += `\n\n_Source: live read of ${liveProject ? 'the project’s' : 'the connected Dev Tracker'} Google Sheet${liveProject ? '' : ' tabs'}._`;
+        if (liveData.attempted && !liveData.fresh) {
+          answer.answer += '\n\n_Source note: live Sheet read failed, so this answer uses the last synced project snapshot._';
+        }
+        if (clickUpEvidence.length) {
+          const latest = clickUpEvidence.flatMap((entry) => entry.comments.map((comment) => ({ ...comment, task: entry.task, url: entry.url })))
+            .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
+          const task = latest?.task || clickUpEvidence[0].task;
+          answer.answer += `\n\n**Live ClickUp check**\nTask: **${task?.name || task?.id || 'Linked task'}** · current status: **${task?.status || '—'}**`;
+          if (latest) answer.answer += `\nLatest comment (${latest.createdAt?.slice(0, 10) || 'undated'} · ${latest.author}): “${String(latest.text || '').slice(0, 500)}”`;
+          answer.answer += '\n_Source: live read-only ClickUp task data._';
+        }
+        answer.steps = steps;
+        answer.liveData = liveData;
+        return ok(answer);
+      }
+
+      // POST /api/master/rag/sync — re-runnable ingestion job. Schedule this
+      // route (or run npm run sync:rag) after source edits so the index stays fresh.
+      if (pathname === '/api/master/rag/sync' && method === 'POST') {
+        const b = await body();
+        const role = b.role || reqUrl.searchParams.get('role') || '';
+        if (role !== 'superadmin') return err(403, 'Superadmin access required');
+        try {
+          const { syncRagIndex } = await import('./enterpriseRag.js');
+          const index = await syncRagIndex({ refresh: true, sources: { documents: db.getAssistantConfig().documents, reportAutomation: db.getAssistantConfig().reportAutomation } });
+          return ok({ success: true, updatedAt: index.updatedAt, chunkCount: index.chunkCount, sources: index.sources, embeddingModel: index.embeddingModel, errors: index.errors });
+        } catch (e) { return err(500, `RAG sync failed: ${e.message}`); }
+      }
+
+      // GET /api/master/rag/search?q= — diagnostic endpoint for the evaluation
+      // workflow; returns chunk metadata + scores, never provider secrets.
+      if (pathname === '/api/master/rag/search' && method === 'GET') {
+        const q = String(reqUrl.searchParams.get('q') || '').trim();
+        if (!q) return err(400, 'q is required');
+        try {
+          const { retrieveRag, sourceTypeForQuestion } = await import('./enterpriseRag.js');
+          return ok(await retrieveRag(q, { sourceType: sourceTypeForQuestion(q), candidateLimit: 20, limit: 5 }));
+        } catch (e) { return err(500, `RAG search failed: ${e.message}`); }
       }
 
 // ─ SHEET SCHEMA (auto-discovered columns & tabs) ───────────
@@ -944,19 +2202,45 @@ const server = http.createServer(async (req, res) => {
         // column layout of the selected source. No Google call is made here —
         // the UI can POST /api/master/sheet-schema/refresh to re-read.
         const { discoverExtraColumns } = await import('./devAssistant.js');
+        const { summarizeProviderMetrics } = await import('./assistantMetrics.js');
+        const { reportMirrorSummary } = await import('./reportAutomation.js');
         const snapshotProjects = db.getDevProjects();
+        const ra = config.reportAutomation || {};
+        const raMirror = reportMirrorSummary();
         return ok({
           providers,
           order: config.order,
           providerOrderOptions: PROVIDER_DEFAULT_ORDER,
           source: config.source,
+          documents: config.documents,
+          handbook: { enabled: config.handbook?.enabled !== false, workerUrl: config.handbook?.workerUrl || '', configured: Boolean(config.handbook?.workerUrl || process.env.HANDBOOK_RAG_WORKER_URL) && config.handbook?.enabled !== false, tokenConfigured: Boolean(process.env.HANDBOOK_RAG_WORKER_TOKEN) },
+          reportAutomation: {
+            enabled: ra.enabled !== false,
+            baseUrl: ra.baseUrl || '',
+            hasKey: Boolean(ra.apiKey),
+            keyMasked: ra.apiKey ? db.maskSecret(ra.apiKey) : '',
+            configured: Boolean(ra.baseUrl && ra.apiKey),
+            freshOnAsk: ra.freshOnAsk === true,
+            mirrorCount: raMirror.count,
+            mirrorUpdatedAt: raMirror.updatedAt,
+            mirrorLatestDate: raMirror.latestDate,
+          },
           rag: config.rag,
           sheetOptions,
           detectedColumns: discoverExtraColumns(snapshotProjects),
+          providerMetrics: summarizeProviderMetrics(),
           updatedAt: config.updatedAt,
           aiAvailable: liveNames.length > 0,
           engine: liveNames.length ? `llm:${liveNames.join('→')}` : 'builtin',
         });
+      }
+      // GET /api/master/assistant-metrics — aggregate provider/cache trend.
+      // Superadmin only; deliberately contains no prompts, answers, or keys.
+      if (pathname === '/api/master/assistant-metrics' && method === 'GET') {
+        const role = reqUrl.searchParams.get('role') || '';
+        if (role !== 'superadmin') return err(403, 'Superadmin access required');
+        const { summarizeProviderMetrics } = await import('./assistantMetrics.js');
+        return ok(summarizeProviderMetrics());
       }
 // PUT /api/master/assistant-config — save provider keys / source / RAG settings
       if (pathname === '/api/master/assistant-config' && method === 'PUT') {
@@ -965,6 +2249,7 @@ const server = http.createServer(async (req, res) => {
         if (role !== 'superadmin') return err(403, 'Superadmin access required');
         const patch = {};
         const cleanedIgnored = [];
+        const config = db.getAssistantConfig();
         if (b.providers && typeof b.providers === 'object') {
           patch.providers = {};
           for (const [name, val] of Object.entries(b.providers)) {
@@ -998,6 +2283,49 @@ const server = http.createServer(async (req, res) => {
             freshOnAsk: b.source.freshOnAsk === true,
           };
         }
+        if (b.documents && typeof b.documents === 'object') {
+          const cleanDoc = (value) => String(value || '').trim().slice(0, 1000);
+          patch.documents = {
+            sources: Array.isArray(b.documents.sources) ? b.documents.sources
+              .map((item) => ({ id: cleanDoc(item?.id || item), url: cleanDoc(item?.url || ''), title: cleanDoc(item?.title || '') }))
+              .filter((item) => item.id || item.url) : [],
+            folderIds: Array.isArray(b.documents.folderIds) ? b.documents.folderIds.map(cleanDoc).filter(Boolean) : [],
+            freshOnAsk: b.documents.freshOnAsk === true,
+          };
+        }
+        if (b.handbook && typeof b.handbook === 'object') {
+          let workerUrl = String(b.handbook.workerUrl || '').trim().replace(/\/+$/, '');
+          if (workerUrl) {
+            try {
+              const parsed = new URL(workerUrl);
+              if (!['https:', 'http:'].includes(parsed.protocol) || /\/(?:admin|ingest)(?:\/|$)/i.test(parsed.pathname)) throw new Error('invalid');
+            } catch { return err(400, 'Handbook URL must be an http(s) Worker base URL, not an /admin or /ingest endpoint'); }
+          }
+          patch.handbook = { enabled: b.handbook.enabled !== false, workerUrl: workerUrl.slice(0, 1000) };
+        }
+        if (b.reportAutomation && typeof b.reportAutomation === 'object') {
+          // Validate the base URL when provided (defaults to the known worker).
+          let raUrl = String(b.reportAutomation.baseUrl || '').trim().replace(/\/+$/, '');
+          const prev = config.reportAutomation || {};
+          if (raUrl) {
+            try {
+              const parsed = new URL(raUrl);
+              if (!['https:', 'http:'].includes(parsed.protocol)) throw new Error('invalid');
+            } catch { return err(400, 'Report Automation base URL must be an http(s) URL'); }
+          } else {
+            raUrl = prev.baseUrl || '';
+          }
+          const clean = { enabled: b.reportAutomation.enabled !== false, baseUrl: raUrl.slice(0, 1000), freshOnAsk: b.reportAutomation.freshOnAsk === true, apiKey: prev.apiKey || '' };
+          if ('apiKey' in b.reportAutomation) {
+            const k = String(b.reportAutomation.apiKey || '').trim();
+            const looksMasked = k.includes('•') || k.includes('…') || k.includes('\uFFFD');
+            if (k === '') clean.apiKey = '';
+            else if (looksMasked) cleanedIgnored.push('reportAutomation: masked value sent back — key left unchanged');
+            else if (k.length < 16) cleanedIgnored.push(`reportAutomation: key looks truncated (${k.length} chars) — ignored`);
+            else clean.apiKey = k;
+          }
+          patch.reportAutomation = clean;
+        }
         if (b.rag && typeof b.rag === 'object') {
           patch.rag = {};
           if ('strictGrounding' in b.rag) patch.rag.strictGrounding = b.rag.strictGrounding !== false;
@@ -1008,7 +2336,7 @@ const server = http.createServer(async (req, res) => {
         }
         try {
           const saved = db.setAssistantConfig(patch);
-          return ok({ success: true, updatedAt: saved.updatedAt, source: saved.source, rag: saved.rag, ignored: cleanedIgnored });
+          return ok({ success: true, updatedAt: saved.updatedAt, source: saved.source, documents: saved.documents, handbook: { enabled: saved.handbook?.enabled !== false, workerUrl: saved.handbook?.workerUrl || '' }, reportAutomation: { enabled: saved.reportAutomation?.enabled !== false, baseUrl: saved.reportAutomation?.baseUrl || '', hasKey: Boolean(saved.reportAutomation?.apiKey), freshOnAsk: saved.reportAutomation?.freshOnAsk === true }, rag: saved.rag, ignored: cleanedIgnored });
         } catch (e) { return err(400, e.message); }
       }
 // POST /api/master/assistant-config/test — live-test one provider or all
@@ -1077,6 +2405,53 @@ const server = http.createServer(async (req, res) => {
         } catch (e) {
           return err(500, `Sheet unreachable: ${e.message}`);
         }
+      }
+
+      // POST /api/master/assistant-config/test-documents — validates the exact
+      // Docs / folders currently selected in AI Settings. Only metadata and
+      // errors are returned; document body text never goes to the browser.
+      if (pathname === '/api/master/assistant-config/test-documents' && method === 'POST') {
+        const b = await body();
+        const role = b.role || reqUrl.searchParams.get('role') || '';
+        if (role !== 'superadmin') return err(403, 'Superadmin access required');
+        const config = db.getAssistantConfig();
+        const documents = b.documents && typeof b.documents === 'object' ? b.documents : config.documents;
+        try {
+          const { fetchGoogleDocuments, documentSourceSummary } = await import('./docsRag.js');
+          const result = await fetchGoogleDocuments(documents, { refresh: true });
+          return ok({ success: result.errors.length === 0, ...documentSourceSummary(documents), documentCount: result.documents.length, documents: result.documents.map((d) => ({ title: d.title, url: d.url, modifiedTime: d.modifiedTime, chars: d.text.length })), errors: result.errors, fetchedAt: result.fetchedAt });
+        } catch (e) { return err(500, `Documents unreachable: ${e.message}`); }
+      }
+
+      // POST /api/master/assistant-config/test-handbook — checks only /health.
+      if (pathname === '/api/master/assistant-config/test-handbook' && method === 'POST') {
+        const b = await body();
+        const role = b.role || reqUrl.searchParams.get('role') || '';
+        if (role !== 'superadmin') return err(403, 'Superadmin access required');
+        const config = db.getAssistantConfig();
+        const candidate = b.handbook && typeof b.handbook === 'object' ? { ...config, handbook: { ...config.handbook, ...b.handbook } } : config;
+        const { testHandbook } = await import('./handbookRag.js');
+        const result = await testHandbook(candidate);
+        return ok({ success: result.ok, result: { ok: result.ok, message: result.message, configured: result.configured, workerUrl: result.workerUrl } });
+      }
+
+      // POST /api/master/assistant-config/test-report-feed — checks the Read-only
+      // Report Automation log connection with the candidate (or saved) config.
+      if (pathname === '/api/master/assistant-config/test-report-feed' && method === 'POST') {
+        const b = await body();
+        const role = b.role || reqUrl.searchParams.get('role') || '';
+        if (role !== 'superadmin') return err(403, 'Superadmin access required');
+        const config = db.getAssistantConfig();
+        const saved = config.reportAutomation || {};
+        const candidate = b.reportAutomation && typeof b.reportAutomation === 'object'
+          ? { ...saved, ...b.reportAutomation }
+          : saved;
+        // If the UI sent a masked placeholder back, fall back to the saved key.
+        const candidateKey = String(candidate.apiKey || '');
+        if (candidateKey.includes('•') || candidateKey.includes('…')) candidate.apiKey = saved.apiKey || '';
+        const { testReportFeed } = await import('./reportAutomation.js');
+        const result = await testReportFeed(candidate);
+        return ok({ success: result.ok, ...result });
       }
 
 
@@ -1997,6 +3372,8 @@ function startServer(port, maxTries = 5) {
     console.log(`\n🚀 Maintenance Mailer Dashboard is running!`);
     console.log(`👉 Open in browser: http://localhost:${port}`);
     console.log(`Press Ctrl+C to stop.\n`);
+    startRagScheduler();
+    refreshReportMirrorOnBoot();
   });
 
   server.on('error', (err) => {
@@ -2012,5 +3389,51 @@ function startServer(port, maxTries = 5) {
   });
 }
 
-startServer(DEFAULT_PORT);
+// On boot (and when the dashboard needs fresh report data) the Report
+// Automation mirror is refreshed if it is stale, so the admin/superadmin
+// report-status panel and chat answers always reflect the Worker log.
+let reportMirrorBootRefreshed = false;
+async function refreshReportMirrorOnBoot() {
+  if (reportMirrorBootRefreshed) return;
+  reportMirrorBootRefreshed = true;
+  try {
+    const config = db.getAssistantConfig();
+    const ra = config.reportAutomation || {};
+    if (ra.enabled === false || !ra.baseUrl || !ra.apiKey) {
+      console.log('[report] Report Automation feed not configured — skipping boot mirror refresh');
+      return;
+    }
+    const { syncReportMirror, loadReportMirror, isReportMirrorStale } = await import('./reportAutomation.js');
+    const mirror = loadReportMirror();
+    if (isReportMirrorStale(mirror)) {
+      const synced = await syncReportMirror({ config: ra, refresh: true });
+      console.log(`[report] Mirror refreshed on boot: ${(synced.items || []).length} report(s)`);
+    } else {
+      console.log(`[report] Mirror is fresh (${(mirror.items || []).length} report(s), updated ${mirror.updatedAt})`);
+    }
+  } catch (e) {
+    console.warn('[report] Boot mirror refresh failed:', e.message);
+  }
+}
 
+// Optional re-runnable index refresh for a long-running OfficeOS deployment.
+// Keep it opt-in: set RAG_SYNC_INTERVAL_MS (e.g. 21600000 for six hours), or
+// use the protected POST /api/master/rag/sync from an external cron service.
+let ragSyncStarted = false;
+function startRagScheduler() {
+  if (ragSyncStarted) return;
+  const interval = Number(process.env.RAG_SYNC_INTERVAL_MS || 0);
+  if (!Number.isFinite(interval) || interval < 60_000) return;
+  ragSyncStarted = true;
+  const run = async () => {
+    try {
+      const { syncRagIndex } = await import('./enterpriseRag.js');
+      const index = await syncRagIndex({ refresh: true, sources: { documents: db.getAssistantConfig().documents, reportAutomation: db.getAssistantConfig().reportAutomation } });
+      console.log(`[rag] scheduled sync complete: ${index.chunkCount} chunks`);
+    } catch (e) { console.warn('[rag] scheduled sync failed:', e.message); }
+  };
+  console.log(`[rag] scheduled sync enabled every ${Math.round(interval / 60000)} minutes`);
+  setInterval(run, interval).unref();
+}
+
+startServer(DEFAULT_PORT);

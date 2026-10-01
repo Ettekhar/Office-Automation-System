@@ -81,10 +81,11 @@ export const COLS = {
   AM: 4, // Account Manager
   NOTE: 5,
   WEBSITE_URL: 6,
-  CLICKUP_URL: 7,
-  REPORT_URL: 8, // not fully reliable per-site (often shared) — we match by tab name instead
-  BACKUP_URL: 9,
-  FIRST_MONTH_COL: 10, // month columns start here and continue rightward
+  TIME_TRACK_URL: 7, // "Maintenance time tracking ClickUp URL" (CW only)
+  CLICKUP_URL: 8, // "Maintenance Task ClickUp URL"
+  REPORT_URL: 9, // not fully reliable per-site (often shared) — we match by tab name instead
+  BACKUP_URL: 10,
+  FIRST_MONTH_COL: 11, // month columns start here and continue rightward
 };
 
 // The exact text a month cell needs to contain (case-insensitive) to count as "done" this month.

@@ -10,8 +10,11 @@ import {
   isValidWebsiteUrl,
   parseContacts,
   rowsToHtmlTable,
+  resolveConditionalNotes,
 } from './reportUtils.js';
 import { buildEmail, sendReportEmail } from './mailer.js';
+import { getConditionalNotes, getSites } from './db.js';
+import { completeClickUpMaintenanceTask } from './clickup.js';
 
 /**
  * Fetch overview data for a single account.
@@ -67,6 +70,12 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
     const company = (row[cols.COMPANY] || '').trim();
     const accountManager = (row[cols.AM] || '').trim();
     const clientNote = (row[cols.NOTE] || '').trim();
+    // "Maintenance time tracking ClickUp URL". The header name is resolved, not
+    // the position: CW carries it at column H and RM at column G, so a fixed
+    // index would show RM the wrong cell.
+    // A sheet with no such column resolves to -1, and row[-1] is already
+    // undefined, so the cell reads blank without a special case.
+    const timeTrackUrl = String(row[cols.TIME_TRACK_URL] ?? '').trim();
     const statusCell = row[cols.STATUS] || '';
     const monthCell = (row[monthCol] || '').trim();
     const active = isActive(statusCell);
@@ -115,6 +124,7 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
       company,
       accountManager,
       clientNote,
+      timeTrackUrl,
       statusCell,
       monthCell,
       isActive: active,
@@ -303,6 +313,7 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
   let reportHtml = '<p><em>(No matching report tab found in spreadsheet for this site.)</em></p>';
   let hasAdditionalIssues = false;
   let hasPremiumPlugins = false;
+  let conditionalNotes = [];
 
   if (matchedTab) {
     const reportRows = await getTabValues(matchedTab, 'A1:D200', targetAcct.spreadsheetId);
@@ -310,16 +321,23 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
     reportHtml = tableRes.reportHtml;
     hasAdditionalIssues = tableRes.hasAdditionalIssues;
     hasPremiumPlugins = tableRes.hasPremiumPlugins;
+    conditionalNotes = resolveConditionalNotes(
+      reportRows,
+      getConditionalNotes({ account: targetAcct.key, enabledOnly: true }),
+    );
   }
 
   let contacts = [];
+  let accountManager = '';
+  let timeTrackUrl = '';
   for (const row of masterRows.slice(1)) {
     if ((row[cols.WEBSITE_URL] || '').trim().toLowerCase() === websiteUrl.trim().toLowerCase()) {
       contacts = parseContacts(row[cols.CONTACT]);
+      accountManager = String(row[cols.AM] || '').trim();
+      timeTrackUrl = String(row[cols.TIME_TRACK_URL] || '').trim();
       break;
     }
   }
-
 
   const { subject, html } = buildEmail({
     websiteUrl,
@@ -327,6 +345,7 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
     reportHtml,
     hasAdditionalIssues,
     hasPremiumPlugins,
+    conditionalNotes,
     accountKey: targetAcct.key,
   });
 
@@ -338,11 +357,20 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
     fromName: targetAcct.fromName,
     matchedTab: matchedTab || null,
     contacts,
-    reportMonth: `${reportMonth.monthLower}-${reportMonth.year}`,
+    accountManager,
+    timeTrackUrl,
+    reportMonth: `${reportMonth.monthName} ${reportMonth.year}`,
     subject,
     html,
     hasAdditionalIssues,
     hasPremiumPlugins,
+    // Which conditions fired, and which cell each link came from. Surfaced so
+    // the dashboard can show the operator why a paragraph appeared.
+    conditionalNotes: conditionalNotes.map((n) => ({
+      condition: n.condition,
+      url: n.url,
+      sourceCell: n.sourceCell,
+    })),
   };
 }
 
@@ -367,6 +395,10 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
       const siteAcct = getAccountConfig(site.account);
       const reportRows = await getTabValues(site.matchedTab, 'A1:D200', siteAcct.spreadsheetId);
       const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
+      const conditionalNotes = resolveConditionalNotes(
+        reportRows,
+        getConditionalNotes({ account: site.account, enabledOnly: true }),
+      );
       const { subject, html } = buildEmail({
         websiteUrl: site.websiteUrl,
         reportMonth: {
@@ -376,6 +408,7 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
         reportHtml,
         hasAdditionalIssues,
         hasPremiumPlugins,
+        conditionalNotes,
         accountKey: site.account,
       });
 
@@ -386,11 +419,18 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
         fromEmail: site.fromEmail,
         fromName: site.fromName,
         contacts: site.contacts,
+        accountManager: site.accountManager || '',
+        timeTrackUrl: site.timeTrackUrl || '',
         matchedTab: site.matchedTab,
         subject,
         html,
         hasAdditionalIssues,
         hasPremiumPlugins,
+        conditionalNotes: conditionalNotes.map((n) => ({
+          condition: n.condition,
+          url: n.url,
+          sourceCell: n.sourceCell,
+        })),
       });
     } catch (err) {
       errors.push({
@@ -415,7 +455,18 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
 /**
  * Send an email for a single site (with optional recipient/subject/html override and accountKey).
  */
-export async function sendSingleEmail({ to, subject, html, dryRun = false, accountKey = 'CW' }) {
+export async function sendSingleEmail({
+  to,
+  subject,
+  html,
+  dryRun = false,
+  accountKey = 'CW',
+  websiteUrl = null,
+  timeTrackUrl = null,
+  accountManager = null,
+  monthName = null,
+  syncClickUp = true,
+}) {
   if (!to || to.length === 0) {
     throw new Error('Recipient email is required.');
   }
@@ -434,6 +485,51 @@ export async function sendSingleEmail({ to, subject, html, dryRun = false, accou
     accountKey,
   });
 
+  // Optional ClickUp task completion and AM mention notification
+  let clickupResult = null;
+  if (syncClickUp) {
+    try {
+      let targetSiteUrl = websiteUrl;
+      let targetTimeTrack = timeTrackUrl;
+      let targetAm = accountManager;
+
+      if (!targetSiteUrl && subject) {
+        const match = subject.match(/Website Maintenance Report for ([^\s(]+)/i);
+        if (match) targetSiteUrl = match[1];
+      }
+
+      if (targetSiteUrl && (!targetTimeTrack || !targetAm)) {
+        const cleanTarget = targetSiteUrl.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const site = (getSites ? getSites({}) : []).find((s) => {
+          const sUrl = (s.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+          return sUrl === cleanTarget || sUrl.includes(cleanTarget) || cleanTarget.includes(sUrl);
+        });
+        if (site) {
+          targetTimeTrack = targetTimeTrack || site.clickupTimeTrackUrl || site.timeTrackUrl;
+          targetAm = targetAm || site.accountManager;
+        }
+      }
+
+      if (targetTimeTrack) {
+        let detectedMonth = monthName;
+        if (!detectedMonth && subject) {
+          const mMatch = subject.match(/\(([^)]+)\)$/);
+          if (mMatch) detectedMonth = mMatch[1];
+        }
+        clickupResult = await completeClickUpMaintenanceTask({
+          timeTrackUrl: targetTimeTrack,
+          websiteUrl: targetSiteUrl || 'website',
+          accountManager: targetAm,
+          monthName: detectedMonth,
+          dryRun,
+        });
+      }
+    } catch (cuErr) {
+      console.warn('[ClickUp] Auto-close task notice:', cuErr.message);
+      clickupResult = { error: cuErr.message };
+    }
+  }
+
   return {
     success: true,
     to: Array.isArray(to) ? to : [to],
@@ -441,6 +537,8 @@ export async function sendSingleEmail({ to, subject, html, dryRun = false, accou
     account: accountKey,
     dryRun,
     result,
+    clickup: clickupResult,
   };
 }
+
 
