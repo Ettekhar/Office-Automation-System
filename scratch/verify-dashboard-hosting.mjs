@@ -513,6 +513,30 @@ section('7. nothing secret is committed');
     'scratch/verify-dashboard-hosting.mjs', 'scratch/mutation-dashboard-hosting.mjs',
     'scratch/classify-routes.mjs', 'scratch/sweep-dashboard-live.mjs',
     'scratch/dryrun-seed-kv.mjs', 'docs/cloudflare-dashboard-hosting.md'];
+  // Sheet ids the dashboard config is ALLOWED to name, and where.
+//
+// The Worker needs CW_SPREADSHEET_ID and RM_SPREADSHEET_ID in [vars]. Without
+// them the src/ literals win and the cloud copy silently reads a different
+// spreadsheet than the laptop - see scratch/audit-hardcoded-sheet-ids.mjs.
+//
+// So these ids have to be committed. That is not a weakened check: the ids are
+// read from the sheet manager, so the test fails if they ever drift from the
+// live configuration, and it is scoped to this one file, so a sheet id appearing
+// anywhere else still fails.
+const CONFIGURED_SHEET_IDS = (() => {
+  const p = path.join(ROOT, 'data', 'sheet-credentials.json');
+  if (!fs.existsSync(p)) return new Map();
+  const sm = JSON.parse(fs.readFileSync(p, 'utf8'));
+  const m = new Map();
+  for (const key of ['cw-maintenance', 'rm-maintenance']) {
+    const row = sm.find((s) => s.id === key);
+    if (row?.spreadsheetId) {
+      m.set(row.spreadsheetId, new Set(['cloudflare-worker/dashboard-wrangler.toml']));
+    }
+  }
+  return m;
+})();
+
   let leaks = 0;
   // Detect a Google Sheets id by SHAPE, not by naming any specific one.
   //
@@ -550,6 +574,7 @@ section('7. nothing secret is committed');
     if (/-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(raw)) { check(false, `${rel} contains PEM key material`); leaks++; }
     for (const m of raw.matchAll(SHEET_ID_SHAPE)) {
       if (ALLOWED_40PLUS.get(m[1])?.has(rel)) continue;
+      if (CONFIGURED_SHEET_IDS.get(m[1])?.has(rel)) continue;
       // hex digests and base64 keys in this repo are not sheet ids; a sheet id
       // always has at least one letter and is not pure hex.
       if (/^[0-9a-f]+$/.test(m[1])) continue;
@@ -557,7 +582,20 @@ section('7. nothing secret is committed');
       leaks++;
     }
   }
-  check(leaks === 0, `no key material or sheet id in any file this change adds (${scan.length} scanned)`);
+  // The config must name exactly the sheets the sheet manager has, no more.
+  // If someone points the Worker at a different sheet, this goes red - which is
+  // the drift that made the cloud copy disagree with the laptop.
+  const tomlRaw = fs.readFileSync(path.join(ROOT, 'cloudflare-worker', 'dashboard-wrangler.toml'), 'utf8');
+  const smRaw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'sheet-credentials.json'), 'utf8'));
+  for (const key of ['cw-maintenance', 'rm-maintenance']) {
+    const want = smRaw.find((s) => s.id === key)?.spreadsheetId;
+    const varName = key === 'cw-maintenance' ? 'CW_SPREADSHEET_ID' : 'RM_SPREADSHEET_ID';
+    const got = new RegExp(`^${varName}\\s*=\\s*"([^"]+)"`, 'm').exec(tomlRaw)?.[1];
+    check(got === want,
+      `${varName} in dashboard-wrangler.toml equals the sheet-manager ${key} id`,
+      got && want && got !== want ? `  config ${String(got).slice(0, 12)}... vs manager ${String(want).slice(0, 12)}...` : '');
+  }
+  check(leaks === 0, `no unexpected sheet id in any file this change adds (${scan.length} scanned)`);
 
   // ---- PRE-EXISTING, NOT MINE, NOT FIXABLE HERE ---------------------------
   // Widening the scan past this commit's own files immediately found two live

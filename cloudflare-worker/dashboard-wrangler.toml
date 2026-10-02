@@ -64,6 +64,39 @@ binding = "DASHBOARD_KV"
 id = "c44955e25a1c4791a89f3f3783213e12"
 
 # ---------------------------------------------------------------------------
+# Sheet ids: NOT SECRETS, but they must be set here explicitly.
+#
+# src/ resolves sheets like this, in ~15 places:
+#
+#     process.env.CW_SPREADSHEET_ID || '19aIBNOb0C4_Fx47...'
+#
+# On the laptop that is harmless - .env always supplies the variable, so the
+# literal never runs. A Worker has no .env, so the variable is UNSET, the
+# literal wins, and the cloud copy reads a DIFFERENT spreadsheet than the
+# laptop does. Both return HTTP 200 while disagreeing about the data.
+#
+# Measured: the literal points at "TEST AUTIOMATION of CW- Web Maintenance
+# Report"; the sheet manager has .env pointed at "2TEST_AUTOMATION_CW- Web
+# Maintenance Report". Three distinct sheets exist across the candidates.
+# The tell is the month list, which comes back offset by one column:
+#
+#   local  -> "Maintenance Report URL, Backup URL, March 22, ..."
+#   Worker -> "Backup URL, March 22, April 22, ..."
+#
+# Setting these two vars makes the Worker read the same live sheet the laptop
+# does, WITHOUT touching src/. The durable fix is to delete the || literal in
+# src/ so a missing id fails loudly instead of silently picking a stale sheet;
+# that is a src/ edit and is still open.
+#
+# These are identifiers, not credentials, so committing them is consistent with
+# the KV namespace id above. They must stay in sync with Sheet Manager - run
+#   npm run test:dashboard  and read the sheet-id drift section
+# ---------------------------------------------------------------------------
+[vars]
+CW_SPREADSHEET_ID = "1yu1oPX7Y3NEomyLLIFUlJ2E6wy6c_XuIzMM_dBqgiu8"
+RM_SPREADSHEET_ID = "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU"
+
+# ---------------------------------------------------------------------------
 # Secrets (set with `wrangler secret put`, never committed):
 #   ADMIN_TOKEN                  bearer token for every non-health route.
 #                                REQUIRED - if unset the Worker refuses all

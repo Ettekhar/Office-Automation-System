@@ -153,6 +153,53 @@ replacement.
 
 ---
 
+## The sheet id trap (found by asking "why is this hardcoded?")
+
+`src/` resolves sheets like this in ~15 places:
+
+```js
+process.env.CW_SPREADSHEET_ID || '<a stale test sheet, hardcoded in src/db.js>'
+```
+
+On the laptop that is harmless — `.env` always supplies the variable, so the
+literal never runs. **A Worker has no `.env`,** so the variable is unset, the
+literal wins, and the cloud copy reads a *different spreadsheet* than the laptop.
+
+Three distinct sheets exist across the candidates, all test copies. Ids are
+abbreviated here deliberately — this file is committed to a public repository, and
+`npm run probe:sheets` prints the full ids for anyone who needs them:
+
+| source | sheet title |
+|---|---|
+| `.env` / Sheet Manager | 2TEST_AUTOMATION_CW- Web Maintenance Report |
+| `src/config.js` default | Automation --- CW- Web Maintenance Report |
+| `src/db.js` literal | TEST AUTIOMATION of CW- Web Maintenance Report |
+
+The Worker was reading the third. The tell was in the data — `/api/master/months`
+filters header cells at index ≥ 9, and the live sheet has an extra leading
+column, so the month list came back offset by one:
+
+```
+local  -> "Maintenance Report URL, Backup URL, March 22, …"
+Worker -> "Backup URL, March 22, April 22, …"
+```
+
+Both returned HTTP 200. Both looked healthy. No error, no warning, nothing in the
+logs — just different data.
+
+**Fixed without touching `src/`:** `[vars]` in `dashboard-wrangler.toml` now
+pins `CW_SPREADSHEET_ID` and `RM_SPREADSHEET_ID` to the Sheet Manager values.
+Worker and laptop now return byte-identical month lists (57/57).
+
+**Still open:** the literals in `src/` disagree with the sheet manager. The
+durable fix is to delete the `|| literal` so a missing id throws instead of
+silently defaulting. That is a `src/` edit, so it is not done.
+
+`scratch/audit-hardcoded-sheet-ids.mjs` prints the full map and gates on
+Worker/laptop agreement. Mutations D23 and D24 prove that gate bites.
+
+---
+
 ## State: the hosted copy is currently EMPTY
 
 `data/*.json` on the laptop has 701 records / 1.05 MB. Cloudflare KV has none,
@@ -171,11 +218,13 @@ on the laptop behind Access, where the data already is.
 ## What is verified
 
 ```
-verify-dashboard-hosting        146/146
-mutation-dashboard-hosting      22/22 caught, all targets restored
+verify-dashboard-hosting        148/148
+mutation-dashboard-hosting      24/24 caught, all targets restored
+audit-hardcoded-sheet-ids       8/8, Worker and laptop resolve the same sheets
 live sweep                      28/28 read-only routes 200
 frontend                        0 console errors, 104 sites / 187 tasks
 assets                          byte-identical to public/
+sheet agreement                 month lists byte-identical, 57/57
 ```
 
 The live sweep only calls routes `classify-routes.mjs` proved read-only. No

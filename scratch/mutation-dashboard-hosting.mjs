@@ -23,6 +23,25 @@ const SUITE = path.join(ROOT, 'scratch', 'verify-dashboard-hosting.mjs');
 
 const sha = (p) => createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 
+// Read the ids under test from the live config rather than pasting them in.
+//
+// Two reasons. Pasting means the test has to be edited every time a sheet
+// changes, and until someone remembers, it quietly stops testing the real thing.
+// And pasting writes a live spreadsheet id into a file committed to a public
+// repository - which is precisely the leak this suite exists to prevent, so the
+// earlier version of D23 tripped its own detector.
+const TOML = fs.readFileSync(path.join(ROOT, 'cloudflare-worker', 'dashboard-wrangler.toml'), 'utf8');
+const tomlLine = (k) => {
+  const m = new RegExp(`^${k}\\s*=\\s*"[^"]+"`, 'm').exec(TOML);
+  if (!m) throw new Error(`dashboard-wrangler.toml has no ${k} - D23/D24 cannot anchor`);
+  return m[0];
+};
+// A DIFFERENT real sheet: the stale literal that src/db.js falls back to. Also
+// read from src/ so this stays true if that fallback is ever corrected.
+const STALE_CW_SHEET = (/process\.env\.CW_SPREADSHEET_ID\s*\|\|\s*'([A-Za-z0-9_-]{20,60})'/
+  .exec(fs.readFileSync(path.join(ROOT, 'src', 'db.js'), 'utf8')) || [])[1];
+if (!STALE_CW_SHEET) throw new Error('src/db.js no longer has a CW_SPREADSHEET_ID literal fallback');
+
 const MUTATIONS = [
   {
     id: 'D1',
@@ -191,6 +210,25 @@ const MUTATIONS = [
     from: "              'WWW-Authenticate': 'Basic realm=\"OfficeOS Master Dashboard\", charset=\"UTF-8\"',",
     to: "              'X-Note': 'challenge removed',",
     why: 'Without the challenge header the browser shows a bare error page and the operator has no way to sign in.',
+  },
+  {
+    id: 'D23',
+    name: 'the Worker is pointed at a different sheet than the laptop',
+    file: 'cloudflare-worker/dashboard-wrangler.toml',
+    // Built at load time from the sheet manager rather than pasted in. A test
+    // that hardcodes the id it is checking has to be updated whenever the sheet
+    // changes, and until someone remembers, it silently stops testing anything.
+    from: tomlLine('CW_SPREADSHEET_ID'),
+    to: `CW_SPREADSHEET_ID = "${STALE_CW_SHEET}"`,
+    why: 'The cloud copy would read a different spreadsheet than the laptop, and both would answer HTTP 200. Nothing else in the system would notice - which is exactly how this shipped.',
+  },
+  {
+    id: 'D24',
+    name: 'the Worker stops setting the sheet id and falls through to the src/ literal',
+    file: 'cloudflare-worker/dashboard-wrangler.toml',
+    from: `[vars]\n${tomlLine('CW_SPREADSHEET_ID')}\n${tomlLine('RM_SPREADSHEET_ID')}`,
+    to: '[vars]',
+    why: 'Without these the Worker has no .env, so `process.env.CW_SPREADSHEET_ID || <literal>` resolves to the stale test sheet in src/db.js. Silent, and wrong.',
   },
   {
     id: 'D22',

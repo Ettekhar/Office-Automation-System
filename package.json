@@ -5,6 +5,8 @@
     "type":  "module",
     "main":  "src/index.js",
     "scripts":  {
+                    "test:dashboard:sheets":  "node scratch/audit-hardcoded-sheet-ids.mjs",
+                    "probe:sheets":  "node scratch/probe-sheet-identity.mjs",
                     "dashboard:deploy":  "wrangler deploy --config cloudflare-worker/dashboard-wrangler.toml",
                     "dashboard:dev":  "wrangler dev --config cloudflare-worker/dashboard-wrangler.toml",
                     "dashboard:logs":  "wrangler tail --config cloudflare-worker/dashboard-wrangler.toml",
