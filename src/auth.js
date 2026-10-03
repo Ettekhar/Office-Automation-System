@@ -19,8 +19,10 @@
 import * as db from './db.js';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production' || !!process.env.CLOUDFLARE_WORKER;
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+
+// Read lazily so Cloudflare Worker env vars (set during warm phase) are available.
+function getGoogleClientId()     { return process.env.GOOGLE_CLIENT_ID     || ''; }
+function getGoogleClientSecret() { return process.env.GOOGLE_CLIENT_SECRET || ''; }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -112,6 +114,7 @@ export function handleMe(req, res) {
 
 /** GET /api/auth/google  — redirect to Google OAuth */
 export function handleGoogleStart(req, res, reqUrl) {
+  const GOOGLE_CLIENT_ID = getGoogleClientId();
   if (!GOOGLE_CLIENT_ID) {
     // Google OAuth not configured — redirect to login with error
     res.writeHead(302, { Location: '/login.html?error=oauth_not_configured', 'Cache-Control': 'no-store' });
@@ -144,6 +147,9 @@ export function handleGoogleStart(req, res, reqUrl) {
 
 /** GET /api/auth/google/callback — handle OAuth code from Google */
 export async function handleGoogleCallback(req, res, reqUrl) {
+  const GOOGLE_CLIENT_ID = getGoogleClientId();
+  const GOOGLE_CLIENT_SECRET = getGoogleClientSecret();
+
   const code = reqUrl.searchParams.get('code');
   const stateParam = reqUrl.searchParams.get('state');
   const errorParam = reqUrl.searchParams.get('error');
@@ -163,6 +169,7 @@ export async function handleGoogleCallback(req, res, reqUrl) {
   }
 
   if (!code || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.error('[auth] Google callback missing:', { code: !!code, id: !!GOOGLE_CLIENT_ID, secret: !!GOOGLE_CLIENT_SECRET });
     res.writeHead(302, { Location: '/login.html?error=oauth_failed', 'Cache-Control': 'no-store' });
     res.end();
     return;
@@ -208,20 +215,30 @@ export async function handleGoogleCallback(req, res, reqUrl) {
       return;
     }
 
-    // Find the user: first by Google sub (previously linked), then by email
+    // Find or create the user:
+    // 1. By Google sub (previously linked account)
+    // 2. By email (existing account → link Google to it)
+    // 3. Auto-create a new 'user'-role account on first Google sign-in
     let user = db.getUserByGoogleSub(sub);
     if (!user) {
       user = db.getUserByEmail(email);
       if (user) {
-        // Link the Google account to this user
+        // Link Google to this existing account
         user = db.linkGoogleAccount(user.id, { googleSub: sub, googleEmail: email, googleName: name, googlePicture: picture });
       }
     }
 
     if (!user) {
-      res.writeHead(302, { Location: '/login.html?error=not_registered', 'Cache-Control': 'no-store' });
-      res.end();
-      return;
+      // First time this Google account signs in — auto-create with role 'user'.
+      // A superadmin can promote them later from the user management panel.
+      console.log('[auth] Auto-creating user for Google account:', email);
+      user = db.createUser({
+        name: name || email.split('@')[0],
+        email,
+        role: 'user',
+        active: true,
+      });
+      user = db.linkGoogleAccount(user.id, { googleSub: sub, googleEmail: email, googleName: name, googlePicture: picture });
     }
     if (user.active === false) {
       res.writeHead(302, { Location: '/login.html?error=deactivated', 'Cache-Control': 'no-store' });
