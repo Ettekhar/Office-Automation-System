@@ -1996,7 +1996,7 @@ export function verifyPassword(password, stored) {
 export function getUserByEmail(email) {
   if (!email) return null;
   const e = email.toLowerCase().trim();
-  return getUsers().find(u => (u.email || '').toLowerCase() === e) || null;
+  return getUsers().find(u => (u.email || '').toLowerCase() === e || (u.googleEmail || '').toLowerCase() === e) || null;
 }
 
 function getSessions() { return ensureArray(dbRead('auth-sessions')); }
@@ -2107,6 +2107,7 @@ export function getUserByGoogleSub(sub) {
   if (!sub) return null;
   return getUsers().find(u => u.googleSub === sub) || null;
 }
+
 
 /** Parse the session token from an HTTP Cookie header. */
 export function tokenFromCookieHeader(cookieHeader) {
