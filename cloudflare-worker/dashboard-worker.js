@@ -116,7 +116,8 @@ export default {
               status: 401,
               headers: {
                 'Content-Type': 'application/json; charset=utf-8',
-                'WWW-Authenticate': 'Basic realm="OfficeOS Master Dashboard", charset="UTF-8"',
+                // NOTE: No WWW-Authenticate header — that would trigger the browser's
+                // native Basic Auth popup which conflicts with our /login.html system.
                 'Cache-Control': 'no-store',
               },
             },
@@ -126,7 +127,16 @@ export default {
 
       await ensureWarm(env);
 
-      // ---- static assets (master.html, app.js, css) ---------------------
+      // ---- root redirect -----------------------------------------------------
+      // Visiting / with no path should go to the dashboard if logged in,
+      // or to /login.html if not. This avoids the raw server response showing.
+      if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '')) {
+        const loggedIn = await gateSession(request, env);
+        const dest = loggedIn ? '/master.html' : '/login.html';
+        return Response.redirect(new URL(dest, request.url).toString(), 302);
+      }
+
+      // ---- static assets (master.html, login.html, app.js, css) ------------
       // Served by the ASSETS binding, which reads the public/ directory as it
       // was at deploy time. This is why the dashboard needs no filesystem.
       if (request.method === 'GET' && !url.pathname.startsWith('/api/')) {
