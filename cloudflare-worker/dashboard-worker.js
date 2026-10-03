@@ -94,21 +94,19 @@ export default {
       }
 
       // ---- Auth routes are PUBLIC — no token required -------------------------
-      // /api/auth/* must be reachable before the user has a session cookie.
-      // /login.html and its static assets also bypass the gate.
       const isAuthRoute = url.pathname.startsWith('/api/auth/');
       const isLoginPage = url.pathname === '/login.html' || url.pathname === '/login';
-      const isPublicAsset = /\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(url.pathname);
+      // All static files bypass the gate — HTML pages load client-side JS which
+      // calls /api/auth/me to enforce authentication. CSS/JS/images are always public.
+      const isStaticFile = /\.(html|css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(url.pathname)
+        || url.pathname === '/' || url.pathname === '';
 
-      if (!isAuthRoute && !isLoginPage && !isPublicAsset) {
-        // ---- the gate ---------------------------------------------------------
-        if (!gate(request, env)) {
-          // If navigating to a page (not an API call), redirect to login instead
-          // of returning a 401 JSON blob the user can't act on.
-          const isNavigation = request.headers.get('accept')?.includes('text/html');
-          if (isNavigation) {
-            return Response.redirect(new URL('/login.html', request.url).toString(), 302);
-          }
+      if (!isAuthRoute && !isLoginPage && !isStaticFile) {
+        // ---- the gate — only API routes need a token --------------------------
+        // Accept EITHER the ADMIN_TOKEN (scripts/curl) OR a valid session cookie
+        // (browser that has logged in via /login.html).
+        const hasValidSession = await gateSession(request, env);
+        if (!hasValidSession && !gate(request, env)) {
           return new Response(
             JSON.stringify({
               error: 'unauthorized',
@@ -256,21 +254,52 @@ function safeEqual(a, b) {
 }
 
 /**
+ * Check the officeos_session cookie against the auth-sessions stored in KV.
+ * Returns true if the cookie maps to an active, non-expired user record.
+ * This lets browsers that logged in via /login.html access API routes without
+ * also needing the ADMIN_TOKEN.
+ */
+async function gateSession(request, env) {
+  try {
+    const cookieHeader = request.headers.get('cookie') || '';
+    const match = cookieHeader.match(/(?:^|;\s*)officeos_session=([^;]+)/);
+    if (!match) return false;
+    const token = match[1].trim();
+    if (!token || token.length < 32) return false;
+
+    // Load sessions from KV
+    const kv = env.DASHBOARD_KV;
+    if (!kv) return false;
+    const raw = await kv.get('auth-sessions');
+    if (!raw) return false;
+    const sessions = JSON.parse(raw);
+    if (!Array.isArray(sessions)) return false;
+
+    const now = Date.now();
+    const session = sessions.find(s => s.token === token);
+    if (!session) return false;
+    if (!session.expiresAt || new Date(session.expiresAt).getTime() < now) return false;
+
+    // Also verify the user still exists and is active
+    const usersRaw = await kv.get('users');
+    if (!usersRaw) return false;
+    const users = JSON.parse(usersRaw);
+    const user = Array.isArray(users) ? users.find(u => u.id === session.userId) : null;
+    return !!(user && user.active !== false);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Accept EITHER credential form:
  *
  *   Authorization: Bearer <token>      for the local agent, curl, scripts
  *   Authorization: Basic <base64>      for a BROWSER, which cannot set headers
- *
- * The Basic username is ignored on purpose - there is exactly one operator, and
- * making them invent a username adds a second thing to get wrong for no
- * security gain. The password is the token, and it is compared the same
- * constant-time way.
  */
 function gate(request, env) {
   const expected = env.ADMIN_TOKEN;
   if (!expected) {
-    // Refusing is the safe default. An unset token must never mean "open",
-    // because this surface can delete client spreadsheet columns.
     console.error('[dashboard] ADMIN_TOKEN is not set - refusing every request');
     return false;
   }
@@ -284,8 +313,6 @@ function gate(request, env) {
     try { decoded = atob(basic[1].trim()); } catch { return false; }
     const sep = decoded.indexOf(':');
     if (sep < 0) return false;
-    // everything after the FIRST colon is the password, so a token containing
-    // a colon still works
     return safeEqual(decoded.slice(sep + 1), expected);
   }
   return false;
