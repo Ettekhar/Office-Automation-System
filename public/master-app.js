@@ -737,19 +737,22 @@ function enterApp() {
     avatarEl.textContent = (displayName || S.userName || S.role)[0].toUpperCase();
   }
 
-  // Topbar quick role switcher — restricted to the authenticated user's role level
+  // Topbar quick role switcher — completely hide roles above the user's privilege
   const authUserRole = (S.authUser && S.authUser.role) || S.role || 'user';
   const allowedRoles = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
   const permitted = allowedRoles[authUserRole] || ['user'];
 
+  const switcher = $('quick-role-switcher');
+  if (switcher) {
+    switcher.style.display = permitted.length > 1 ? '' : 'none';
+  }
+
   document.querySelectorAll('.role-pill-btn').forEach(btn => {
     const btnRole = btn.dataset.role;
     const isPermitted = permitted.includes(btnRole);
+    btn.style.display = isPermitted ? '' : 'none';
     btn.classList.toggle('active', btnRole === S.role);
-    // Visually disable pills the user isn't allowed to use
-    btn.style.opacity = isPermitted ? '' : '0.35';
-    btn.style.cursor  = isPermitted ? '' : 'not-allowed';
-    btn.title = isPermitted ? `Switch to ${btnRole} view` : `Your account does not have ${btnRole} access`;
+    btn.title = `Switch to ${btnRole} view`;
 
     btn.addEventListener('click', () => {
       const newRole = btn.dataset.role;

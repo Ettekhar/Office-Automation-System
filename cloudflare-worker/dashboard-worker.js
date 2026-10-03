@@ -69,6 +69,8 @@ async function ensureWarm(env, ctx) {
     if (env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
     if (env.APP_BASE_URL) process.env.APP_BASE_URL = env.APP_BASE_URL;
     if (env.SESSION_SECRET) process.env.SESSION_SECRET = env.SESSION_SECRET;
+    // Lower queue interval on Workers for fast responsive syncs
+    process.env.SHEETS_QUEUE_INTERVAL_MS = '250';
     const sa = env.GOOGLE_SERVICE_ACCOUNT_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
     if (sa) {
       kvShim.registerVirtualFile('service-account.json', sa);
@@ -198,6 +200,60 @@ async function invoke(handler, request) {
       return req;
     },
   };
+
+  const isSSE = (headers.accept || '').includes('text/event-stream');
+
+  if (isSSE) {
+    // Streaming response for SSE: sends headers immediately and pipes writes live.
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+    let resHeaders = {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    };
+    let statusCode = 200;
+
+    let resolveResponse;
+    const responsePromise = new Promise((resolve) => { resolveResponse = resolve; });
+
+    const res = {
+      writeHead(code, hdrs) {
+        statusCode = code;
+        for (const [k, v] of Object.entries(hdrs || {})) resHeaders[k] = v;
+        const outHeaders = new Headers();
+        for (const [k, v] of Object.entries(resHeaders)) outHeaders.set(k, String(v));
+        resolveResponse(new Response(readable, { status: statusCode, headers: outHeaders }));
+        return res;
+      },
+      setHeader(k, v) { resHeaders[k] = v; return res; },
+      getHeader(k) { return resHeaders[k]; },
+      write(chunk) {
+        if (chunk !== undefined && chunk !== null) {
+          writer.write(encoder.encode(String(chunk))).catch(() => {});
+        }
+        return true;
+      },
+      end(chunk) {
+        if (chunk !== undefined && chunk !== null) {
+          writer.write(encoder.encode(String(chunk))).catch(() => {});
+        }
+        writer.close().catch(() => {});
+        return res;
+      },
+      get statusCode() { return statusCode; },
+    };
+
+    // Run handler in background while returning the streaming response
+    handler(req, res).catch((err) => {
+      console.error('[dashboard] stream handler error:', err);
+      writer.write(encoder.encode(`data: ${JSON.stringify({ error: err && err.message })}\n\n`)).catch(() => {});
+      writer.close().catch(() => {});
+    });
+
+    return await responsePromise;
+  }
 
   let statusCode = 200;
   const resCookies = []; // Set-Cookie is multi-value
