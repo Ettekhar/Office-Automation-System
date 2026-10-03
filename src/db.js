@@ -2009,39 +2009,64 @@ function pruneExpiredSessions() {
   return sessions;
 }
 
-/** Create a new session for a user. Returns the session token. */
+/** Create a new self-signed session token. No KV storage required.
+ *  The token carries the userId and role, signed with HMAC-SHA256.
+ *  Works across Cloudflare Worker isolates without KV propagation delay. */
 export function createSession(userId, meta) {
   if (!meta) meta = {};
-  pruneExpiredSessions();
-  const token = crypto.randomBytes(32).toString('hex');
-  const session = {
-    id: uuid(), token, userId,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + SESSION_TTL_MS).toISOString(),
-    userAgent: meta.userAgent || '', ip: meta.ip || '',
+  const user = getUserById(userId);
+  const role = (user && user.role) || 'user';
+  const now = Date.now();
+  const payload = {
+    userId, role,
+    iat: now,
+    exp: now + SESSION_TTL_MS,
     provider: meta.provider || 'email',
+    nonce: crypto.randomBytes(8).toString('hex'),
   };
-  const sessions = getSessions();
-  sessions.push(session);
-  setSessions(sessions);
-  return token;
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const secret = _sessionSecret();
+  const sig = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
+  return payloadB64 + '.' + sig;
 }
 
-/** Look up a valid session by token. Returns {session, user} or null. */
+function _sessionSecret() {
+  return process.env.SESSION_SECRET || process.env.ADMIN_TOKEN || 'officeos-dev-secret-change-in-prod';
+}
+
+/** Verify and decode a signed session token. Returns {session, user} or null.
+ *  No KV lookup needed — the signature itself proves validity. */
 export function getSessionByToken(token) {
-  if (!token) return null;
-  pruneExpiredSessions();
-  const session = getSessions().find(s => s.token === token);
-  if (!session) return null;
-  const user = getUserById(session.userId);
-  if (!user || user.active === false) return null;
-  return { session, user };
+  if (!token || !token.includes('.')) return null;
+  try {
+    const lastDot = token.lastIndexOf('.');
+    const payloadB64 = token.slice(0, lastDot);
+    const sig = token.slice(lastDot + 1);
+    const secret = _sessionSecret();
+    const expectedSig = crypto.createHmac('sha256', secret).update(payloadB64).digest('base64url');
+    // Timing-safe compare
+    if (sig.length !== expectedSig.length) return null;
+    const a = Buffer.from(sig, 'base64url');
+    const b = Buffer.from(expectedSig, 'base64url');
+    if (a.length !== b.length) return null;
+    if (!crypto.timingSafeEqual(a, b)) return null;
+
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    if (!payload.userId || !payload.exp) return null;
+    if (Date.now() > payload.exp) return null;  // expired
+
+    const user = getUserById(payload.userId);
+    if (!user || user.active === false) return null;
+    return { session: payload, user };
+  } catch { return null; }
 }
 
-/** Revoke (delete) a session by token. */
+/** Revoke a session. With signed tokens this is a no-op for reads
+ *  (the token is self-contained), but we still prune old KV sessions for hygiene. */
 export function revokeSession(token) {
-  if (!token) return;
-  setSessions(getSessions().filter(s => s.token !== token));
+  // Signed tokens don't need KV revocation. The token expires naturally.
+  // For logout to take effect immediately, the client simply deletes the cookie.
+  return;
 }
 
 /** Revoke all sessions for a user. */

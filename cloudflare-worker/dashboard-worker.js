@@ -68,6 +68,7 @@ async function ensureWarm(env, ctx) {
     if (env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
     if (env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
     if (env.APP_BASE_URL) process.env.APP_BASE_URL = env.APP_BASE_URL;
+    if (env.SESSION_SECRET) process.env.SESSION_SECRET = env.SESSION_SECRET;
     const sa = env.GOOGLE_SERVICE_ACCOUNT_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
     if (sa) {
       kvShim.registerVirtualFile('service-account.json', sa);
@@ -268,10 +269,12 @@ function safeEqual(a, b) {
 }
 
 /**
- * Check the officeos_session cookie against the auth-sessions stored in KV.
- * Returns true if the cookie maps to an active, non-expired user record.
- * This lets browsers that logged in via /login.html access API routes without
- * also needing the ADMIN_TOKEN.
+ * Verify the officeos_session cookie using HMAC-SHA256 signature.
+ * The token is self-contained — no KV lookup needed.
+ * This works instantly on any Cloudflare edge node, immune to KV eventual consistency.
+ *
+ * Token format: base64url(payload_json) + "." + base64url(hmac_sha256)
+ * Matches the format created by db.js createSession().
  */
 async function gateSession(request, env) {
   try {
@@ -279,27 +282,33 @@ async function gateSession(request, env) {
     const match = cookieHeader.match(/(?:^|;\s*)officeos_session=([^;]+)/);
     if (!match) return false;
     const token = match[1].trim();
-    if (!token || token.length < 32) return false;
+    if (!token || !token.includes('.')) return false;
 
-    // Load sessions from KV
-    const kv = env.DASHBOARD_KV;
-    if (!kv) return false;
-    const raw = await kv.get('auth-sessions');
-    if (!raw) return false;
-    const sessions = JSON.parse(raw);
-    if (!Array.isArray(sessions)) return false;
+    const secret = env.SESSION_SECRET || env.ADMIN_TOKEN || 'officeos-dev-secret-change-in-prod';
 
-    const now = Date.now();
-    const session = sessions.find(s => s.token === token);
-    if (!session) return false;
-    if (!session.expiresAt || new Date(session.expiresAt).getTime() < now) return false;
+    const lastDot = token.lastIndexOf('.');
+    const payloadB64 = token.slice(0, lastDot);
+    const sigB64 = token.slice(lastDot + 1);
 
-    // Also verify the user still exists and is active
-    const usersRaw = await kv.get('users');
-    if (!usersRaw) return false;
-    const users = JSON.parse(usersRaw);
-    const user = Array.isArray(users) ? users.find(u => u.id === session.userId) : null;
-    return !!(user && user.active !== false);
+    // Verify HMAC signature using Web Crypto API (available in Workers + Node 15+)
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw', enc.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false, ['sign']
+    );
+    const expectedSigBuf = await crypto.subtle.sign('HMAC', keyMaterial, enc.encode(payloadB64));
+    const expectedSig = btoa(String.fromCharCode(...new Uint8Array(expectedSigBuf)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    if (sigB64 !== expectedSig) return false;
+
+    // Decode and validate payload
+    const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload.userId || !payload.exp) return false;
+    if (Date.now() > payload.exp) return false;  // expired
+
+    return true;  // valid signed session
   } catch {
     return false;
   }
