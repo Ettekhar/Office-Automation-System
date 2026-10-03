@@ -52,10 +52,15 @@ const STATE_KEYS = [
 
 let warmed = null;
 
-async function ensureWarm(env) {
+async function ensureWarm(env, ctx) {
   // Once per isolate, not once per request. KV reads are eventually consistent,
   // so re-warming on every request would be both slow and no fresher.
-  if (warmed) return warmed;
+  if (warmed) {
+    // Even on subsequent requests, re-register ctx.waitUntil so new writes
+    // (e.g. a session created on this request) are guaranteed to complete.
+    if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+    return warmed;
+  }
   warmed = (async () => {
     configureGoogle({ env });
 
@@ -63,19 +68,15 @@ async function ensureWarm(env) {
     if (env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
     if (env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
     if (env.APP_BASE_URL) process.env.APP_BASE_URL = env.APP_BASE_URL;
-    // The service account is a secret here and a file on the laptop. Register
-    // it as a virtual file so src/sheets.js's existing
-    //   JSON.parse(fs.readFileSync(config.serviceAccountKeyPath, 'utf8'))
-    // resolves to the same bytes it always did, with no call-site change.
     const sa = env.GOOGLE_SERVICE_ACCOUNT_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
     if (sa) {
       kvShim.registerVirtualFile('service-account.json', sa);
-      // config.js sets serviceAccountKeyPath to null when this var is present,
-      // which is the path sheets.js prefers. Set both so either route works.
       if (!env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON = sa;
     }
 
     kvShim.init(env.DASHBOARD_KV);
+    // Register waitUntil BEFORE warm so any writes during warm are also covered.
+    if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
     const loaded = await kvShim.warm(env.DASHBOARD_KV, STATE_KEYS);
     console.log(`[dashboard] warmed ${loaded}/${STATE_KEYS.length} state keys from KV`);
     return loaded;
@@ -92,6 +93,11 @@ export default {
       if (url.pathname === '/api/worker-health' || url.pathname === '/__health') {
         return json({ service: 'officeos-dashboard', ok: true });
       }
+
+      // Warm KV cache for ALL requests — auth routes need sessions from KV.
+      // ensureWarm() is a cached promise; it is a no-op after the first call per isolate.
+      // Pass ctx.waitUntil so session KV writes finish even after a redirect response.
+      await ensureWarm(env, ctx);
 
       // ---- Auth routes are PUBLIC — no token required -------------------------
       const isAuthRoute = url.pathname.startsWith('/api/auth/');
@@ -124,8 +130,6 @@ export default {
           );
         }
       }
-
-      await ensureWarm(env);
 
       // ---- root redirect -----------------------------------------------------
       // Visiting / with no path should go to the dashboard if logged in,

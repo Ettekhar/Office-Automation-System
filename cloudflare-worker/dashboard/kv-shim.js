@@ -48,6 +48,12 @@ const virtualFiles = new Map();
 
 let ns = null;
 let inited = false;
+// Optional ctx.waitUntil — when set, critical writes (auth-sessions) are
+// registered with it so Cloudflare keeps the isolate alive until the KV put
+// completes. Without this, a redirect response sent immediately after a write
+// can terminate the isolate before the put finishes, losing the session.
+let _waitUntil = null;
+export function setWaitUntil(fn) { _waitUntil = fn; }
 
 // Names that are large and/or machine-specific. Reading them is allowed (they
 // come from the warm), but they are never WRITTEN from the Worker, because a
@@ -56,6 +62,33 @@ let inited = false;
 export const NEVER_WRITE = new Set([
   'rag-index',      // 1.9 MB, rebuilt locally by the RAG indexer
   'assistant-metrics',
+]);
+
+/**
+ * Filename stem -> KV key, for the one collection whose file name and key name
+ * differ.
+ *
+ * The key a file resolves to is its basename minus `.json`, which works for
+ * every collection except this one. src/db.js line 896 reads
+ * data/email-conditional-notes.json (CONDITIONAL_NOTES_COLLECTION), while the
+ * Worker's STATE_KEYS calls that key 'conditional-notes'. So the read asked KV
+ * for 'email-conditional-notes', the seed had written 'conditional-notes', the
+ * cache missed, and GET /api/conditional-notes returned 0 notes on the hosted
+ * dashboard while the laptop returned 2 - with the seed reporting the key as
+ * uploaded and read back identical, because the seed checks the key it WROTE,
+ * never the key the Worker READS.
+ *
+ * The alias lives here rather than in STATE_KEYS because STATE_KEYS lists KV
+ * keys and is the vocabulary the seed and the Worker share; this maps the file
+ * name onto that vocabulary. Renaming the KV key instead would have broken
+ * every existing read and every previously-written value.
+ *
+ * Applied in nameFor(), so reads, writes and existsSync all agree. If it were
+ * only on the read path, a Worker write to email-conditional-notes.json would
+ * create a SECOND key and the two copies would drift apart silently.
+ */
+const KEY_ALIASES = new Map([
+  ['email-conditional-notes', 'conditional-notes'],
 ]);
 
 export function init(kvNamespace) {
@@ -104,7 +137,12 @@ export function readFileSync(file) {
   if (virtualFiles.has(base)) return virtualFiles.get(base);
 
   // 2. state from KV
-  const name = base.replace(/\.json$/, '');
+  //
+  // nameFor(), not an inline basename strip: this collection's file name and KV
+  // key differ (see KEY_ALIASES). The previous inline version here and in
+  // existsSync() silently disagreed with writeFileSync(), which already called
+  // nameFor().
+  const name = nameFor(file);
   if (cache.has(name)) return JSON.stringify(cache.get(name), null, 2);
 
   // 3. absent.
@@ -136,16 +174,25 @@ export function writeFileSync(file, contents) {
   try { parsed = JSON.parse(contents); } catch { parsed = contents; }
   cache.set(name, parsed);              // synchronous: callers see it at once
   if (!ns) throw new Error('kv-shim: write before init()');
-  // Deliberately not awaited. See the header note on writes.
-  Promise.resolve(ns.put(name, JSON.stringify(parsed)))
+  // Auth-sessions writes MUST complete before the isolate terminates (a login
+  // callback redirects immediately after creating a session). Register with
+  // ctx.waitUntil when available so Cloudflare keeps the isolate alive.
+  const writePromise = Promise.resolve(ns.put(name, JSON.stringify(parsed)))
     .catch((e) => console.error(`kv-shim: write of '${name}' failed:`, e?.message || e));
+  if (name === 'auth-sessions' || name === 'users') {
+    if (_waitUntil) _waitUntil(writePromise);
+  }
   return undefined;
 }
 
 export function existsSync(file) {
   const base = String(file).replace(/\\/g, '/').split('/').pop() || '';
   if (virtualFiles.has(base)) return true;
-  return cache.has(base.replace(/\.json$/, ''));
+  // nameFor(), for the same reason as readFileSync(): db.js guards every read
+  // with existsSync() first, so an existsSync() that resolved a different key
+  // than readFileSync() would decide the file is absent and never read the key
+  // that is actually present.
+  return cache.has(nameFor(file));
 }
 
 /**
@@ -184,7 +231,8 @@ export function mkdirSync() {
 
 export function nameFor(file) {
   const base = String(file).replace(/\\/g, '/').split('/').pop() || '';
-  return base.replace(/\.json$/, '');
+  const stem = base.replace(/\.json$/, '');
+  return KEY_ALIASES.get(stem) || stem;
 }
 
 export default { readFileSync, readFile, writeFileSync, existsSync, mkdirSync, init, warm, isWarm, cachedKeys, registerVirtualFile, NEVER_WRITE };
