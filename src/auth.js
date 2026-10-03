@@ -217,8 +217,9 @@ export async function handleGoogleCallback(req, res, reqUrl) {
 
     // Find or create the user:
     // 1. By Google sub (previously linked account)
-    // 2. By email (existing account → link Google to it)
-    // 3. Auto-create a new 'user'-role account on first Google sign-in
+    // 2. By email / googleEmail (existing account → link Google to it)
+    // 3. Smart match: existing unlinked active profile with matching name (e.g. sheet-imported member)
+    // 4. Auto-create a new 'user'-role account on first Google sign-in
     let user = db.getUserByGoogleSub(sub);
     if (!user) {
       user = db.getUserByEmail(email);
@@ -229,8 +230,32 @@ export async function handleGoogleCallback(req, res, reqUrl) {
     }
 
     if (!user) {
+      // Smart Auto-Match: check if an unlinked active team member matches this Google account name
+      const candidateUsers = db.getUsers().filter(u => !u.googleSub && !u.mergedInto && u.active !== false);
+      const cleanGName = (name || '').trim().toLowerCase();
+      const emailPrefix = (email || '').split('@')[0].trim().toLowerCase();
+
+      const nameMatch = candidateUsers.find(u => {
+        const uName = (u.name || '').trim().toLowerCase();
+        if (!uName) return false;
+        if (cleanGName && uName === cleanGName) return true;
+        if (cleanGName && (cleanGName.startsWith(uName + ' ') || cleanGName.endsWith(' ' + uName))) return true;
+        if (emailPrefix && (uName === emailPrefix || emailPrefix.startsWith(uName))) return true;
+        return false;
+      });
+
+      if (nameMatch) {
+        console.log(`[auth] Auto-matching Google account ${email} (${name}) to unlinked team member: ${nameMatch.name}`);
+        user = db.linkGoogleAccount(nameMatch.id, { googleSub: sub, googleEmail: email, googleName: name, googlePicture: picture });
+        if (!user.email) {
+          user = db.updateUser(user.id, { email });
+        }
+      }
+    }
+
+    if (!user) {
       // First time this Google account signs in — auto-create with role 'user'.
-      // A superadmin can promote them later from the user management panel.
+      // A superadmin can promote or merge them later from the user management panel.
       console.log('[auth] Auto-creating user for Google account:', email);
       user = db.createUser({
         name: name || email.split('@')[0],

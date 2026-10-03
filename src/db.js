@@ -53,21 +53,35 @@ export function cleanDomainUrl(u) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
-export function getUsers() {
+export function getUsers(options = {}) {
   const users = ensureArray(dbRead('users'));
-  return users.map(u => ({ ...u, active: u.active !== false }));
+  const mapped = users.map(u => ({ ...u, active: u.active !== false }));
+  if (options && options.includeMerged) return mapped;
+  return mapped.filter(u => !u.mergedInto);
 }
 export function setUsers(data) { dbWrite('users', data); }
 
-export function getUserById(id) { return getUsers().find(u => u.id === id) || null; }
+export function getUserById(id) {
+  if (!id) return null;
+  const rawUsers = ensureArray(dbRead('users'));
+  const u = rawUsers.find(x => x.id === id);
+  if (!u) return null;
+  if (u.mergedInto) return getUserById(u.mergedInto);
+  return { ...u, active: u.active !== false };
+}
+
 export function getUserByName(name) {
-  const n = name?.toLowerCase().trim();
-  return getUsers().find(u => u.name.toLowerCase() === n) || null;
+  if (!name) return null;
+  const n = name.toLowerCase().trim();
+  const rawUsers = ensureArray(dbRead('users'));
+  const u = rawUsers.find(x => !x.mergedInto && (x.name || '').toLowerCase().trim() === n);
+  if (!u) return null;
+  return { ...u, active: u.active !== false };
 }
 
 export function createUser({ name, role = 'user', email = '', active = true }) {
-  const users = getUsers();
-  if (users.find(u => u.name.toLowerCase() === name.toLowerCase()))
+  const users = ensureArray(dbRead('users'));
+  if (users.find(u => !u.mergedInto && (u.name || '').toLowerCase().trim() === name.toLowerCase().trim()))
     throw new Error(`User "${name}" already exists`);
   const user = { id: uuid(), name, role, email, active: active !== false, createdAt: now(), updatedAt: now() };
   users.push(user);
@@ -76,7 +90,7 @@ export function createUser({ name, role = 'user', email = '', active = true }) {
 }
 
 export function updateUser(id, updates) {
-  const users = getUsers();
+  const users = ensureArray(dbRead('users'));
   const idx = users.findIndex(u => u.id === id);
   if (idx === -1) throw new Error(`User not found: ${id}`);
   users[idx] = { ...users[idx], ...updates, updatedAt: now() };
@@ -85,7 +99,7 @@ export function updateUser(id, updates) {
 }
 
 export function deleteUser(id) {
-  const users = getUsers().filter(u => u.id !== id);
+  const users = ensureArray(dbRead('users')).filter(u => u.id !== id);
   setUsers(users);
 }
 
@@ -1996,7 +2010,11 @@ export function verifyPassword(password, stored) {
 export function getUserByEmail(email) {
   if (!email) return null;
   const e = email.toLowerCase().trim();
-  return getUsers().find(u => (u.email || '').toLowerCase() === e || (u.googleEmail || '').toLowerCase() === e) || null;
+  const rawUsers = ensureArray(dbRead('users'));
+  const u = rawUsers.find(x => (x.email || '').toLowerCase().trim() === e || (x.googleEmail || '').toLowerCase().trim() === e);
+  if (!u) return null;
+  if (u.mergedInto) return getUserById(u.mergedInto);
+  return { ...u, active: u.active !== false };
 }
 
 function getSessions() { return ensureArray(dbRead('auth-sessions')); }
@@ -2102,10 +2120,159 @@ export function linkGoogleAccount(userId, opts) {
   });
 }
 
+/** Link Google email to a user profile, merging any duplicate user that already used it. */
+export function linkUserGoogleEmail(userId, email) {
+  if (!email || !email.includes('@')) throw new Error('A valid email address is required');
+  const e = email.toLowerCase().trim();
+  const rawUsers = ensureArray(dbRead('users'));
+  const idx = rawUsers.findIndex(u => u.id === userId);
+  if (idx === -1) throw new Error(`User not found: ${userId}`);
+
+  // Check if another active/unmerged user already has this email
+  const duplicate = rawUsers.find(u => u.id !== userId && !u.mergedInto && ((u.email || '').toLowerCase().trim() === e || (u.googleEmail || '').toLowerCase().trim() === e));
+  if (duplicate) {
+    return mergeUsers(duplicate.id, userId);
+  }
+
+  rawUsers[idx] = {
+    ...rawUsers[idx],
+    email: rawUsers[idx].email || e,
+    googleEmail: e,
+    updatedAt: now(),
+  };
+  setUsers(rawUsers);
+  return rawUsers[idx];
+}
+
+/** Unlink Google account credentials from a user. */
+export function unlinkGoogleAccount(userId) {
+  const rawUsers = ensureArray(dbRead('users'));
+  const idx = rawUsers.findIndex(u => u.id === userId);
+  if (idx === -1) throw new Error(`User not found: ${userId}`);
+
+  rawUsers[idx] = {
+    ...rawUsers[idx],
+    googleSub: null,
+    googleEmail: '',
+    googleName: '',
+    googlePicture: '',
+    updatedAt: now(),
+  };
+  setUsers(rawUsers);
+  return rawUsers[idx];
+}
+
+/**
+ * Merge sourceUser into targetUser:
+ * - Copies Google credentials, picture, and email from source to target if target is missing them.
+ * - Migrates site assignments in sites.json from source to target.
+ * - Migrates daily review checklist rows in daily-review.json from source to target.
+ * - Migrates tasks in tasks.json from source to target.
+ * - Marks sourceUser as mergedInto: targetUserId, active: false.
+ * - Returns updated targetUser.
+ */
+export function mergeUsers(sourceUserId, targetUserId) {
+  if (!sourceUserId || !targetUserId) throw new Error('sourceUserId and targetUserId are required');
+  if (sourceUserId === targetUserId) throw new Error('Cannot merge a user into themselves');
+
+  const users = ensureArray(dbRead('users'));
+  const sourceIdx = users.findIndex(u => u.id === sourceUserId);
+  const targetIdx = users.findIndex(u => u.id === targetUserId);
+
+  if (sourceIdx === -1) throw new Error(`Source user not found: ${sourceUserId}`);
+  if (targetIdx === -1) throw new Error(`Target user not found: ${targetUserId}`);
+
+  const source = users[sourceIdx];
+  const target = users[targetIdx];
+
+  // 1. Update target with Google auth info or email from source if target lacks them
+  const targetUpdates = {
+    googleSub: target.googleSub || source.googleSub || null,
+    googleEmail: target.googleEmail || source.googleEmail || source.email || '',
+    googleName: target.googleName || source.googleName || source.name || '',
+    googlePicture: target.googlePicture || source.googlePicture || '',
+    email: target.email || source.email || source.googleEmail || '',
+    updatedAt: now(),
+  };
+
+  if (source.passwordHash && !target.passwordHash) {
+    targetUpdates.passwordHash = source.passwordHash;
+  }
+
+  users[targetIdx] = { ...target, ...targetUpdates };
+
+  // 2. Mark source as merged
+  users[sourceIdx] = {
+    ...source,
+    active: false,
+    mergedInto: targetUserId,
+    googleSub: null,
+    updatedAt: now(),
+  };
+
+  setUsers(users);
+
+  // 3. Migrate sites.json
+  const sites = ensureArray(dbRead('sites'));
+  let sitesChanged = false;
+  for (const s of sites) {
+    if (Array.isArray(s.assignedUsers) && s.assignedUsers.includes(sourceUserId)) {
+      s.assignedUsers = s.assignedUsers.filter(id => id !== sourceUserId);
+      if (!s.assignedUsers.includes(targetUserId)) {
+        s.assignedUsers.push(targetUserId);
+      }
+      s.updatedAt = now();
+      sitesChanged = true;
+    }
+  }
+  if (sitesChanged) setSites(sites);
+
+  // 4. Migrate daily-review
+  const drRows = ensureArray(dbRead('daily-review'));
+  let drChanged = false;
+  for (const r of drRows) {
+    if (r.userId === sourceUserId) {
+      const existing = drRows.find(x => x.siteId === r.siteId && x.userId === targetUserId);
+      if (existing) {
+        if (r.checklist && typeof r.checklist === 'object') {
+          existing.checklist = { ...r.checklist, ...(existing.checklist || {}) };
+          existing.updatedAt = now();
+          drChanged = true;
+        }
+      } else {
+        r.userId = targetUserId;
+        r.userName = users[targetIdx].name;
+        r.updatedAt = now();
+        drChanged = true;
+      }
+    }
+  }
+  if (drChanged) dbWrite('daily-review', drRows);
+
+  // 5. Migrate tasks
+  const tasks = ensureArray(dbRead('tasks'));
+  let tasksChanged = false;
+  for (const t of tasks) {
+    if (t.assigneeId === sourceUserId) {
+      t.assigneeId = targetUserId;
+      t.assigneeName = users[targetIdx].name;
+      t.updatedAt = now();
+      tasksChanged = true;
+    }
+  }
+  if (tasksChanged) setTasks(tasks);
+
+  return users[targetIdx];
+}
+
 /** Find a user by Google subject ID. */
 export function getUserByGoogleSub(sub) {
   if (!sub) return null;
-  return getUsers().find(u => u.googleSub === sub) || null;
+  const rawUsers = ensureArray(dbRead('users'));
+  const u = rawUsers.find(x => x.googleSub === sub);
+  if (!u) return null;
+  if (u.mergedInto) return getUserById(u.mergedInto);
+  return { ...u, active: u.active !== false };
 }
 
 

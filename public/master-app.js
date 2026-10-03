@@ -6628,7 +6628,10 @@ async function viewUserMgmt() {
                 <button class="btn btn-sm ${currentFilter === 'inactive' ? 'btn-primary' : 'btn-secondary'} filter-chip-btn" data-filter="inactive">Deactivated (${deactCount})</button>
               </div>
             </div>
-            <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" id="merge-users-btn" style="display:inline-flex;align-items:center;gap:6px">🔀 Merge Profiles</button>
+              <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
+            </div>
           </div>
           <div class="table-wrap"><table>
             <thead>
@@ -6636,7 +6639,7 @@ async function viewUserMgmt() {
                 <th>Name</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Email</th>
+                <th>Email / Google Login</th>
                 <th>Sites Assigned</th>
                 <th>Created</th>
                 <th style="text-align:right">Actions</th>
@@ -6661,11 +6664,33 @@ async function viewUserMgmt() {
                         ${isActive ? getSvg('check', 10) + ' Active' : getSvg('x', 10) + ' Deactivated'}
                       </span>
                     </td>
-                    <td style="font-size:12px;color:var(--text-muted)">${esc(u.email || '—')}</td>
+                    <td style="font-size:12px">
+                      ${u.googleEmail ? `
+                        <div style="display:flex;flex-direction:column;gap:3px">
+                          <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(66,133,244,0.12);color:#4285f4;border:1px solid rgba(66,133,244,0.25);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;width:fit-content" title="Google Account Connected">
+                            <svg width="11" height="11" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                            ${esc(u.googleEmail)}
+                          </span>
+                          ${u.email && u.email.toLowerCase() !== u.googleEmail.toLowerCase() ? `<span style="color:var(--text-muted);font-size:11px">${esc(u.email)}</span>` : ''}
+                        </div>
+                      ` : u.email ? `
+                        <div>
+                          <div>${esc(u.email)}</div>
+                          <div style="font-size:10px;color:var(--text-dim)">(No Google connected)</div>
+                        </div>
+                      ` : `
+                        <div style="color:var(--text-dim);font-size:11px;font-style:italic">
+                          Not connected
+                        </div>
+                      `}
+                    </td>
                     <td style="font-size:12px;font-weight:600">${userSites.length} ${userSites.length === 1 ? 'site' : 'sites'}</td>
                     <td style="font-size:11px;color:var(--text-dim)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
                     <td style="text-align:right">
                       <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+                        <button class="btn btn-ghost btn-sm connect-user-btn" data-id="${u.id}" title="Connect or Merge Google Account" style="display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:600">
+                          🔗 Connect
+                        </button>
                         <button class="btn btn-ghost btn-sm edit-user-btn" data-id="${u.id}" title="Edit User" style="display:inline-flex;align-items:center;gap:5px">${getSvg('edit', 12)} Edit</button>
                         <button class="btn btn-sm toggle-status-btn ${isActive ? 'btn-secondary' : 'btn-success'}" data-id="${u.id}" data-active="${!isActive}" title="${isActive ? 'Deactivate user (hide from Team Progress)' : 'Activate user (show in Team Progress)'}" style="display:inline-flex;align-items:center;gap:5px">
                           ${isActive ? getSvg('x', 12) + ' Deactivate' : getSvg('check', 12) + ' Activate'}
@@ -6727,6 +6752,200 @@ async function viewUserMgmt() {
       );
     });
 
+    // Global Merge Profiles listener
+    const globalMergeBtn = $('merge-users-btn');
+    if (globalMergeBtn) {
+      globalMergeBtn.addEventListener('click', () => {
+        openModal('🔀 Merge Two User Profiles',
+          `<div style="display:flex;flex-direction:column;gap:12px">
+            <div style="font-size:12px;color:var(--text-muted)">
+              Merge a duplicate or newly logged-in Google profile into a canonical team profile. All Google login credentials, tasks, and site assignments will be moved into the target profile, and the source profile will be deactivated.
+            </div>
+            <div class="form-group">
+              <label class="form-label">Source Profile (to merge FROM — e.g. newly created Google login)</label>
+              <select class="form-select" id="gmerge-source">
+                <option value="">-- Select duplicate user --</option>
+                ${users.map(u => {
+                  const gText = u.googleEmail ? ` [Google: ${u.googleEmail}]` : (u.email ? ` [${u.email}]` : '');
+                  return `<option value="${u.id}">${esc(u.name)} (${esc(u.role)})${esc(gText)}</option>`;
+                }).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Target Profile (to merge INTO — canonical team member to keep)</label>
+              <select class="form-select" id="gmerge-target">
+                <option value="">-- Select target member --</option>
+                ${users.map(u => {
+                  const gText = u.googleEmail ? ` [Google: ${u.googleEmail}]` : (u.email ? ` [${u.email}]` : '');
+                  return `<option value="${u.id}">${esc(u.name)} (${esc(u.role)})${esc(gText)}</option>`;
+                }).join('')}
+              </select>
+            </div>
+          </div>`,
+          [
+            { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
+            {
+              label: '🔀 Merge Profiles', cls: 'btn btn-primary', onClick: async () => {
+                const sId = $('gmerge-source').value;
+                const tId = $('gmerge-target').value;
+                if (!sId || !tId) { toast('Please select both source and target profiles', 'error'); return; }
+                if (sId === tId) { toast('Source and target must be different profiles', 'error'); return; }
+                const sUser = users.find(u => u.id === sId);
+                const tUser = users.find(u => u.id === tId);
+                if (!confirm(`Merge "${sUser?.name}" into "${tUser?.name}"?`)) return;
+                try {
+                  await POST('/api/master/users/merge', { sourceUserId: sId, targetUserId: tId });
+                  toast(`Merged "${sUser?.name}" into "${tUser?.name}"!`, 'success');
+                  closeModal();
+                  const [uData, sData] = await Promise.all([GET('/api/master/users'), GET('/api/master/sites')]);
+                  users = uData.users || []; sites = sData.sites || []; S.users = users;
+                  render();
+                } catch (e) {
+                  toast(e.message, 'error');
+                }
+              }
+            }
+          ]
+        );
+      });
+    }
+
+    // Connect / Merge Google Account listener per row
+    mainEl.querySelectorAll('.connect-user-btn').forEach(btn => {
+      const user = users.find(u => u.id === btn.dataset.id);
+      if (!user) return;
+      btn.addEventListener('click', () => {
+        const otherUsers = users.filter(u => u.id !== user.id);
+        const isLinked = !!(user.googleEmail || user.googleSub);
+
+        openModal(`Connect Google Account: ${user.name}`,
+          `<div style="display:flex;flex-direction:column;gap:14px">
+            <div style="padding:12px;background:var(--bg-subtle, rgba(255,255,255,0.03));border:1px solid var(--border);border-radius:8px">
+              <div style="font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between">
+                <span>Profile: <b>${esc(user.name)}</b> (${esc(user.role)})</span>
+                <span class="badge badge-${user.active !== false ? 'success' : 'danger'}">${user.active !== false ? 'Active' : 'Deactivated'}</span>
+              </div>
+              <div style="margin-top:8px;font-size:12px">
+                ${isLinked ? `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(66,133,244,0.1);padding:8px 12px;border-radius:6px;border:1px solid rgba(66,133,244,0.25)">
+                    <div>
+                      <div style="color:#4285f4;font-weight:600">🟢 Connected Google Account</div>
+                      <div style="font-weight:600;margin-top:2px">${esc(user.googleEmail || user.email)}</div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" id="btn-do-unlink" style="font-size:11px">Unlink</button>
+                  </div>
+                ` : `
+                  <div style="color:var(--warning);background:rgba(234,179,8,0.08);padding:8px 12px;border-radius:6px;border:1px solid rgba(234,179,8,0.2)">
+                    ⚠️ Not currently connected to any Google account.
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- Option A: Merge with an existing / duplicate Google login user -->
+            <div style="background:var(--bg-subtle, rgba(255,255,255,0.02));border:1px solid var(--border);border-radius:8px;padding:12px">
+              <div style="font-weight:600;font-size:13px;margin-bottom:4px">Option A: Merge from another user profile</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+                If <b>${esc(user.name)}</b> signed in with Google and a duplicate profile was created, select that profile below.
+                Their Google login, permissions, and tasks will be merged into <b>${esc(user.name)}</b>, and the duplicate profile will be removed.
+              </div>
+              <div class="form-group" style="margin-bottom:10px">
+                <select class="form-select" id="merge-source-select">
+                  <option value="">-- Select duplicate user to merge from --</option>
+                  ${otherUsers.map(o => {
+                    const gText = o.googleEmail ? ` [Google: ${o.googleEmail}]` : (o.email ? ` [${o.email}]` : '');
+                    return `<option value="${o.id}">${esc(o.name)} (${esc(o.role)})${esc(gText)}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-exec-merge" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px">
+                🔀 Merge Selected Profile into ${esc(user.name)}
+              </button>
+            </div>
+
+            <!-- Option B: Connect Google email address directly -->
+            <div style="background:var(--bg-subtle, rgba(255,255,255,0.02));border:1px solid var(--border);border-radius:8px;padding:12px">
+              <div style="font-weight:600;font-size:13px;margin-bottom:4px">Option B: Connect Google Email directly</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+                Enter the team member's Gmail address. Next time they click <b>Sign in with Google</b>, they will automatically log into <b>${esc(user.name)}</b>.
+              </div>
+              <div class="form-group" style="margin-bottom:10px">
+                <input class="form-input" id="link-direct-email" type="email" placeholder="e.g. sabbir@gmail.com" value="${esc(user.googleEmail || user.email || '')}">
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-exec-link-email" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px">
+                💾 Save Google Email Link
+              </button>
+            </div>
+          </div>`,
+          [{ label: 'Close', cls: 'btn btn-secondary', onClick: closeModal }]
+        );
+
+        // Bind Option A: Merge
+        const btnMerge = $('btn-exec-merge');
+        if (btnMerge) {
+          btnMerge.addEventListener('click', async () => {
+            const sourceId = $('merge-source-select').value;
+            if (!sourceId) { toast('Please select a profile to merge from', 'error'); return; }
+            const sourceUser = users.find(u => u.id === sourceId);
+            if (!confirm(`Merge "${sourceUser?.name}" into "${user.name}"? This will transfer Google credentials and tasks to ${user.name}.`)) return;
+            btnMerge.disabled = true;
+            try {
+              await POST('/api/master/users/merge', { sourceUserId: sourceId, targetUserId: user.id });
+              toast(`Successfully merged "${sourceUser?.name}" into "${user.name}"!`, 'success');
+              closeModal();
+              const [uData, sData] = await Promise.all([GET('/api/master/users'), GET('/api/master/sites')]);
+              users = uData.users || []; sites = sData.sites || []; S.users = users;
+              render();
+            } catch (e) {
+              toast(e.message, 'error');
+              btnMerge.disabled = false;
+            }
+          });
+        }
+
+        // Bind Option B: Link Email
+        const btnLinkEmail = $('btn-exec-link-email');
+        if (btnLinkEmail) {
+          btnLinkEmail.addEventListener('click', async () => {
+            const email = $('link-direct-email').value.trim();
+            if (!email || !email.includes('@')) { toast('Please enter a valid email address', 'error'); return; }
+            btnLinkEmail.disabled = true;
+            try {
+              await POST(`/api/master/users/${user.id}/link-google`, { googleEmail: email });
+              toast(`Linked ${email} to "${user.name}"!`, 'success');
+              closeModal();
+              const [uData, sData] = await Promise.all([GET('/api/master/users'), GET('/api/master/sites')]);
+              users = uData.users || []; sites = sData.sites || []; S.users = users;
+              render();
+            } catch (e) {
+              toast(e.message, 'error');
+              btnLinkEmail.disabled = false;
+            }
+          });
+        }
+
+        // Bind Unlink
+        const btnUnlink = $('btn-do-unlink');
+        if (btnUnlink) {
+          btnUnlink.addEventListener('click', async () => {
+            if (!confirm(`Unlink Google account from "${user.name}"?`)) return;
+            btnUnlink.disabled = true;
+            try {
+              await POST(`/api/master/users/${user.id}/unlink-google`, {});
+              toast(`Unlinked Google account from "${user.name}"`, 'success');
+              closeModal();
+              const [uData, sData] = await Promise.all([GET('/api/master/users'), GET('/api/master/sites')]);
+              users = uData.users || []; sites = sData.sites || []; S.users = users;
+              render();
+            } catch (e) {
+              toast(e.message, 'error');
+              btnUnlink.disabled = false;
+            }
+          });
+        }
+      });
+    });
+
     // Toggle status listener
     mainEl.querySelectorAll('.toggle-status-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -6767,7 +6986,10 @@ async function viewUserMgmt() {
                <option value="true" ${isActive ? 'selected' : ''}>🟢 Active (Shown in Team Progress)</option>
                <option value="false" ${!isActive ? 'selected' : ''}>🔴 Deactivated (Hidden from Team Progress)</option>
              </select></div>
-           <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" type="email" value="${esc(user.email || '')}"></div>`,
+           <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="eu-email" type="email" value="${esc(user.email || '')}"></div>
+           <div class="form-group"><label class="form-label">Google / Sign-In Email</label><input class="form-input" id="eu-gemail" type="email" placeholder="e.g. sabbir@gmail.com" value="${esc(user.googleEmail || '')}">
+             <div style="font-size:11px;color:var(--text-dim);margin-top:3px">Allows this team member to log in via Google OAuth directly into this profile.</div>
+           </div>`,
           [
             { label: 'Cancel', cls: 'btn btn-secondary', onClick: closeModal },
             {
@@ -6778,6 +7000,7 @@ async function viewUserMgmt() {
                     role: $('eu-role').value,
                     active: $('eu-active').value === 'true',
                     email: $('eu-email').value,
+                    googleEmail: $('eu-gemail').value.trim(),
                   });
                   const idx = users.findIndex(u => u.id === user.id);
                   if (idx !== -1) users[idx] = updated;

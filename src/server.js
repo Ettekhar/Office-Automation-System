@@ -757,7 +757,8 @@ const server = http.createServer(async (req, res) => {
       // ── USERS ──────────────────────────────────────────────────
       // GET /api/master/users
       if (pathname === '/api/master/users' && method === 'GET') {
-        return ok({ users: db.getUsers() });
+        const includeMerged = reqUrl.searchParams.get('includeMerged') === '1';
+        return ok({ users: db.getUsers({ includeMerged }) });
       }
       // POST /api/master/users  (superadmin)
       if (pathname === '/api/master/users' && method === 'POST') {
@@ -776,6 +777,83 @@ const server = http.createServer(async (req, res) => {
         }
         catch (e) { return err(400, e.message); }
       }
+      // POST /api/master/users/merge  (superadmin)
+      if (pathname === '/api/master/users/merge' && method === 'POST') {
+        const authUser = db.resolveAuthUser(req);
+        const b = await body();
+        const reqRole = authUser ? authUser.role : actorFrom(req, b, reqUrl).role;
+        if (reqRole !== 'superadmin') return err(403, 'Superadmin access required');
+
+        const { sourceUserId, targetUserId } = b;
+        if (!sourceUserId || !targetUserId) return err(400, 'sourceUserId and targetUserId required');
+        try {
+          const sourceUser = db.getUserById(sourceUserId);
+          const targetUser = db.getUserById(targetUserId);
+          if (!sourceUser) return err(404, `Source user not found: ${sourceUserId}`);
+          if (!targetUser) return err(404, `Target user not found: ${targetUserId}`);
+
+          const mergedUser = db.mergeUsers(sourceUserId, targetUserId);
+          const actor = authUser || actorFrom(req, b, reqUrl);
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'merge', entity: 'user', entityId: targetUserId, label: mergedUser.name,
+            field: 'all',
+            oldValue: `${sourceUser.name} (${sourceUser.email || sourceUser.googleEmail || 'unlinked'})`,
+            newValue: `${mergedUser.name} (${mergedUser.email || mergedUser.googleEmail || 'linked'})`,
+            source: 'User Management', reason: `Merged Google account from ${sourceUser.name} into ${mergedUser.name}`,
+          });
+          return ok({ ok: true, user: mergedUser });
+        } catch (e) {
+          return err(400, e.message);
+        }
+      }
+      // POST /api/master/users/:id/link-google  (superadmin)
+      if (/^\/api\/master\/users\/([^/]+)\/link-google$/.test(pathname) && method === 'POST') {
+        const authUser = db.resolveAuthUser(req);
+        const b = await body();
+        const reqRole = authUser ? authUser.role : actorFrom(req, b, reqUrl).role;
+        if (reqRole !== 'superadmin') return err(403, 'Superadmin access required');
+
+        const id = pathname.split('/')[4];
+        const { googleEmail } = b;
+        if (!googleEmail) return err(400, 'googleEmail required');
+        try {
+          const user = db.linkUserGoogleEmail(id, googleEmail);
+          const actor = authUser || actorFrom(req, b, reqUrl);
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'update', entity: 'user', entityId: id, label: user.name,
+            field: 'googleEmail', oldValue: null, newValue: googleEmail,
+            source: 'User Management', reason: `Linked Google account email: ${googleEmail}`,
+          });
+          return ok({ ok: true, user });
+        } catch (e) {
+          return err(400, e.message);
+        }
+      }
+      // POST /api/master/users/:id/unlink-google  (superadmin)
+      if (/^\/api\/master\/users\/([^/]+)\/unlink-google$/.test(pathname) && method === 'POST') {
+        const authUser = db.resolveAuthUser(req);
+        const b = await body();
+        const reqRole = authUser ? authUser.role : actorFrom(req, b, reqUrl).role;
+        if (reqRole !== 'superadmin') return err(403, 'Superadmin access required');
+
+        const id = pathname.split('/')[4];
+        try {
+          const before = db.getUserById(id);
+          const user = db.unlinkGoogleAccount(id);
+          const actor = authUser || actorFrom(req, b, reqUrl);
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'update', entity: 'user', entityId: id, label: user.name,
+            field: 'googleSub', oldValue: before?.googleEmail || 'linked', newValue: null,
+            source: 'User Management', reason: 'Unlinked Google account',
+          });
+          return ok({ ok: true, user });
+        } catch (e) {
+          return err(400, e.message);
+        }
+      }
       // PUT /api/master/users/:id  (superadmin)
       if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
@@ -783,7 +861,7 @@ const server = http.createServer(async (req, res) => {
         try {
           const before = db.getUserById(id);
           const user = db.updateUser(id, b);
-          const fields = ['name', 'role', 'email', 'active'];
+          const fields = ['name', 'role', 'email', 'googleEmail', 'active'];
           for (const f of fields) {
             if (before && b[f] !== undefined && String(before[f] ?? '') !== String(b[f] ?? '')) {
               const actor = actorFrom(req, b, reqUrl);
