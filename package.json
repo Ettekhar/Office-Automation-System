@@ -1,10 +1,15 @@
-﻿{
+{
     "name":  "maintenance-report-mailer",
     "version":  "1.0.0",
     "description":  "Reads the maintenance tracking Google Sheet, finds active sites due for their monthly report, pulls the per-site report tab, and emails it to the client contact.",
     "type":  "module",
     "main":  "src/index.js",
     "scripts":  {
+                    "hooks:install":  "node scratch/install-hooks.mjs",
+                    "setup:admin":    "node scripts/setup-admin.mjs",
+                    "test:secrets":  "node scratch/verify-no-credentials.mjs",
+                    "test:secrets:mutation":  "node scratch/mutation-no-credentials.mjs",
+                    "test:deploy:secrets":  "node scratch/verify-deploy-secrets.mjs",
                     "test:dashboard:sheets":  "node scratch/audit-hardcoded-sheet-ids.mjs",
                     "probe:sheets":  "node scratch/probe-sheet-identity.mjs",
                     "dashboard:deploy":  "wrangler deploy --config cloudflare-worker/dashboard-wrangler.toml",

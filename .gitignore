@@ -1,3 +1,7 @@
+# Auth data — contains session tokens and password hashes. NEVER commit.
+data/auth-sessions.json
+data/users.json
+
 node_modules/
 .env
 service-account.json

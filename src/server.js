@@ -251,6 +251,67 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    // ── Authentication Routes  (public — no session required) ─────────────
+    // All /api/auth/* routes are handled before any auth check so that the
+    // login page can reach them with no existing session cookie.
+    if (pathname.startsWith('/api/auth/')) {
+      const {
+        handleLogin, handleLogout, handleMe,
+        handleGoogleStart, handleGoogleCallback, handleSetPassword,
+      } = await import('./auth.js');
+
+      // POST /api/auth/login
+      if (pathname === '/api/auth/login' && method === 'POST') {
+        const body = await parseBody(req).catch(() => ({}));
+        return handleLogin(req, res, body);
+      }
+      // POST /api/auth/logout
+      if (pathname === '/api/auth/logout' && (method === 'POST' || method === 'GET')) {
+        return handleLogout(req, res);
+      }
+      // GET /api/auth/me
+      if (pathname === '/api/auth/me' && method === 'GET') {
+        return handleMe(req, res);
+      }
+      // GET /api/auth/google  — start OAuth
+      if (pathname === '/api/auth/google' && method === 'GET') {
+        return handleGoogleStart(req, res, reqUrl);
+      }
+      // GET /api/auth/google/callback  — OAuth code exchange
+      if (pathname === '/api/auth/google/callback' && method === 'GET') {
+        return handleGoogleCallback(req, res, reqUrl);
+      }
+      // POST /api/auth/set-password  — superadmin sets a user's password
+      if (pathname === '/api/auth/set-password' && method === 'POST') {
+        const body = await parseBody(req).catch(() => ({}));
+        const authUser = db.resolveAuthUser(req);
+        return handleSetPassword(req, res, body, authUser);
+      }
+
+      sendJson(res, 404, { error: 'Auth route not found.' });
+      return;
+    }
+
+    // ── Static pages that must be publicly accessible (no session) ─────────
+    // /login.html is served by the static handler below; skip auth for it.
+    const PUBLIC_PATHS = ['/login.html', '/master.css', '/dashboard.css'];
+    const isPublicPath = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/assets/'));
+    const isPublicAsset = /\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(pathname);
+
+    // ── Session-based auth guard for the master dashboard ──────────────────
+    // The master.html and master-app.js require a valid session. If there is
+    // no session cookie, redirect to /login.html so the user can sign in.
+    // API routes are NOT redirected — they return 401 JSON so the client
+    // can handle it programmatically.
+    if (pathname === '/master.html' || pathname === '/') {
+      const authUser = db.resolveAuthUser(req);
+      if (!authUser) {
+        res.writeHead(302, { Location: '/login.html', 'Cache-Control': 'no-store' });
+        res.end();
+        return;
+      }
+    }
+
     // API Route: Accounts Config (sender info for UI)
     if (pathname === '/api/accounts' && method === 'GET') {
       const { getAllAccountConfigs } = await import('./config.js');

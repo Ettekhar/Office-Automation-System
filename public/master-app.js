@@ -413,10 +413,15 @@ function navigate(viewId) {
 
 $('refresh-btn').addEventListener('click', () => { if (S.view) navigate(S.view); });
 $('notice-board-top-btn')?.addEventListener('click', () => openNoticeBoardModal());
-$('logout-btn').addEventListener('click', () => {
-  sessionStorage.setItem('officeos_logged_out', '1');
-  appShell.classList.add('hidden');
-  landing.classList.remove('hidden');
+$('logout-btn').addEventListener('click', async () => {
+  // Sign out: revoke the session cookie via /api/auth/logout
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  } catch {}
+  // Clear local state
+  try { localStorage.removeItem('officeos_session'); } catch {}
+  try { sessionStorage.removeItem('officeos_logged_out'); } catch {}
+  window.location.replace('/login.html?logout=1');
 });
 const savedSidebar = localStorage.getItem('officeos_sidebar_collapsed');
 if (savedSidebar === 'true' || (savedSidebar === null && window.innerWidth < 1350)) {
@@ -541,30 +546,71 @@ function initCommandPalette() {
 async function initLanding() {
   initCommandPalette();
 
-  const defaultNames = ['Toufiq', 'Sabbir', 'Taion', 'Medul', 'Saiful', 'Tarikul', 'Roeich', 'Asif'];
-  const nameSelect = $('user-name-select');
-  nameSelect.innerHTML = defaultNames.map(n => `<option value="">${n}</option>`).join('');
+  // ── Auth guard ──────────────────────────────────────────────────────────
+  // Check the session via /api/auth/me. If the server says we're not
+  // authenticated, redirect to /login.html immediately.
+  let authUser = null;
+  try {
+    const meResp = await fetch('/api/auth/me', { credentials: 'include' });
+    if (meResp.ok) {
+      const meData = await meResp.json();
+      authUser = meData.user || null;
+    }
+  } catch {}
 
-  // Handle role cards clicking
+  if (!authUser) {
+    window.location.replace('/login.html');
+    return;
+  }
+
+  // Store the authenticated user's real role and info
+  S.authUser = authUser;  // the server-authoritative user
+  const userRole = authUser.role || 'user';  // 'user' | 'admin' | 'superadmin'
+
+  // Show welcome message with user's name
+  const welcomeEl = $('landing-welcome-text');
+  if (welcomeEl) {
+    welcomeEl.textContent = `Welcome back, ${authUser.name || authUser.email || 'User'}! Select your workspace view.`;
+  }
+
+  // ── Role card visibility ────────────────────────────────────────────────
+  // Users can only select their assigned role (and below).
+  // - superadmin → sees all 3 role cards
+  // - admin      → sees user + admin cards
+  // - user       → sees only the user card (no choice)
+  const roleCardUser = $('role-card-user');
+  const roleCardAdmin = $('role-card-admin');
+  const roleCardSuperadmin = $('role-card-superadmin');
+
+  if (roleCardUser) roleCardUser.style.display = '';
+  if (roleCardAdmin) roleCardAdmin.style.display = (userRole === 'admin' || userRole === 'superadmin') ? '' : 'none';
+  if (roleCardSuperadmin) roleCardSuperadmin.style.display = userRole === 'superadmin' ? '' : 'none';
+
+  // Default active role card = the user's actual role
+  document.querySelectorAll('.role-card').forEach(rc => {
+    rc.classList.toggle('active', rc.dataset.role === userRole);
+  });
+  $('role-select').value = userRole;
+  $('user-select-wrap').classList.toggle('hidden', userRole !== 'user');
+
+  // Handle role cards clicking (only allowed roles)
   document.querySelectorAll('.role-card').forEach(rc => {
     rc.addEventListener('click', () => {
+      const clickedRole = rc.dataset.role;
+      // Prevent selecting a role above the user's actual role
+      const allowed = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
+      if (!(allowed[userRole] || ['user']).includes(clickedRole)) return;
+
       document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
       rc.classList.add('active');
-      const role = rc.dataset.role;
-      $('role-select').value = role;
-      $('user-select-wrap').classList.toggle('hidden', role !== 'user');
+      $('role-select').value = clickedRole;
+      $('user-select-wrap').classList.toggle('hidden', clickedRole !== 'user');
     });
   });
 
-  // Restore saved session if available
-  try {
-    const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
-    if (saved.role) {
-      const targetCard = document.querySelector(`.role-card[data-role="${saved.role}"]`);
-      if (targetCard) targetCard.click();
-    }
-  } catch { }
+  const nameSelect = $('user-name-select');
 
+  // ── Status pill ─────────────────────────────────────────────────────────
   const statusEl = $('landing-status');
   try {
     const st = await GET('/api/master/db-status');
@@ -576,7 +622,7 @@ async function initLanding() {
     }
   } catch { }
 
-  // Load real users — populate dropdown with real IDs and pre-select saved user
+  // ── Load real users ─────────────────────────────────────────────────────
   let loadedUsers = [];
   try {
     const { users } = await GET('/api/master/users');
@@ -585,24 +631,33 @@ async function initLanding() {
       loadedUsers = users.filter(u => u.active !== false);
       const _sv = JSON.parse(localStorage.getItem('officeos_session') || '{}');
       nameSelect.innerHTML = loadedUsers.map(u => {
+        // Pre-select the authenticated user's own record
+        const isSelf = (authUser.id && u.id === authUser.id) ||
+                       (authUser.name && u.name.toLowerCase() === authUser.name.toLowerCase());
         const isSaved = (_sv.userId && u.id === _sv.userId) ||
-                        (!_sv.userId && _sv.userName && u.name.toLowerCase() === _sv.userName.toLowerCase());
-        return `<option value="${u.id}"${isSaved ? ' selected' : ''}>${esc(u.name)}</option>`;
+                        (!_sv.userId && _sv.userName && u.name.toLowerCase() === (_sv.userName || '').toLowerCase());
+        return `<option value="${u.id}"${(isSelf || isSaved) ? ' selected' : ''}>${esc(u.name)}</option>`;
       }).join('');
     }
   } catch { }
 
   function handleEnter() {
-    sessionStorage.removeItem('officeos_logged_out');
     const role = $('role-select').value;
+    // Enforce: cannot enter a role above your auth level
+    const allowed = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
+    if (!(allowed[userRole] || ['user']).includes(role)) {
+      toast(`Your account role is "${userRole}" — you cannot access the ${role} workspace.`, 'error');
+      return;
+    }
+
     S.role = role;
     const nameOpt = nameSelect.options[nameSelect.selectedIndex];
     if (role === 'user') {
-      const selectedName = nameOpt ? nameOpt.text.trim() : defaultNames[0];
+      const selectedName = nameOpt ? nameOpt.text.trim() : (authUser.name || 'User');
       const selectedId   = nameOpt ? nameOpt.value.trim() : '';
-      const resolvedUser = S.users?.find(u => u.name.toLowerCase() === selectedName.toLowerCase()) || null;
+      const resolvedUser = S.users && S.users.find(u => u.name.toLowerCase() === selectedName.toLowerCase()) || null;
       S.userName = resolvedUser ? resolvedUser.name : selectedName;
-      S.userId   = resolvedUser ? resolvedUser.id   : (selectedId || null);
+      S.userId   = resolvedUser ? resolvedUser.id   : (selectedId || (authUser.id || null));
     } else {
       S.userName = role === 'admin' ? 'Admin' : 'Superadmin';
       S.userId   = null;
@@ -622,41 +677,87 @@ async function initLanding() {
     const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
     const isManualLogout = sessionStorage.getItem('officeos_logged_out');
     if (saved.role && !isManualLogout) {
-      S.role = saved.role;
-      if (saved.role === 'user') {
-        const matchById   = loadedUsers.find(u => u.id   === saved.userId);
-        const matchByName = loadedUsers.find(u => u.name.toLowerCase() === (saved.userName || '').toLowerCase());
-        const resolved    = matchById || matchByName || null;
-        S.userName = resolved ? resolved.name : (saved.userName || 'User');
-        S.userId   = resolved ? resolved.id   : null;
-        if (resolved && resolved.id !== saved.userId) {
-          try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+      // Verify the saved role is still allowed for this auth user
+      const allowedRoles = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
+      const canUseRole = (allowedRoles[userRole] || ['user']).includes(saved.role);
+      if (canUseRole) {
+        S.role = saved.role;
+        if (saved.role === 'user') {
+          const matchById   = loadedUsers.find(u => u.id   === saved.userId);
+          const matchByName = loadedUsers.find(u => u.name.toLowerCase() === (saved.userName || '').toLowerCase());
+          // Prefer the authenticated user's own record
+          const selfMatch = loadedUsers.find(u => u.id === authUser.id);
+          const resolved  = matchById || matchByName || selfMatch || null;
+          S.userName = resolved ? resolved.name : (saved.userName || authUser.name || 'User');
+          S.userId   = resolved ? resolved.id   : (authUser.id || null);
+        } else {
+          S.userName = saved.userName || (saved.role === 'admin' ? 'Admin' : 'Superadmin');
+          S.userId   = saved.userId || null;
         }
-      } else {
-        S.userName = saved.userName || (saved.role === 'admin' ? 'Admin' : 'Superadmin');
-        S.userId   = saved.userId || null;
+        enterApp();
+        return;
       }
-      enterApp();
-      return;
     }
   } catch { }
+
+  // Default: enter with the auth user's role
+  S.role = userRole;
+  if (userRole === 'user') {
+    const selfUser = loadedUsers.find(u => u.id === authUser.id) ||
+                     loadedUsers.find(u => u.name.toLowerCase() === (authUser.name || '').toLowerCase()) ||
+                     null;
+    S.userName = selfUser ? selfUser.name : (authUser.name || authUser.email || 'User');
+    S.userId   = selfUser ? selfUser.id   : (authUser.id || null);
+    // For users with only one role, just auto-enter
+    enterApp();
+  } else {
+    // Admin/superadmin: show landing so they can choose their view
+    landing.classList.remove('hidden');
+  }
 }
 
 function enterApp() {
   landing.classList.add('hidden');
   appShell.classList.remove('hidden');
 
-  // Set sidebar user info
-  $('user-name-display').textContent = S.role === 'user' ? S.userName : (S.role === 'admin' ? 'Admin' : 'Superadmin');
+  // Set sidebar user info (use auth user's real name, not just role label)
+  const displayName = S.authUser ? (S.authUser.name || S.authUser.email || S.userName) : S.userName;
+  $('user-name-display').textContent = S.role === 'user' ? (displayName || S.userName) : (S.role === 'admin' ? (displayName || 'Admin') : (displayName || 'Superadmin'));
   $('user-role-display').textContent = S.role.toUpperCase();
-  $('user-avatar').textContent = (S.userName || S.role)[0].toUpperCase();
+  // Show Google profile picture if available, else initial letter
+  const avatarEl = $('user-avatar');
+  const googlePic = S.authUser && S.authUser.googlePicture;
+  if (googlePic && avatarEl) {
+    avatarEl.style.backgroundImage = `url('${googlePic}')`;
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+  } else if (avatarEl) {
+    avatarEl.style.backgroundImage = '';
+    avatarEl.textContent = (displayName || S.userName || S.role)[0].toUpperCase();
+  }
 
-  // Topbar quick role switcher
+  // Topbar quick role switcher — restricted to the authenticated user's role level
+  const authUserRole = (S.authUser && S.authUser.role) || S.role || 'user';
+  const allowedRoles = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
+  const permitted = allowedRoles[authUserRole] || ['user'];
+
   document.querySelectorAll('.role-pill-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.role === S.role);
+    const btnRole = btn.dataset.role;
+    const isPermitted = permitted.includes(btnRole);
+    btn.classList.toggle('active', btnRole === S.role);
+    // Visually disable pills the user isn't allowed to use
+    btn.style.opacity = isPermitted ? '' : '0.35';
+    btn.style.cursor  = isPermitted ? '' : 'not-allowed';
+    btn.title = isPermitted ? `Switch to ${btnRole} view` : `Your account does not have ${btnRole} access`;
+
     btn.addEventListener('click', () => {
       const newRole = btn.dataset.role;
       if (newRole === S.role) return;
+      if (!permitted.includes(newRole)) {
+        toast(`Your account (${authUserRole}) cannot access the ${newRole} workspace.`, 'error');
+        return;
+      }
       S.role = newRole;
       $('user-role-display').textContent = newRole.toUpperCase();
       document.querySelectorAll('.role-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.role === newRole));

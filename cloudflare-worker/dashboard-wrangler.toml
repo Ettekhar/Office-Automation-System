@@ -106,6 +106,25 @@ RM_SPREADSHEET_ID = "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU"
 #                                NOTE: the dashboard needs the FULL
 #                                spreadsheets scope, not readonly, because it
 #                                writes. See docs/cloudflare-dashboard-hosting.md.
+#
+#   ── Login System secrets (optional but recommended) ────────────────────
+#   GOOGLE_CLIENT_ID             OAuth 2.0 Client ID from Google Cloud Console.
+#                                Required for Google Sign-In to work.
+#                                Steps:
+#                                  1. Go to console.cloud.google.com → APIs & Credentials
+#                                  2. Create an OAuth 2.0 Client ID (Web application)
+#                                  3. Add your Worker URL as an authorised redirect URI:
+#                                       https://<your-worker>.workers.dev/api/auth/google/callback
+#                                  4. Copy the Client ID here.
+#                                  wrangler secret put GOOGLE_CLIENT_ID --config cloudflare-worker/dashboard-wrangler.toml
+#
+#   GOOGLE_CLIENT_SECRET         OAuth 2.0 Client Secret (same Google Cloud project).
+#                                  wrangler secret put GOOGLE_CLIENT_SECRET --config cloudflare-worker/dashboard-wrangler.toml
+#
+#   APP_BASE_URL                 The public URL of this Worker (no trailing slash).
+#                                Required so the OAuth callback URI is correct.
+#                                Example: https://officeos-dashboard.myaccount.workers.dev
+#                                  wrangler secret put APP_BASE_URL --config cloudflare-worker/dashboard-wrangler.toml
 # ---------------------------------------------------------------------------
 
 [alias]

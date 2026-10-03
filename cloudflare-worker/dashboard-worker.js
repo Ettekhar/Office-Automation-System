@@ -47,6 +47,7 @@ const STATE_KEYS = [
   'conditional-notes', 'daily-review', 'domain-expiry-requests', 'meta',
   'custom-sheets', 'sheet-credentials', 'assistant-config', 'sync-conflicts',
   'user-aliases', 'audit-log', 'master-overrides',
+  'auth-sessions',  // ← session tokens for login system
 ];
 
 let warmed = null;
@@ -58,6 +59,10 @@ async function ensureWarm(env) {
   warmed = (async () => {
     configureGoogle({ env });
 
+    // Expose Google OAuth credentials to the auth module via process.env
+    if (env.GOOGLE_CLIENT_ID) process.env.GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
+    if (env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
+    if (env.APP_BASE_URL) process.env.APP_BASE_URL = env.APP_BASE_URL;
     // The service account is a secret here and a file on the laptop. Register
     // it as a virtual file so src/sheets.js's existing
     //   JSON.parse(fs.readFileSync(config.serviceAccountKeyPath, 'utf8'))
@@ -83,37 +88,42 @@ export default {
     const url = new URL(request.url);
 
     try {
-      // ---- unauthenticated: liveness only -------------------------------
-      // Deliberately says nothing about configuration, state, sheet ids or
-      // counts. This route is public, so anything on it is published.
+      // ---- liveness only -------------------------------------------------------
       if (url.pathname === '/api/worker-health' || url.pathname === '/__health') {
         return json({ service: 'officeos-dashboard', ok: true });
       }
 
-      // ---- the gate ------------------------------------------------------
-      // Everything else needs a token. The dashboard can delete columns from
-      // client spreadsheets; it must never be an open URL.
-      if (!gate(request, env)) {
-        // WWW-Authenticate is what makes a BROWSER work. Without it the
-        // visitor just gets a 401 JSON blob and no way in, because a browser
-        // cannot attach an Authorization header to a navigation on its own.
-        // With it, the browser raises its own sign-in dialog and resends the
-        // request as Basic auth, which gate() also accepts. The user never has
-        // to paste a token into a header by hand.
-        return new Response(
-          JSON.stringify({
-            error: 'unauthorized',
-            howto: 'send "Authorization: Bearer <DASHBOARD_ADMIN_TOKEN>", or sign in with the browser prompt (user is ignored, password is the token)',
-          }, null, 2),
-          {
-            status: 401,
-            headers: {
-              'Content-Type': 'application/json; charset=utf-8',
-              'WWW-Authenticate': 'Basic realm="OfficeOS Master Dashboard", charset="UTF-8"',
-              'Cache-Control': 'no-store',
+      // ---- Auth routes are PUBLIC — no token required -------------------------
+      // /api/auth/* must be reachable before the user has a session cookie.
+      // /login.html and its static assets also bypass the gate.
+      const isAuthRoute = url.pathname.startsWith('/api/auth/');
+      const isLoginPage = url.pathname === '/login.html' || url.pathname === '/login';
+      const isPublicAsset = /\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(url.pathname);
+
+      if (!isAuthRoute && !isLoginPage && !isPublicAsset) {
+        // ---- the gate ---------------------------------------------------------
+        if (!gate(request, env)) {
+          // If navigating to a page (not an API call), redirect to login instead
+          // of returning a 401 JSON blob the user can't act on.
+          const isNavigation = request.headers.get('accept')?.includes('text/html');
+          if (isNavigation) {
+            return Response.redirect(new URL('/login.html', request.url).toString(), 302);
+          }
+          return new Response(
+            JSON.stringify({
+              error: 'unauthorized',
+              howto: 'sign in at /login.html or send "Authorization: Bearer <DASHBOARD_ADMIN_TOKEN>"',
+            }, null, 2),
+            {
+              status: 401,
+              headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'WWW-Authenticate': 'Basic realm="OfficeOS Master Dashboard", charset="UTF-8"',
+                'Cache-Control': 'no-store',
+              },
             },
-          },
-        );
+          );
+        }
       }
 
       await ensureWarm(env);
@@ -177,12 +187,24 @@ async function invoke(handler, request) {
   };
 
   let statusCode = 200;
+  const resCookies = []; // Set-Cookie is multi-value
   let resHeaders = {};
   const chunks = [];
   let ended = false;
   const res = {
-    writeHead(code, hdrs) { statusCode = code; resHeaders = { ...resHeaders, ...(hdrs || {}) }; return res; },
-    setHeader(k, v) { resHeaders[k] = v; return res; },
+    writeHead(code, hdrs) {
+      statusCode = code;
+      for (const [k, v] of Object.entries(hdrs || {})) {
+        if (k.toLowerCase() === 'set-cookie') resCookies.push(v);
+        else resHeaders[k] = v;
+      }
+      return res;
+    },
+    setHeader(k, v) {
+      if (k.toLowerCase() === 'set-cookie') resCookies.push(v);
+      else resHeaders[k] = v;
+      return res;
+    },
     getHeader(k) { return resHeaders[k]; },
     write(chunk) { if (chunk !== undefined && chunk !== null) chunks.push(String(chunk)); return true; },
     end(chunk) {
@@ -196,12 +218,18 @@ async function invoke(handler, request) {
   await handler(req, res);
 
   const body = chunks.join('');
-  const outHeaders = { ...resHeaders };
-  // Node lowercases nothing; make sure content-type exists for non-empty bodies.
-  if (body && !Object.keys(outHeaders).some((k) => k.toLowerCase() === 'content-type')) {
-    outHeaders['Content-Type'] = 'text/plain; charset=utf-8';
+  // Use Headers() for multi-value Set-Cookie support.
+  const outHeaders = new Headers();
+  for (const [k, v] of Object.entries(resHeaders)) {
+    if (v !== undefined && v !== null) outHeaders.set(k, String(v));
   }
-  return new Response(body, { status: statusCode, headers: outHeaders });
+  for (const c of resCookies) outHeaders.append('Set-Cookie', c);
+  // Ensure content-type for non-empty, non-redirect bodies.
+  const isRedirect = statusCode >= 300 && statusCode < 400;
+  if (!isRedirect && body && !outHeaders.has('Content-Type')) {
+    outHeaders.set('Content-Type', 'text/plain; charset=utf-8');
+  }
+  return new Response(isRedirect ? null : body, { status: statusCode, headers: outHeaders });
 }
 
 async function serveAsset(env, pathname) {
