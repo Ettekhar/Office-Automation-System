@@ -17,25 +17,7 @@
       } catch(e) {}
     })();
   </script>
-  <!-- Auth guard: check session before page loads -->
-  <script>
-    (function() {
-      // Quick synchronous check: if no officeos_session cookie, go to login immediately.
-      // The async /api/auth/me check in master-app.js is the authoritative gate.
-      function hasCookie() {
-        try { return document.cookie.indexOf('officeos_session=') !== -1; } catch(e) { return false; }
-      }
-      // We also check localStorage for a backwards-compat session hint.
-      function hasLocalSession() {
-        try { return !!JSON.parse(localStorage.getItem('officeos_session') || '{}').role; } catch(e) { return false; }
-      }
-      // If neither cookie nor local session hint exists, redirect immediately
-      // (saves a flash of the dashboard before the async check fires).
-      if (!hasCookie()) {
-        window.location.replace('/login.html');
-      }
-    })();
-  </script>
+
 </head>
 <body>
 

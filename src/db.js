@@ -2019,6 +2019,8 @@ export function createSession(userId, meta) {
   const now = Date.now();
   const payload = {
     userId, role,
+    name: (user && user.name) || '',
+    email: (user && user.email) || '',
     iat: now,
     exp: now + SESSION_TTL_MS,
     provider: meta.provider || 'email',
@@ -2055,7 +2057,18 @@ export function getSessionByToken(token) {
     if (!payload.userId || !payload.exp) return null;
     if (Date.now() > payload.exp) return null;  // expired
 
-    const user = getUserById(payload.userId);
+    let user = getUserById(payload.userId);
+    // Edge-resilience fallback: if KV hasn't propagated this user across isolates yet,
+    // reconstruct user from HMAC-signed token payload.
+    if (!user && (payload.name || payload.email)) {
+      user = {
+        id: payload.userId,
+        name: payload.name || payload.email,
+        email: payload.email || '',
+        role: payload.role || 'user',
+        active: true,
+      };
+    }
     if (!user || user.active === false) return null;
     return { session: payload, user };
   } catch { return null; }
@@ -2098,7 +2111,7 @@ export function getUserByGoogleSub(sub) {
 /** Parse the session token from an HTTP Cookie header. */
 export function tokenFromCookieHeader(cookieHeader) {
   if (!cookieHeader) return null;
-  const match = (cookieHeader + '').match(/(?:^|;s*)officeos_session=([^;]+)/);
+  const match = (cookieHeader + '').match(/(?:^|;\s*)officeos_session=([^;]+)/);
   return match ? match[1] : null;
 }
 
@@ -2131,6 +2144,7 @@ export function buildSessionCookie(token, opts) {
 }
 
 /** Build a cookie that clears the session. */
-export function buildClearSessionCookie() {
-  return 'officeos_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax';
+export function buildClearSessionCookie(opts) {
+  const secure = (opts && opts.secure === false) ? '' : '; Secure';
+  return 'officeos_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax' + secure;
 }

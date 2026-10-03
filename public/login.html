@@ -389,6 +389,8 @@
   // ── Check if already logged in ──
   (async function () {
     try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('error') || params.get('logout') === '1') return;
       const r = await fetch('/api/auth/me', { credentials: 'include' });
       if (r.ok) {
         const d = await r.json();

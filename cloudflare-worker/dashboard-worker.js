@@ -304,7 +304,9 @@ async function gateSession(request, env) {
     if (sigB64 !== expectedSig) return false;
 
     // Decode and validate payload
-    const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+    const bin = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
     if (!payload.userId || !payload.exp) return false;
     if (Date.now() > payload.exp) return false;  // expired
 

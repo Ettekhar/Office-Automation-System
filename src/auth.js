@@ -97,7 +97,7 @@ export function handleLogout(req, res) {
 
   res.writeHead(200, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Set-Cookie': db.buildClearSessionCookie(),
+    'Set-Cookie': db.buildClearSessionCookie(cookieOpts(req)),
     'Cache-Control': 'no-store',
   });
   res.end(JSON.stringify({ ok: true }));
