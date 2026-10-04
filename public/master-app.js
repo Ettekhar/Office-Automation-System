@@ -762,6 +762,21 @@ function enterApp() {
         return;
       }
       S.role = newRole;
+      if (newRole === 'user') {
+        const activeUsers = (S.users || []).filter(u => u.active !== false);
+        const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
+                          activeUsers.find(u => u.email && S.authUser && u.email.toLowerCase() === (S.authUser.email || '').toLowerCase()) ||
+                          activeUsers.find(u => u.googleEmail && S.authUser && u.googleEmail.toLowerCase() === (S.authUser.email || S.authUser.googleEmail || '').toLowerCase()) ||
+                          activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
+                          activeUsers[0];
+        if (selfMatch) {
+          S.userId = selfMatch.id;
+          S.userName = selfMatch.name;
+        }
+      } else {
+        S.userName = newRole === 'admin' ? 'Admin' : 'Superadmin';
+        S.userId = null;
+      }
       $('user-role-display').textContent = newRole.toUpperCase();
       document.querySelectorAll('.role-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.role === newRole));
       buildNav(newRole);
@@ -1771,13 +1786,46 @@ function openExpiryEditModal({ siteId, siteUrl, currentDate, rowId }, onSaved) {
 // VIEW: MY SITES (User)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewMySites() {
-  setPage('My Sites', `Assigned checklist for ${S.userName}`);
+  if (!S.users || S.users.length === 0) {
+    try {
+      const res = await GET('/api/master/users');
+      if (res && res.users) S.users = res.users;
+    } catch {}
+  }
+
+  // If S.userName is generic Superadmin/Admin or empty, resolve to authUser profile or first team member
+  if (!S.userName || S.userName === 'Superadmin' || S.userName === 'Admin') {
+    const activeUsers = (S.users || []).filter(u => u.active !== false);
+    const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
+                      activeUsers.find(u => u.email && S.authUser && u.email.toLowerCase() === (S.authUser.email || '').toLowerCase()) ||
+                      activeUsers.find(u => u.googleEmail && S.authUser && u.googleEmail.toLowerCase() === (S.authUser.email || S.authUser.googleEmail || '').toLowerCase()) ||
+                      activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
+                      activeUsers[0];
+    if (selfMatch) {
+      S.userId = selfMatch.id;
+      S.userName = selfMatch.name;
+    }
+  }
+
+  setPage('My Sites', `Assigned checklist for ${S.userName || 'Team'}`);
 
   let rows = [];
   let noticeBannerHtml = '';
   try {
+    const queryParts = [];
+    if (S.userName && S.userName !== 'All Team Sites') {
+      queryParts.push(`user=${encodeURIComponent(S.userName)}`);
+    }
+    if (S.userId && S.userName !== 'All Team Sites') {
+      queryParts.push(`userId=${encodeURIComponent(S.userId)}`);
+    }
+    if (currentActiveMonth) {
+      queryParts.push(`month=${encodeURIComponent(currentActiveMonth)}`);
+    }
+    const qStr = queryParts.length ? `?${queryParts.join('&')}` : '';
+
     const [data, nHtml] = await Promise.all([
-      GET(`/api/master/daily-review${S.userId ? `?userId=${encodeURIComponent(S.userId)}&user=${encodeURIComponent(S.userName)}` : `?user=${encodeURIComponent(S.userName)}`}&month=${encodeURIComponent(currentActiveMonth || '')}`),
+      GET(`/api/master/daily-review${qStr}`),
       getNoticeBannerHtml()
     ]);
     rows = data.rows || [];
@@ -1823,10 +1871,19 @@ async function viewMySites() {
           </div>
         </div>
 
-        <div class="toolbar" style="padding:14px 18px 0;gap:10px">
-          <div class="search-wrap" style="flex:1;max-width:320px">
+        <div class="toolbar" style="padding:14px 18px 0;gap:10px;display:flex;align-items:center;flex-wrap:wrap">
+          <div class="search-wrap" style="flex:1;max-width:320px;min-width:180px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input id="site-search" class="search-input" placeholder="Search URL, ClickUp, notes…">
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">${getSvg('user', 12)} Team Member:</span>
+            <select id="my-sites-user-select" class="form-select select-sm" style="font-size:12px;padding:4px 8px;border-radius:6px;min-width:140px;background:var(--bg-surface-2);color:var(--text-primary);border:1px solid var(--border)">
+              <option value="all" ${S.userName === 'All Team Sites' ? 'selected' : ''}>🌐 All Team Sites</option>
+              ${(S.users || []).filter(u => u.active !== false).map(u => `
+                <option value="${u.id}" ${(!['All Team Sites', 'Superadmin', 'Admin'].includes(S.userName) && (S.userId === u.id || (S.userName && S.userName.toLowerCase() === u.name.toLowerCase()))) ? 'selected' : ''}>👤 ${esc(u.name)}</option>
+              `).join('')}
+            </select>
           </div>
           <div style="display:flex;gap:5px;flex-wrap:wrap" id="quick-filter-chips">
             <button class="btn btn-secondary btn-sm chip-btn active" data-filter="">All (${rows.length})</button>
@@ -1890,7 +1947,18 @@ async function viewMySites() {
               `}
             </thead>
             <tbody id="sites-tbody">
-              ${rows.map((r, i) => isMaint ? maintSiteRow(r, i) : siteRow(r, i, isSmart ? 'smart' : 'full')).join('')}
+              ${rows.length > 0 ? rows.map((r, i) => isMaint ? maintSiteRow(r, i) : siteRow(r, i, isSmart ? 'smart' : 'full')).join('') : `
+                <tr>
+                  <td colspan="${isMaint ? 9 : (isSmart ? 7 : 14)}" style="text-align:center;padding:48px 20px;color:var(--text-secondary)">
+                    <div style="font-size:32px;margin-bottom:12px">📋</div>
+                    <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px">No checklist items found for ${esc(S.userName || 'this user')} (${esc(currentActiveMonth || 'this month')})</div>
+                    <div style="font-size:13px;max-width:460px;margin:0 auto 16px;line-height:1.5">Switch team members using the dropdown above, view all team sites, or sync from Google Sheets to populate records.</div>
+                    <div style="display:flex;gap:8px;justify-content:center">
+                      <button class="btn btn-primary btn-sm" id="empty-view-all-btn">View All Team Sites</button>
+                    </div>
+                  </td>
+                </tr>
+              `}
             </tbody>
           </table>
         </div>
@@ -1976,6 +2044,35 @@ async function viewMySites() {
       applyFilter();
     });
   });
+
+  const mySitesUserSelect = $('my-sites-user-select');
+  if (mySitesUserSelect) {
+    mySitesUserSelect.addEventListener('change', () => {
+      const val = mySitesUserSelect.value;
+      if (val === 'all') {
+        S.userName = 'All Team Sites';
+        S.userId = null;
+      } else {
+        const u = (S.users || []).find(x => x.id === val);
+        if (u) {
+          S.userId = u.id;
+          S.userName = u.name;
+        }
+      }
+      try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+      viewMySites();
+    });
+  }
+
+  const emptyViewAllBtn = $('empty-view-all-btn');
+  if (emptyViewAllBtn) {
+    emptyViewAllBtn.addEventListener('click', () => {
+      S.userName = 'All Team Sites';
+      S.userId = null;
+      try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+      viewMySites();
+    });
+  }
 
   // Mode switcher (Smart Fit vs Full Spread)
   document.querySelectorAll('#table-mode-toggle .mode-btn').forEach(btn => {
@@ -2585,17 +2682,37 @@ function editDailyReviewRowModal(row, onSaved) {
 // VIEW: MY TASKS (User)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function viewMyTasks() {
-  setPage('My Tasks');
+  if (!S.userName || S.userName === 'Superadmin' || S.userName === 'Admin') {
+    const activeUsers = (S.users || []).filter(u => u.active !== false);
+    const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
+                      activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
+                      activeUsers[0];
+    if (selfMatch) {
+      S.userId = selfMatch.id;
+      S.userName = selfMatch.name;
+    }
+  }
+
+  setPage('My Tasks', `Assigned tasks for ${S.userName || 'You'}`);
   let tasks = [];
   try {
-    const data = await GET(`/api/master/tasks${S.userId ? `?assigneeId=${S.userId}` : ''}`);
+    const qParts = [];
+    if (S.userId && S.userName !== 'All Team Sites') qParts.push(`assigneeId=${encodeURIComponent(S.userId)}`);
+    if (S.userName && S.userName !== 'All Team Sites') qParts.push(`user=${encodeURIComponent(S.userName)}`);
+    const qStr = qParts.length ? `?${qParts.join('&')}` : '';
+    const data = await GET(`/api/master/tasks${qStr}`);
     tasks = data.tasks || [];
   } catch (e) { toast(e.message, 'error'); }
 
   mainEl.innerHTML = `
     <div class="fade-in">
       <div class="card">
-        <div class="card-header"><span class="card-title">📋 Assigned Tasks</span></div>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+          <span class="card-title">📋 Assigned Tasks (${tasks.length})</span>
+          ${S.userName !== 'All Team Sites' ? `
+            <button class="btn btn-secondary btn-sm" id="btn-view-all-tasks" style="font-size:12px">View All Tasks</button>
+          ` : ''}
+        </div>
         <div class="table-wrap">
           <table class="table-smart-fit">
             <thead><tr><th>Task</th><th>Site</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th></tr></thead>
@@ -2607,12 +2724,21 @@ async function viewMyTasks() {
                 <td>${priorityBadge(t.priority)}</td>
                 <td>${statusBadge(t.status)}</td>
                 <td>${t.clickupLink ? `<a class="btn btn-ghost btn-sm" href="${esc(t.clickupLink)}" target="_blank">Open</a>` : '—'}</td>
-              </tr>`).join('') : '<tr><td colspan="6" class="empty-state" style="text-align:center;padding:32px">No tasks assigned</td></tr>'}
+              </tr>`).join('') : '<tr><td colspan="6" class="empty-state" style="text-align:center;padding:32px">No tasks assigned to ' + esc(S.userName || 'you') + '</td></tr>'}
             </tbody>
           </table>
         </div>
       </div>
     </div>`;
+
+  const btnAll = $('btn-view-all-tasks');
+  if (btnAll) {
+    btnAll.addEventListener('click', () => {
+      S.userName = 'All Team Sites';
+      S.userId = null;
+      viewMyTasks();
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -1291,10 +1291,24 @@ const server = http.createServer(async (req, res) => {
       // ── DAILY REVIEW ───────────────────────────────────────────
       // GET /api/master/daily-review?userId=&user=&month=
       if (pathname === '/api/master/daily-review' && method === 'GET') {
-        const userId   = reqUrl.searchParams.get('userId');
-        const userName = reqUrl.searchParams.get('user') || reqUrl.searchParams.get('userName');
+        let userId   = reqUrl.searchParams.get('userId');
+        let userName = reqUrl.searchParams.get('user') || reqUrl.searchParams.get('userName');
+        if (userId === 'all' || userName === 'all' || userName === 'All Team Sites') {
+          userId = null;
+          userName = null;
+        }
         const month    = reqUrl.searchParams.get('month') || db.getActiveMonth();
         let rows = db.getDailyReview({ userId, userName });
+
+        if (rows.length === 0 && (userName === 'Superadmin' || userName === 'Admin' || !userName)) {
+          const authUser = db.resolveAuthUser(req);
+          if (authUser && authUser.id) {
+            rows = db.getDailyReview({ userId: authUser.id, userName: authUser.name });
+          }
+          if (rows.length === 0) {
+            rows = db.getDailyReview();
+          }
+        }
 
         // Overlay maintenanceStatus from the CW/RM sheet's monthlyHistory for the
         // selected month. This ensures that when "September 26" is chosen and that
@@ -1867,13 +1881,30 @@ const server = http.createServer(async (req, res) => {
       }
 
       // ── TASKS ──────────────────────────────────────────────────
-      // GET /api/master/tasks?assigneeId=&status=
+      // GET /api/master/tasks?assigneeId=&assigneeName=&user=&status=
       if (pathname === '/api/master/tasks' && method === 'GET') {
+        let assigneeId = reqUrl.searchParams.get('assigneeId') || undefined;
+        let assigneeName = reqUrl.searchParams.get('assigneeName') || reqUrl.searchParams.get('user') || undefined;
+        if (assigneeId === 'all' || assigneeName === 'all' || assigneeName === 'All Team Sites') {
+          assigneeId = undefined;
+          assigneeName = undefined;
+        }
         const filter = {
-          assigneeId: reqUrl.searchParams.get('assigneeId') || undefined,
-          status:     reqUrl.searchParams.get('status') || undefined,
+          assigneeId,
+          assigneeName,
+          status: reqUrl.searchParams.get('status') || undefined,
         };
-        return ok({ tasks: db.getTasks(filter) });
+        let tasks = db.getTasks(filter);
+        if (tasks.length === 0 && (assigneeName === 'Superadmin' || assigneeName === 'Admin')) {
+          const authUser = db.resolveAuthUser(req);
+          if (authUser && authUser.id) {
+            tasks = db.getTasks({ assigneeId: authUser.id, assigneeName: authUser.name, status: filter.status });
+          }
+          if (tasks.length === 0) {
+            tasks = db.getTasks({ status: filter.status });
+          }
+        }
+        return ok({ tasks });
       }
       // POST /api/master/tasks  (admin+)
       if (pathname === '/api/master/tasks' && method === 'POST') {

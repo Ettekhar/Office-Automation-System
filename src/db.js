@@ -386,6 +386,10 @@ export function getDailyReview(filter = {}) {
   const sitesByUrl = Object.fromEntries(sites.map(s => [(s.url || '').toLowerCase().trim(), s]));
 
   let targetUserId = filter.userId || null;
+  if (targetUserId) {
+    const resolved = getUserById(targetUserId);
+    if (resolved) targetUserId = resolved.id;
+  }
   if (!targetUserId && filter.userName) {
     const u = getUserByName(filter.userName);
     if (u) targetUserId = u.id;
@@ -462,11 +466,16 @@ export function getDailyReview(filter = {}) {
                              (cleanU ? pendingBySite[cleanU] : null) || null;
   });
 
-  if (filter.userId) rows = rows.filter(r => r.userId === filter.userId);
-  if (filter.siteId) rows = rows.filter(r => r.siteId === filter.siteId);
-  if (filter.userName) {
-    rows = rows.filter(r => (r.userName||'').toLowerCase() === filter.userName.toLowerCase() || (targetUserId && r.userId === targetUserId));
+  if (filter.userId && filter.userName) {
+    const targetName = (filter.userName || '').toLowerCase().trim();
+    rows = rows.filter(r => (targetUserId && r.userId === targetUserId) || r.userId === filter.userId || (r.userName || '').toLowerCase().trim() === targetName);
+  } else if (filter.userId) {
+    rows = rows.filter(r => (targetUserId && r.userId === targetUserId) || r.userId === filter.userId);
+  } else if (filter.userName) {
+    const targetName = (filter.userName || '').toLowerCase().trim();
+    rows = rows.filter(r => (r.userName||'').toLowerCase().trim() === targetName || (targetUserId && r.userId === targetUserId));
   }
+  if (filter.siteId) rows = rows.filter(r => r.siteId === filter.siteId);
   return rows;
 }
 export function setDailyReview(rows) { dbWrite('daily-review', rows); }
@@ -580,7 +589,35 @@ export function updateDailyReviewBatch(ids, updates) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export function getTasks(filter = {}) {
   let tasks = ensureArray(dbRead('tasks'));
-  if (filter.assigneeId) tasks = tasks.filter(t => t.assigneeId === filter.assigneeId);
+  let user = null;
+  if (filter.assigneeId) {
+    user = getUserById(filter.assigneeId);
+  } else if (filter.assigneeName) {
+    user = getUserByName(filter.assigneeName);
+  }
+
+  const nameVariants = new Set();
+  if (user) {
+    if (user.id) nameVariants.add(user.id);
+    if (user.name) nameVariants.add(user.name.toLowerCase().trim());
+    if (Array.isArray(user.aliases)) {
+      user.aliases.forEach(a => nameVariants.add(String(a).toLowerCase().trim()));
+    }
+  }
+  if (filter.assigneeName) nameVariants.add(filter.assigneeName.toLowerCase().trim());
+
+  if (filter.assigneeId || filter.assigneeName) {
+    tasks = tasks.filter(t => {
+      if (filter.assigneeId && t.assigneeId === filter.assigneeId) return true;
+      if (user && t.assigneeId === user.id) return true;
+      const an = (t.assigneeName || '').toLowerCase().trim();
+      if (!an) return false;
+      for (const nv of nameVariants) {
+        if (an === nv || an.includes(nv) || nv.includes(an)) return true;
+      }
+      return false;
+    });
+  }
   if (filter.siteId) tasks = tasks.filter(t => t.siteId === filter.siteId);
   if (filter.status) tasks = tasks.filter(t => t.status === filter.status);
   return tasks;

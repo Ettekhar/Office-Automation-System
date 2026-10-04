@@ -179,8 +179,8 @@ export function writeFileSync(file, contents) {
   // ctx.waitUntil when available so Cloudflare keeps the isolate alive.
   const writePromise = Promise.resolve(ns.put(name, JSON.stringify(parsed)))
     .catch((e) => console.error(`kv-shim: write of '${name}' failed:`, e?.message || e));
-  if (name === 'auth-sessions' || name === 'users') {
-    if (_waitUntil) _waitUntil(writePromise);
+  if (_waitUntil) {
+    _waitUntil(writePromise);
   }
   return undefined;
 }
