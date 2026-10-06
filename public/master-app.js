@@ -50,10 +50,84 @@ async function api(url, opts = {}) {
   }
   return data;
 }
-const GET = url => api(url);
+
+// ─── Session-scoped GET cache ─────────────────────────────────────────────────
+// Stable read-only data (users list, months, db-status) does not change while
+// the user is on the page. Caching it for the session lifetime eliminates the
+// most expensive repeated round-trips on every navigate().
+//
+// TTL: 60 s for volatile data (db-status, months), 5 min for static lists (users).
+// Cache is stored in memory (not sessionStorage) so it is never stale across
+// hard-reloads. Call invalidateCache(url) after any write that changes the data.
+const _getCache = new Map(); // url -> { data, expiresAt }
+function _cacheGet(url) {
+  const entry = _getCache.get(url);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { _getCache.delete(url); return null; }
+  return entry.data;
+}
+function _cacheSet(url, data, ttlMs) {
+  _getCache.set(url, { data, expiresAt: Date.now() + ttlMs });
+}
+function invalidateCache(urlPrefix) {
+  for (const k of _getCache.keys()) {
+    if (k.startsWith(urlPrefix)) _getCache.delete(k);
+  }
+}
+
+// URLs whose responses are safe to cache (prefix match).
+// Anything not in this list is always fetched fresh.
+const _CACHEABLE = [
+  { prefix: '/api/master/users',      ttl: 5 * 60_000 },
+  { prefix: '/api/master/db-status',  ttl: 60_000 },
+  { prefix: '/api/master/months',     ttl: 60_000 },
+  { prefix: '/api/master/properties', ttl: 5 * 60_000 },
+  { prefix: '/api/master/notices',    ttl: 2 * 60_000 },
+];
+
+function _cacheTtl(url) {
+  const entry = _CACHEABLE.find(e => url.startsWith(e.prefix));
+  return entry ? entry.ttl : 0;
+}
+
+// In-flight deduplication: if two parts of the page call GET(url) at the same
+// time before the first resolves, only one fetch goes to the network.
+const _inflight = new Map(); // url -> Promise
+
+async function GET(url) {
+  const ttl = _cacheTtl(url);
+  if (ttl > 0) {
+    const cached = _cacheGet(url);
+    if (cached !== null) return cached;
+    // Deduplicate concurrent identical requests
+    if (_inflight.has(url)) return _inflight.get(url);
+    const p = api(url).then(data => {
+      _cacheSet(url, data, ttl);
+      _inflight.delete(url);
+      return data;
+    }).catch(err => {
+      _inflight.delete(url);
+      throw err;
+    });
+    _inflight.set(url, p);
+    return p;
+  }
+  return api(url);
+}
 const POST = (url, body) => api(url, { method: 'POST', body: JSON.stringify(body) });
 const PUT = (url, body) => api(url, { method: 'PUT', body: JSON.stringify(body) });
 const DELETE = url => api(url, { method: 'DELETE' });
+// Warm the session cache for the most common boot requests in one parallel burst.
+// Called immediately so that by the time initLanding runs, data is often ready.
+async function prefetchBootData() {
+  // Fire all three in parallel; results land in _getCache so GET() hits cache.
+  await Promise.allSettled([
+    GET('/api/master/db-status'),
+    GET('/api/master/users'),
+    GET('/api/master/months'),
+  ]);
+}
+prefetchBootData();
 
 // ─── HTML escape ──────────────────────────────────────────────────────────────
 const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -367,8 +441,88 @@ function buildNav(role) {
     el.addEventListener('click', () => navigate(el.dataset.view));
   });
 
+  // Append dynamic temporary assigned sites section
+  buildAssignedSitesNav();
+
   // Append dynamic custom sheet tabs after static nav
   buildCustomSheetNav();
+}
+
+function getAssignedCoveringUsers() {
+  const currentId = (S.authUser && S.authUser.id) || S.userId;
+  const currentName = ((S.authUser && S.authUser.name) || S.userName || '').toLowerCase();
+  const currentGoogleEmail = ((S.authUser && (S.authUser.googleEmail || S.authUser.email)) || '').toLowerCase();
+  if (!currentId && !currentName && !currentGoogleEmail) return [];
+
+  const allUsers = S.users || [];
+  const assigned = [];
+
+  for (const u of allUsers) {
+    if (u.id === currentId || (u.name && u.name.toLowerCase() === currentName)) continue;
+    // Check if u is assigned to current user
+    const assignedTo = Array.isArray(u.tempAssignedTo) ? u.tempAssignedTo : [];
+    const isAssigned = assignedTo.some(a =>
+      (a.userId && a.userId === currentId) ||
+      (a.userName && a.userName.toLowerCase() === currentName) ||
+      (currentGoogleEmail && a.userEmail && a.userEmail.toLowerCase() === currentGoogleEmail)
+    );
+    if (isAssigned && !assigned.some(x => x.id === u.id)) {
+      assigned.push(u);
+    }
+  }
+
+  // Also check if current user profile has tempCoveringUsers recorded
+  const selfUser = allUsers.find(u =>
+    u.id === currentId ||
+    (u.name && u.name.toLowerCase() === currentName) ||
+    (currentGoogleEmail && (u.googleEmail || u.email || '').toLowerCase() === currentGoogleEmail)
+  );
+  if (selfUser && Array.isArray(selfUser.tempCoveringUsers)) {
+    for (const cov of selfUser.tempCoveringUsers) {
+      const u = allUsers.find(x => x.id === cov.userId || (x.name && x.name.toLowerCase() === (cov.userName || '').toLowerCase()));
+      if (u && !assigned.some(x => x.id === u.id)) {
+        assigned.push(u);
+      }
+    }
+  }
+
+  return assigned;
+}
+
+function buildAssignedSitesNav() {
+  sidebarNavEl.querySelector('.nav-section-assigned-sites')?.remove();
+  const assignedUsers = getAssignedCoveringUsers();
+  if (!assignedUsers.length) return;
+
+  const secEl = document.createElement('div');
+  secEl.className = 'nav-section nav-section-assigned-sites';
+  secEl.innerHTML = `
+    <div class="nav-section-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Assigned Workspace</span>
+      <span class="badge badge-accent" style="font-size:9.5px;padding:2px 7px;border-radius:10px;text-transform:none;letter-spacing:0;font-weight:700">${assignedUsers.length} Assigned</span>
+    </div>
+    <div class="nav-section-items">
+      ${assignedUsers.map(u => `
+        <div class="nav-item ${S.view === 'assigned-sites-' + u.id ? 'active' : ''}" data-view="assigned-sites-${u.id}" id="nav-assigned-sites-${u.id}" title="Assigned Checklist for ${esc(u.name)}">
+          <span class="nav-icon">${getNavSvg('my-sites')}</span>
+          <span class="nav-label">${esc(u.name)}</span>
+          <span class="nav-pill-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.3)">Sites</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  secEl.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => navigate(el.dataset.view));
+  });
+
+  // Insert right after the first nav section (which is "My Workspace" or "Workspace")
+  const firstSec = sidebarNavEl.querySelector('.nav-section');
+  if (firstSec && firstSec.nextSibling) {
+    sidebarNavEl.insertBefore(secEl, firstSec.nextSibling);
+  } else {
+    sidebarNavEl.appendChild(secEl);
+  }
 }
 
 function setActiveNav(viewId) {
@@ -401,6 +555,11 @@ function navigate(viewId) {
   S.view = viewId;
   setActiveNav(viewId);
   mainEl.innerHTML = `<div class="empty-state"><div class="loading-spinner"></div><p>Loading…</p></div>`;
+  if (viewId.startsWith('assigned-sites-')) {
+    const targetUserId = viewId.replace('assigned-sites-', '');
+    viewAssignedSites(targetUserId);
+    return;
+  }
   // Dynamic custom-sheet route
   if (viewId.startsWith('custom-sheet-')) {
     const sheetId = viewId.replace('custom-sheet-', '');
@@ -546,12 +705,17 @@ function initCommandPalette() {
 async function initLanding() {
   initCommandPalette();
 
-  // ── Auth guard ──────────────────────────────────────────────────────────
-  // Check the session via /api/auth/me. If the server says we're not
-  // authenticated, redirect to /login.html immediately.
+  // ── Auth guard + parallel boot data ────────────────────────────────────
+  // Fire /api/auth/me alongside the already-prefetched boot data. By the
+  // time we reach here, prefetchBootData() has likely already resolved the
+  // cache entries, so GET('/api/master/db-status') etc. are instant.
   let authUser = null;
   try {
-    const meResp = await fetch('/api/auth/me', { credentials: 'include' });
+    const [meResp] = await Promise.all([
+      fetch('/api/auth/me', { credentials: 'include' }),
+      // Ensure prefetch is done (no-op if already resolved)
+      prefetchBootData(),
+    ]);
     if (meResp.ok) {
       const meData = await meResp.json();
       authUser = meData.user || null;
@@ -574,10 +738,6 @@ async function initLanding() {
   }
 
   // ── Role card visibility ────────────────────────────────────────────────
-  // Users can only select their assigned role (and below).
-  // - superadmin → sees all 3 role cards
-  // - admin      → sees user + admin cards
-  // - user       → sees only the user card (no choice)
   const roleCardUser = $('role-card-user');
   const roleCardAdmin = $('role-card-admin');
   const roleCardSuperadmin = $('role-card-superadmin');
@@ -586,18 +746,15 @@ async function initLanding() {
   if (roleCardAdmin) roleCardAdmin.style.display = (userRole === 'admin' || userRole === 'superadmin') ? '' : 'none';
   if (roleCardSuperadmin) roleCardSuperadmin.style.display = userRole === 'superadmin' ? '' : 'none';
 
-  // Default active role card = the user's actual role
   document.querySelectorAll('.role-card').forEach(rc => {
     rc.classList.toggle('active', rc.dataset.role === userRole);
   });
   $('role-select').value = userRole;
   $('user-select-wrap').classList.toggle('hidden', userRole !== 'user');
 
-  // Handle role cards clicking (only allowed roles)
   document.querySelectorAll('.role-card').forEach(rc => {
     rc.addEventListener('click', () => {
       const clickedRole = rc.dataset.role;
-      // Prevent selecting a role above the user's actual role
       const allowed = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
       if (!(allowed[userRole] || ['user']).includes(clickedRole)) return;
 
@@ -610,28 +767,37 @@ async function initLanding() {
 
   const nameSelect = $('user-name-select');
 
-  // ── Status pill ─────────────────────────────────────────────────────────
+  // ── Status pill + users — both from cache (warmed by prefetchBootData) ──
   const statusEl = $('landing-status');
+  let loadedUsers = [];
+  // Both of these are likely cached already, so they resolve synchronously.
+  const [stResult, usersResult] = await Promise.allSettled([
+    GET('/api/master/db-status'),
+    GET('/api/master/users'),
+  ]);
+
+  // Status pill
   try {
-    const st = await GET('/api/master/db-status');
-    if (!st.initialised) {
-      statusEl.innerHTML = `<div class="status-pill warn">⚠️ <span><strong>First-time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import data.</span></div>`;
-    } else {
-      const ago = st.lastSync ? Math.round((Date.now() - new Date(st.lastSync)) / 60000) : null;
-      statusEl.innerHTML = `<div class="status-pill ok">⚡ <span><strong>${st.totalSites} Sites</strong> · ${st.totalDomains || 0} Domains${ago !== null ? ` · Synced ${ago}m ago` : ''}</span></div>`;
+    const st = stResult.value;
+    if (st) {
+      S._cachedDbStatus = st; // save for enterApp reuse
+      if (!st.initialised) {
+        statusEl.innerHTML = `<div class="status-pill warn">⚠️ <span><strong>First-time setup:</strong> After entering, go to <em>Sync from Sheets</em> to import data.</span></div>`;
+      } else {
+        const ago = st.lastSync ? Math.round((Date.now() - new Date(st.lastSync)) / 60000) : null;
+        statusEl.innerHTML = `<div class="status-pill ok">⚡ <span><strong>${st.totalSites} Sites</strong> · ${st.totalDomains || 0} Domains${ago !== null ? ` · Synced ${ago}m ago` : ''}</span></div>`;
+      }
     }
   } catch { }
 
-  // ── Load real users ─────────────────────────────────────────────────────
-  let loadedUsers = [];
+  // Users list
   try {
-    const { users } = await GET('/api/master/users');
-    if (users && users.length > 0) {
-      S.users = users;
-      loadedUsers = users.filter(u => u.active !== false);
+    const usersData = usersResult.value;
+    if (usersData && usersData.users && usersData.users.length > 0) {
+      S.users = usersData.users;
+      loadedUsers = usersData.users.filter(u => u.active !== false);
       const _sv = JSON.parse(localStorage.getItem('officeos_session') || '{}');
       nameSelect.innerHTML = loadedUsers.map(u => {
-        // Pre-select the authenticated user's own record
         const isSelf = (authUser.id && u.id === authUser.id) ||
                        (authUser.name && u.name.toLowerCase() === authUser.name.toLowerCase());
         const isSaved = (_sv.userId && u.id === _sv.userId) ||
@@ -816,14 +982,19 @@ function enterApp() {
     updateActiveMonthUI();
   });
 
-  // Show sync-status if synced
-  GET('/api/master/db-status').then(st => {
-    if (st.lastSync) {
+  // Show sync-status if synced — reuse cached db-status from initLanding if available
+  const _showSyncStatus = (st) => {
+    if (st && st.lastSync) {
       $('sync-status').classList.remove('hidden');
       const ago = Math.round((Date.now() - new Date(st.lastSync)) / 60000);
       $('sync-status-text').textContent = ago < 1 ? 'Synced just now' : `Synced ${ago}m ago`;
     }
-  }).catch(() => { });
+  };
+  if (S._cachedDbStatus) {
+    _showSyncStatus(S._cachedDbStatus); // instant — no extra request
+  } else {
+    GET('/api/master/db-status').then(_showSyncStatus).catch(() => { });
+  }
 
   // Default view
   const defaultViews = { user: 'my-sites', admin: 'overview', superadmin: 'overview' };
@@ -1714,6 +1885,27 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
   containerEl.querySelectorAll('#btn-toggle-columns, .btn-toggle-columns').forEach(btn => {
     btn.addEventListener('click', openColumnManagerModal);
   });
+  // 10. Copy URL button listener
+  containerEl.querySelectorAll(".btn-copy-url").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const u = btn.dataset.url;
+      if (u) {
+        navigator.clipboard.writeText(u).then(() => {
+          btn.classList.add("copied");
+          const origHtml = btn.innerHTML;
+          btn.innerHTML = "<span style=\"font-size:10px;font-weight:700\">✓</span>";
+          setTimeout(() => {
+            btn.classList.remove("copied");
+            btn.innerHTML = origHtml;
+          }, 1500);
+          toast("Copied " + u + " to clipboard", "info", 2000);
+        }).catch(() => {
+          toast(u, "info", 3000);
+        });
+      }
+    });
+  });
 }
 
 function openExpiryEditModal({ siteId, siteUrl, currentDate, rowId }, onSaved) {
@@ -1726,7 +1918,7 @@ function openExpiryEditModal({ siteId, siteUrl, currentDate, rowId }, onSaved) {
     </div>
     <div class="form-group" style="margin-bottom:16px">
       <label class="form-label" style="font-size:12.5px;font-weight:700">Domain Expiration Date</label>
-      <input type="date" id="modal-expiry-date" class="form-input" value="${esc(cleanCurrent)}" style="background:var(--bg-surface-2);color:#fff" />
+      <input type="date" id="modal-expiry-date" class="form-input" value="${esc(cleanCurrent)}" style="background:var(--bg-surface-2);color:var(--text-primary);border-color:var(--border)" />
       <div style="font-size:11.5px;color:var(--text-secondary);margin-top:6px">
         ${isAdminOrSuper
       ? '⚡ As an Admin/Superadmin, changes apply immediately across the system.'
@@ -1782,10 +1974,25 @@ function openExpiryEditModal({ siteId, siteUrl, currentDate, rowId }, onSaved) {
   }
 }
 
+async function viewAssignedSites(targetUserId) {
+  if (!S.users || !S.users.length) {
+    try {
+      const res = await GET('/api/master/users');
+      if (res && res.users) S.users = res.users;
+    } catch {}
+  }
+  const targetUser = (S.users || []).find(u => u.id === targetUserId || u.name.toLowerCase() === String(targetUserId).toLowerCase());
+  if (!targetUser) {
+    mainEl.innerHTML = `<div class="empty-state"><p>Assigned team member not found.</p><button class="btn btn-primary btn-sm" onclick="navigate('my-sites')">Return to My Sites</button></div>`;
+    return;
+  }
+  await viewMySites(null, targetUser);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: MY SITES (User)
 // ═══════════════════════════════════════════════════════════════════════════════
-async function viewMySites() {
+async function viewMySites(preloadedRows = null, targetUserOverride = null) {
   if (!S.users || S.users.length === 0) {
     try {
       const res = await GET('/api/master/users');
@@ -1793,54 +2000,81 @@ async function viewMySites() {
     } catch {}
   }
 
-  // If S.userName is generic Superadmin/Admin or empty, resolve to authUser profile or first team member
-  if (!S.userName || S.userName === 'Superadmin' || S.userName === 'Admin') {
-    const activeUsers = (S.users || []).filter(u => u.active !== false);
-    const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
-                      activeUsers.find(u => u.email && S.authUser && u.email.toLowerCase() === (S.authUser.email || '').toLowerCase()) ||
-                      activeUsers.find(u => u.googleEmail && S.authUser && u.googleEmail.toLowerCase() === (S.authUser.email || S.authUser.googleEmail || '').toLowerCase()) ||
-                      activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
-                      activeUsers[0];
-    if (selfMatch) {
-      S.userId = selfMatch.id;
-      S.userName = selfMatch.name;
+  const isCoveringView = !!targetUserOverride;
+  let effectiveUserId = targetUserOverride ? targetUserOverride.id : S.userId;
+  let effectiveUserName = targetUserOverride ? targetUserOverride.name : S.userName;
+
+  if (!isCoveringView) {
+    // If S.userName is generic Superadmin/Admin or empty, resolve to authUser profile or first team member
+    if (!S.userName || S.userName === 'Superadmin' || S.userName === 'Admin') {
+      const activeUsers = (S.users || []).filter(u => u.active !== false);
+      const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
+                        activeUsers.find(u => u.email && S.authUser && u.email.toLowerCase() === (S.authUser.email || '').toLowerCase()) ||
+                        activeUsers.find(u => u.googleEmail && S.authUser && u.googleEmail.toLowerCase() === (S.authUser.email || S.authUser.googleEmail || '').toLowerCase()) ||
+                        activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
+                        activeUsers[0];
+      if (selfMatch) {
+        S.userId = selfMatch.id;
+        S.userName = selfMatch.name;
+        effectiveUserId = selfMatch.id;
+        effectiveUserName = selfMatch.name;
+      }
     }
   }
 
-  setPage('My Sites', `Assigned checklist for ${S.userName || 'Team'}`);
+  setPage('My Sites', `Assigned checklist for ${effectiveUserName || 'Team'}`);
 
-  let rows = [];
-  let noticeBannerHtml = '';
-  try {
-    const queryParts = [];
-    if (S.userName && S.userName !== 'All Team Sites') {
-      queryParts.push(`user=${encodeURIComponent(S.userName)}`);
-    }
-    if (S.userId && S.userName !== 'All Team Sites') {
-      queryParts.push(`userId=${encodeURIComponent(S.userId)}`);
-    }
-    if (currentActiveMonth) {
-      queryParts.push(`month=${encodeURIComponent(currentActiveMonth)}`);
-    }
-    const qStr = queryParts.length ? `?${queryParts.join('&')}` : '';
+  let rows = preloadedRows || [];
+  let noticeBannerHtml = S._cachedNoticeBannerHtml || '';
+  if (!preloadedRows) {
+    try {
+      const queryParts = [];
+      if (effectiveUserName && effectiveUserName !== 'All Team Sites') {
+        queryParts.push(`user=${encodeURIComponent(effectiveUserName)}`);
+      }
+      if (effectiveUserId && effectiveUserName !== 'All Team Sites') {
+        queryParts.push(`userId=${encodeURIComponent(effectiveUserId)}`);
+      }
+      if (currentActiveMonth) {
+        queryParts.push(`month=${encodeURIComponent(currentActiveMonth)}`);
+      }
+      const qStr = queryParts.length ? `?${queryParts.join('&')}` : '';
 
-    const [data, nHtml] = await Promise.all([
-      GET(`/api/master/daily-review${qStr}`),
-      getNoticeBannerHtml()
-    ]);
-    rows = data.rows || [];
-    noticeBannerHtml = nHtml;
-  } catch (e) { toast(e.message, 'error'); }
+      const [data, nHtml] = await Promise.all([
+        GET(`/api/master/daily-review${qStr}`),
+        getNoticeBannerHtml()
+      ]);
+      rows = data.rows || [];
+      noticeBannerHtml = nHtml;
+      S._cachedNoticeBannerHtml = nHtml;
+    } catch (e) { toast(e.message, 'error'); }
+  }
 
   const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
   const inProgress = rows.filter(r => r.maintenanceStatus === 'in_progress').length;
   const pending = rows.filter(r => !['completed', 'in_progress'].includes(r.maintenanceStatus)).length;
   const pct = rows.length ? Math.round(completed / rows.length * 100) : 0;
-  const isSmart = S.tableMode !== 'full';
-  const isMaint = S.mySitesMode === 'maintenance';
+  
+  // Unified 3-mode active state
+  const activeViewMode = S.mySitesMode === 'maintenance' ? 'maintenance' : (S.tableMode === 'full' ? 'full' : 'smart');
+  const isSmart = activeViewMode === 'smart';
+  const isMaint = activeViewMode === 'maintenance';
+
+  const coveringNoticeHtml = isCoveringView ? `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.28);border-radius:var(--radius);margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-primary)">
+        <span style="font-size:16px">⚡</span>
+        <span>Temporary Coverage: Viewing and managing <strong>${esc(effectiveUserName)}'s</strong> assigned site checklist.</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="exit-coverage-btn" style="display:inline-flex;align-items:center;gap:6px;font-size:12px">
+        ← Back to My Sites
+      </button>
+    </div>
+  ` : '';
 
   mainEl.innerHTML = `
     <div class="fade-in">
+      ${coveringNoticeHtml}
       ${noticeBannerHtml}
       <div class="stat-grid">
         <div class="stat-card accent"><div class="stat-value" id="stat-total">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
@@ -1855,16 +2089,11 @@ async function viewMySites() {
           <div class="card-actions">
             <span class="completion-pct-text" style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
             <div class="progress-wrap" style="width:120px"><div class="progress-fill completion-progress-fill" style="width:${pct}%"></div></div>
-            <div class="view-mode-toggle" id="my-sites-mode-toggle" data-tooltip="My Sites view mode">
-              <button class="btn btn-sm mode-btn ${!isMaint ? 'active' : ''}" data-mysite-mode="normal" title="Normal checklist view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Normal Mode</button>
-              <button class="btn btn-sm mode-btn ${isMaint ? 'active' : ''}" data-mysite-mode="maintenance" title="Maintenance view — URL, company, status, ClickUp, sheet & account manager" style="display:inline-flex;align-items:center;gap:5px">${getSvg('shield', 11)} Maintenance Mode</button>
+            <div class="view-mode-toggle" id="table-mode-toggle" data-tooltip="Table view mode">
+              <button class="btn btn-sm mode-btn ${activeViewMode === 'smart' ? 'active' : ''}" data-mode="smart" title="Smart Fit — compact 7-column view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('zap', 11)} Smart Fit</button>
+              <button class="btn btn-sm mode-btn ${activeViewMode === 'full' ? 'active' : ''}" data-mode="full" title="Full Spread — all 14 columns visible" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Full Spread</button>
+              <button class="btn btn-sm mode-btn ${activeViewMode === 'maintenance' ? 'active' : ''}" data-mode="maintenance" title="Maintenance Mode — URL, company, status, ClickUp, sheet & account manager" style="display:inline-flex;align-items:center;gap:5px">${getSvg('shield', 11)} Maintenance Mode</button>
             </div>
-            ${isMaint ? '' : `
-            <div class="view-mode-toggle" id="table-mode-toggle">
-              <button class="btn btn-sm mode-btn ${isSmart ? 'active' : ''}" data-mode="smart" title="Smart Fit — compact 7-column view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('zap', 11)} Smart Fit</button>
-              <button class="btn btn-sm mode-btn ${!isSmart ? 'active' : ''}" data-mode="full" title="Full Spread — all 14 columns visible" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Full Spread</button>
-            </div>
-            `}
             <button id="export-csv-btn" class="btn btn-secondary btn-sm" title="Export this checklist to CSV" style="display:inline-flex;align-items:center;gap:5px">
               ${getSvg('download', 12)} Export CSV
             </button>
@@ -1879,10 +2108,12 @@ async function viewMySites() {
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">${getSvg('user', 12)} Team Member:</span>
             <select id="my-sites-user-select" class="form-select select-sm" style="font-size:12px;padding:4px 8px;border-radius:6px;min-width:140px;background:var(--bg-surface-2);color:var(--text-primary);border:1px solid var(--border)">
-              <option value="all" ${S.userName === 'All Team Sites' ? 'selected' : ''}>🌐 All Team Sites</option>
-              ${(S.users || []).filter(u => u.active !== false).map(u => `
-                <option value="${u.id}" ${(!['All Team Sites', 'Superadmin', 'Admin'].includes(S.userName) && (S.userId === u.id || (S.userName && S.userName.toLowerCase() === u.name.toLowerCase()))) ? 'selected' : ''}>👤 ${esc(u.name)}</option>
-              `).join('')}
+              <option value="all" ${effectiveUserName === 'All Team Sites' ? 'selected' : ''}>🌐 All Team Sites</option>
+              ${(S.users || []).filter(u => u.active !== false).map(u => {
+                const isCov = getAssignedCoveringUsers().some(cov => cov.id === u.id);
+                const isSelected = (!['All Team Sites', 'Superadmin', 'Admin'].includes(effectiveUserName) && (effectiveUserId === u.id || (effectiveUserName && effectiveUserName.toLowerCase() === u.name.toLowerCase())));
+                return `<option value="${u.id}" ${isSelected ? 'selected' : ''}>👤 ${esc(u.name)}${isCov ? ' (Assigned Coverage)' : ''}</option>`;
+              }).join('')}
             </select>
           </div>
           <div style="display:flex;gap:5px;flex-wrap:wrap" id="quick-filter-chips">
@@ -2045,6 +2276,8 @@ async function viewMySites() {
     });
   });
 
+  $('exit-coverage-btn')?.addEventListener('click', () => navigate('my-sites'));
+
   const mySitesUserSelect = $('my-sites-user-select');
   if (mySitesUserSelect) {
     mySitesUserSelect.addEventListener('change', () => {
@@ -2052,15 +2285,22 @@ async function viewMySites() {
       if (val === 'all') {
         S.userName = 'All Team Sites';
         S.userId = null;
+        try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+        navigate('my-sites');
       } else {
         const u = (S.users || []).find(x => x.id === val);
         if (u) {
+          const isCovering = getAssignedCoveringUsers().some(cov => cov.id === u.id);
+          if (isCovering) {
+            navigate('assigned-sites-' + u.id);
+            return;
+          }
           S.userId = u.id;
           S.userName = u.name;
+          try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
+          navigate('my-sites');
         }
       }
-      try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch {}
-      viewMySites();
     });
   }
 
@@ -2074,23 +2314,25 @@ async function viewMySites() {
     });
   }
 
-  // Mode switcher (Smart Fit vs Full Spread)
+  // Unified Mode switcher (Smart Fit vs Full Spread vs Maintenance Mode)
   document.querySelectorAll('#table-mode-toggle .mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const mode = btn.dataset.mode;
-      S.tableMode = mode;
-      try { localStorage.setItem('officeos_table_mode', mode); } catch { }
-      viewMySites();
-    });
-  });
-
-  // My Sites mode switcher (Normal vs Maintenance)
-  document.querySelectorAll('#my-sites-mode-toggle .mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mysiteMode;
-      S.mySitesMode = mode;
-      try { localStorage.setItem('officeos_mysites_mode', mode); } catch { }
-      viewMySites();
+      if (mode === 'maintenance') {
+        S.mySitesMode = 'maintenance';
+        S.tableMode = 'maintenance';
+        try { localStorage.setItem('officeos_mysites_mode', 'maintenance'); } catch { }
+      } else {
+        S.mySitesMode = 'normal';
+        S.tableMode = mode;
+        try { 
+          localStorage.setItem('officeos_mysites_mode', 'normal'); 
+          localStorage.setItem('officeos_table_mode', mode);
+        } catch { }
+      }
+      viewMySites(rows); // Instant 0ms switch without network re-fetch!
     });
   });
 
@@ -2397,6 +2639,46 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   const liveBall = `<span class="live-network-icon ${netSt}" id="live-dot-${r.id}" title="${isOffline ? 'Website Offline / Down' : (isOnline ? 'Website Active & Online' : 'Website Status: Unknown')}">${getSvg('network', 11)}</span>`;
   const co = (r.company || 'CW').trim();
 
+  // Smart Fit Expiry Badge line
+  let smartExpiryBadge = '';
+  if (r.domainExpiry) {
+    let dBadge = '';
+    if (r.daysLeft !== null && r.daysLeft !== undefined) {
+      if (r.daysLeft <= 0) {
+        dBadge = '<span class="badge-expiry-danger badge-xs">EXPIRED</span>';
+      } else if (r.daysLeft <= 30) {
+        dBadge = '<span class="badge-expiry-danger badge-xs">' + r.daysLeft + 'd left</span>';
+      } else if (r.daysLeft <= 90) {
+        dBadge = '<span class="badge-expiry-warning badge-xs">' + r.daysLeft + 'd left</span>';
+      } else {
+        dBadge = '<span class="badge-expiry-safe badge-xs">' + r.daysLeft + 'd left</span>';
+      }
+    }
+    smartExpiryBadge = `
+      <div class="smart-expiry-line" title="Domain Expiration: ${esc(cleanExp || 'Not set')}">
+        <span class="smart-expiry-pill">📅 Exp: <strong>${esc(cleanExp)}</strong></span>
+        ${dBadge}
+        <button class="btn-edit-expiry" data-row-id="${r.id}" data-site-id="${r.siteId || ''}" data-url="${esc(r.siteUrl)}" data-current="${esc(cleanExp)}" title="Edit expiration date (Current: ${esc(cleanExp)})">✏️</button>
+      </div>
+    `;
+  } else {
+    smartExpiryBadge = `
+      <div class="smart-expiry-line" title="No expiration date set">
+        <span class="smart-expiry-pill no-exp">📅 Exp: <span class="dim-dash">—</span></span>
+        <button class="btn-edit-expiry" data-row-id="${r.id}" data-site-id="${r.siteId || ''}" data-url="${esc(r.siteUrl)}" data-current="" title="Set expiration date">✏️</button>
+      </div>
+    `;
+  }
+
+  if (r.pendingExpiryRequest) {
+    const pr = r.pendingExpiryRequest;
+    smartExpiryBadge += `
+      <div class="smart-expiry-line" style="margin-top:2px">
+        <span class="expiry-pending-pill" style="font-size:10px;padding:1px 5px" title="Proposed by ${esc(pr.requestedByName || 'User')}: ${esc(pr.requestedDate)}">⏳ Req: ${esc(pr.requestedDate)}</span>
+      </div>
+    `;
+  }
+
   if (mode === 'smart') {
     return `
       <tr class="smart-row" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-updated-at="${esc(r.updatedAt || '')}">
@@ -2404,13 +2686,19 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
           <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
         </td>
         <td class="col-url url-cell" data-col="url">
-          <div class="site-identity-cell">
-            ${liveBall}
-            <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'} badge-xs">${esc(co)}</span>
-            <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
-              ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
-            </a>
-            <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+          <div class="site-identity-wrapper">
+            <div class="site-identity-cell">
+              ${liveBall}
+              <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'} badge-xs">${esc(co)}</span>
+              <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
+                ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
+              </a>
+              <button class="btn-copy-url" data-url="${esc(r.siteUrl)}" title="Copy site URL to clipboard">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+              <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+            </div>
+            ${smartExpiryBadge}
           </div>
         </td>
         <td class="col-maint" data-col="maintenance">
@@ -6755,6 +7043,7 @@ async function viewUserMgmt() {
               </div>
             </div>
             <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" id="temp-assign-mgmt-btn" style="display:inline-flex;align-items:center;gap:6px">⚡ Temporary Assignment</button>
               <button class="btn btn-secondary btn-sm" id="merge-users-btn" style="display:inline-flex;align-items:center;gap:6px">🔀 Merge Profiles</button>
               <button class="btn btn-primary btn-sm" id="new-user-btn">+ Add User</button>
             </div>
@@ -6782,6 +7071,20 @@ async function viewUserMgmt() {
                       <div>
                         <div>${esc(u.name)}</div>
                         ${!isActive ? '<div style="font-size:10px;color:var(--danger);font-weight:500">Deactivated — excluded from Team Progress</div>' : ''}
+                        ${u.tempAssignedTo && u.tempAssignedTo.length ? `
+                          <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                            <span class="badge" style="background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);font-size:10px;padding:1px 6px">
+                              ⚡ Assigned to: ${u.tempAssignedTo.map(a => esc(a.userName)).join(', ')}
+                            </span>
+                          </div>
+                        ` : ''}
+                        ${u.tempCoveringUsers && u.tempCoveringUsers.length ? `
+                          <div style="margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                            <span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);font-size:10px;padding:1px 6px">
+                              🛡️ Covering: ${u.tempCoveringUsers.map(a => esc(a.userName)).join(', ')}
+                            </span>
+                          </div>
+                        ` : ''}
                       </div>
                     </td>
                     <td><span class="badge badge-${u.role === 'superadmin' ? 'danger' : u.role === 'admin' ? 'warning' : 'info'}">${esc(u.role)}</span></td>
@@ -6814,6 +7117,9 @@ async function viewUserMgmt() {
                     <td style="font-size:11px;color:var(--text-dim)">${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</td>
                     <td style="text-align:right">
                       <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+                        <button class="btn btn-ghost btn-sm temp-assign-row-btn" data-id="${u.id}" data-name="${esc(u.name)}" title="Assign ${esc(u.name)}'s list to another team member" style="display:inline-flex;align-items:center;gap:5px;color:var(--text-secondary)">
+                          ⚡ Assign
+                        </button>
                         <button class="btn btn-ghost btn-sm connect-user-btn" data-id="${u.id}" title="Connect or Merge Google Account" style="display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:600">
                           🔗 Connect
                         </button>
@@ -7140,6 +7446,30 @@ async function viewUserMgmt() {
       });
     });
 
+    // Temporary assignment listeners
+    // Temporary assignment listeners (instant optimistic updates)
+    $('temp-assign-mgmt-btn')?.addEventListener('click', () => {
+      openTempAssignModal(null, (updatedUsers) => {
+        if (updatedUsers) {
+          users = updatedUsers;
+          S.users = updatedUsers;
+          render();
+        }
+      });
+    });
+
+    mainEl.querySelectorAll('.temp-assign-row-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openTempAssignModal(btn.dataset.id, (updatedUsers) => {
+          if (updatedUsers) {
+            users = updatedUsers;
+            S.users = updatedUsers;
+            render();
+          }
+        });
+      });
+    });
+
     // Delete user listener
     mainEl.querySelectorAll('.del-user-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -7159,13 +7489,339 @@ async function viewUserMgmt() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// MODAL: TEMPORARY USER ASSIGNMENT (COVERAGE) - ULTRA-FAST OPTIMISTIC UPDATES
+// ═══════════════════════════════════════════════════════════════════════════════
+function openTempAssignModal(preselectedFromUserId = null, onSaved = null) {
+  let users = (S.users && S.users.length) ? S.users : [];
+  let sites = S.sites || [];
+
+  const activeUsers = () => users.filter(u => u.active !== false);
+
+  function renderModalBody() {
+    const allDelegations = [];
+    for (const u of users) {
+      if (Array.isArray(u.tempAssignedTo) && u.tempAssignedTo.length > 0) {
+        for (const assign of u.tempAssignedTo) {
+          const target = users.find(x => x.id === assign.userId || (x.name && x.name.toLowerCase() === (assign.userName || '').toLowerCase()))
+            || { id: assign.userId, name: assign.userName || 'User' };
+          const uSites = sites.filter(s => (s.assignedUsers || []).includes(u.id));
+          allDelegations.push({
+            fromUser: u,
+            toUser: target,
+            assignment: assign,
+            siteCount: uSites.length,
+          });
+        }
+      }
+    }
+
+    const currentActives = activeUsers();
+    const defaultFrom = preselectedFromUserId || (currentActives[0] ? currentActives[0].id : '');
+    const defaultTo = currentActives.find(u => u.id !== defaultFrom) ? currentActives.find(u => u.id !== defaultFrom).id : '';
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:12.5px;color:var(--text-muted);line-height:1.5">
+          Temporarily assign a team member's site checklist (e.g. <strong>Sabbir's list</strong>) to another user (e.g. <strong>Taion</strong> or <strong>Roich</strong>). The assigned user will see a dedicated <em>Assigned Workspace</em> section in their sidebar and can view, review, and maintain their checklist.
+        </div>
+
+        <!-- Active Delegations List -->
+        <div style="background:var(--bg-surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+            <span>Active Temporary Assignments</span>
+            <span class="badge ${allDelegations.length ? 'badge-accent' : 'badge-secondary'}">${allDelegations.length} Active</span>
+          </div>
+          ${allDelegations.length ? `
+            <div style="display:flex;flex-direction:column;gap:8px" id="ta-delegations-list">
+              ${allDelegations.map(d => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px" class="temp-assign-row">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap">
+                    <span style="font-weight:600;font-size:12.5px;color:var(--text-primary)">👤 ${esc(d.fromUser.name)}</span>
+                    <span style="font-size:11px;color:var(--text-muted)">(${d.siteCount} sites)</span>
+                    <span style="color:var(--accent);font-weight:700">➔</span>
+                    <span style="font-weight:600;font-size:12.5px;color:var(--accent)">👤 ${esc(d.toUser.name)}</span>
+                    ${d.assignment.note ? `<span style="font-size:11px;color:var(--text-dim);font-style:italic">"${esc(d.assignment.note)}"</span>` : ''}
+                  </div>
+                  <button type="button" class="btn btn-danger btn-xs revoke-assign-btn" data-from="${d.fromUser.id}" data-to="${d.toUser.id || d.assignment.userId}" title="Revoke assignment" style="font-size:11px;padding:3px 9px;cursor:pointer">
+                    Revoke ✕
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div style="font-size:12px;color:var(--text-dim);padding:8px 0;text-align:center">No active temporary assignments currently.</div>
+          `}
+        </div>
+
+        <!-- New Assignment Form -->
+        <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text-primary)">+ Assign Site Checklist to Team Member</div>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" style="font-size:11.5px;font-weight:600">Assign Sites From (Source User) *</label>
+              <select class="form-select" id="ta-from-user" style="font-size:12.5px">
+                ${currentActives.map(u => {
+                  const uSites = sites.filter(s => (s.assignedUsers || []).includes(u.id));
+                  return `<option value="${u.id}" ${u.id === defaultFrom ? 'selected' : ''}>${esc(u.name)} (${uSites.length} sites)</option>`;
+                }).join('')}
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label" style="font-size:11.5px;font-weight:600">Assign To (Coverage) *</label>
+              <select class="form-select" id="ta-to-user" style="font-size:12.5px">
+                ${currentActives.map(u => {
+                  return `<option value="${u.id}" ${u.id === defaultTo ? 'selected' : ''}>${esc(u.name)} (${esc(u.role)})</option>`;
+                }).join('')}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" style="font-size:11.5px;font-weight:600">Note / Reason (optional)</label>
+            <input class="form-input" id="ta-note" placeholder="e.g. Vacation coverage, sick leave, backup support" style="font-size:12px">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function attachListeners() {
+    const modalBody = $('modal-body');
+    if (!modalBody) return;
+
+    modalBody.querySelectorAll('.revoke-assign-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const fromUserId = btn.dataset.from;
+        const toUserId = btn.dataset.to;
+
+        // 1. Instant Optimistic in-memory update (0ms latency)
+        const fromUser = users.find(u => u.id === fromUserId || u.name.toLowerCase() === String(fromUserId).toLowerCase());
+        const toUser = users.find(u => u.id === toUserId || u.name.toLowerCase() === String(toUserId).toLowerCase());
+
+        const realFromId = fromUser ? fromUser.id : fromUserId;
+        const realFromName = fromUser ? fromUser.name.toLowerCase() : String(fromUserId).toLowerCase();
+        const realToId = toUser ? toUser.id : toUserId;
+        const realToName = toUser ? toUser.name.toLowerCase() : String(toUserId).toLowerCase();
+
+        if (fromUser && Array.isArray(fromUser.tempAssignedTo)) {
+          fromUser.tempAssignedTo = fromUser.tempAssignedTo.filter(a => {
+            const aId = a.userId || '';
+            const aName = (a.userName || '').toLowerCase();
+            return aId !== realToId && aId !== toUserId && aName !== realToName;
+          });
+        }
+
+        if (toUser && Array.isArray(toUser.tempCoveringUsers)) {
+          toUser.tempCoveringUsers = toUser.tempCoveringUsers.filter(a => {
+            const aId = a.userId || '';
+            const aName = (a.userName || '').toLowerCase();
+            return aId !== realFromId && aId !== fromUserId && aName !== realFromName;
+          });
+        }
+
+        // Clean any other cross-references
+        for (const u of users) {
+          if (Array.isArray(u.tempAssignedTo)) {
+            u.tempAssignedTo = u.tempAssignedTo.filter(a => {
+              const matchTo = a.userId === realToId || a.userId === toUserId || (a.userName || '').toLowerCase() === realToName;
+              const matchFrom = u.id === realFromId || u.id === fromUserId || (u.name || '').toLowerCase() === realFromName;
+              return !(matchTo && matchFrom);
+            });
+          }
+          if (Array.isArray(u.tempCoveringUsers)) {
+            u.tempCoveringUsers = u.tempCoveringUsers.filter(a => {
+              const matchFrom = a.userId === realFromId || a.userId === fromUserId || (a.userName || '').toLowerCase() === realFromName;
+              const matchTo = u.id === realToId || u.id === toUserId || (u.name || '').toLowerCase() === realToName;
+              return !(matchFrom && matchTo);
+            });
+          }
+        }
+
+        S.users = [...users];
+        invalidateCache('/api/master/users');
+
+        // 2. Instant UI re-render (0ms)
+        const mb = $('modal-body');
+        if (mb) {
+          mb.innerHTML = renderModalBody();
+          attachListeners();
+        }
+        buildAssignedSitesNav();
+        if (onSaved) onSaved(users);
+        toast('Temporary assignment revoked', 'info', 2000);
+
+        // 3. Background server sync
+        POST('/api/master/users/temp-unassign', { fromUserId: realFromId, toUserId: realToId })
+          .then(res => {
+            if (res && res.users) {
+              users = res.users;
+              S.users = res.users;
+              buildAssignedSitesNav();
+              if (onSaved) onSaved(users);
+            }
+          })
+          .catch(err => {
+            toast('Failed to revoke on server: ' + err.message, 'error');
+            GET('/api/master/users').then(uRes => {
+              if (uRes && uRes.users) {
+                users = uRes.users;
+                S.users = users;
+                buildAssignedSitesNav();
+                if (onSaved) onSaved(users);
+                const mb2 = $('modal-body');
+                if (mb2) { mb2.innerHTML = renderModalBody(); attachListeners(); }
+              }
+            });
+          });
+      };
+    });
+  }
+
+  // Open modal immediately without waiting for any network roundtrips
+  openModal('⚡ Temporary User List Assignment', renderModalBody(), [
+    { label: 'Close', cls: 'btn btn-secondary', onClick: closeModal },
+    {
+      label: 'Assign Coverage',
+      cls: 'btn btn-primary',
+      onClick: () => {
+        const fromUserId = $('ta-from-user')?.value;
+        const toUserId = $('ta-to-user')?.value;
+        const note = $('ta-note')?.value?.trim() || '';
+
+        if (!fromUserId || !toUserId) {
+          toast('Please select both users', 'error');
+          return;
+        }
+        if (fromUserId === toUserId) {
+          toast('Cannot assign user to themselves', 'error');
+          return;
+        }
+
+        const fromUser = users.find(u => u.id === fromUserId);
+        const toUser = users.find(u => u.id === toUserId);
+        if (!fromUser || !toUser) {
+          toast('Selected user not found', 'error');
+          return;
+        }
+
+        // 1. Instant Optimistic in-memory update (0ms latency)
+        const nowStr = new Date().toISOString();
+        const actorName = (S.authUser && S.authUser.name) || 'Admin';
+
+        const assignEntry = {
+          userId: toUser.id,
+          userName: toUser.name,
+          assignedAt: nowStr,
+          assignedBy: actorName,
+          note,
+        };
+        const covEntry = {
+          userId: fromUser.id,
+          userName: fromUser.name,
+          assignedAt: nowStr,
+          assignedBy: actorName,
+          note,
+        };
+
+        const fromList = Array.isArray(fromUser.tempAssignedTo) ? [...fromUser.tempAssignedTo] : [];
+        const exFromIdx = fromList.findIndex(a => a.userId === toUser.id || (a.userName || '').toLowerCase() === toUser.name.toLowerCase());
+        if (exFromIdx >= 0) fromList[exFromIdx] = assignEntry;
+        else fromList.push(assignEntry);
+        fromUser.tempAssignedTo = fromList;
+
+        const toList = Array.isArray(toUser.tempCoveringUsers) ? [...toUser.tempCoveringUsers] : [];
+        const exToIdx = toList.findIndex(a => a.userId === fromUser.id || (a.userName || '').toLowerCase() === fromUser.name.toLowerCase());
+        if (exToIdx >= 0) toList[exToIdx] = covEntry;
+        else toList.push(covEntry);
+        toUser.tempCoveringUsers = toList;
+
+        S.users = [...users];
+        invalidateCache('/api/master/users');
+
+        // 2. Instant UI update (0ms)
+        const mb = $('modal-body');
+        if (mb) {
+          mb.innerHTML = renderModalBody();
+          attachListeners();
+          const noteEl = $('ta-note');
+          if (noteEl) noteEl.value = '';
+        }
+        buildAssignedSitesNav();
+        if (onSaved) onSaved(users);
+        toast(`Assigned ${fromUser.name}'s sites to ${toUser.name}`, 'success', 2500);
+
+        // 3. Background server sync
+        POST('/api/master/users/temp-assign', { fromUserId, toUserId, note })
+          .then(res => {
+            if (res && res.users) {
+              users = res.users;
+              S.users = res.users;
+              buildAssignedSitesNav();
+              if (onSaved) onSaved(users);
+            }
+          })
+          .catch(err => {
+            toast('Failed to save assignment on server: ' + err.message, 'error');
+            GET('/api/master/users').then(uRes => {
+              if (uRes && uRes.users) {
+                users = uRes.users;
+                S.users = users;
+                buildAssignedSitesNav();
+                if (onSaved) onSaved(users);
+                const mb2 = $('modal-body');
+                if (mb2) { mb2.innerHTML = renderModalBody(); attachListeners(); }
+              }
+            });
+          });
+      }
+    }
+  ]);
+
+  attachListeners();
+
+  // If initial users or sites were missing from cache, fetch in background and refresh smoothly
+  if (!users.length || !sites.length) {
+    Promise.all([
+      !users.length ? GET('/api/master/users') : Promise.resolve(null),
+      !sites.length ? GET('/api/master/sites') : Promise.resolve(null),
+    ]).then(([uRes, sRes]) => {
+      let needsRerender = false;
+      if (uRes && uRes.users) {
+        users = uRes.users;
+        S.users = users;
+        needsRerender = true;
+      }
+      if (sRes && sRes.sites) {
+        sites = sRes.sites;
+        S.sites = sites;
+        needsRerender = true;
+      }
+      if (needsRerender) {
+        const mb = $('modal-body');
+        if (mb) {
+          mb.innerHTML = renderModalBody();
+          attachListeners();
+        }
+      }
+    }).catch(() => {});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: SEND EMAILS
 // ═══════════════════════════════════════════════════════════════════════════════
 function viewSendEmails() {
   setPage('Send Emails', 'Maintenance report mailer & client dispatch');
   mainEl.innerHTML = `
     <div class="fade-in" style="display:flex;flex-direction:column;height:calc(100vh - 125px);gap:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card-bg, #1a1f2c);padding:10px 18px;border-radius:10px;border:1px solid var(--border,#2d3748);flex-shrink:0">
+
+      <!-- ── Top bar ── -->
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--card-bg,#1a1f2c);padding:10px 18px;border-radius:10px;border:1px solid var(--border,#2d3748);flex-shrink:0">
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-size:20px">✉️</span>
           <div>
@@ -7174,27 +7830,184 @@ function viewSendEmails() {
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn btn-secondary btn-sm" id="reload-mailer-frame" title="Reload Mailer" style="padding:6px 12px;font-size:12px;cursor:pointer">
-            🔄 Reload
-          </button>
+          <button class="btn btn-secondary btn-sm" id="reload-mailer-frame" style="padding:6px 12px;font-size:12px">🔄 Reload</button>
           <a href="/mailer" target="_blank" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:7px 14px;font-size:12px;font-weight:600">
-            <span>Open in Full Tab</span>
-            <span>↗</span>
+            <span>Open in Full Tab</span><span>↗</span>
           </a>
         </div>
       </div>
-      <div style="flex:1;position:relative;min-height:500px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#2d3748);box-shadow:0 8px 30px rgba(0,0,0,0.25)">
+
+      <!-- ── Tools row: Install Command + Tunnel ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-shrink:0">
+
+        <!-- Install Command Card -->
+        <div style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🖥️</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:var(--text,#fff)">Run on Another PC</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Generate a one-click install command with all credentials baked in</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-gen-install-cmd" style="font-size:12px;padding:6px 14px;white-space:nowrap">
+              📋 Generate Command
+            </button>
+          </div>
+          <!-- Command output area (hidden until generated) -->
+          <div id="install-cmd-area" style="display:none;flex-direction:column;gap:8px">
+            <div style="font-size:11px;color:var(--text-muted,#94a3b8)">
+              ⚠️ This command contains your SMTP passwords. Share only with trusted team members via secure channel (Signal, WhatsApp, etc.)
+            </div>
+            <div style="display:flex;gap:8px;align-items:stretch">
+              <code id="install-cmd-text" style="flex:1;background:var(--bg,#0d1117);border:1px solid var(--border,#2d3748);border-radius:8px;padding:8px 12px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#a5f3fc;word-break:break-all;line-height:1.6;display:block;overflow:hidden;max-height:56px"></code>
+              <button class="btn btn-primary btn-sm" id="btn-copy-install-cmd" style="font-size:12px;padding:6px 12px;white-space:nowrap">📋 Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cloudflare Tunnel Card -->
+        <div style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🌐</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;color:var(--text,#fff)">Quick Public URL</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Create a temporary public link via Cloudflare Tunnel — dies when server stops</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-tunnel-toggle" style="font-size:12px;padding:6px 14px;white-space:nowrap">
+              🚀 Start Tunnel
+            </button>
+          </div>
+          <!-- Tunnel status -->
+          <div id="tunnel-status-area" style="display:none;flex-direction:column;gap:8px">
+            <div id="tunnel-status-msg" style="font-size:11px;color:var(--text-muted,#94a3b8)"></div>
+            <div style="display:flex;gap:8px;align-items:center" id="tunnel-url-row">
+              <a id="tunnel-url-link" href="#" target="_blank" style="flex:1;background:var(--bg,#0d1117);border:1px solid #10b981;border-radius:8px;padding:8px 12px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#10b981;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></a>
+              <button class="btn btn-primary btn-sm" id="btn-copy-tunnel-url" style="font-size:12px;padding:6px 12px;white-space:nowrap">📋 Copy</button>
+            </div>
+          </div>
+          <div id="tunnel-loading" style="display:none;font-size:11px;color:var(--text-muted,#94a3b8)">
+            <span style="animation:pulse 1.5s ease-in-out infinite;display:inline-block">⏳</span> Starting tunnel... downloading cloudflared if needed (first time only)...
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Mailer iframe ── -->
+      <div style="flex:1;position:relative;min-height:400px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#2d3748);box-shadow:0 8px 30px rgba(0,0,0,0.25)">
         <iframe id="mailer-iframe" src="/mailer" style="width:100%;height:100%;border:none;display:block;background:#0d1117"></iframe>
       </div>
     </div>`;
 
+  // ── Reload iframe ──
   $('reload-mailer-frame')?.addEventListener('click', () => {
     const frame = $('mailer-iframe');
-    if (frame) {
-      frame.src = '/mailer?t=' + Date.now();
-      toast('Reloading mailer...', 'info', 1500);
+    if (frame) { frame.src = '/mailer?t=' + Date.now(); toast('Reloading mailer...', 'info', 1500); }
+  });
+
+  // ── Generate Install Command ──
+  $('btn-gen-install-cmd')?.addEventListener('click', async () => {
+    const btn = $('btn-gen-install-cmd');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating...';
+    try {
+      const data = await GET('/api/setup/generate-install-cmd');
+      const area = $('install-cmd-area');
+      area.style.display = 'flex';
+      $('install-cmd-text').textContent = data.cmd;
+      btn.textContent = '✅ Done';
+      setTimeout(() => { btn.disabled = false; btn.textContent = '📋 Generate Command'; }, 3000);
+    } catch (e) {
+      toast('Failed to generate command: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '📋 Generate Command';
     }
   });
+
+  $('btn-copy-install-cmd')?.addEventListener('click', () => {
+    const cmd = $('install-cmd-text')?.textContent;
+    if (!cmd) return;
+    navigator.clipboard.writeText(cmd).then(() => {
+      toast('✅ Install command copied! Share it securely with your team member.', 'success', 4000);
+      const btn = $('btn-copy-install-cmd');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy'; }, 3000);
+    }).catch(() => toast('Copy failed — please select and copy manually', 'error'));
+  });
+
+  // ── Cloudflare Tunnel ──
+  let tunnelRunning = false;
+
+  async function refreshTunnelStatus() {
+    try {
+      const data = await GET('/api/tunnel/status');
+      tunnelRunning = data.running;
+      const toggleBtn = $('btn-tunnel-toggle');
+      const statusArea = $('tunnel-status-area');
+      const loadingEl  = $('tunnel-loading');
+      if (!toggleBtn) return;
+      if (data.running && data.url) {
+        toggleBtn.textContent = '🛑 Stop Tunnel';
+        toggleBtn.style.background = 'rgba(248,113,113,0.15)';
+        toggleBtn.style.borderColor = '#f87171';
+        toggleBtn.style.color = '#f87171';
+        statusArea.style.display = 'flex';
+        loadingEl.style.display = 'none';
+        const link = $('tunnel-url-link');
+        if (link) { link.href = data.url; link.textContent = data.url; }
+        $('tunnel-status-msg').textContent = '🟢 Tunnel is live — share this URL with your team member';
+        $('tunnel-status-msg').style.color = '#10b981';
+        $('btn-copy-tunnel-url').style.display = '';
+        $('tunnel-url-row').style.display = 'flex';
+      } else {
+        toggleBtn.textContent = '🚀 Start Tunnel';
+        toggleBtn.style.background = '';
+        toggleBtn.style.borderColor = '';
+        toggleBtn.style.color = '';
+        statusArea.style.display = 'none';
+        loadingEl.style.display = 'none';
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  $('btn-tunnel-toggle')?.addEventListener('click', async () => {
+    const btn = $('btn-tunnel-toggle');
+    if (tunnelRunning) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Stopping...';
+      try {
+        await POST('/api/tunnel/stop', {});
+        tunnelRunning = false;
+        await refreshTunnelStatus();
+        toast('Tunnel stopped', 'info', 2000);
+      } catch (e) { toast('Stop failed: ' + e.message, 'error'); }
+      btn.disabled = false;
+    } else {
+      btn.disabled = true;
+      $('tunnel-loading').style.display = 'block';
+      btn.textContent = '⏳ Starting...';
+      try {
+        const data = await POST('/api/tunnel/start', {});
+        await refreshTunnelStatus();
+        toast(`🌐 Tunnel live at ${data.url}`, 'success', 5000);
+      } catch (e) {
+        $('tunnel-loading').style.display = 'none';
+        toast('Tunnel failed: ' + e.message, 'error', 5000);
+      }
+      btn.disabled = false;
+    }
+  });
+
+  $('btn-copy-tunnel-url')?.addEventListener('click', () => {
+    const url = $('tunnel-url-link')?.href;
+    if (!url || url === '#') return;
+    navigator.clipboard.writeText(url).then(() => {
+      toast('🌐 Tunnel URL copied!', 'success', 2500);
+      const btn = $('btn-copy-tunnel-url');
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy'; }, 2500);
+    });
+  });
+
+  // Check if tunnel is already running
+  refreshTunnelStatus();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -9762,3 +10575,25 @@ function wire() {
   // NOTE: the tab list is loaded on demand ("Test source & load tabs") rather
   // than on page open, so visiting this page never floods the Sheets API.
 }
+
+// Delegated copy URL button fallback
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".btn-copy-url");
+  if (!btn) return;
+  e.stopPropagation();
+  const u = btn.dataset.url;
+  if (u) {
+    navigator.clipboard.writeText(u).then(() => {
+      btn.classList.add("copied");
+      const origHtml = btn.innerHTML;
+      btn.innerHTML = "<span style=\"font-size:10px;font-weight:700\">✓</span>";
+      setTimeout(() => {
+        btn.classList.remove("copied");
+        btn.innerHTML = origHtml;
+      }, 1500);
+      toast("Copied " + u + " to clipboard", "info", 2000);
+    }).catch(() => {
+      toast(u, "info", 3000);
+    });
+  }
+});

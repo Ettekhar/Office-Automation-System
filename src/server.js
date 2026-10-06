@@ -345,7 +345,145 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // GET /api/setup/generate-install-cmd — builds a one-liner PowerShell
+      // install command with all credentials baked in as a base64 blob so
+      // another machine can run it and be fully configured automatically.
+      if (pathname === '/api/setup/generate-install-cmd' && method === 'GET') {
+        try {
+          const envPath = path.resolve(__dirname, '../.env');
+          const saPath  = path.resolve(__dirname, '../service-account.json');
+          const envText = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+          const saText  = fs.existsSync(saPath)  ? fs.readFileSync(saPath,  'utf8') : '';
+
+          // Collect only the credential vars we need (not the whole .env)
+          const CRED_KEYS = [
+            'CW_NAME','CW_SPREADSHEET_ID','CW_MASTER_TAB_NAME',
+            'CW_SMTP_HOST','CW_SMTP_PORT','CW_SMTP_SECURE',
+            'CW_SMTP_USER','CW_SMTP_PASS','CW_FROM_EMAIL','CW_FROM_NAME','CW_BCC_EMAIL',
+            'RM_NAME','RM_SPREADSHEET_ID','RM_MASTER_TAB_NAME',
+            'RM_SMTP_HOST','RM_SMTP_PORT','RM_SMTP_SECURE',
+            'RM_SMTP_USER','RM_SMTP_PASS','RM_FROM_EMAIL','RM_FROM_NAME','RM_BCC_EMAIL',
+            'MAX_EMAILS_PER_RUN',
+          ];
+          const credObj = {};
+          for (const line of envText.split(/\r?\n/)) {
+            const eq = line.indexOf('=');
+            if (eq < 1) continue;
+            const k = line.slice(0, eq).trim();
+            if (CRED_KEYS.includes(k)) credObj[k] = line.slice(eq + 1).trim();
+          }
+          if (saText) credObj['_SA_JSON'] = saText;
+
+          const blob = Buffer.from(JSON.stringify(credObj)).toString('base64');
+          const rawUrl = 'https://raw.githubusercontent.com/Ettekhar/Office-Automation-System/main/install.ps1';
+          const cmd = `$env:MAILER_CREDS='${blob}'; irm ${rawUrl} | iex`;
+          sendJson(res, 200, { cmd, credCount: Object.keys(credObj).length });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
       sendJson(res, 404, { error: 'Setup route not found' });
+      return;
+    }
+
+    // ── Cloudflare Quick Tunnel API ────────────────────────────────────────
+    // /api/tunnel/start  POST  — download cloudflared if needed, start tunnel
+    // /api/tunnel/status GET   — current tunnel URL (null if not running)
+    // /api/tunnel/stop   POST  — kill the tunnel process
+    if (pathname.startsWith('/api/tunnel/')) {
+      if (pathname === '/api/tunnel/start' && method === 'POST') {
+        if (global._tunnelUrl) {
+          sendJson(res, 200, { ok: true, url: global._tunnelUrl, alreadyRunning: true });
+          return;
+        }
+        try {
+          const { spawn } = await import('child_process');
+          const https = await import('https');
+
+          // cloudflared binary path
+          const cfDir = path.resolve(__dirname, '../data');
+          if (!fs.existsSync(cfDir)) fs.mkdirSync(cfDir, { recursive: true });
+          const cfBin = path.join(cfDir, 'cloudflared.exe');
+
+          // Download cloudflared.exe if missing
+          if (!fs.existsSync(cfBin)) {
+            const CF_URL = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
+            console.log('[tunnel] Downloading cloudflared...');
+            await new Promise((resolve, reject) => {
+              const file = fs.createWriteStream(cfBin);
+              const download = (url, redirects = 5) => {
+                if (redirects <= 0) { reject(new Error('Too many redirects')); return; }
+                https.get(url, (response) => {
+                  if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                    download(response.headers.location, redirects - 1);
+                    return;
+                  }
+                  response.pipe(file);
+                  file.on('finish', () => file.close(resolve));
+                }).on('error', reject);
+              };
+              download(CF_URL);
+            });
+            console.log('[tunnel] cloudflared downloaded');
+          }
+
+          const port = DEFAULT_PORT;
+          const proc = spawn(cfBin, ['tunnel', '--url', `http://localhost:${port}`], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+
+          global._tunnelProc = proc;
+          global._tunnelUrl  = null;
+
+          // Parse tunnel URL from stderr
+          const urlFound = await new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('Tunnel URL not found within 30s')), 30000);
+            const onData = (data) => {
+              const text = data.toString();
+              const match = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+              if (match) {
+                clearTimeout(timer);
+                proc.stdout.off('data', onData);
+                proc.stderr.off('data', onData);
+                resolve(match[0]);
+              }
+            };
+            proc.stdout.on('data', onData);
+            proc.stderr.on('data', onData);
+            proc.on('error', (e) => { clearTimeout(timer); reject(e); });
+            proc.on('exit', (code) => { clearTimeout(timer); reject(new Error(`cloudflared exited with code ${code}`)); });
+          });
+
+          global._tunnelUrl = urlFound;
+          console.log(`[tunnel] Live at ${urlFound}`);
+          proc.on('exit', () => { global._tunnelUrl = null; global._tunnelProc = null; console.log('[tunnel] Tunnel closed'); });
+
+          sendJson(res, 200, { ok: true, url: urlFound });
+        } catch (e) {
+          console.error('[tunnel] Failed to start:', e.message);
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
+      if (pathname === '/api/tunnel/status' && method === 'GET') {
+        sendJson(res, 200, { running: !!global._tunnelUrl, url: global._tunnelUrl || null });
+        return;
+      }
+
+      if (pathname === '/api/tunnel/stop' && method === 'POST') {
+        if (global._tunnelProc) {
+          global._tunnelProc.kill();
+          global._tunnelProc = null;
+          global._tunnelUrl  = null;
+        }
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      sendJson(res, 404, { error: 'Tunnel route not found' });
       return;
     }
 
