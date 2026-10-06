@@ -402,6 +402,7 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
       const { subject, html } = buildEmail({
         websiteUrl: site.websiteUrl,
         reportMonth: {
+          monthName: overview.selectedMonth.name,
           monthLower: overview.selectedMonth.lower,
           year: overview.selectedMonth.year,
         },

@@ -70,3 +70,6 @@ scratch/live-sweep.json
 scratch/kv-seed-dryrun.json
 
 cloudflare-worker/.dev.vars
+
+# First-run setup wizard flag — machine-local, never commit
+data/.setup-complete

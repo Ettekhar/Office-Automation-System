@@ -206,28 +206,30 @@ function serveStatic(res, filePath) {
  */
 async function assistantSchemaText(config) {
   try {
-    // Start with the configured source (the one the assistant is pointed at).
+    const { readRegistry, describeSchemaForAssistant } = await import('./sheetSchema.js');
+    const reg = readRegistry();
+    const stored = Object.values(reg?.spreadsheets || {});
+    if (stored.length) {
+      return describeSchemaForAssistant(stored, { maxTabs: 14, maxSheets: 8 });
+    }
+    // Start with the configured source if not in registry
     const src = config?.source || {};
     let sheets = [];
     if (src.spreadsheetId) {
       const { getOrDiscoverSheetSchema } = await import('./sheetSchema.js');
-      const schema = await getOrDiscoverSheetSchema(src.spreadsheetId, {
-        tabs: Array.isArray(src.tabs) && src.tabs.length ? src.tabs : undefined,
-        maxTabs: 14,
-      });
+      const schema = await Promise.race([
+        getOrDiscoverSheetSchema(src.spreadsheetId, {
+          tabs: Array.isArray(src.tabs) && src.tabs.length ? src.tabs : undefined,
+          maxTabs: 14,
+        }),
+        new Promise((r) => setTimeout(() => r(null), 1500)),
+      ]);
       if (schema) sheets.push(schema);
     }
-    // Also describe every other connected spreadsheet (CW, RM, dev tracker,
-    // any credential-added sheet) so the chatbot can see columns across ALL
-    // sheets the project reads — not just the single source. This is what
-    // makes the dynamic-column guarantee cover every sheet, not one.
-    if (!sheets.length) {
-      const { getSchemaRegistry } = await import('./sheetSchema.js');
-      const registry = await getSchemaRegistry({ refresh: false, maxTabs: 14 });
-      sheets = registry.sheets;
+    if (sheets.length) {
+      return describeSchemaForAssistant(sheets, { maxTabs: 14, maxSheets: 8 });
     }
-    const { describeSchemaForAssistant } = await import('./sheetSchema.js');
-    return describeSchemaForAssistant(sheets, { maxTabs: 14, maxSheets: 8 });
+    return '';
   } catch (e) {
     console.warn('[sheet-schema] Could not build schema text for the assistant:', e.message);
     return '';
@@ -251,6 +253,102 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    // ── First-Run Setup Detection ──────────────────────────────────────────
+    // If no SMTP is configured yet, redirect browsers to /setup so the
+    // operator can enter credentials through a guided wizard. API calls and
+    // static assets are never redirected so the setup page itself can load.
+    const SETUP_FLAG = path.resolve(__dirname, '../data/.setup-complete');
+    const setupComplete = fs.existsSync(SETUP_FLAG);
+    const smtpConfigured = !!(process.env.CW_SMTP_PASS || process.env.SMTP_PASS);
+
+    if (!setupComplete && !smtpConfigured) {
+      // Allow setup page and its API to load without redirect
+      const isSetupRoute = pathname === '/setup' ||
+        pathname === '/setup.html' ||
+        pathname.startsWith('/api/setup/') ||
+        /\.(css|js|png|jpg|svg|ico|woff2?)$/.test(pathname);
+
+      if (!isSetupRoute && !pathname.startsWith('/api/')) {
+        res.writeHead(302, { Location: '/setup', 'Cache-Control': 'no-store' });
+        res.end();
+        return;
+      }
+    }
+
+    // ── Setup Wizard API Routes (public — no auth needed) ──────────────────
+    if (pathname.startsWith('/api/setup/')) {
+      // POST /api/setup/service-account — write service-account.json
+      if (pathname === '/api/setup/service-account' && method === 'POST') {
+        const body = await parseBody(req);
+        if (!body.json) { sendJson(res, 400, { error: 'json field required' }); return; }
+        let parsed;
+        try { parsed = JSON.parse(body.json); } catch { sendJson(res, 400, { error: 'Invalid JSON' }); return; }
+        if (!parsed.client_email || !parsed.private_key) {
+          sendJson(res, 400, { error: 'JSON missing client_email or private_key' });
+          return;
+        }
+        const saPath = path.resolve(__dirname, '../service-account.json');
+        fs.writeFileSync(saPath, JSON.stringify(parsed, null, 2), 'utf8');
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      // POST /api/setup/env — write/merge variables into .env
+      if (pathname === '/api/setup/env' && method === 'POST') {
+        const body = await parseBody(req);
+        const vars = body.vars || {};
+        const envPath = path.resolve(__dirname, '../.env');
+        let existing = '';
+        if (fs.existsSync(envPath)) existing = fs.readFileSync(envPath, 'utf8');
+
+        // Parse existing .env into a map
+        const lines = existing.split(/\r?\n/);
+        const envMap = new Map();
+        const comments = [];
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('#') || trimmed === '') {
+            comments.push(line);
+          } else {
+            const eq = line.indexOf('=');
+            if (eq > 0) {
+              const k = line.slice(0, eq).trim();
+              const v = line.slice(eq + 1);
+              envMap.set(k, v);
+            }
+          }
+        }
+        // Merge new vars
+        for (const [k, v] of Object.entries(vars)) {
+          envMap.set(k, v);
+        }
+        // Rebuild .env — existing comments first, then all key=value pairs
+        const newLines = [...comments];
+        for (const [k, v] of envMap) {
+          newLines.push(`${k}=${v}`);
+        }
+        fs.writeFileSync(envPath, newLines.join('\n') + '\n', 'utf8');
+        // Reload env vars in-process so server uses them without restart
+        for (const [k, v] of Object.entries(vars)) {
+          process.env[k] = v;
+        }
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      // POST /api/setup/complete — mark setup as done, write flag file
+      if (pathname === '/api/setup/complete' && method === 'POST') {
+        const dataDir = path.resolve(__dirname, '../data');
+        if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+        fs.writeFileSync(SETUP_FLAG, new Date().toISOString(), 'utf8');
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+
+      sendJson(res, 404, { error: 'Setup route not found' });
+      return;
+    }
+
     // ── Authentication Routes  (public — no session required) ─────────────
     // All /api/auth/* routes are handled before any auth check so that the
     // login page can reach them with no existing session cookie.
@@ -854,6 +952,54 @@ const server = http.createServer(async (req, res) => {
           return err(400, e.message);
         }
       }
+
+      // POST /api/master/users/temp-assign  (admin+)
+      if (pathname === '/api/master/users/temp-assign' && method === 'POST') {
+        const b = await body();
+        const { fromUserId, toUserId, note = '' } = b;
+        if (!fromUserId || !toUserId) return err(400, 'fromUserId and toUserId required');
+        try {
+          const actor = actorFrom(req, b, reqUrl);
+          const result = db.assignTempCoverage({
+            fromUserId,
+            toUserId,
+            assignedBy: actor.name || 'Admin',
+            note,
+          });
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'temp_assign', entity: 'user', entityId: fromUserId,
+            label: `${result.fromUser.name} -> ${result.toUser.name}`,
+            field: 'tempAssignedTo', oldValue: '', newValue: result.toUser.name,
+            source: 'User Management', reason: note || 'Temporary site coverage assigned',
+          });
+          return ok({ ok: true, ...result, users: db.getUsers({ includeMerged: true }) });
+        } catch (e) {
+          return err(400, e.message);
+        }
+      }
+
+      // POST /api/master/users/temp-unassign  (admin+)
+      if (pathname === '/api/master/users/temp-unassign' && method === 'POST') {
+        const b = await body();
+        const { fromUserId, toUserId } = b;
+        if (!fromUserId || !toUserId) return err(400, 'fromUserId and toUserId required');
+        try {
+          const actor = actorFrom(req, b, reqUrl);
+          const result = db.removeTempCoverage({ fromUserId, toUserId });
+          db.appendAuditLog({
+            actor: actor.name, actorId: actor.id,
+            action: 'temp_unassign', entity: 'user', entityId: fromUserId,
+            label: `Revoked coverage (${fromUserId} -> ${toUserId})`,
+            field: 'tempAssignedTo', oldValue: toUserId, newValue: '',
+            source: 'User Management', reason: 'Temporary coverage revoked',
+          });
+          return ok({ ok: true, ...result, users: db.getUsers({ includeMerged: true }) });
+        } catch (e) {
+          return err(400, e.message);
+        }
+      }
+
       // PUT /api/master/users/:id  (superadmin)
       if (/^\/api\/master\/users\/([^/]+)$/.test(pathname) && method === 'PUT') {
         const id = pathname.split('/').pop();
@@ -861,7 +1007,7 @@ const server = http.createServer(async (req, res) => {
         try {
           const before = db.getUserById(id);
           const user = db.updateUser(id, b);
-          const fields = ['name', 'role', 'email', 'googleEmail', 'active'];
+          const fields = ['name', 'role', 'email', 'googleEmail', 'active', 'tempAssignedTo', 'tempCoveringUsers'];
           for (const f of fields) {
             if (before && b[f] !== undefined && String(before[f] ?? '') !== String(b[f] ?? '')) {
               const actor = actorFrom(req, b, reqUrl);
@@ -1548,20 +1694,37 @@ const server = http.createServer(async (req, res) => {
           null;
 
         const enriched = [];
+        // Enrich with Google Sheets tab links — wrapped in a per-row timeout so a
+        // slow/unavailable Sheets API can't hang the whole response indefinitely.
+        const ENRICH_TIMEOUT_MS = 8000;
         for (const row of rows) {
           const site = findMaintSite(row);
           if (!site) {
             enriched.push({ ...row, accountManager: '', reportUrl: '', siteAccount: '' });
             continue;
           }
-          const reportUrl = await resolveSheetLink(site);
-          enriched.push({
-            ...row,
-            accountManager: site.accountManager || '',
-            clickupTimeTrackUrl: site.clickupTimeTrackUrl || row.clickupTimeTrackUrl || '',
-            reportUrl,
-            siteAccount: site.account || row.company || '',
-          });
+          try {
+            const reportUrl = await Promise.race([
+              resolveSheetLink(site),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ENRICH_TIMEOUT_MS)),
+            ]);
+            enriched.push({
+              ...row,
+              accountManager: site.accountManager || '',
+              clickupTimeTrackUrl: site.clickupTimeTrackUrl || row.clickupTimeTrackUrl || '',
+              reportUrl,
+              siteAccount: site.account || row.company || '',
+            });
+          } catch (e) {
+            console.warn(`[daily-review] resolveSheetLink failed for ${site.url || row.siteUrl}: ${e.message}`);
+            enriched.push({
+              ...row,
+              accountManager: site.accountManager || '',
+              clickupTimeTrackUrl: site.clickupTimeTrackUrl || row.clickupTimeTrackUrl || '',
+              reportUrl: '',
+              siteAccount: site.account || row.company || '',
+            });
+          }
         }
         rows = enriched;
 
@@ -1610,8 +1773,19 @@ const server = http.createServer(async (req, res) => {
           const { syncReportMirror, loadReportMirror, isReportMirrorStale, perUserReportStatus, reportMirrorSummary, todayInTeamTZ } = await import('./reportAutomation.js');
           let mirror = loadReportMirror();
           if (ra.enabled !== false && ra.baseUrl && ra.apiKey && isReportMirrorStale(mirror)) {
-            mirror = await syncReportMirror({ config: ra, refresh: true });
+            // Wrap in a timeout so a slow/unreachable Report Automation endpoint
+            // can't hang this request indefinitely — fall back to cached data.
+            try {
+              mirror = await Promise.race([
+                syncReportMirror({ config: ra, refresh: true }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('report-sync timeout')), 5000)),
+              ]);
+            } catch (syncErr) {
+              console.warn('[report-status] syncReportMirror skipped:', syncErr.message);
+              // Keep the stale mirror — still returns useful cached data
+            }
           }
+
           const roster = db.getUsers().filter(u => u.active !== false).map(u => u.name);
           const { rows, latestDate, count } = perUserReportStatus(mirror.items || [], roster);
           const summary = reportMirrorSummary();
@@ -2001,47 +2175,51 @@ const server = http.createServer(async (req, res) => {
         if (!projs.length) {
           try {
             const { fetchDevTrackerSheetData } = await import('./sheets.js');
-            const live = await fetchDevTrackerSheetData();
+            const live = await Promise.race([
+              fetchDevTrackerSheetData(),
+              new Promise((r) => setTimeout(() => r(null), 1500)),
+            ]);
             if (live?.length) { projs = live; db.setDevProjects(projs); }
           } catch (e) {
             console.warn('[dev-assistant] Live fetch fallback:', e.message);
           }
         }
-        const { getAssistantMeta } = await import('./devAssistant.js');
+        const { getAssistantMeta, discoverExtraColumns } = await import('./devAssistant.js');
         const meta = getAssistantMeta(projs, process.env, config);
         // Auto-discovered column layout of the configured source sheet → passed
         // to the client so the chat UI can show what columns the assistant can
         // see (including hand-added ones). Discovery is cached, so this is
-        // normally free; ?refresh=1 on the GET re-reads from Google.
+        // normally free.
         const schemaText = await assistantSchemaText(config);
-        // Columns the sheets actually carry (auto-discovered, including hand-added
-        // ones) — surfaced so the assistant UI can show what it can answer from.
-        const { discoverExtraColumns } = await import('./devAssistant.js');
-        // Provider names / chain details are superadmin-only. Everyone else gets
-        // the overview plus a plain "AI on/off" flag — no keys, no provider list.
         const role = reqUrl.searchParams.get('role') || '';
-        // Broad RAG: also fetch all-sheets summary so the frontend boot can
-        // show which sheets the assistant is connected to (SECTION 6 sources).
+        // Fast local sheet metadata (0ms)
         let allSheetsMeta = null;
         try {
-          const { fetchAllSheetsSummary } = await import('./sheets.js');
-          allSheetsMeta = await fetchAllSheetsSummary();
+          const { getSheetCredentials } = await import('./db.js');
+          const creds = getSheetCredentials() || [];
+          allSheetsMeta = { count: creds.length, sheets: creds.map(c => ({ id: c.id, title: c.title || c.key })) };
         } catch (e) {
-          console.warn('[dev-assistant] Boot all-sheets fetch failed:', e.message);
+          console.warn('[dev-assistant] Boot all-sheets metadata failed:', e.message);
         }
         let documentMeta = { documents: [], errors: [], configured: false };
-        try {
-          const { fetchGoogleDocuments } = await import('./docsRag.js');
-          documentMeta = await fetchGoogleDocuments(config.documents);
-        } catch (e) {
-          console.warn('[dev-assistant] Document source boot failed:', e.message);
-          documentMeta.errors = [{ error: e.message }];
+        if (config?.documents?.sources?.length) {
+          try {
+            const { fetchGoogleDocuments } = await import('./docsRag.js');
+            documentMeta = await Promise.race([
+              fetchGoogleDocuments(config.documents),
+              new Promise((r) => setTimeout(() => r({ documents: [], errors: [], configured: false }), 1000)),
+            ]);
+          } catch (e) {
+            console.warn('[dev-assistant] Document source boot failed:', e.message);
+            documentMeta.errors = [{ error: e.message }];
+          }
         }
         const documentSummary = { configured: Boolean(documentMeta.configured), documentCount: documentMeta.documents?.length || 0, errors: documentMeta.errors || [], fetchedAt: documentMeta.fetchedAt || '' };
         if (role !== 'superadmin') {
           return ok({
             engine: meta.aiAvailable ? 'llm' : 'builtin',
             aiAvailable: meta.aiAvailable,
+            aiProviders: meta.aiProviders,
             overview: meta.overview,
             suggestions: meta.suggestions,
             schemaText,
@@ -3034,9 +3212,14 @@ const server = http.createServer(async (req, res) => {
 
         if (reqUrl.searchParams.get('progress') === '1') {
           const progressList = await Promise.all(credentials.map(async c => {
-            const metrics = await getOrComputeSheetProgress(c);
-            const canEdit = (c.editableBy || []).includes(role);
-            return { ...c, metrics, canEdit };
+            try {
+              const metrics = await getOrComputeSheetProgress(c);
+              const canEdit = (c.editableBy || []).includes(role);
+              return { ...c, metrics, canEdit };
+            } catch (e) {
+              console.warn(`[sheet-credentials] progress failed for "${c.name || c.id}": ${e.message}`);
+              return { ...c, metrics: null, canEdit: (c.editableBy || []).includes(role) };
+            }
           }));
           credentials = progressList;
         }
@@ -3522,6 +3705,7 @@ const server = http.createServer(async (req, res) => {
     let filePath = path.join(PUBLIC_DIR,
       (pathname === '/' || pathname === '/master' || pathname === '/master.html' || pathname === '/dashboard') ? 'master.html' :
       (pathname === '/mailer' || pathname === '/mailer.html' || pathname === '/index.html' || pathname === '/email' || pathname === '/emails' || pathname === '/emaildashboard' || pathname === '/email-dashboard') ? 'index.html' :
+      (pathname === '/setup' || pathname === '/setup.html') ? 'setup.html' :
       pathname
     );
     if (!filePath.startsWith(PUBLIC_DIR)) {
