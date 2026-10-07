@@ -722,7 +722,7 @@ const server = http.createServer(async (req, res) => {
           } catch {}
 
           // Auto-register to hosted Cloudflare dashboard if configured
-          const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL;
+          const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL || 'https://officeos-dashboard.taion16240.workers.dev';
           const cfToken = process.env.DASHBOARD_ADMIN_TOKEN || process.env.CLOUDFLARE_WORKER_TOKEN;
           if (cfUrl && cfUrl.startsWith('http')) {
             try {

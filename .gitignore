@@ -11,6 +11,7 @@ dry-run-previews/
 data/assistant-config.json
 data/sheet-credentials.json
 data/mailer-credentials.json
+data/active-tunnel.json
 data/cloudflared.exe
 *.exe
 data/custom-sheets.json
