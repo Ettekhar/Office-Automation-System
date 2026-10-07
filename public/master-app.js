@@ -24,6 +24,7 @@ const sidebarNavEl = $('sidebar-nav');
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function api(url, opts = {}) {
   const r = await fetch(url, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'x-officeos-role': S.role || '',
@@ -709,16 +710,9 @@ async function initLanding() {
   initCommandPalette();
 
   // ── Auth guard + parallel boot data ────────────────────────────────────
-  // Fire /api/auth/me alongside the already-prefetched boot data. By the
-  // time we reach here, prefetchBootData() has likely already resolved the
-  // cache entries, so GET('/api/master/db-status') etc. are instant.
   let authUser = null;
   try {
-    const [meResp] = await Promise.all([
-      fetch('/api/auth/me', { credentials: 'include' }),
-      // Ensure prefetch is done (no-op if already resolved)
-      prefetchBootData(),
-    ]);
+    const meResp = await fetch('/api/auth/me', { credentials: 'include' });
     if (meResp.ok) {
       const meData = await meResp.json();
       authUser = meData.user || null;
@@ -738,6 +732,12 @@ async function initLanding() {
   const welcomeEl = $('landing-welcome-text');
   if (welcomeEl) {
     welcomeEl.textContent = `Welcome back, ${authUser.name || authUser.email || 'User'}! Select your workspace view.`;
+  }
+
+  // Immediately pre-populate the profile dropdown with the logged-in user so it NEVER stays stuck on "Loading profiles..."
+  const nameSelect = $('user-name-select');
+  if (nameSelect && authUser && authUser.id) {
+    nameSelect.innerHTML = `<option value="${authUser.id}" selected>${esc(authUser.name || authUser.email || 'You')}</option>`;
   }
 
   // ── Role card visibility ────────────────────────────────────────────────
@@ -768,19 +768,16 @@ async function initLanding() {
     });
   });
 
-  const nameSelect = $('user-name-select');
-
-  // ── Status pill + users — both from cache (warmed by prefetchBootData) ──
+  // ── Status pill + full users list ─────────────────────────────────────────
   const statusEl = $('landing-status');
   let loadedUsers = [];
-  // Both of these are likely cached already, so they resolve synchronously.
-  const [stResult, usersResult] = await Promise.allSettled([
-    GET('/api/master/db-status'),
-    GET('/api/master/users'),
-  ]);
-
-  // Status pill
   try {
+    const [stResult, usersResult] = await Promise.allSettled([
+      GET('/api/master/db-status'),
+      GET('/api/master/users'),
+    ]);
+
+    // Status pill
     const st = stResult.value;
     if (st) {
       S._cachedDbStatus = st; // save for enterApp reuse
@@ -791,10 +788,8 @@ async function initLanding() {
         statusEl.innerHTML = `<div class="status-pill ok">⚡ <span><strong>${st.totalSites} Sites</strong> · ${st.totalDomains || 0} Domains${ago !== null ? ` · Synced ${ago}m ago` : ''}</span></div>`;
       }
     }
-  } catch { }
 
-  // Users list
-  try {
+    // Users list
     const usersData = usersResult.value;
     if (usersData && usersData.users && usersData.users.length > 0) {
       S.users = usersData.users;
@@ -807,8 +802,14 @@ async function initLanding() {
                         (!_sv.userId && _sv.userName && u.name.toLowerCase() === (_sv.userName || '').toLowerCase());
         return `<option value="${u.id}"${(isSelf || isSaved) ? ' selected' : ''}>${esc(u.name)}</option>`;
       }).join('');
+    } else if (authUser && authUser.id) {
+      nameSelect.innerHTML = `<option value="${authUser.id}" selected>${esc(authUser.name || authUser.email || 'You')}</option>`;
     }
-  } catch { }
+  } catch {
+    if (authUser && authUser.id) {
+      nameSelect.innerHTML = `<option value="${authUser.id}" selected>${esc(authUser.name || authUser.email || 'You')}</option>`;
+    }
+  }
 
   function handleEnter() {
     const role = $('role-select').value;
