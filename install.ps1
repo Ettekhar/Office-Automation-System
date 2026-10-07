@@ -1,5 +1,5 @@
 # ============================================================
-#  Maintenance Mailer — Auto Installer
+#  Maintenance Mailer - Auto Installer
 #  Run this on any Windows PC to install & launch the mailer.
 #
 #  Basic (Setup Wizard on first run):
@@ -13,38 +13,38 @@ $REPO_URL    = "https://github.com/Ettekhar/Office-Automation-System.git"
 $NODE_URL    = "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi"
 $NODE_MSI    = "$env:TEMP\node-installer.msi"
 
-function Write-Step($msg) { Write-Host ""; Write-Host "  ► $msg" -ForegroundColor Cyan }
-function Write-OK($msg)   { Write-Host "    ✅ $msg" -ForegroundColor Green }
-function Write-Warn($msg) { Write-Host "    ⚠  $msg" -ForegroundColor Yellow }
-function Write-Fail($msg) { Write-Host "    ❌ $msg" -ForegroundColor Red }
+function Write-Step($msg) { Write-Host ""; Write-Host "  >> $msg" -ForegroundColor Cyan }
+function Write-OK($msg)   { Write-Host "    [OK] $msg" -ForegroundColor Green }
+function Write-Warn($msg) { Write-Host "    [!]  $msg" -ForegroundColor Yellow }
+function Write-Fail($msg) { Write-Host "    [X]  $msg" -ForegroundColor Red }
 
 Clear-Host
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-Write-Host "  ║       MAINTENANCE MAILER — AUTO INSTALLER            ║" -ForegroundColor Magenta
-Write-Host "  ╚══════════════════════════════════════════════════════╝" -ForegroundColor Magenta
+Write-Host "  ========================================================" -ForegroundColor Magenta
+Write-Host "          MAINTENANCE MAILER - AUTO INSTALLER             " -ForegroundColor Magenta
+Write-Host "  ========================================================" -ForegroundColor Magenta
 Write-Host ""
 
-# ── Step 0: Determine Target Directory ──────────────────────
+# -- Step 0: Determine Target Directory ----------------------
 # If current folder is already the project, use it!
 $currentDir = (Get-Location).Path
 $isCurrentDirProject = (Test-Path "$currentDir\src\server.js") -and (Test-Path "$currentDir\package.json")
 
 if ($isCurrentDirProject) {
     $INSTALL_DIR = $currentDir
-    Write-Host "  📁 Using existing project folder: $INSTALL_DIR" -ForegroundColor Gray
+    Write-Host "  [DIR] Using existing project folder: $INSTALL_DIR" -ForegroundColor Gray
 } else {
     $INSTALL_DIR = "$env:USERPROFILE\maintenance-mailer"
 }
 
-# ── Detect baked-in credentials ─────────────────────────────
+# -- Detect baked-in credentials -----------------------------
 $hasCreds = $env:MAILER_CREDS -and $env:MAILER_CREDS.Length -gt 10
 if ($hasCreds) {
-    Write-Host "  🔑 Credentials detected — setup wizard will be skipped." -ForegroundColor Green
+    Write-Host "  [KEY] Credentials detected - setup wizard will be skipped." -ForegroundColor Green
     Write-Host ""
 }
 
-# ── Step 1: Check / Install Node.js ─────────────────────────
+# -- Step 1: Check / Install Node.js -------------------------
 Write-Step "Checking Node.js..."
 
 $nodeInstalled = $false
@@ -73,22 +73,22 @@ if (-not $nodeInstalled) {
     }
 }
 
-# ── Step 2: Check Git ───────────────────────────────────────
+# -- Step 2: Check Git ---------------------------------------
 Write-Step "Checking Git..."
 $gitInstalled = $false
 try {
     $gitVer = & git --version 2>$null
     if ($LASTEXITCODE -eq 0 -and $gitVer) { Write-OK "Git found: $gitVer"; $gitInstalled = $true }
 } catch {}
-if (-not $gitInstalled) { Write-Warn "Git not found — will download via ZIP if needed." }
+if (-not $gitInstalled) { Write-Warn "Git not found - will download via ZIP if needed." }
 
-# ── Step 3: Check / Download / Update project ───────────────
+# -- Step 3: Check / Download / Update project ---------------
 Write-Step "Setting up project at: $INSTALL_DIR"
 
 $projectFilesExist = (Test-Path "$INSTALL_DIR\src\server.js") -and (Test-Path "$INSTALL_DIR\package.json")
 
 if ($projectFilesExist) {
-    Write-OK "Project files already exist — skipping download."
+    Write-OK "Project files already exist - skipping download."
     if (Test-Path "$INSTALL_DIR\.git") {
         Write-Host "    Checking for updates from GitHub..." -ForegroundColor Gray
         try {
@@ -105,7 +105,7 @@ if ($projectFilesExist) {
         }
         Write-OK "Project cloned successfully"
     } catch {
-        Write-Warn "Git clone failed — trying ZIP download fallback..."
+        Write-Warn "Git clone failed - trying ZIP download fallback..."
         $ZIP_URL     = "https://github.com/Ettekhar/Office-Automation-System/archive/refs/heads/main.zip"
         $ZIP_FILE    = "$env:TEMP\mailer-main.zip"
         $EXTRACT_DIR = "$env:TEMP\mailer-extract"
@@ -139,7 +139,7 @@ if ($projectFilesExist) {
     } catch { Write-Fail "Download failed: $_"; Read-Host "Press Enter to exit"; exit 1 }
 }
 
-# ── Step 4: npm install ──────────────────────────────────────
+# -- Step 4: npm install --------------------------------------
 Write-Step "Checking Node.js dependencies..."
 $nmDir = Join-Path $INSTALL_DIR "node_modules"
 if (-not (Test-Path $nmDir)) {
@@ -152,7 +152,7 @@ if (-not (Test-Path $nmDir)) {
     Write-OK "Dependencies already installed"
 }
 
-# ── Step 5: Inject credentials (if baked in) ────────────────
+# -- Step 5: Inject credentials (if baked in) ----------------
 if ($hasCreds) {
     Write-Step "Injecting credentials..."
     try {
@@ -204,7 +204,7 @@ if ($hasCreds) {
     }
 }
 
-# ── Step 6: Desktop shortcut ─────────────────────────────────
+# -- Step 6: Desktop shortcut ---------------------------------
 Write-Step "Checking desktop shortcut..."
 try {
     $batContent = "@echo off`r`ncd /d `"%~dp0`"`r`nstart /b cmd /c `"timeout /t 2 >nul ^&^& start http://localhost:3000`"`r`nnode src/server.js`r`npause"
@@ -226,11 +226,11 @@ try {
     }
 } catch { Write-Warn "Could not create shortcut (non-critical): $_" }
 
-# ── Step 7: Launch ───────────────────────────────────────────
+# -- Step 7: Launch -------------------------------------------
 Write-Host ""
-Write-Host "  ╔══════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "  ║   ✅  SETUP COMPLETE — LAUNCHING NOW                 ║" -ForegroundColor Green
-Write-Host "  ╚══════════════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host "  ========================================================" -ForegroundColor Green
+Write-Host "      SETUP COMPLETE - LAUNCHING NOW                      " -ForegroundColor Green
+Write-Host "  ========================================================" -ForegroundColor Green
 Write-Host ""
 
 # Check if server is already running on port 3000
