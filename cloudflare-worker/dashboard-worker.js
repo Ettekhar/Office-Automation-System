@@ -47,7 +47,9 @@ const STATE_KEYS = [
   'conditional-notes', 'daily-review', 'domain-expiry-requests', 'meta',
   'custom-sheets', 'sheet-credentials', 'assistant-config', 'sync-conflicts',
   'user-aliases', 'audit-log', 'master-overrides',
+  'sheet-schema', 'daily-reports', 'distribution', 'domains',
   'auth-sessions',  // ← session tokens for login system
+  'mailer-credentials', // ← mailer SMTP, sheet IDs, AI keys & service account credentials
 ];
 
 let warmed = null;
@@ -69,6 +71,16 @@ async function ensureWarm(env, ctx) {
     if (env.GOOGLE_CLIENT_SECRET) process.env.GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
     if (env.APP_BASE_URL) process.env.APP_BASE_URL = env.APP_BASE_URL;
     if (env.SESSION_SECRET) process.env.SESSION_SECRET = env.SESSION_SECRET;
+
+    // Expose all AI API keys and assistant secrets to process.env
+    if (env.GEMINI_API_KEY) process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
+    if (env.GROQ_API_KEY) process.env.GROQ_API_KEY = env.GROQ_API_KEY;
+    if (env.OPENROUTER_API_KEY) process.env.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
+    if (env.MISTRAL_API_KEY) process.env.MISTRAL_API_KEY = env.MISTRAL_API_KEY;
+    if (env.CLICKUP_API_TOKEN) process.env.CLICKUP_API_TOKEN = env.CLICKUP_API_TOKEN;
+    if (env.CLOUDFLARE_WORKER_URL) process.env.CLOUDFLARE_WORKER_URL = env.CLOUDFLARE_WORKER_URL;
+    if (env.CLOUDFLARE_WORKER_TOKEN) process.env.CLOUDFLARE_WORKER_TOKEN = env.CLOUDFLARE_WORKER_TOKEN;
+
     // Lower queue interval on Workers for fast responsive syncs
     process.env.SHEETS_QUEUE_INTERVAL_MS = '250';
     const sa = env.GOOGLE_SERVICE_ACCOUNT_JSON || env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
@@ -82,8 +94,40 @@ async function ensureWarm(env, ctx) {
     if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
     const loaded = await kvShim.warm(env.DASHBOARD_KV, STATE_KEYS);
     console.log(`[dashboard] warmed ${loaded}/${STATE_KEYS.length} state keys from KV`);
+
+    // Hydrate process.env & service-account from KV mailer-credentials
+    try {
+      if (kvShim.existsSync('mailer-credentials.json')) {
+        const rawCreds = kvShim.readFileSync('mailer-credentials.json');
+        if (rawCreds) {
+          const parsedCreds = JSON.parse(rawCreds);
+          if (parsedCreds && parsedCreds.vars) {
+            for (const [k, v] of Object.entries(parsedCreds.vars)) {
+              if (v) process.env[k] = v;
+            }
+          }
+          if (parsedCreds && parsedCreds.serviceAccount) {
+            const saStr = typeof parsedCreds.serviceAccount === 'string'
+              ? parsedCreds.serviceAccount
+              : JSON.stringify(parsedCreds.serviceAccount);
+            kvShim.registerVirtualFile('service-account.json', saStr);
+            if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+              process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON = saStr;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[dashboard] error loading mailer-credentials from KV:', e?.message || e);
+    }
+
     return loaded;
   })();
+
+  // If warm fails, reset so the next request retries rather than returning a
+  // permanently-rejected promise for the lifetime of this isolate.
+  warmed.catch(() => { warmed = null; });
+
   return warmed;
 }
 
@@ -298,6 +342,9 @@ async function invoke(handler, request) {
   if (!isRedirect && body && !outHeaders.has('Content-Type')) {
     outHeaders.set('Content-Type', 'text/plain; charset=utf-8');
   }
+  if (url.pathname.startsWith('/api/') && !outHeaders.has('Cache-Control')) {
+    outHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  }
   return new Response(isRedirect ? null : body, { status: statusCode, headers: outHeaders });
 }
 
@@ -308,7 +355,30 @@ async function serveAsset(env, pathname) {
   if (rel.includes('..')) return null;
   const res = await env.ASSETS.fetch(new Request('https://asset.local' + rel));
   if (!res || res.status === 404) return null;
-  return res;
+
+  // Static asset headers: JS & CSS revalidate so updates are immediate
+  const ext = rel.split('.').pop().toLowerCase();
+  const cacheControl = {
+    js:    'no-cache, must-revalidate',
+    css:   'no-cache, must-revalidate',
+    woff2: 'public, max-age=86400',   // 1 day for fonts
+    woff:  'public, max-age=86400',
+    png:   'public, max-age=86400',
+    jpg:   'public, max-age=86400',
+    jpeg:  'public, max-age=86400',
+    svg:   'public, max-age=86400',
+    ico:   'public, max-age=86400',
+    webp:  'public, max-age=86400',
+    html:  'no-cache, no-store',  // always fresh — auth guards depend on it
+  }[ext] || 'no-cache';
+
+  // Clone and re-set Cache-Control (the ASSETS binding often sends no-cache by default)
+  const headers = new Headers(res.headers);
+  headers.set('Cache-Control', cacheControl);
+  // Vary on Accept-Encoding so Cloudflare can serve gzip/br variants correctly
+  if (!headers.has('Vary')) headers.set('Vary', 'Accept-Encoding');
+
+  return new Response(res.body, { status: res.status, headers });
 }
 
 /**

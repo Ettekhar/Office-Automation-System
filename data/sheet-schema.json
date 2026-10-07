@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-17T17:10:03.944Z",
+  "updatedAt": "2026-10-04T18:28:41.420Z",
   "spreadsheets": {
     "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78": {
       "spreadsheetId": "14PXRHUkFG-gf0DwbGVqeyPA7aQ4LyhDMjAeTVatOI78",
@@ -2377,6 +2377,1559 @@
             ]
           ],
           "columnsText": "• Name (col 1, text), • URL (col 2, url), + Property Type (col 3, text), + Stauts (col 4, text), + SEO (col 5, text), + H&M (col 6, text), + Task Assigned To SEO (col 7, text), + Task Assigned To WEB (col 8, text)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1yu1oPX7Y3NEomyLLIFUlJ2E6wy6c_XuIzMM_dBqgiu8": {
+      "spreadsheetId": "1yu1oPX7Y3NEomyLLIFUlJ2E6wy6c_XuIzMM_dBqgiu8",
+      "label": "CW Maintenance",
+      "discoveredAt": "2026-10-04T18:28:36.155Z",
+      "tabCount": 80,
+      "tabs": [
+        {
+          "title": "Website List",
+          "headerRowIndex": 1,
+          "headerRowNumber": 2,
+          "headers": [
+            "si",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Note",
+            "Website URL",
+            "Maintenance time tracking ClickUp URL",
+            "Maintenance Task ClickUp URL",
+            "Maintenance Report URL",
+            "Backup URL",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23",
+            "July 23",
+            "Augus 23",
+            "September 23",
+            "October 23",
+            "November 23",
+            "December 23",
+            "January 24",
+            "February24",
+            "March 24",
+            "April 24",
+            "May 24",
+            "June 24",
+            "July 16",
+            "August 12",
+            "September 3",
+            "October 2024",
+            "November 2024",
+            "December 24",
+            "January 25",
+            "February 25",
+            "March 25",
+            "April 25",
+            "May 25",
+            "Jun",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September 26"
+          ],
+          "signature": "xmoot3-659",
+          "profile": "maintenance",
+          "columns": [
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 0,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "cms",
+              "label": "CMS",
+              "index": 1,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "company",
+              "label": "Company",
+              "index": 2,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "contact",
+              "label": "Contact",
+              "index": 3,
+              "kind": "email",
+              "extra": false
+            },
+            {
+              "key": "accountManager",
+              "label": "A/C Manager",
+              "index": 4,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "note",
+              "label": "Note",
+              "index": 5,
+              "kind": "longtext",
+              "extra": false
+            },
+            {
+              "key": "websiteUrl",
+              "label": "Website URL",
+              "index": 6,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupTimeTrackUrl",
+              "label": "ClickUp Time Track URL",
+              "index": 7,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupUrl",
+              "label": "ClickUp URL",
+              "index": 8,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "reportUrl",
+              "label": "Report URL",
+              "index": 9,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "backupUrl",
+              "label": "Backup URL",
+              "index": 10,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "september3",
+              "label": "September 3",
+              "index": 41,
+              "kind": "text",
+              "extra": true
+            }
+          ],
+          "extras": [
+            {
+              "key": "september3",
+              "label": "September 3",
+              "index": 41,
+              "kind": "text"
+            }
+          ],
+          "months": [
+            {
+              "index": 11,
+              "label": "March 22",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2022
+            },
+            {
+              "index": 12,
+              "label": "April 22",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2022
+            },
+            {
+              "index": 13,
+              "label": "May 22",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2022
+            },
+            {
+              "index": 14,
+              "label": "June 22",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2022
+            },
+            {
+              "index": 15,
+              "label": "July 22",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2022
+            },
+            {
+              "index": 16,
+              "label": "August 22",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2022
+            },
+            {
+              "index": 17,
+              "label": "September 22",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2022
+            },
+            {
+              "index": 18,
+              "label": "October 22",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2022
+            },
+            {
+              "index": 19,
+              "label": "November 22",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2022
+            },
+            {
+              "index": 20,
+              "label": "December 22",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2022
+            },
+            {
+              "index": 21,
+              "label": "January 23",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2023
+            },
+            {
+              "index": 22,
+              "label": "February 23",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2023
+            },
+            {
+              "index": 23,
+              "label": "March 23",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2023
+            },
+            {
+              "index": 24,
+              "label": "April 23",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2023
+            },
+            {
+              "index": 25,
+              "label": "May 23",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2023
+            },
+            {
+              "index": 26,
+              "label": "June 23",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2023
+            },
+            {
+              "index": 27,
+              "label": "July 23",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2023
+            },
+            {
+              "index": 28,
+              "label": "Augus 23",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2023
+            },
+            {
+              "index": 29,
+              "label": "September 23",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2023
+            },
+            {
+              "index": 30,
+              "label": "October 23",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2023
+            },
+            {
+              "index": 31,
+              "label": "November 23",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2023
+            },
+            {
+              "index": 32,
+              "label": "December 23",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2023
+            },
+            {
+              "index": 33,
+              "label": "January 24",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2024
+            },
+            {
+              "index": 34,
+              "label": "February24",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2024
+            },
+            {
+              "index": 35,
+              "label": "March 24",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2024
+            },
+            {
+              "index": 36,
+              "label": "April 24",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2024
+            },
+            {
+              "index": 37,
+              "label": "May 24",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2024
+            },
+            {
+              "index": 38,
+              "label": "June 24",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2024
+            },
+            {
+              "index": 39,
+              "label": "July 16",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2016
+            },
+            {
+              "index": 40,
+              "label": "August 12",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2012
+            },
+            {
+              "index": 42,
+              "label": "October 2024",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2024
+            },
+            {
+              "index": 43,
+              "label": "November 2024",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2024
+            },
+            {
+              "index": 44,
+              "label": "December 24",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2024
+            },
+            {
+              "index": 45,
+              "label": "January 25",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2025
+            },
+            {
+              "index": 46,
+              "label": "February 25",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2025
+            },
+            {
+              "index": 47,
+              "label": "March 25",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2025
+            },
+            {
+              "index": 48,
+              "label": "April 25",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2025
+            },
+            {
+              "index": 49,
+              "label": "May 25",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2025
+            },
+            {
+              "index": 50,
+              "label": "Jun",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 51,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 52,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 53,
+              "label": "September",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": null
+            },
+            {
+              "index": 54,
+              "label": "October",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": null
+            },
+            {
+              "index": 55,
+              "label": "November",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": null
+            },
+            {
+              "index": 56,
+              "label": "December",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": null
+            },
+            {
+              "index": 57,
+              "label": "January",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": null
+            },
+            {
+              "index": 58,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 59,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 60,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 61,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 62,
+              "label": "June",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 63,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 64,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 65,
+              "label": "September 26",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2026
+            }
+          ],
+          "fields": {
+            "cms": 1,
+            "company": 2,
+            "contact": 3,
+            "accountManager": 4,
+            "note": 5,
+            "websiteUrl": 6,
+            "clickupUrl": 8,
+            "clickupTimeTrackUrl": 7,
+            "reportUrl": 9,
+            "backupUrl": 10,
+            "status": 0,
+            "domainExpiry": -1,
+            "backupDate": -1
+          },
+          "dataRowCount": 18,
+          "sampleRows": [
+            [
+              "Deactive",
+              "",
+              "CW",
+              "",
+              "",
+              "",
+              "qualityinnparkersburg.com",
+              "",
+              "",
+              "",
+              "",
+              "N/A",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "CW",
+              "taion@razibmarketing.net",
+              "Mohammed",
+              "",
+              "governorsinnnd.com",
+              "https://app.clickup.com/t/10554421/868b8tgd5",
+              "https://app.clickup.com/t/868a6gkvn",
+              "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1610374045#gid=1610374045",
+              "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "CW",
+              "taion@razibmarketing.net",
+              "N/A (Support Team)",
+              "",
+              "cogwheelmarketing.com",
+              "https://app.clickup.com/t/10554421/868b8ubuq",
+              "https://app.clickup.com/t/868b8ubug",
+              "https://docs.google.com/spreadsheets/d/1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8/edit?gid=1224146003#gid=1224146003",
+              "https://drive.google.com/drive/folders/1E8Hnf7oEmLdEZFdmnKCNEU02tq4HWPzH",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ]
+          ],
+          "columnsText": "• Status (col 1, status), • CMS (col 2, text), • Company (col 3, text), • Contact (col 4, email), • A/C Manager (col 5, text), • Note (col 6, longtext), • Website URL (col 7, url), • ClickUp Time Track URL (col 8, url), • ClickUp URL (col 9, url), • Report URL (col 10, url), • Backup URL (col 11, url), + September 3 (col 42, text)"
+        }
+      ],
+      "skippedTabs": [],
+      "errors": []
+    },
+    "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU": {
+      "spreadsheetId": "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU",
+      "label": "RM Maintenance",
+      "discoveredAt": "2026-10-04T18:28:41.420Z",
+      "tabCount": 25,
+      "tabs": [
+        {
+          "title": "Website List",
+          "headerRowIndex": 1,
+          "headerRowNumber": 2,
+          "headers": [
+            "",
+            "CMS",
+            "Company",
+            "Contact",
+            "A/C Manager",
+            "Website URL",
+            "Maintenance time tracking ClickUp URL",
+            "Maintenance Task ClickUp Link",
+            "March 22",
+            "April 22",
+            "May 22",
+            "June 22",
+            "July 22",
+            "August 22",
+            "September 22",
+            "October 22",
+            "November 22",
+            "December 22",
+            "January 23",
+            "February 23",
+            "March 23",
+            "April 23",
+            "May 23",
+            "June 23",
+            "July 23",
+            "Augus 23",
+            "September 23",
+            "October 23",
+            "November 23",
+            "December 23",
+            "January 24",
+            "February24",
+            "March 24",
+            "April 24",
+            "May 24",
+            "June 24",
+            "July 24",
+            "August 24",
+            "September 24",
+            "October 24",
+            "November 24",
+            "December 24",
+            "January 25",
+            "February",
+            "March",
+            "April",
+            "May",
+            "Jun",
+            "July",
+            "August",
+            "September",
+            "octobor",
+            "November",
+            "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September 26"
+          ],
+          "signature": "pvbwa4-604",
+          "profile": "maintenance",
+          "columns": [
+            {
+              "key": "status",
+              "label": "Status",
+              "index": 0,
+              "kind": "status",
+              "extra": false
+            },
+            {
+              "key": "cms",
+              "label": "CMS",
+              "index": 1,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "company",
+              "label": "Company",
+              "index": 2,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "contact",
+              "label": "Contact",
+              "index": 3,
+              "kind": "email",
+              "extra": false
+            },
+            {
+              "key": "accountManager",
+              "label": "A/C Manager",
+              "index": 4,
+              "kind": "text",
+              "extra": false
+            },
+            {
+              "key": "websiteUrl",
+              "label": "Website URL",
+              "index": 5,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupTimeTrackUrl",
+              "label": "ClickUp Time Track URL",
+              "index": 6,
+              "kind": "url",
+              "extra": false
+            },
+            {
+              "key": "clickupUrl",
+              "label": "ClickUp URL",
+              "index": 7,
+              "kind": "url",
+              "extra": false
+            }
+          ],
+          "extras": [],
+          "months": [
+            {
+              "index": 8,
+              "label": "March 22",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2022
+            },
+            {
+              "index": 9,
+              "label": "April 22",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2022
+            },
+            {
+              "index": 10,
+              "label": "May 22",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2022
+            },
+            {
+              "index": 11,
+              "label": "June 22",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2022
+            },
+            {
+              "index": 12,
+              "label": "July 22",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2022
+            },
+            {
+              "index": 13,
+              "label": "August 22",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2022
+            },
+            {
+              "index": 14,
+              "label": "September 22",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2022
+            },
+            {
+              "index": 15,
+              "label": "October 22",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2022
+            },
+            {
+              "index": 16,
+              "label": "November 22",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2022
+            },
+            {
+              "index": 17,
+              "label": "December 22",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2022
+            },
+            {
+              "index": 18,
+              "label": "January 23",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2023
+            },
+            {
+              "index": 19,
+              "label": "February 23",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2023
+            },
+            {
+              "index": 20,
+              "label": "March 23",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2023
+            },
+            {
+              "index": 21,
+              "label": "April 23",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2023
+            },
+            {
+              "index": 22,
+              "label": "May 23",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2023
+            },
+            {
+              "index": 23,
+              "label": "June 23",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2023
+            },
+            {
+              "index": 24,
+              "label": "July 23",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2023
+            },
+            {
+              "index": 25,
+              "label": "Augus 23",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2023
+            },
+            {
+              "index": 26,
+              "label": "September 23",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2023
+            },
+            {
+              "index": 27,
+              "label": "October 23",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2023
+            },
+            {
+              "index": 28,
+              "label": "November 23",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2023
+            },
+            {
+              "index": 29,
+              "label": "December 23",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2023
+            },
+            {
+              "index": 30,
+              "label": "January 24",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2024
+            },
+            {
+              "index": 31,
+              "label": "February24",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": 2024
+            },
+            {
+              "index": 32,
+              "label": "March 24",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": 2024
+            },
+            {
+              "index": 33,
+              "label": "April 24",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": 2024
+            },
+            {
+              "index": 34,
+              "label": "May 24",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": 2024
+            },
+            {
+              "index": 35,
+              "label": "June 24",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": 2024
+            },
+            {
+              "index": 36,
+              "label": "July 24",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": 2024
+            },
+            {
+              "index": 37,
+              "label": "August 24",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": 2024
+            },
+            {
+              "index": 38,
+              "label": "September 24",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2024
+            },
+            {
+              "index": 39,
+              "label": "October 24",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": 2024
+            },
+            {
+              "index": 40,
+              "label": "November 24",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": 2024
+            },
+            {
+              "index": 41,
+              "label": "December 24",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": 2024
+            },
+            {
+              "index": 42,
+              "label": "January 25",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": 2025
+            },
+            {
+              "index": 43,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 44,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 45,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 46,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 47,
+              "label": "Jun",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 48,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 49,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 50,
+              "label": "September",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": null
+            },
+            {
+              "index": 51,
+              "label": "octobor",
+              "monthIndex": 9,
+              "monthName": "october",
+              "abbr": "oct",
+              "year": null
+            },
+            {
+              "index": 52,
+              "label": "November",
+              "monthIndex": 10,
+              "monthName": "november",
+              "abbr": "nov",
+              "year": null
+            },
+            {
+              "index": 53,
+              "label": "December",
+              "monthIndex": 11,
+              "monthName": "december",
+              "abbr": "dec",
+              "year": null
+            },
+            {
+              "index": 54,
+              "label": "January",
+              "monthIndex": 0,
+              "monthName": "january",
+              "abbr": "jan",
+              "year": null
+            },
+            {
+              "index": 55,
+              "label": "February",
+              "monthIndex": 1,
+              "monthName": "february",
+              "abbr": "feb",
+              "year": null
+            },
+            {
+              "index": 56,
+              "label": "March",
+              "monthIndex": 2,
+              "monthName": "march",
+              "abbr": "mar",
+              "year": null
+            },
+            {
+              "index": 57,
+              "label": "April",
+              "monthIndex": 3,
+              "monthName": "april",
+              "abbr": "apr",
+              "year": null
+            },
+            {
+              "index": 58,
+              "label": "May",
+              "monthIndex": 4,
+              "monthName": "may",
+              "abbr": "may",
+              "year": null
+            },
+            {
+              "index": 59,
+              "label": "June",
+              "monthIndex": 5,
+              "monthName": "june",
+              "abbr": "jun",
+              "year": null
+            },
+            {
+              "index": 60,
+              "label": "July",
+              "monthIndex": 6,
+              "monthName": "july",
+              "abbr": "jul",
+              "year": null
+            },
+            {
+              "index": 61,
+              "label": "August",
+              "monthIndex": 7,
+              "monthName": "august",
+              "abbr": "aug",
+              "year": null
+            },
+            {
+              "index": 62,
+              "label": "September 26",
+              "monthIndex": 8,
+              "monthName": "september",
+              "abbr": "sep",
+              "year": 2026
+            }
+          ],
+          "fields": {
+            "cms": 1,
+            "company": 2,
+            "contact": 3,
+            "accountManager": 4,
+            "websiteUrl": 5,
+            "clickupUrl": 7,
+            "clickupTimeTrackUrl": 6,
+            "status": 0,
+            "note": -1,
+            "reportUrl": -1,
+            "backupUrl": -1,
+            "domainExpiry": -1,
+            "backupDate": -1
+          },
+          "dataRowCount": 18,
+          "sampleRows": [
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "razib@razibmarketing.com",
+              "",
+              "razibmarketing.com",
+              "",
+              "https://app.clickup.com/t/868e2028e",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "julia@gumfoundation.org, ptlehr@gumfoundation.org, jake@gumfoundation.org, razib@razibmarketing.com",
+              "",
+              "https://groundupmusicfestival.com/",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ],
+            [
+              "Active",
+              "Wordpress",
+              "RM",
+              "oscar.sanchez@mdmhotelsusa.com, dnasru66@gmail.com, razib@razibmarketing.com",
+              "Mohammed",
+              "https://mdmhotelsusa.com/",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup",
+              "Updated & Backup"
+            ]
+          ],
+          "columnsText": "• Status (col 1, status), • CMS (col 2, text), • Company (col 3, text), • Contact (col 4, email), • A/C Manager (col 5, text), • Website URL (col 6, url), • ClickUp Time Track URL (col 7, url), • ClickUp URL (col 8, url)"
         }
       ],
       "skippedTabs": [],

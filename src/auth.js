@@ -230,17 +230,28 @@ export async function handleGoogleCallback(req, res, reqUrl) {
     }
 
     if (!user) {
-      // Smart Auto-Match: check if an unlinked active team member matches this Google account name
+      // Smart Auto-Match: check if an unlinked active team member matches this Google account name.
+      // Rules (in order of confidence):
+      //   1. Exact full-name match (both cleaned to lowercase)
+      //   2. Google name starts with "uName " AND uName is ≥4 chars (e.g. "Sabbir Islam" matches "Sabbir")
+      //   3. Email prefix exactly equals uName (e.g. "sabbir@..." matches "Sabbir")
+      // Deliberately NOT matching on "Google name ends with uName" — that rule let a multi-word
+      // name like "Md. Ettekhar Rahman Taion" match the single-word member "Taion", creating a
+      // duplicate account instead of the intended link.
       const candidateUsers = db.getUsers().filter(u => !u.googleSub && !u.mergedInto && u.active !== false);
       const cleanGName = (name || '').trim().toLowerCase();
       const emailPrefix = (email || '').split('@')[0].trim().toLowerCase();
 
       const nameMatch = candidateUsers.find(u => {
         const uName = (u.name || '').trim().toLowerCase();
-        if (!uName) return false;
+        if (!uName || uName.length < 2) return false;
+        // 1. Exact full match
         if (cleanGName && uName === cleanGName) return true;
-        if (cleanGName && (cleanGName.startsWith(uName + ' ') || cleanGName.endsWith(' ' + uName))) return true;
-        if (emailPrefix && (uName === emailPrefix || emailPrefix.startsWith(uName))) return true;
+        // 2. Google name STARTS with "uName " — only if uName is at least 4 chars
+        //    (avoids matching initials like "M." against "Medul")
+        if (cleanGName && uName.length >= 4 && cleanGName.startsWith(uName + ' ')) return true;
+        // 3. Email prefix is exactly uName
+        if (emailPrefix && uName === emailPrefix) return true;
         return false;
       });
 
@@ -252,6 +263,7 @@ export async function handleGoogleCallback(req, res, reqUrl) {
         }
       }
     }
+
 
     if (!user) {
       // First time this Google account signs in — auto-create with role 'user'.

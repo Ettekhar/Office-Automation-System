@@ -1,4 +1,4 @@
-# Auth data — contains session tokens and password hashes. NEVER commit.
+# Auth data â€” contains session tokens and password hashes. NEVER commit.
 data/auth-sessions.json
 data/users.json
 
@@ -7,9 +7,10 @@ node_modules/
 service-account.json
 dry-run-previews/
 
-# Holds API tokens entered from the dashboard (AI Settings) — never commit
+# Holds API tokens entered from the dashboard (AI Settings) â€” never commit
 data/assistant-config.json
 data/sheet-credentials.json
+data/mailer-credentials.json
 data/custom-sheets.json
 # Generated RAG data contains synchronized internal Sheets/Docs content.
 # Rebuild locally or during deployment with `npm run sync:rag`; never commit it.
@@ -71,5 +72,5 @@ scratch/kv-seed-dryrun.json
 
 cloudflare-worker/.dev.vars
 
-# First-run setup wizard flag � machine-local, never commit
+# First-run setup wizard flag — machine-local, never commit
 data/.setup-complete

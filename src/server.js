@@ -19,6 +19,16 @@ import { syncAssignmentToUserTabs } from './assignmentWriteBack.js';
 import { findMonthlyHistoryEntry, shouldWriteReconciledStatus, maintenanceStatusRank } from './maintenanceStatus.js';
 import * as db from './db.js';
 
+// Hydrate process.env from database (data/mailer-credentials.json or KV)
+try {
+  const dbCreds = db.dbRead('mailer-credentials');
+  if (dbCreds && dbCreds.vars) {
+    for (const [k, v] of Object.entries(dbCreds.vars)) {
+      if (v && !process.env[k]) process.env[k] = v;
+    }
+  }
+} catch {}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.resolve(__dirname, '../public');
@@ -350,12 +360,6 @@ const server = http.createServer(async (req, res) => {
       // another machine can run it and be fully configured automatically.
       if (pathname === '/api/setup/generate-install-cmd' && method === 'GET') {
         try {
-          const envPath = path.resolve(__dirname, '../.env');
-          const saPath  = path.resolve(__dirname, '../service-account.json');
-          const envText = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-          const saText  = fs.existsSync(saPath)  ? fs.readFileSync(saPath,  'utf8') : '';
-
-          // Collect only the credential vars we need (not the whole .env)
           const CRED_KEYS = [
             'CW_NAME','CW_SPREADSHEET_ID','CW_MASTER_TAB_NAME',
             'CW_SMTP_HOST','CW_SMTP_PORT','CW_SMTP_SECURE',
@@ -366,18 +370,47 @@ const server = http.createServer(async (req, res) => {
             'MAX_EMAILS_PER_RUN',
           ];
           const credObj = {};
-          for (const line of envText.split(/\r?\n/)) {
-            const eq = line.indexOf('=');
-            if (eq < 1) continue;
-            const k = line.slice(0, eq).trim();
-            if (CRED_KEYS.includes(k)) credObj[k] = line.slice(eq + 1).trim();
+
+          // 1. Read from database first (works in both Node and Cloudflare Worker KV)
+          let dbCreds = null;
+          try { dbCreds = db.dbRead('mailer-credentials'); } catch {}
+          if (dbCreds && dbCreds.vars) {
+            for (const k of CRED_KEYS) {
+              if (dbCreds.vars[k]) credObj[k] = dbCreds.vars[k];
+            }
+            if (dbCreds.serviceAccount) {
+              credObj['_SA_JSON'] = typeof dbCreds.serviceAccount === 'string'
+                ? dbCreds.serviceAccount
+                : JSON.stringify(dbCreds.serviceAccount);
+            }
           }
-          if (saText) credObj['_SA_JSON'] = saText;
+
+          // 2. Overlay / fall back to local .env and service-account.json
+          const envPath = path.resolve(__dirname, '../.env');
+          const saPath  = path.resolve(__dirname, '../service-account.json');
+          const envText = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+          const saText  = fs.existsSync(saPath)  ? fs.readFileSync(saPath,  'utf8') : '';
+
+          if (envText) {
+            for (const line of envText.split(/\r?\n/)) {
+              const eq = line.indexOf('=');
+              if (eq < 1) continue;
+              const k = line.slice(0, eq).trim();
+              if (CRED_KEYS.includes(k) && !credObj[k]) credObj[k] = line.slice(eq + 1).trim();
+            }
+          }
+          for (const k of CRED_KEYS) {
+            if (!credObj[k] && process.env[k]) credObj[k] = process.env[k];
+          }
+          if (!credObj['_SA_JSON'] && saText) credObj['_SA_JSON'] = saText;
+          if (!credObj['_SA_JSON'] && process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+            credObj['_SA_JSON'] = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON;
+          }
 
           const blob = Buffer.from(JSON.stringify(credObj)).toString('base64');
           const rawUrl = 'https://raw.githubusercontent.com/Ettekhar/Office-Automation-System/main/install.ps1';
           const cmd = `$env:MAILER_CREDS='${blob}'; irm ${rawUrl} | iex`;
-          sendJson(res, 200, { cmd, credCount: Object.keys(credObj).length });
+          sendJson(res, 200, { cmd, credCount: Object.keys(credObj).length, fromDatabase: !!(dbCreds && dbCreds.vars) });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
         }
@@ -388,9 +421,10 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // ── Mailer Credentials Settings API ───────────────────────────────────
-    // GET  /api/settings/credentials  — read current .env values (passwords masked)
-    // POST /api/settings/credentials  — write updated values to .env + service-account.json
+    // ── Mailer Credentials Settings API (Database & Cloudflare KV backed) ──
+    // GET  /api/settings/credentials           — read credentials from database & .env (passwords masked)
+    // POST /api/settings/credentials           — save credentials to database + .env + in-process
+    // POST /api/settings/credentials/sync-cloud— sync local database credentials to Cloudflare KV remote
     if (pathname.startsWith('/api/settings/')) {
       const CRED_KEYS = [
         'CW_NAME','CW_SPREADSHEET_ID','CW_MASTER_TAB_NAME',
@@ -408,33 +442,68 @@ const server = http.createServer(async (req, res) => {
 
       if (pathname === '/api/settings/credentials' && method === 'GET') {
         try {
+          let dbCreds = null;
+          try { dbCreds = db.dbRead('mailer-credentials'); } catch {}
+
           const envPath = path.resolve(__dirname, '../.env');
           const saPath  = path.resolve(__dirname, '../service-account.json');
           const envText = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-          // Parse env into map
+
           const envMap = {};
-          for (const line of envText.split(/\r?\n/)) {
-            const eq = line.indexOf('=');
-            if (eq < 1) continue;
-            const k = line.slice(0, eq).trim();
-            if (k.startsWith('#')) continue;
-            if (CRED_KEYS.includes(k)) {
-              const v = line.slice(eq + 1).trim();
-              // Mask passwords: return placeholder so UI shows "••••••" but keeps real value separate
-              envMap[k] = v;
+          // Start with database values
+          if (dbCreds && dbCreds.vars) {
+            for (const [k, v] of Object.entries(dbCreds.vars)) {
+              if (CRED_KEYS.includes(k)) envMap[k] = v;
             }
           }
+          // Overlay or supplement with .env file
+          if (envText) {
+            for (const line of envText.split(/\r?\n/)) {
+              const eq = line.indexOf('=');
+              if (eq < 1) continue;
+              const k = line.slice(0, eq).trim();
+              if (k.startsWith('#')) continue;
+              if (CRED_KEYS.includes(k) && !envMap[k]) {
+                envMap[k] = line.slice(eq + 1).trim();
+              }
+            }
+          }
+          // Supplement with process.env
+          for (const k of CRED_KEYS) {
+            if (!envMap[k] && process.env[k]) envMap[k] = process.env[k];
+          }
+
           // Service account status
           let saStatus = 'missing';
           let saEmail = '';
-          if (fs.existsSync(saPath)) {
+          if (dbCreds && dbCreds.serviceAccount) {
+            const sa = typeof dbCreds.serviceAccount === 'string'
+              ? JSON.parse(dbCreds.serviceAccount)
+              : dbCreds.serviceAccount;
+            saEmail = sa.client_email || '';
+            saStatus = saEmail ? 'ok' : 'invalid';
+          } else if (fs.existsSync(saPath)) {
             try {
               const sa = JSON.parse(fs.readFileSync(saPath, 'utf8'));
               saEmail = sa.client_email || '';
               saStatus = saEmail ? 'ok' : 'invalid';
             } catch { saStatus = 'invalid'; }
+          } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+            try {
+              const sa = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON);
+              saEmail = sa.client_email || '';
+              saStatus = saEmail ? 'ok' : 'invalid';
+            } catch { saStatus = 'invalid'; }
           }
-          sendJson(res, 200, { credentials: envMap, passKeys: [...PASS_KEYS], saStatus, saEmail });
+
+          sendJson(res, 200, {
+            credentials: envMap,
+            passKeys: [...PASS_KEYS],
+            saStatus,
+            saEmail,
+            inDatabase: !!(dbCreds && dbCreds.vars),
+            lastUpdated: dbCreds?.updatedAt || null,
+          });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
         }
@@ -444,56 +513,110 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/settings/credentials' && method === 'POST') {
         try {
           const body = await parseBody(req);
-          const vars = body.vars || {};       // key→value pairs to update in .env
+          const vars = body.vars || {};       // key→value pairs to update
           const saJson = body.saJson || null; // optional new service-account JSON string
 
-          // Write service-account.json if provided
+          // 1. Load or initialize database record
+          let dbCreds = null;
+          try { dbCreds = db.dbRead('mailer-credentials'); } catch {}
+          if (!dbCreds || typeof dbCreds !== 'object') {
+            dbCreds = {
+              updatedAt: '',
+              description: 'OfficeOS Mailer & Integration Credentials Database',
+              vars: {},
+              serviceAccount: null,
+            };
+          }
+          if (!dbCreds.vars) dbCreds.vars = {};
+
+          // 2. Service account update
+          let parsedSa = null;
           if (saJson) {
-            let parsed;
-            try { parsed = JSON.parse(saJson); } catch { sendJson(res, 400, { error: 'Invalid service-account JSON' }); return; }
-            if (!parsed.client_email || !parsed.private_key) {
+            try { parsedSa = JSON.parse(saJson); }
+            catch { sendJson(res, 400, { error: 'Invalid service-account JSON' }); return; }
+            if (!parsedSa.client_email || !parsedSa.private_key) {
               sendJson(res, 400, { error: 'service-account JSON missing client_email or private_key' });
               return;
             }
-            const saPath = path.resolve(__dirname, '../service-account.json');
-            fs.writeFileSync(saPath, JSON.stringify(parsed, null, 2), 'utf8');
+            dbCreds.serviceAccount = parsedSa;
+            try {
+              const saPath = path.resolve(__dirname, '../service-account.json');
+              fs.writeFileSync(saPath, JSON.stringify(parsedSa, null, 2), 'utf8');
+            } catch {}
           }
 
-          // Merge vars into .env
-          if (Object.keys(vars).length) {
+          // 3. Merge vars into database record & process.env
+          for (const [k, v] of Object.entries(vars)) {
+            dbCreds.vars[k] = v;
+            process.env[k] = v;
+          }
+          dbCreds.updatedAt = new Date().toISOString();
+
+          // 4. Save to database (writes to KV on Cloudflare, data/*.json locally)
+          db.dbWrite('mailer-credentials', dbCreds);
+
+          // 5. Merge vars into local .env if on Node.js
+          try {
             const envPath = path.resolve(__dirname, '../.env');
-            let existing = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-            const lines = existing.split(/\r?\n/);
-            const envMap = new Map();
-            const headerLines = []; // comments and blanks at top
-            let inHeader = true;
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (trimmed.startsWith('#') || trimmed === '') {
-                if (inHeader) headerLines.push(line);
-              } else {
-                inHeader = false;
-                const eq = line.indexOf('=');
-                if (eq > 0) {
-                  envMap.set(line.slice(0, eq).trim(), line.slice(eq + 1));
+            if (fs.existsSync(envPath)) {
+              const existing = fs.readFileSync(envPath, 'utf8');
+              const lines = existing.split(/\r?\n/);
+              const envMap = new Map();
+              const headerLines = [];
+              let inHeader = true;
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('#') || trimmed === '') {
+                  if (inHeader) headerLines.push(line);
+                } else {
+                  inHeader = false;
+                  const eq = line.indexOf('=');
+                  if (eq > 0) envMap.set(line.slice(0, eq).trim(), line.slice(eq + 1));
                 }
               }
+              for (const [k, v] of Object.entries(vars)) {
+                if (v !== '' || envMap.has(k)) envMap.set(k, v);
+              }
+              const newLines = [...headerLines];
+              for (const [k, v] of envMap) newLines.push(`${k}=${v}`);
+              fs.writeFileSync(envPath, newLines.join('\n') + '\n', 'utf8');
             }
-            for (const [k, v] of Object.entries(vars)) {
-              if (v !== '' || envMap.has(k)) envMap.set(k, v); // only skip truly absent+empty
-            }
-            const newLines = [...headerLines];
-            for (const [k, v] of envMap) newLines.push(`${k}=${v}`);
-            fs.writeFileSync(envPath, newLines.join('\n') + '\n', 'utf8');
-            // Reload in-process immediately (no restart needed)
-            for (const [k, v] of Object.entries(vars)) {
-              process.env[k] = v;
-            }
-          }
+          } catch {}
 
-          sendJson(res, 200, { ok: true, updated: Object.keys(vars).length, saUpdated: !!saJson });
+          sendJson(res, 200, {
+            ok: true,
+            inDatabase: true,
+            updated: Object.keys(vars).length,
+            saUpdated: !!saJson,
+            updatedAt: dbCreds.updatedAt,
+          });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
+      // POST /api/settings/credentials/sync-cloud — push current database credentials to Cloudflare KV remote
+      if (pathname === '/api/settings/credentials/sync-cloud' && method === 'POST') {
+        try {
+          const { execSync } = await import('child_process');
+          const dbFile = path.resolve(__dirname, '../data/mailer-credentials.json');
+          const configPath = 'cloudflare-worker/dashboard-wrangler.toml';
+          const nsId = 'c44955e25a1c4791a89f3f3783213e12';
+
+          if (!fs.existsSync(dbFile)) {
+            sendJson(res, 400, { error: 'data/mailer-credentials.json does not exist' });
+            return;
+          }
+
+          const out = execSync(
+            `npx wrangler kv key put "mailer-credentials" --path "${dbFile}" --namespace-id ${nsId} --remote --config ${configPath}`,
+            { cwd: path.resolve(__dirname, '..'), encoding: 'utf8', timeout: 30000 }
+          );
+
+          sendJson(res, 200, { ok: true, output: out.trim(), syncedAt: new Date().toISOString() });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message, stderr: e.stderr?.toString() });
         }
         return;
       }

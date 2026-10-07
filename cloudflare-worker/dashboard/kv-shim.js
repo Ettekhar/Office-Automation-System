@@ -114,14 +114,22 @@ export async function warm(kvNamespace, names) {
   ns = kvNamespace;
   const results = await Promise.all(
     names.map(async (n) => {
-      const v = await ns.get(n, 'json');
-      return [n, v === null ? undefined : v];
+      try {
+        // Workers KV get() with type 'json' throws SyntaxError if the stored value
+        // is not valid JSON. Catch per-key so one bad key doesn't kill the whole warm.
+        const v = await ns.get(n, 'json');
+        return [n, v === null ? undefined : v];
+      } catch (e) {
+        console.error(`[kv-shim] warm: failed to load '${n}' (${e?.message || e}) — skipping`);
+        return [n, undefined];
+      }
     }),
   );
   for (const [n, v] of results) if (v !== undefined) cache.set(n, v);
   inited = true;
   return cache.size;
 }
+
 
 export function isWarm() { return inited; }
 export function cachedKeys() { return [...cache.keys()].sort(); }

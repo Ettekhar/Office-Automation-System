@@ -10704,11 +10704,15 @@ async function viewMailerSettings() {
       <!-- Header -->
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div>
-          <h2 style="font-size:20px;font-weight:700;color:var(--text,#fff);margin:0">⚙️ Mailer Settings</h2>
-          <p style="font-size:12px;color:var(--text-muted,#94a3b8);margin:4px 0 0">Changes are saved to <code>.env</code> &amp; <code>service-account.json</code> and take effect immediately — no restart needed.</p>
+          <div style="display:flex;align-items:center;gap:10px">
+            <h2 style="font-size:20px;font-weight:700;color:var(--text,#fff);margin:0">⚙️ Mailer Settings</h2>
+            <span id="ms-db-badge" style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)">📦 Database: Connected</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted,#94a3b8);margin:4px 0 0">Credentials are stored in the database (Cloudflare KV &amp; <code>.env</code>) and take effect immediately without server restart.</p>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-secondary btn-sm" id="ms-reload-btn" style="font-size:12px">🔄 Reload from disk</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" id="ms-sync-cloud-btn" style="font-size:12px" title="Push credentials directly into remote Cloudflare KV">☁️ Sync to Cloudflare</button>
+          <button class="btn btn-secondary btn-sm" id="ms-reload-btn" style="font-size:12px">🔄 Reload</button>
           <button class="btn btn-primary" id="ms-save-btn" style="font-size:13px;padding:8px 22px;font-weight:700">💾 Save All Changes</button>
         </div>
       </div>
@@ -10863,6 +10867,21 @@ async function viewMailerSettings() {
           el.value = v;
         }
       }
+      // Database status badge
+      const dbBadge = $('ms-db-badge');
+      if (dbBadge) {
+        if (data.inDatabase) {
+          dbBadge.textContent = '📦 Database: Synced (KV & Local)';
+          dbBadge.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+          if (data.lastUpdated) {
+            dbBadge.title = 'Last updated in database: ' + new Date(data.lastUpdated).toLocaleString();
+          }
+        } else {
+          dbBadge.textContent = '📁 Local .env Only';
+          dbBadge.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)';
+        }
+      }
+
       // Service account badge
       const saBadge = $('ms-sa-badge');
       const saEmail = $('ms-sa-email');
@@ -10919,14 +10938,14 @@ async function viewMailerSettings() {
       if (statusEl) {
         statusEl.style.display = 'block';
         statusEl.style.cssText = 'display:block;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
-        statusEl.textContent = `✅ Saved ${result.updated} credential(s)${result.saUpdated ? ' + service account' : ''} — changes are live immediately.`;
+        statusEl.textContent = `✅ Saved ${result.updated} credential(s)${result.saUpdated ? ' + service account' : ''} to database & environment.`;
         setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 6000);
       }
-      toast('✅ Credentials saved!', 'success', 3000);
+      toast('✅ Credentials saved to database!', 'success', 3000);
       // Clear SA JSON box after successful save
       if ($('ms-sa-json')) $('ms-sa-json').value = '';
-      // Reload to show updated SA status
-      if (saJsonText) await loadCredentials();
+      // Reload to show updated SA status & DB badge
+      await loadCredentials();
     } catch (e) {
       if (statusEl) {
         statusEl.style.display = 'block';
@@ -10938,7 +10957,25 @@ async function viewMailerSettings() {
     saveBtns.forEach(b => { if (b) { b.disabled = false; b.textContent = '💾 Save All Changes'; } });
   }
 
+  // ── Sync to Cloudflare KV ──
+  async function syncToCloudflare() {
+    const btn = $('ms-sync-cloud-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Syncing to Cloud...'; }
+    toast('Pushing credentials to Cloudflare KV...', 'info', 3000);
+
+    try {
+      const res = await POST('/api/settings/credentials/sync-cloud', {});
+      toast('☁️ Credentials synced to Cloudflare KV!', 'success', 3500);
+      await loadCredentials();
+    } catch (e) {
+      toast('Cloudflare sync: ' + e.message, 'error', 4000);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '☁️ Sync to Cloudflare'; }
+    }
+  }
+
   $('ms-save-btn')?.addEventListener('click', saveCredentials);
   $('ms-save-btn-2')?.addEventListener('click', saveCredentials);
-  $('ms-reload-btn')?.addEventListener('click', () => { loadCredentials(); toast('Reloaded from disk', 'info', 1500); });
+  $('ms-sync-cloud-btn')?.addEventListener('click', syncToCloudflare);
+  $('ms-reload-btn')?.addEventListener('click', () => { loadCredentials(); toast('Reloaded credentials', 'info', 1500); });
 }

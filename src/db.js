@@ -103,6 +103,124 @@ export function deleteUser(id) {
   setUsers(users);
 }
 
+export function assignTempCoverage({ fromUserId, toUserId, assignedBy = 'Admin', note = '' }) {
+  const users = ensureArray(dbRead('users'));
+  const fromIdx = users.findIndex(u => u.id === fromUserId || u.name.toLowerCase() === String(fromUserId).toLowerCase());
+  const toIdx = users.findIndex(u => u.id === toUserId || u.name.toLowerCase() === String(toUserId).toLowerCase());
+  if (fromIdx === -1) throw new Error(`Source user not found: ${fromUserId}`);
+  if (toIdx === -1) throw new Error(`Target user not found: ${toUserId}`);
+  if (fromIdx === toIdx) throw new Error('Cannot assign user to themselves');
+
+  const fromUser = users[fromIdx];
+  const toUser = users[toIdx];
+
+  // Update fromUser.tempAssignedTo
+  const fromAssigned = Array.isArray(fromUser.tempAssignedTo) ? [...fromUser.tempAssignedTo] : [];
+  const existingFromIdx = fromAssigned.findIndex(a => a.userId === toUser.id);
+  const entry = {
+    userId: toUser.id,
+    userName: toUser.name,
+    assignedAt: now(),
+    assignedBy,
+    note: note || '',
+  };
+  if (existingFromIdx >= 0) {
+    fromAssigned[existingFromIdx] = entry;
+  } else {
+    fromAssigned.push(entry);
+  }
+  users[fromIdx] = { ...fromUser, tempAssignedTo: fromAssigned, updatedAt: now() };
+
+  // Update toUser.tempCoveringUsers
+  const toCovering = Array.isArray(toUser.tempCoveringUsers) ? [...toUser.tempCoveringUsers] : [];
+  const existingToIdx = toCovering.findIndex(a => a.userId === fromUser.id);
+  const covEntry = {
+    userId: fromUser.id,
+    userName: fromUser.name,
+    assignedAt: now(),
+    assignedBy,
+    note: note || '',
+  };
+  if (existingToIdx >= 0) {
+    toCovering[existingToIdx] = covEntry;
+  } else {
+    toCovering.push(covEntry);
+  }
+  users[toIdx] = { ...toUser, tempCoveringUsers: toCovering, updatedAt: now() };
+
+  setUsers(users);
+  return { fromUser: users[fromIdx], toUser: users[toIdx], users };
+}
+
+export function removeTempCoverage({ fromUserId, toUserId }) {
+  const users = ensureArray(dbRead('users'));
+  const fromStr = String(fromUserId || '').toLowerCase().trim();
+  const toStr = String(toUserId || '').toLowerCase().trim();
+  const fromIdx = users.findIndex(u => u.id === fromUserId || u.name.toLowerCase() === fromStr);
+  const toIdx = users.findIndex(u => u.id === toUserId || u.name.toLowerCase() === toStr);
+
+  const realFromId = fromIdx >= 0 ? users[fromIdx].id : fromUserId;
+  const realFromName = fromIdx >= 0 ? users[fromIdx].name.toLowerCase() : fromStr;
+  const realToId = toIdx >= 0 ? users[toIdx].id : toUserId;
+  const realToName = toIdx >= 0 ? users[toIdx].name.toLowerCase() : toStr;
+
+  // Clean fromUser
+  if (fromIdx >= 0) {
+    const fromUser = users[fromIdx];
+    const fromAssigned = Array.isArray(fromUser.tempAssignedTo)
+      ? fromUser.tempAssignedTo.filter(a => {
+          const aId = a.userId || '';
+          const aName = (a.userName || '').toLowerCase();
+          return aId !== realToId && aId !== toStr && aName !== realToName;
+        })
+      : [];
+    users[fromIdx] = { ...fromUser, tempAssignedTo: fromAssigned, updatedAt: now() };
+  }
+
+  // Clean toUser
+  if (toIdx >= 0) {
+    const toUser = users[toIdx];
+    const toCovering = Array.isArray(toUser.tempCoveringUsers)
+      ? toUser.tempCoveringUsers.filter(a => {
+          const aId = a.userId || '';
+          const aName = (a.userName || '').toLowerCase();
+          return aId !== realFromId && aId !== fromStr && aName !== realFromName;
+        })
+      : [];
+    users[toIdx] = { ...toUser, tempCoveringUsers: toCovering, updatedAt: now() };
+  }
+
+  // Comprehensively sweep across all user records for any orphaned cross-references
+  for (let i = 0; i < users.length; i++) {
+    let changed = false;
+    if (Array.isArray(users[i].tempAssignedTo)) {
+      const filtered = users[i].tempAssignedTo.filter(a => {
+        const isFrom = users[i].id === realFromId || users[i].name.toLowerCase() === realFromName;
+        const isTo = a.userId === realToId || a.userId === toStr || (a.userName && a.userName.toLowerCase() === realToName);
+        return !(isFrom && isTo);
+      });
+      if (filtered.length !== users[i].tempAssignedTo.length) {
+        users[i] = { ...users[i], tempAssignedTo: filtered, updatedAt: now() };
+        changed = true;
+      }
+    }
+    if (Array.isArray(users[i].tempCoveringUsers)) {
+      const filtered = users[i].tempCoveringUsers.filter(a => {
+        const isTo = users[i].id === realToId || users[i].name.toLowerCase() === realToName;
+        const isFrom = a.userId === realFromId || a.userId === fromStr || (a.userName && a.userName.toLowerCase() === realFromName);
+        return !(isTo && isFrom);
+      });
+      if (filtered.length !== users[i].tempCoveringUsers.length) {
+        users[i] = { ...users[i], tempCoveringUsers: filtered, updatedAt: now() };
+        changed = true;
+      }
+    }
+  }
+
+  setUsers(users);
+  return { ok: true, users };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // SITES (merged from CW/RM + Domain Expiry + Daily Review assignments)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2043,12 +2161,16 @@ export function verifyPassword(password, stored) {
   } catch (_) { return false; }
 }
 
-/** Look up a user by email (case-insensitive). */
+/** Look up a user by email (case-insensitive). Also checks aliases[] array. */
 export function getUserByEmail(email) {
   if (!email) return null;
   const e = email.toLowerCase().trim();
   const rawUsers = ensureArray(dbRead('users'));
-  const u = rawUsers.find(x => (x.email || '').toLowerCase().trim() === e || (x.googleEmail || '').toLowerCase().trim() === e);
+  const u = rawUsers.find(x =>
+    (x.email || '').toLowerCase().trim() === e ||
+    (x.googleEmail || '').toLowerCase().trim() === e ||
+    (Array.isArray(x.aliases) && x.aliases.some(a => (a || '').toLowerCase().trim() === e))
+  );
   if (!u) return null;
   if (u.mergedInto) return getUserById(u.mergedInto);
   return { ...u, active: u.active !== false };
@@ -2113,8 +2235,25 @@ export function getSessionByToken(token) {
     if (Date.now() > payload.exp) return null;  // expired
 
     let user = getUserById(payload.userId);
-    // Edge-resilience fallback: if KV hasn't propagated this user across isolates yet,
-    // reconstruct user from HMAC-signed token payload.
+
+    // If the user was merged into another account, follow the chain to the canonical user.
+    if (!user && payload.userId) {
+      const rawUsers = ensureArray(dbRead('users'));
+      const raw = rawUsers.find(x => x.id === payload.userId);
+      if (raw && raw.mergedInto) {
+        user = getUserById(raw.mergedInto);
+        if (user) console.log(`[session] Redirected merged userId ${payload.userId} → ${raw.mergedInto} (${user.name})`);
+      }
+    }
+
+    // Try to resolve by email if ID is still missing (e.g. auto-created ghost user).
+    if (!user && payload.email) {
+      user = getUserByEmail(payload.email);
+      if (user) console.log(`[session] Resolved ghost userId ${payload.userId} by email ${payload.email} → ${user.id} (${user.name})`);
+    }
+
+    // Last-resort: reconstruct from signed token payload so the isolate doesn't go dark
+    // while KV propagates.  We use role 'user' as a safe default to prevent privilege escalation.
     if (!user && (payload.name || payload.email)) {
       user = {
         id: payload.userId,
