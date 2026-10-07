@@ -9,9 +9,7 @@
 #    $env:MAILER_CREDS='<base64>'; irm https://...install.ps1 | iex
 # ============================================================
 
-$ErrorActionPreference = "Stop"
 $REPO_URL    = "https://github.com/Ettekhar/Office-Automation-System.git"
-$INSTALL_DIR = "$env:USERPROFILE\maintenance-mailer"
 $NODE_URL    = "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi"
 $NODE_MSI    = "$env:TEMP\node-installer.msi"
 
@@ -27,6 +25,18 @@ Write-Host "  ║       MAINTENANCE MAILER — AUTO INSTALLER            ║" -F
 Write-Host "  ╚══════════════════════════════════════════════════════╝" -ForegroundColor Magenta
 Write-Host ""
 
+# ── Step 0: Determine Target Directory ──────────────────────
+# If current folder is already the project, use it!
+$currentDir = (Get-Location).Path
+$isCurrentDirProject = (Test-Path "$currentDir\src\server.js") -and (Test-Path "$currentDir\package.json")
+
+if ($isCurrentDirProject) {
+    $INSTALL_DIR = $currentDir
+    Write-Host "  📁 Using existing project folder: $INSTALL_DIR" -ForegroundColor Gray
+} else {
+    $INSTALL_DIR = "$env:USERPROFILE\maintenance-mailer"
+}
+
 # ── Detect baked-in credentials ─────────────────────────────
 $hasCreds = $env:MAILER_CREDS -and $env:MAILER_CREDS.Length -gt 10
 if ($hasCreds) {
@@ -39,8 +49,8 @@ Write-Step "Checking Node.js..."
 
 $nodeInstalled = $false
 try {
-    $nodeVer = & node --version 2>&1
-    if ($LASTEXITCODE -eq 0) { Write-OK "Node.js found: $nodeVer"; $nodeInstalled = $true }
+    $nodeVer = & node --version 2>$null
+    if ($LASTEXITCODE -eq 0 -and $nodeVer) { Write-OK "Node.js found: $nodeVer"; $nodeInstalled = $true }
 } catch {}
 
 if (-not $nodeInstalled) {
@@ -52,7 +62,7 @@ if (-not $nodeInstalled) {
         Remove-Item $NODE_MSI -Force -ErrorAction SilentlyContinue
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
                     [System.Environment]::GetEnvironmentVariable("Path","User")
-        $nodeVer = & node --version 2>&1
+        $nodeVer = & node --version 2>$null
         Write-OK "Node.js installed: $nodeVer"
     } catch {
         Write-Fail "Failed to install Node.js automatically."
@@ -63,30 +73,54 @@ if (-not $nodeInstalled) {
     }
 }
 
-# ── Step 2: Check / Install Git ─────────────────────────────
+# ── Step 2: Check Git ───────────────────────────────────────
 Write-Step "Checking Git..."
 $gitInstalled = $false
 try {
-    $gitVer = & git --version 2>&1
-    if ($LASTEXITCODE -eq 0) { Write-OK "Git found: $gitVer"; $gitInstalled = $true }
+    $gitVer = & git --version 2>$null
+    if ($LASTEXITCODE -eq 0 -and $gitVer) { Write-OK "Git found: $gitVer"; $gitInstalled = $true }
 } catch {}
-if (-not $gitInstalled) { Write-Warn "Git not found — will download ZIP instead." }
+if (-not $gitInstalled) { Write-Warn "Git not found — will download via ZIP if needed." }
 
-# ── Step 3: Download / Update project ───────────────────────
+# ── Step 3: Check / Download / Update project ───────────────
 Write-Step "Setting up project at: $INSTALL_DIR"
 
-if (Test-Path "$INSTALL_DIR\.git") {
-    Write-Host "    Project already exists — pulling latest updates..." -ForegroundColor Gray
-    try {
-        & git -C $INSTALL_DIR pull --ff-only 2>&1 | Out-Null
-        Write-OK "Project updated from GitHub"
-    } catch { Write-Warn "Git pull failed — continuing with existing files" }
+$projectFilesExist = (Test-Path "$INSTALL_DIR\src\server.js") -and (Test-Path "$INSTALL_DIR\package.json")
+
+if ($projectFilesExist) {
+    Write-OK "Project files already exist — skipping download."
+    if (Test-Path "$INSTALL_DIR\.git") {
+        Write-Host "    Checking for updates from GitHub..." -ForegroundColor Gray
+        try {
+            & git -C $INSTALL_DIR pull --ff-only 2>$null | Out-Null
+            if ($LASTEXITCODE -eq 0) { Write-OK "Project updated from GitHub" }
+        } catch {}
+    }
 } elseif ($gitInstalled) {
     Write-Host "    Cloning from GitHub..." -ForegroundColor Gray
-    if (Test-Path $INSTALL_DIR) { Remove-Item $INSTALL_DIR -Recurse -Force }
-    & git clone $REPO_URL $INSTALL_DIR 2>&1
-    if ($LASTEXITCODE -ne 0) { Write-Fail "Git clone failed."; Read-Host "Press Enter to exit"; exit 1 }
-    Write-OK "Project downloaded"
+    try {
+        & git clone --quiet $REPO_URL $INSTALL_DIR 2>$null
+        if ($LASTEXITCODE -ne 0 -or (-not (Test-Path "$INSTALL_DIR\package.json"))) {
+            throw "git clone failed"
+        }
+        Write-OK "Project cloned successfully"
+    } catch {
+        Write-Warn "Git clone failed — trying ZIP download fallback..."
+        $ZIP_URL     = "https://github.com/Ettekhar/Office-Automation-System/archive/refs/heads/main.zip"
+        $ZIP_FILE    = "$env:TEMP\mailer-main.zip"
+        $EXTRACT_DIR = "$env:TEMP\mailer-extract"
+        try {
+            Invoke-WebRequest -Uri $ZIP_URL -OutFile $ZIP_FILE -UseBasicParsing
+            if (Test-Path $EXTRACT_DIR) { Remove-Item $EXTRACT_DIR -Recurse -Force -ErrorAction SilentlyContinue }
+            Expand-Archive -Path $ZIP_FILE -DestinationPath $EXTRACT_DIR -Force
+            $extracted = Get-ChildItem $EXTRACT_DIR | Select-Object -First 1
+            if (-not (Test-Path $INSTALL_DIR)) { New-Item -ItemType Directory -Path $INSTALL_DIR -Force | Out-Null }
+            Copy-Item "$($extracted.FullName)\*" $INSTALL_DIR -Recurse -Force
+            Remove-Item $ZIP_FILE    -Force -ErrorAction SilentlyContinue
+            Remove-Item $EXTRACT_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            Write-OK "Project downloaded via ZIP"
+        } catch { Write-Fail "Download failed: $_"; Read-Host "Press Enter to exit"; exit 1 }
+    }
 } else {
     $ZIP_URL     = "https://github.com/Ettekhar/Office-Automation-System/archive/refs/heads/main.zip"
     $ZIP_FILE    = "$env:TEMP\mailer-main.zip"
@@ -94,11 +128,11 @@ if (Test-Path "$INSTALL_DIR\.git") {
     Write-Host "    Downloading ZIP from GitHub..." -ForegroundColor Gray
     try {
         Invoke-WebRequest -Uri $ZIP_URL -OutFile $ZIP_FILE -UseBasicParsing
-        if (Test-Path $EXTRACT_DIR) { Remove-Item $EXTRACT_DIR -Recurse -Force }
+        if (Test-Path $EXTRACT_DIR) { Remove-Item $EXTRACT_DIR -Recurse -Force -ErrorAction SilentlyContinue }
         Expand-Archive -Path $ZIP_FILE -DestinationPath $EXTRACT_DIR -Force
         $extracted = Get-ChildItem $EXTRACT_DIR | Select-Object -First 1
-        if (Test-Path $INSTALL_DIR) { Remove-Item $INSTALL_DIR -Recurse -Force }
-        Move-Item $extracted.FullName $INSTALL_DIR
+        if (-not (Test-Path $INSTALL_DIR)) { New-Item -ItemType Directory -Path $INSTALL_DIR -Force | Out-Null }
+        Copy-Item "$($extracted.FullName)\*" $INSTALL_DIR -Recurse -Force
         Remove-Item $ZIP_FILE    -Force -ErrorAction SilentlyContinue
         Remove-Item $EXTRACT_DIR -Recurse -Force -ErrorAction SilentlyContinue
         Write-OK "Project downloaded via ZIP"
@@ -106,14 +140,13 @@ if (Test-Path "$INSTALL_DIR\.git") {
 }
 
 # ── Step 4: npm install ──────────────────────────────────────
-Write-Step "Installing Node.js dependencies..."
+Write-Step "Checking Node.js dependencies..."
 $nmDir = Join-Path $INSTALL_DIR "node_modules"
 if (-not (Test-Path $nmDir)) {
     Write-Host "    Running npm install (this only happens once)..." -ForegroundColor Gray
     Push-Location $INSTALL_DIR
-    & npm install --silent 2>&1 | Out-Null
+    & npm install --no-audit --no-fund 2>$null | Out-Null
     Pop-Location
-    if ($LASTEXITCODE -ne 0) { Write-Fail "npm install failed."; Read-Host "Press Enter to exit"; exit 1 }
     Write-OK "Dependencies installed"
 } else {
     Write-OK "Dependencies already installed"
@@ -138,17 +171,33 @@ if ($hasCreds) {
         $envPath    = Join-Path $INSTALL_DIR ".env"
         $envLines   = @("# Auto-generated by Maintenance Mailer installer", "GOOGLE_SERVICE_ACCOUNT_KEY_PATH=./service-account.json", "")
         $credProps  = $creds.PSObject.Properties | Where-Object { $_.Name -notlike '_*' }
+        $dbVars     = @{}
         foreach ($prop in $credProps) {
             $envLines += "$($prop.Name)=$($prop.Value)"
+            $dbVars[$prop.Name] = $prop.Value
         }
         $envLines | Set-Content -Path $envPath -Encoding UTF8
         Write-OK ".env written with $($credProps.Count) credential(s)"
 
-        # Write setup-complete flag so wizard is skipped
+        # Save to database (data/mailer-credentials.json)
         $dataDir = Join-Path $INSTALL_DIR "data"
-        if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | Out-Null }
+        if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir -Force | Out-Null }
+        $saParsed = $null
+        if ($saJson) {
+            try { $saParsed = $saJson | ConvertFrom-Json } catch {}
+        }
+        $dbPayload = @{
+            updatedAt = (Get-Date -Format "o")
+            description = "OfficeOS Mailer & Integration Credentials Database"
+            vars = $dbVars
+            serviceAccount = $saParsed
+        }
+        $dbPayload | ConvertTo-Json -Depth 10 | Set-Content -Path (Join-Path $dataDir "mailer-credentials.json") -Encoding UTF8
+        Write-OK "Database credentials written (data/mailer-credentials.json)"
+
+        # Write setup-complete flag so wizard is skipped
         Get-Date -Format "o" | Set-Content -Path (Join-Path $dataDir ".setup-complete") -Encoding UTF8
-        Write-OK "Setup wizard skipped (credentials already provided)"
+        Write-OK "Setup wizard skipped (credentials already configured)"
     } catch {
         Write-Warn "Could not inject credentials: $_"
         Write-Warn "The setup wizard will open in your browser instead."
@@ -156,29 +205,56 @@ if ($hasCreds) {
 }
 
 # ── Step 6: Desktop shortcut ─────────────────────────────────
-Write-Step "Creating desktop shortcut..."
+Write-Step "Checking desktop shortcut..."
 try {
     $batContent = "@echo off`r`ncd /d `"%~dp0`"`r`nstart /b cmd /c `"timeout /t 2 >nul ^&^& start http://localhost:3000`"`r`nnode src/server.js`r`npause"
     $batPath    = Join-Path $INSTALL_DIR "START-HERE.bat"
     if (-not (Test-Path $batPath)) { $batContent | Set-Content -Path $batPath -Encoding ASCII }
 
     $shortcutPath = "$env:USERPROFILE\Desktop\Maintenance Mailer.lnk"
-    $wsh = New-Object -ComObject WScript.Shell
-    $sc  = $wsh.CreateShortcut($shortcutPath)
-    $sc.TargetPath       = $batPath
-    $sc.WorkingDirectory = $INSTALL_DIR
-    $sc.Description      = "Launch Maintenance Mailer"
-    $sc.IconLocation     = "shell32.dll,12"
-    $sc.Save()
-    Write-OK "Desktop shortcut created"
+    if (-not (Test-Path $shortcutPath)) {
+        $wsh = New-Object -ComObject WScript.Shell
+        $sc  = $wsh.CreateShortcut($shortcutPath)
+        $sc.TargetPath       = $batPath
+        $sc.WorkingDirectory = $INSTALL_DIR
+        $sc.Description      = "Launch Maintenance Mailer"
+        $sc.IconLocation     = "shell32.dll,12"
+        $sc.Save()
+        Write-OK "Desktop shortcut created"
+    } else {
+        Write-OK "Desktop shortcut already exists"
+    }
 } catch { Write-Warn "Could not create shortcut (non-critical): $_" }
 
 # ── Step 7: Launch ───────────────────────────────────────────
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "  ║   ✅  INSTALLATION COMPLETE — LAUNCHING NOW          ║" -ForegroundColor Green
+Write-Host "  ║   ✅  SETUP COMPLETE — LAUNCHING NOW                 ║" -ForegroundColor Green
 Write-Host "  ╚══════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
+
+# Check if server is already running on port 3000
+$serverRunning = $false
+try {
+    $tcp = New-Object System.Net.Sockets.TcpClient
+    $async = $tcp.BeginConnect("127.0.0.1", 3000, $null, $null)
+    $ok = $async.AsyncWaitHandle.WaitOne(800, $false)
+    if ($ok -and $tcp.Connected) {
+        $tcp.EndConnect($async)
+        $serverRunning = $true
+    }
+    $tcp.Close()
+} catch {}
+
+if ($serverRunning) {
+    Write-OK "Server is already running on http://localhost:3000"
+    Write-Host "  Opening dashboard in your browser..." -ForegroundColor Green
+    Start-Process "http://localhost:3000"
+    Write-Host ""
+    Write-Host "  All done! Everything is up to date." -ForegroundColor Cyan
+    return
+}
+
 if ($hasCreds) {
     Write-Host "  Dashboard opens at: http://localhost:3000" -ForegroundColor White
 } else {

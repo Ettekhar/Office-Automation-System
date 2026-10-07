@@ -11,6 +11,8 @@ dry-run-previews/
 data/assistant-config.json
 data/sheet-credentials.json
 data/mailer-credentials.json
+data/cloudflared.exe
+*.exe
 data/custom-sheets.json
 # Generated RAG data contains synchronized internal Sheets/Docs content.
 # Rebuild locally or during deployment with `npm run sync:rag`; never commit it.
