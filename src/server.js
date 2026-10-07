@@ -626,20 +626,39 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── Cloudflare Quick Tunnel API ────────────────────────────────────────
-    // /api/tunnel/start  POST  — download cloudflared if needed, start tunnel
-    // /api/tunnel/status GET   — current tunnel URL (null if not running)
-    // /api/tunnel/stop   POST  — kill the tunnel process
+    // /api/tunnel/start    POST — start local tunnel or return registered cloud tunnel
+    // /api/tunnel/register POST — register live tunnel URL from local PC to cloud
+    // /api/tunnel/status   GET  — current tunnel status & live URL
+    // /api/tunnel/stop     POST — stop the tunnel process & clear registration
     if (pathname.startsWith('/api/tunnel/')) {
       if (pathname === '/api/tunnel/start' && method === 'POST') {
+        // If tunnel already active in memory
         if (global._tunnelUrl) {
           sendJson(res, 200, { ok: true, url: global._tunnelUrl, alreadyRunning: true });
           return;
         }
+
+        // On Cloudflare Worker (no filesystem / no native processes)
+        const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
+        if (isWorkerEnv) {
+          let stored = null;
+          try { stored = db.dbRead('active-tunnel'); } catch {}
+          if (stored && stored.active && stored.url) {
+            sendJson(res, 200, { ok: true, url: stored.url, registeredFromLocal: true });
+            return;
+          }
+          sendJson(res, 400, {
+            error: 'Tunnels connect from your local PC to this cloud dashboard. Run the installer or local server on your PC to connect.',
+            isWorker: true,
+          });
+          return;
+        }
+
+        // Local Node.js server execution
         try {
           const { spawn } = await import('child_process');
           const https = await import('https');
 
-          // cloudflared binary path
           const cfDir = path.resolve(__dirname, '../data');
           if (!fs.existsSync(cfDir)) fs.mkdirSync(cfDir, { recursive: true });
           const cfBin = path.join(cfDir, 'cloudflared.exe');
@@ -652,14 +671,15 @@ const server = http.createServer(async (req, res) => {
               const file = fs.createWriteStream(cfBin);
               const download = (url, redirects = 5) => {
                 if (redirects <= 0) { reject(new Error('Too many redirects')); return; }
-                https.get(url, (response) => {
+                const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 MaintenanceMailer' } }, (response) => {
                   if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
                     download(response.headers.location, redirects - 1);
                     return;
                   }
                   response.pipe(file);
                   file.on('finish', () => file.close(resolve));
-                }).on('error', reject);
+                });
+                req.on('error', reject);
               };
               download(CF_URL);
             });
@@ -674,7 +694,7 @@ const server = http.createServer(async (req, res) => {
           global._tunnelProc = proc;
           global._tunnelUrl  = null;
 
-          // Parse tunnel URL from stderr
+          // Parse tunnel URL from output
           const urlFound = await new Promise((resolve, reject) => {
             const timer = setTimeout(() => reject(new Error('Tunnel URL not found within 30s')), 30000);
             const onData = (data) => {
@@ -695,7 +715,47 @@ const server = http.createServer(async (req, res) => {
 
           global._tunnelUrl = urlFound;
           console.log(`[tunnel] Live at ${urlFound}`);
-          proc.on('exit', () => { global._tunnelUrl = null; global._tunnelProc = null; console.log('[tunnel] Tunnel closed'); });
+
+          // Save to database
+          try {
+            db.dbWrite('active-tunnel', { url: urlFound, updatedAt: new Date().toISOString(), active: true });
+          } catch {}
+
+          // Auto-register to hosted Cloudflare dashboard if configured
+          const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL;
+          const cfToken = process.env.DASHBOARD_ADMIN_TOKEN || process.env.CLOUDFLARE_WORKER_TOKEN;
+          if (cfUrl && cfUrl.startsWith('http')) {
+            try {
+              fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/register`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
+                },
+                body: JSON.stringify({ url: urlFound }),
+              }).catch(() => {});
+            } catch {}
+          }
+
+          proc.on('exit', () => {
+            global._tunnelUrl = null;
+            global._tunnelProc = null;
+            console.log('[tunnel] Tunnel closed');
+            try {
+              db.dbWrite('active-tunnel', { url: null, updatedAt: new Date().toISOString(), active: false });
+            } catch {}
+            if (cfUrl && cfUrl.startsWith('http')) {
+              try {
+                fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/stop`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
+                  },
+                }).catch(() => {});
+              } catch {}
+            }
+          });
 
           sendJson(res, 200, { ok: true, url: urlFound });
         } catch (e) {
@@ -705,17 +765,56 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      // POST /api/tunnel/register — register live tunnel from local operator PC
+      if (pathname === '/api/tunnel/register' && method === 'POST') {
+        try {
+          const body = await parseBody(req);
+          const tunnelUrl = (body.url || '').trim();
+          if (!tunnelUrl || !tunnelUrl.startsWith('https://')) {
+            sendJson(res, 400, { error: 'Invalid tunnel URL' });
+            return;
+          }
+          global._tunnelUrl = tunnelUrl;
+          try {
+            db.dbWrite('active-tunnel', { url: tunnelUrl, updatedAt: new Date().toISOString(), active: true });
+          } catch {}
+          console.log(`[tunnel] Registered active tunnel: ${tunnelUrl}`);
+          sendJson(res, 200, { ok: true, url: tunnelUrl });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
       if (pathname === '/api/tunnel/status' && method === 'GET') {
-        sendJson(res, 200, { running: !!global._tunnelUrl, url: global._tunnelUrl || null });
+        let activeUrl = global._tunnelUrl || null;
+        let lastUpdated = null;
+        if (!activeUrl) {
+          try {
+            const stored = db.dbRead('active-tunnel');
+            if (stored && stored.active && stored.url) {
+              const ageMs = Date.now() - new Date(stored.updatedAt).getTime();
+              // Valid if updated within last 1 hour
+              if (ageMs < 60 * 60 * 1000) {
+                activeUrl = stored.url;
+                lastUpdated = stored.updatedAt;
+              }
+            }
+          } catch {}
+        }
+        sendJson(res, 200, { running: !!activeUrl, url: activeUrl, lastUpdated });
         return;
       }
 
       if (pathname === '/api/tunnel/stop' && method === 'POST') {
         if (global._tunnelProc) {
-          global._tunnelProc.kill();
+          try { global._tunnelProc.kill(); } catch {}
           global._tunnelProc = null;
-          global._tunnelUrl  = null;
         }
+        global._tunnelUrl = null;
+        try {
+          db.dbWrite('active-tunnel', { url: null, updatedAt: new Date().toISOString(), active: false });
+        } catch {}
         sendJson(res, 200, { ok: true });
         return;
       }

@@ -17,6 +17,9 @@ function Write-Step($msg) { Write-Host ""; Write-Host "  >> $msg" -ForegroundCol
 function Write-OK($msg)   { Write-Host "    [OK] $msg" -ForegroundColor Green }
 function Write-Warn($msg) { Write-Host "    [!]  $msg" -ForegroundColor Yellow }
 function Write-Fail($msg) { Write-Host "    [X]  $msg" -ForegroundColor Red }
+function Write-Utf8NoBom($path, $text) {
+    [System.IO.File]::WriteAllText($path, $text, (New-Object System.Text.UTF8Encoding($false)))
+}
 
 Clear-Host
 Write-Host ""
@@ -163,7 +166,7 @@ if ($hasCreds) {
         $saJson = $creds._SA_JSON
         if ($saJson) {
             $saPath = Join-Path $INSTALL_DIR "service-account.json"
-            $saJson | Set-Content -Path $saPath -Encoding UTF8
+            Write-Utf8NoBom $saPath $saJson
             Write-OK "service-account.json written"
         }
 
@@ -176,7 +179,8 @@ if ($hasCreds) {
             $envLines += "$($prop.Name)=$($prop.Value)"
             $dbVars[$prop.Name] = $prop.Value
         }
-        $envLines | Set-Content -Path $envPath -Encoding UTF8
+        $envText = $envLines -join [System.Environment]::NewLine
+        Write-Utf8NoBom $envPath $envText
         Write-OK ".env written with $($credProps.Count) credential(s)"
 
         # Save to database (data/mailer-credentials.json)
@@ -192,11 +196,12 @@ if ($hasCreds) {
             vars = $dbVars
             serviceAccount = $saParsed
         }
-        $dbPayload | ConvertTo-Json -Depth 10 | Set-Content -Path (Join-Path $dataDir "mailer-credentials.json") -Encoding UTF8
+        $jsonPayload = $dbPayload | ConvertTo-Json -Depth 10
+        Write-Utf8NoBom (Join-Path $dataDir "mailer-credentials.json") $jsonPayload
         Write-OK "Database credentials written (data/mailer-credentials.json)"
 
         # Write setup-complete flag so wizard is skipped
-        Get-Date -Format "o" | Set-Content -Path (Join-Path $dataDir ".setup-complete") -Encoding UTF8
+        Write-Utf8NoBom (Join-Path $dataDir ".setup-complete") (Get-Date -Format "o")
         Write-OK "Setup wizard skipped (credentials already configured)"
     } catch {
         Write-Warn "Could not inject credentials: $_"

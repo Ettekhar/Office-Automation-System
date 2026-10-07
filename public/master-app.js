@@ -7934,14 +7934,35 @@ function viewSendEmails() {
   async function checkMailerHealth() {
     const dot = $('server-status-dot');
     const overlay = $('mailer-offline-overlay');
+    const frame = $('mailer-iframe');
+
+    // 1. Try local server status
     try {
       const r = await fetch('/api/server/status', { cache: 'no-store' });
       if (r.ok) {
-        if (dot) { dot.style.background = '#10b981'; dot.title = 'Server running'; }
+        if (dot) { dot.style.background = '#10b981'; dot.title = 'Server running locally'; }
         if (overlay) overlay.style.display = 'none';
         return true;
       }
-    } catch { /* network error — server down */ }
+    } catch { /* local server not reachable directly */ }
+
+    // 2. Check if a Cloudflare Tunnel is connected from local PC
+    try {
+      const t = await fetch('/api/tunnel/status', { cache: 'no-store' });
+      if (t.ok) {
+        const td = await t.json();
+        if (td.running && td.url) {
+          if (dot) { dot.style.background = '#10b981'; dot.title = 'Connected via Cloudflare Tunnel: ' + td.url; }
+          if (frame && (!frame.src || frame.src.endsWith('/mailer') || !frame.src.includes('trycloudflare.com'))) {
+            frame.src = td.url + '/mailer';
+          }
+          if (overlay) overlay.style.display = 'none';
+          refreshTunnelStatus();
+          return true;
+        }
+      }
+    } catch {}
+
     if (dot) { dot.style.background = '#ef4444'; dot.title = 'Server not reachable'; }
     if (overlay) { overlay.style.display = 'flex'; }
     return false;
@@ -8077,9 +8098,10 @@ function viewSendEmails() {
         const data = await POST('/api/tunnel/start', {});
         await refreshTunnelStatus();
         toast(`🌐 Tunnel live at ${data.url}`, 'success', 5000);
+        checkMailerHealth();
       } catch (e) {
         $('tunnel-loading').style.display = 'none';
-        toast('Tunnel failed: ' + e.message, 'error', 5000);
+        toast(e.message, 'info', 6000);
       }
       btn.disabled = false;
     }

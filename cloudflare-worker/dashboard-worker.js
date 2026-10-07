@@ -50,6 +50,7 @@ const STATE_KEYS = [
   'sheet-schema', 'daily-reports', 'distribution', 'domains',
   'auth-sessions',  // ← session tokens for login system
   'mailer-credentials', // ← mailer SMTP, sheet IDs, AI keys & service account credentials
+  'active-tunnel',      // ← live Cloudflare Tunnel URL registered from operator PC
 ];
 
 let warmed = null;
