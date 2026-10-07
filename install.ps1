@@ -251,27 +251,65 @@ try {
     $tcp.Close()
 } catch {}
 
+if (-not $serverRunning) {
+    Write-Step "Launching local server..."
+    $batPath = Join-Path $INSTALL_DIR "START-HERE.bat"
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$batPath`"" -WorkingDirectory $INSTALL_DIR
+    # Wait up to 10 seconds for server to be responsive
+    for ($i = 0; $i -lt 20; $i++) {
+        Start-Sleep -Milliseconds 500
+        try {
+            $tcp = New-Object System.Net.Sockets.TcpClient
+            $async = $tcp.BeginConnect("127.0.0.1", 3000, $null, $null)
+            if ($async.AsyncWaitHandle.WaitOne(400, $false) -and $tcp.Connected) {
+                $tcp.EndConnect($async)
+                $tcp.Close()
+                $serverRunning = $true
+                break
+            }
+            $tcp.Close()
+        } catch {}
+    }
+}
+
 if ($serverRunning) {
-    Write-OK "Server is already running on http://localhost:3000"
-    Write-Host "  Opening dashboard in your browser..." -ForegroundColor Green
-    Start-Process "http://localhost:3000"
+    Write-OK "Server is live on http://localhost:3000"
+}
+
+# Auto-start and retrieve Cloudflare Quick Tunnel link
+Write-Step "Generating Cloudflare Quick Tunnel link..."
+$tunnelUrl = $null
+for ($t = 0; $t -lt 3; $t++) {
+    try {
+        $res = Invoke-RestMethod -Uri "http://localhost:3000/api/tunnel/start" -Method Post -TimeoutSec 35 -ErrorAction SilentlyContinue
+        if ($res.ok -and $res.url) {
+            $tunnelUrl = $res.url
+            break
+        }
+    } catch {
+        Start-Sleep -Seconds 1
+    }
+}
+
+if ($tunnelUrl) {
     Write-Host ""
-    Write-Host "  All done! Everything is up to date." -ForegroundColor Cyan
-    return
-}
-
-if ($hasCreds) {
-    Write-Host "  Dashboard opens at: http://localhost:3000" -ForegroundColor White
+    Write-Host "  ========================================================" -ForegroundColor Green
+    Write-Host "     CLOUD TUNNEL URL (QUICK PUBLIC URL):                 " -ForegroundColor Green
+    Write-Host "     $tunnelUrl" -ForegroundColor Yellow
+    Write-Host "  ========================================================" -ForegroundColor Green
+    Write-Host ""
+    try {
+        Set-Clipboard -Value $tunnelUrl
+        Write-OK "URL copied to clipboard! (Ready to paste in Quick Public URL)"
+    } catch {}
+    Write-OK "Automatically synced with Cloudflare dashboard!"
+    Write-Host "    Cloud Dashboard: https://officeos-dashboard.taion16240.workers.dev" -ForegroundColor Cyan
 } else {
-    Write-Host "  First-run Setup Wizard opens at: http://localhost:3000/setup" -ForegroundColor White
-    Write-Host "  Follow the 3 steps to enter your credentials." -ForegroundColor Gray
+    Write-Warn "Tunnel taking a moment to initialize. You can also start or view it in the dashboard."
 }
-Write-Host ""
-Write-Host "  Press Ctrl+C in this window to stop the server." -ForegroundColor Gray
-Write-Host ""
 
-Start-Job -ScriptBlock { Start-Sleep 3; Start-Process "http://localhost:3000" } | Out-Null
-
-Push-Location $INSTALL_DIR
-& node src/server.js
-Pop-Location
+Write-Host ""
+Write-Host "  Opening dashboard in your browser..." -ForegroundColor Green
+Start-Process "http://localhost:3000"
+Write-Host ""
+Write-Host "  All done! Everything is up to date." -ForegroundColor Cyan

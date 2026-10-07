@@ -7891,7 +7891,7 @@ function viewSendEmails() {
             <span style="font-size:20px">🌐</span>
             <div style="flex:1">
               <div style="font-size:13px;font-weight:600;color:var(--text,#fff)">Quick Public URL</div>
-              <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Create a temporary public link via Cloudflare Tunnel — dies when server stops</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Live tunnel to your local PC — auto-generated or paste your own</div>
             </div>
             <button class="btn btn-secondary btn-sm" id="btn-tunnel-toggle" style="font-size:12px;padding:6px 14px;white-space:nowrap">
               🚀 Start Tunnel
@@ -7904,6 +7904,11 @@ function viewSendEmails() {
               <a id="tunnel-url-link" href="#" target="_blank" style="flex:1;background:var(--bg,#0d1117);border:1px solid #10b981;border-radius:8px;padding:8px 12px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#10b981;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></a>
               <button class="btn btn-primary btn-sm" id="btn-copy-tunnel-url" style="font-size:12px;padding:6px 12px;white-space:nowrap">📋 Copy</button>
             </div>
+          </div>
+          <!-- Manual URL input row -->
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="input-manual-tunnel-url" type="url" placeholder="Paste Cloudflare Tunnel URL (e.g. https://xxx.trycloudflare.com)" style="flex:1;background:var(--bg,#0d1117);border:1px solid var(--border,#2d3748);border-radius:8px;padding:8px 12px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#fff;outline:none" />
+            <button class="btn btn-primary btn-sm" id="btn-save-manual-tunnel" style="font-size:12px;padding:7px 14px;white-space:nowrap">🔗 Connect URL</button>
           </div>
           <div id="tunnel-loading" style="display:none;font-size:11px;color:var(--text-muted,#94a3b8)">
             <span style="animation:pulse 1.5s ease-in-out infinite;display:inline-block">⏳</span> Starting tunnel... downloading cloudflared if needed (first time only)...
@@ -8063,6 +8068,8 @@ function viewSendEmails() {
         loadingEl.style.display = 'none';
         const link = $('tunnel-url-link');
         if (link) { link.href = data.url; link.textContent = data.url; }
+        const inp = $('input-manual-tunnel-url');
+        if (inp && !inp.value) inp.value = data.url;
         $('tunnel-status-msg').textContent = '🟢 Tunnel is live — share this URL with your team member';
         $('tunnel-status-msg').style.color = '#10b981';
         $('btn-copy-tunnel-url').style.display = '';
@@ -8105,6 +8112,33 @@ function viewSendEmails() {
       }
       btn.disabled = false;
     }
+  });
+
+  $('btn-save-manual-tunnel')?.addEventListener('click', async () => {
+    const inp = $('input-manual-tunnel-url');
+    const url = (inp?.value || '').trim();
+    if (!url) { toast('Please enter or paste a tunnel URL first', 'error'); return; }
+    if (!url.startsWith('https://')) {
+      toast('Tunnel URL must start with https://', 'error');
+      return;
+    }
+    const btn = $('btn-save-manual-tunnel');
+    btn.disabled = true;
+    btn.textContent = '⏳ Connecting...';
+    try {
+      await POST('/api/tunnel/register', { url });
+      await refreshTunnelStatus();
+      checkMailerHealth();
+      toast('🌐 Connected to tunnel: ' + url, 'success', 4000);
+    } catch (e) {
+      toast('Failed to connect: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = '🔗 Connect URL';
+  });
+
+  $('input-manual-tunnel-url')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('btn-save-manual-tunnel')?.click();
   });
 
   $('btn-copy-tunnel-url')?.addEventListener('click', () => {

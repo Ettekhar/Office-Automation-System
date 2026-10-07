@@ -246,6 +246,113 @@ async function assistantSchemaText(config) {
   }
 }
 
+async function startCloudflareTunnel(port = DEFAULT_PORT) {
+  if (global._tunnelUrl) return global._tunnelUrl;
+  const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
+  if (isWorkerEnv) {
+    let stored = null;
+    try { stored = db.dbRead('active-tunnel'); } catch {}
+    if (stored && stored.active && stored.url) return stored.url;
+    throw new Error('Tunnels connect from your local PC to this cloud dashboard.');
+  }
+
+  const { spawn } = await import('child_process');
+  const https = await import('https');
+  const cfDir = path.resolve(__dirname, '../data');
+  if (!fs.existsSync(cfDir)) fs.mkdirSync(cfDir, { recursive: true });
+  const cfBin = path.join(cfDir, 'cloudflared.exe');
+
+  if (!fs.existsSync(cfBin)) {
+    const CF_URL = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
+    console.log('[tunnel] Downloading cloudflared...');
+    await new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(cfBin);
+      const download = (url, redirects = 5) => {
+        if (redirects <= 0) { reject(new Error('Too many redirects')); return; }
+        const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 MaintenanceMailer' } }, (response) => {
+          if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+            download(response.headers.location, redirects - 1);
+            return;
+          }
+          response.pipe(file);
+          file.on('finish', () => file.close(resolve));
+        });
+        req.on('error', reject);
+      };
+      download(CF_URL);
+    });
+    console.log('[tunnel] cloudflared downloaded');
+  }
+
+  const proc = spawn(cfBin, ['tunnel', '--url', `http://localhost:${port}`], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  global._tunnelProc = proc;
+  global._tunnelUrl = null;
+
+  const urlFound = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Tunnel URL not found within 30s')), 30000);
+    const onData = (data) => {
+      const text = data.toString();
+      const match = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+      if (match) {
+        clearTimeout(timer);
+        proc.stdout.off('data', onData);
+        proc.stderr.off('data', onData);
+        resolve(match[0]);
+      }
+    };
+    proc.stdout.on('data', onData);
+    proc.stderr.on('data', onData);
+    proc.on('error', (e) => { clearTimeout(timer); reject(e); });
+    proc.on('exit', (code) => { clearTimeout(timer); reject(new Error(`cloudflared exited with code ${code}`)); });
+  });
+
+  global._tunnelUrl = urlFound;
+  console.log(`[tunnel] Live at ${urlFound}`);
+
+  try {
+    db.dbWrite('active-tunnel', { url: urlFound, updatedAt: new Date().toISOString(), active: true });
+  } catch {}
+
+  const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL || 'https://officeos-dashboard.taion16240.workers.dev';
+  const cfToken = process.env.DASHBOARD_ADMIN_TOKEN || process.env.CLOUDFLARE_WORKER_TOKEN;
+  if (cfUrl && cfUrl.startsWith('http')) {
+    try {
+      fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
+        },
+        body: JSON.stringify({ url: urlFound }),
+      }).catch(() => {});
+    } catch {}
+  }
+
+  proc.on('exit', () => {
+    global._tunnelUrl = null;
+    global._tunnelProc = null;
+    console.log('[tunnel] Tunnel closed');
+    try {
+      db.dbWrite('active-tunnel', { url: null, updatedAt: new Date().toISOString(), active: false });
+    } catch {}
+    if (cfUrl && cfUrl.startsWith('http')) {
+      try {
+        fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/stop`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
+          },
+        }).catch(() => {});
+      } catch {}
+    }
+  });
+
+  return urlFound;
+}
+
 const server = http.createServer(async (req, res) => {
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = reqUrl.pathname;
@@ -632,13 +739,11 @@ const server = http.createServer(async (req, res) => {
     // /api/tunnel/stop     POST — stop the tunnel process & clear registration
     if (pathname.startsWith('/api/tunnel/')) {
       if (pathname === '/api/tunnel/start' && method === 'POST') {
-        // If tunnel already active in memory
         if (global._tunnelUrl) {
           sendJson(res, 200, { ok: true, url: global._tunnelUrl, alreadyRunning: true });
           return;
         }
 
-        // On Cloudflare Worker (no filesystem / no native processes)
         const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
         if (isWorkerEnv) {
           let stored = null;
@@ -654,109 +759,8 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        // Local Node.js server execution
         try {
-          const { spawn } = await import('child_process');
-          const https = await import('https');
-
-          const cfDir = path.resolve(__dirname, '../data');
-          if (!fs.existsSync(cfDir)) fs.mkdirSync(cfDir, { recursive: true });
-          const cfBin = path.join(cfDir, 'cloudflared.exe');
-
-          // Download cloudflared.exe if missing
-          if (!fs.existsSync(cfBin)) {
-            const CF_URL = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe';
-            console.log('[tunnel] Downloading cloudflared...');
-            await new Promise((resolve, reject) => {
-              const file = fs.createWriteStream(cfBin);
-              const download = (url, redirects = 5) => {
-                if (redirects <= 0) { reject(new Error('Too many redirects')); return; }
-                const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 MaintenanceMailer' } }, (response) => {
-                  if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-                    download(response.headers.location, redirects - 1);
-                    return;
-                  }
-                  response.pipe(file);
-                  file.on('finish', () => file.close(resolve));
-                });
-                req.on('error', reject);
-              };
-              download(CF_URL);
-            });
-            console.log('[tunnel] cloudflared downloaded');
-          }
-
-          const port = DEFAULT_PORT;
-          const proc = spawn(cfBin, ['tunnel', '--url', `http://localhost:${port}`], {
-            stdio: ['ignore', 'pipe', 'pipe'],
-          });
-
-          global._tunnelProc = proc;
-          global._tunnelUrl  = null;
-
-          // Parse tunnel URL from output
-          const urlFound = await new Promise((resolve, reject) => {
-            const timer = setTimeout(() => reject(new Error('Tunnel URL not found within 30s')), 30000);
-            const onData = (data) => {
-              const text = data.toString();
-              const match = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
-              if (match) {
-                clearTimeout(timer);
-                proc.stdout.off('data', onData);
-                proc.stderr.off('data', onData);
-                resolve(match[0]);
-              }
-            };
-            proc.stdout.on('data', onData);
-            proc.stderr.on('data', onData);
-            proc.on('error', (e) => { clearTimeout(timer); reject(e); });
-            proc.on('exit', (code) => { clearTimeout(timer); reject(new Error(`cloudflared exited with code ${code}`)); });
-          });
-
-          global._tunnelUrl = urlFound;
-          console.log(`[tunnel] Live at ${urlFound}`);
-
-          // Save to database
-          try {
-            db.dbWrite('active-tunnel', { url: urlFound, updatedAt: new Date().toISOString(), active: true });
-          } catch {}
-
-          // Auto-register to hosted Cloudflare dashboard if configured
-          const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL || 'https://officeos-dashboard.taion16240.workers.dev';
-          const cfToken = process.env.DASHBOARD_ADMIN_TOKEN || process.env.CLOUDFLARE_WORKER_TOKEN;
-          if (cfUrl && cfUrl.startsWith('http')) {
-            try {
-              fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/register`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
-                },
-                body: JSON.stringify({ url: urlFound }),
-              }).catch(() => {});
-            } catch {}
-          }
-
-          proc.on('exit', () => {
-            global._tunnelUrl = null;
-            global._tunnelProc = null;
-            console.log('[tunnel] Tunnel closed');
-            try {
-              db.dbWrite('active-tunnel', { url: null, updatedAt: new Date().toISOString(), active: false });
-            } catch {}
-            if (cfUrl && cfUrl.startsWith('http')) {
-              try {
-                fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/stop`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
-                  },
-                }).catch(() => {});
-              } catch {}
-            }
-          });
-
+          const urlFound = await startCloudflareTunnel(DEFAULT_PORT);
           sendJson(res, 200, { ok: true, url: urlFound });
         } catch (e) {
           console.error('[tunnel] Failed to start:', e.message);
@@ -4237,6 +4241,20 @@ function startServer(port, maxTries = 5) {
     console.log(`Press Ctrl+C to stop.\n`);
     startRagScheduler();
     refreshReportMirrorOnBoot();
+
+    // Auto-launch Cloudflare tunnel on local PC
+    const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
+    if (!isWorkerEnv && process.env.AUTO_TUNNEL !== 'false') {
+      startCloudflareTunnel(port).then((tunnelUrl) => {
+        console.log(`============================================================`);
+        console.log(`  🌐 CLOUD TUNNEL URL (Quick Public URL):`);
+        console.log(`  👉 ${tunnelUrl}`);
+        console.log(`  🔗 Live Dashboard: https://officeos-dashboard.taion16240.workers.dev`);
+        console.log(`============================================================\n`);
+      }).catch((e) => {
+        console.log(`[tunnel] Note: Tunnel can be started from UI (${e.message})`);
+      });
+    }
   });
 
   server.on('error', (err) => {
