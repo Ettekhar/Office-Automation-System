@@ -388,6 +388,120 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // ── Mailer Credentials Settings API ───────────────────────────────────
+    // GET  /api/settings/credentials  — read current .env values (passwords masked)
+    // POST /api/settings/credentials  — write updated values to .env + service-account.json
+    if (pathname.startsWith('/api/settings/')) {
+      const CRED_KEYS = [
+        'CW_NAME','CW_SPREADSHEET_ID','CW_MASTER_TAB_NAME',
+        'CW_SMTP_HOST','CW_SMTP_PORT','CW_SMTP_SECURE',
+        'CW_SMTP_USER','CW_SMTP_PASS','CW_FROM_EMAIL','CW_FROM_NAME','CW_BCC_EMAIL',
+        'RM_NAME','RM_SPREADSHEET_ID','RM_MASTER_TAB_NAME',
+        'RM_SMTP_HOST','RM_SMTP_PORT','RM_SMTP_SECURE',
+        'RM_SMTP_USER','RM_SMTP_PASS','RM_FROM_EMAIL','RM_FROM_NAME','RM_BCC_EMAIL',
+        'MAX_EMAILS_PER_RUN',
+        'GEMINI_API_KEY','GROQ_API_KEY','OPENROUTER_API_KEY','MISTRAL_API_KEY',
+        'CLICKUP_API_TOKEN','CLICKUP_AUTO_CLOSE_ENABLED',
+        'CLOUDFLARE_WORKER_URL','CLOUDFLARE_WORKER_TOKEN',
+      ];
+      const PASS_KEYS = new Set(['CW_SMTP_PASS','RM_SMTP_PASS','GEMINI_API_KEY','GROQ_API_KEY','OPENROUTER_API_KEY','MISTRAL_API_KEY','CLICKUP_API_TOKEN','CLOUDFLARE_WORKER_TOKEN']);
+
+      if (pathname === '/api/settings/credentials' && method === 'GET') {
+        try {
+          const envPath = path.resolve(__dirname, '../.env');
+          const saPath  = path.resolve(__dirname, '../service-account.json');
+          const envText = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+          // Parse env into map
+          const envMap = {};
+          for (const line of envText.split(/\r?\n/)) {
+            const eq = line.indexOf('=');
+            if (eq < 1) continue;
+            const k = line.slice(0, eq).trim();
+            if (k.startsWith('#')) continue;
+            if (CRED_KEYS.includes(k)) {
+              const v = line.slice(eq + 1).trim();
+              // Mask passwords: return placeholder so UI shows "••••••" but keeps real value separate
+              envMap[k] = v;
+            }
+          }
+          // Service account status
+          let saStatus = 'missing';
+          let saEmail = '';
+          if (fs.existsSync(saPath)) {
+            try {
+              const sa = JSON.parse(fs.readFileSync(saPath, 'utf8'));
+              saEmail = sa.client_email || '';
+              saStatus = saEmail ? 'ok' : 'invalid';
+            } catch { saStatus = 'invalid'; }
+          }
+          sendJson(res, 200, { credentials: envMap, passKeys: [...PASS_KEYS], saStatus, saEmail });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
+      if (pathname === '/api/settings/credentials' && method === 'POST') {
+        try {
+          const body = await parseBody(req);
+          const vars = body.vars || {};       // key→value pairs to update in .env
+          const saJson = body.saJson || null; // optional new service-account JSON string
+
+          // Write service-account.json if provided
+          if (saJson) {
+            let parsed;
+            try { parsed = JSON.parse(saJson); } catch { sendJson(res, 400, { error: 'Invalid service-account JSON' }); return; }
+            if (!parsed.client_email || !parsed.private_key) {
+              sendJson(res, 400, { error: 'service-account JSON missing client_email or private_key' });
+              return;
+            }
+            const saPath = path.resolve(__dirname, '../service-account.json');
+            fs.writeFileSync(saPath, JSON.stringify(parsed, null, 2), 'utf8');
+          }
+
+          // Merge vars into .env
+          if (Object.keys(vars).length) {
+            const envPath = path.resolve(__dirname, '../.env');
+            let existing = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+            const lines = existing.split(/\r?\n/);
+            const envMap = new Map();
+            const headerLines = []; // comments and blanks at top
+            let inHeader = true;
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('#') || trimmed === '') {
+                if (inHeader) headerLines.push(line);
+              } else {
+                inHeader = false;
+                const eq = line.indexOf('=');
+                if (eq > 0) {
+                  envMap.set(line.slice(0, eq).trim(), line.slice(eq + 1));
+                }
+              }
+            }
+            for (const [k, v] of Object.entries(vars)) {
+              if (v !== '' || envMap.has(k)) envMap.set(k, v); // only skip truly absent+empty
+            }
+            const newLines = [...headerLines];
+            for (const [k, v] of envMap) newLines.push(`${k}=${v}`);
+            fs.writeFileSync(envPath, newLines.join('\n') + '\n', 'utf8');
+            // Reload in-process immediately (no restart needed)
+            for (const [k, v] of Object.entries(vars)) {
+              process.env[k] = v;
+            }
+          }
+
+          sendJson(res, 200, { ok: true, updated: Object.keys(vars).length, saUpdated: !!saJson });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+
+      sendJson(res, 404, { error: 'Settings route not found' });
+      return;
+    }
+
     // ── Cloudflare Quick Tunnel API ────────────────────────────────────────
     // /api/tunnel/start  POST  — download cloudflared if needed, start tunnel
     // /api/tunnel/status GET   — current tunnel URL (null if not running)

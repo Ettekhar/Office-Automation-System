@@ -343,6 +343,7 @@ function getNavSvg(key) {
     'sync': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.2"/></svg>`,
     'sheet-manager': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
     'ai-settings': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6l2.1 2.1"/><path d="M16.3 16.3l2.1 2.1"/><path d="M18.4 5.6l-2.1 2.1"/><path d="M7.7 16.3l-2.1 2.1"/></svg>`,
+    'mailer-settings': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
     'audit-log': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`,
     'custom-sheet': `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>`,
   };
@@ -412,6 +413,7 @@ const NAV_SECTIONS = {
       items: [
         { id: 'user-mgmt', icon: 'user-mgmt', label: 'User Management' },
         { id: 'send-emails', icon: 'send-emails', label: 'Email Reports' },
+        { id: 'mailer-settings', icon: 'mailer-settings', label: 'Mailer Settings', badge: 'Super' },
         { id: 'audit-log', icon: 'audit-log', label: 'Change History' },
         { id: 'sync', icon: 'sync', label: 'Sheets Sync' },
         { id: 'sheet-manager', icon: 'sheet-manager', label: 'Sheet Manager', badge: 'Super' },
@@ -545,6 +547,7 @@ const viewFns = {
   'dev-projects': viewDevProjects,
   'user-mgmt': viewUserMgmt,
   'send-emails': viewSendEmails,
+  'mailer-settings': viewMailerSettings,
   'audit-log': viewAuditLog,
   'sync': viewSync,
   'sheet-manager': viewSheetManager,
@@ -10684,3 +10687,258 @@ document.addEventListener("click", (e) => {
     });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIEW: MAILER SETTINGS
+// ═══════════════════════════════════════════════════════════════════════════════
+async function viewMailerSettings() {
+  setPage('Mailer Settings', 'Credentials & configuration for email dispatch');
+  if (S.role !== 'superadmin') {
+    mainEl.innerHTML = '<div class="empty-state"><p>Superadmin access required.</p></div>';
+    return;
+  }
+
+  mainEl.innerHTML = `
+    <div class="fade-in" style="display:flex;flex-direction:column;gap:18px;max-width:900px;margin:0 auto;padding-bottom:40px">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;color:var(--text,#fff);margin:0">⚙️ Mailer Settings</h2>
+          <p style="font-size:12px;color:var(--text-muted,#94a3b8);margin:4px 0 0">Changes are saved to <code>.env</code> &amp; <code>service-account.json</code> and take effect immediately — no restart needed.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" id="ms-reload-btn" style="font-size:12px">🔄 Reload from disk</button>
+          <button class="btn btn-primary" id="ms-save-btn" style="font-size:13px;padding:8px 22px;font-weight:700">💾 Save All Changes</button>
+        </div>
+      </div>
+
+      <!-- Save status -->
+      <div id="ms-status" style="display:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600"></div>
+
+      <!-- Google Service Account -->
+      <div class="ms-card" style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border,#2d3748);padding-bottom:12px">
+          <span style="font-size:20px">🔑</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text,#fff)">Google Service Account</div>
+            <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Grants access to Google Sheets</div>
+          </div>
+          <div id="ms-sa-badge" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted,#94a3b8)">Current account: <code id="ms-sa-email" style="color:#a5f3fc">—</code></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:12px;color:var(--text-muted,#94a3b8)">Paste new service-account.json to replace (leave blank to keep current)</label>
+          <textarea id="ms-sa-json" rows="4" placeholder="Paste full JSON content here to update..." style="width:100%;background:var(--bg,#0d1117);border:1px solid var(--border,#2d3748);border-radius:8px;padding:10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#a5f3fc;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+      </div>
+
+      <!-- CW SMTP -->
+      <div class="ms-card" style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border,#2d3748);padding-bottom:12px">
+          <span style="font-size:20px">📧</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text,#fff)">CW Workspace — SMTP &amp; Sheets</div>
+            <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Cogwheel Marketing email account &amp; Google Sheet</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${msField('CW_NAME','Display Name','text','CW Maintenance')}
+          ${msField('CW_SPREADSHEET_ID','Google Spreadsheet ID','text','')}
+          ${msField('CW_MASTER_TAB_NAME','Master Tab Name','text','Website List')}
+          ${msField('CW_FROM_NAME','From Name','text','CW Maintenance Team')}
+          ${msField('CW_FROM_EMAIL','From Email','email','')}
+          ${msField('CW_BCC_EMAIL','BCC Email (optional)','email','')}
+          ${msField('CW_SMTP_HOST','SMTP Host','text','smtp.titan.email')}
+          ${msField('CW_SMTP_PORT','SMTP Port','number','587')}
+          ${msField('CW_SMTP_USER','SMTP Username','text','')}
+          ${msPassField('CW_SMTP_PASS','SMTP Password')}
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted,#94a3b8);cursor:pointer">
+          <input type="checkbox" id="ms-CW_SMTP_SECURE" style="width:14px;height:14px"> Use SSL/TLS (port 465)
+        </label>
+      </div>
+
+      <!-- RM SMTP -->
+      <div class="ms-card" style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border,#2d3748);padding-bottom:12px">
+          <span style="font-size:20px">📨</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text,#fff)">RM Workspace — SMTP &amp; Sheets</div>
+            <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Razib Marketing email account &amp; Google Sheet</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${msField('RM_NAME','Display Name','text','RM Maintenance')}
+          ${msField('RM_SPREADSHEET_ID','Google Spreadsheet ID','text','')}
+          ${msField('RM_MASTER_TAB_NAME','Master Tab Name','text','Website List')}
+          ${msField('RM_FROM_NAME','From Name','text','RM Maintenance Team')}
+          ${msField('RM_FROM_EMAIL','From Email','email','')}
+          ${msField('RM_BCC_EMAIL','BCC Email (optional)','email','')}
+          ${msField('RM_SMTP_HOST','SMTP Host','text','smtp.titan.email')}
+          ${msField('RM_SMTP_PORT','SMTP Port','number','587')}
+          ${msField('RM_SMTP_USER','SMTP Username','text','')}
+          ${msPassField('RM_SMTP_PASS','SMTP Password')}
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted,#94a3b8);cursor:pointer">
+          <input type="checkbox" id="ms-RM_SMTP_SECURE" style="width:14px;height:14px"> Use SSL/TLS (port 465)
+        </label>
+      </div>
+
+      <!-- Email cap + ClickUp -->
+      <div class="ms-card" style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border,#2d3748);padding-bottom:12px">
+          <span style="font-size:20px">🔗</span>
+          <div style="font-size:14px;font-weight:700;color:var(--text,#fff)">Integrations &amp; Limits</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${msField('MAX_EMAILS_PER_RUN','Max Emails per Run (0 = no cap)','number','0')}
+          ${msPassField('CLICKUP_API_TOKEN','ClickUp API Token')}
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted,#94a3b8);cursor:pointer">
+          <input type="checkbox" id="ms-CLICKUP_AUTO_CLOSE_ENABLED" style="width:14px;height:14px"> Auto-close ClickUp task when email is sent
+        </label>
+      </div>
+
+      <!-- AI Keys -->
+      <div class="ms-card" style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border,#2d3748);padding-bottom:12px">
+          <span style="font-size:20px">🤖</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text,#fff)">AI Provider Keys</div>
+            <div style="font-size:11px;color:var(--text-muted,#94a3b8)">All optional — the assistant falls back to a built-in engine if none are set</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${msPassField('GEMINI_API_KEY','Google Gemini API Key')}
+          ${msPassField('GROQ_API_KEY','Groq API Key')}
+          ${msPassField('OPENROUTER_API_KEY','OpenRouter API Key')}
+          ${msPassField('MISTRAL_API_KEY','Mistral API Key')}
+          ${msField('CLOUDFLARE_WORKER_URL','Cloudflare Worker URL','url','')}
+          ${msPassField('CLOUDFLARE_WORKER_TOKEN','Cloudflare Worker Token')}
+        </div>
+      </div>
+
+      <!-- Bottom save -->
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn btn-secondary" id="ms-save-btn-2" style="font-size:13px;padding:8px 22px">💾 Save All Changes</button>
+      </div>
+    </div>`;
+
+  // ── Helper renderers ──
+  function msField(key, label, type, placeholder) {
+    return `<div style="display:flex;flex-direction:column;gap:5px">
+      <label style="font-size:11px;color:var(--text-muted,#94a3b8);font-weight:500">${esc(label)}</label>
+      <input type="${type}" id="ms-${key}" data-key="${key}" placeholder="${esc(placeholder)}"
+        style="background:var(--bg,#0d1117);border:1px solid var(--border,#2d3748);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text,#fff);width:100%;box-sizing:border-box">
+    </div>`;
+  }
+  function msPassField(key, label) {
+    return `<div style="display:flex;flex-direction:column;gap:5px">
+      <label style="font-size:11px;color:var(--text-muted,#94a3b8);font-weight:500">${esc(label)}</label>
+      <div style="display:flex;gap:6px">
+        <input type="password" id="ms-${key}" data-key="${key}" placeholder="••••••••"
+          style="flex:1;background:var(--bg,#0d1117);border:1px solid var(--border,#2d3748);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text,#fff);min-width:0">
+        <button type="button" class="btn btn-xs ms-reveal-btn" data-target="ms-${key}"
+          style="padding:4px 8px;font-size:11px;background:rgba(148,163,184,0.1);border:1px solid var(--border,#2d3748);border-radius:6px;cursor:pointer;color:var(--text-muted,#94a3b8);white-space:nowrap">👁</button>
+      </div>
+    </div>`;
+  }
+
+  // Rebuild msField/msPassField as actual DOM insertions now that innerHTML is set
+  // (The template strings above already rendered into innerHTML — no action needed)
+
+  // ── Load credentials from server ──
+  async function loadCredentials() {
+    try {
+      const data = await GET('/api/settings/credentials');
+      const creds = data.credentials || {};
+      // Fill all fields
+      for (const [k, v] of Object.entries(creds)) {
+        const el = $(`ms-${k}`);
+        if (!el) continue;
+        if (el.type === 'checkbox') {
+          el.checked = (v === 'true' || v === '1');
+        } else {
+          el.value = v;
+        }
+      }
+      // Service account badge
+      const saBadge = $('ms-sa-badge');
+      const saEmail = $('ms-sa-email');
+      if (saBadge) {
+        if (data.saStatus === 'ok') {
+          saBadge.textContent = '✅ Connected';
+          saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+        } else if (data.saStatus === 'missing') {
+          saBadge.textContent = '⚠️ Not configured';
+          saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)';
+        } else {
+          saBadge.textContent = '❌ Invalid JSON';
+          saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.3)';
+        }
+      }
+      if (saEmail) saEmail.textContent = data.saEmail || '(none)';
+    } catch (e) {
+      toast('Failed to load credentials: ' + e.message, 'error');
+    }
+  }
+  loadCredentials();
+
+  // ── Reveal password toggles ──
+  document.querySelectorAll('.ms-reveal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = $(btn.dataset.target);
+      if (!input) return;
+      if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+      else { input.type = 'password'; btn.textContent = '👁'; }
+    });
+  });
+
+  // ── Save handler ──
+  async function saveCredentials() {
+    const statusEl = $('ms-status');
+    const saveBtns = [document.getElementById('ms-save-btn'), document.getElementById('ms-save-btn-2')];
+    saveBtns.forEach(b => { if (b) { b.disabled = true; b.textContent = '⏳ Saving...'; } });
+
+    try {
+      const vars = {};
+      // Collect all env fields
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const k = el.dataset.key;
+        if (!k) return;
+        if (el.type === 'checkbox') vars[k] = el.checked ? 'true' : 'false';
+        else if (el.value !== '') vars[k] = el.value;
+      });
+
+      const saJsonText = $('ms-sa-json')?.value?.trim() || '';
+      const body = { vars };
+      if (saJsonText) body.saJson = saJsonText;
+
+      const result = await POST('/api/settings/credentials', body);
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.cssText = 'display:block;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+        statusEl.textContent = `✅ Saved ${result.updated} credential(s)${result.saUpdated ? ' + service account' : ''} — changes are live immediately.`;
+        setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 6000);
+      }
+      toast('✅ Credentials saved!', 'success', 3000);
+      // Clear SA JSON box after successful save
+      if ($('ms-sa-json')) $('ms-sa-json').value = '';
+      // Reload to show updated SA status
+      if (saJsonText) await loadCredentials();
+    } catch (e) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.cssText = 'display:block;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.3)';
+        statusEl.textContent = '❌ Save failed: ' + e.message;
+      }
+      toast('Save failed: ' + e.message, 'error');
+    }
+    saveBtns.forEach(b => { if (b) { b.disabled = false; b.textContent = '💾 Save All Changes'; } });
+  }
+
+  $('ms-save-btn')?.addEventListener('click', saveCredentials);
+  $('ms-save-btn-2')?.addEventListener('click', saveCredentials);
+  $('ms-reload-btn')?.addEventListener('click', () => { loadCredentials(); toast('Reloaded from disk', 'info', 1500); });
+}
