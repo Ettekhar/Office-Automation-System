@@ -7837,8 +7837,26 @@ function viewSendEmails() {
         </div>
       </div>
 
-      <!-- ── Tools row: Install Command + Tunnel ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-shrink:0">
+      <!-- ── Tools row: Start Server + Install Command + Tunnel ── -->
+      <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:12px;flex-shrink:0">
+
+        <!-- Start Server Card -->
+        <div style="background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.35);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:220px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">⚡</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#10b981">Start Local Server</div>
+              <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Open terminal &amp; run START-HERE.bat</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btn-start-server" class="btn btn-sm" style="flex:1;font-size:12px;padding:7px 14px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:8px;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(16,185,129,0.35)">
+              🚀 Launch Server
+            </button>
+            <div id="server-status-dot" style="width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .4s" title="Server status"></div>
+          </div>
+          <div id="server-launch-msg" style="display:none;font-size:11px;color:#10b981"></div>
+        </div>
 
         <!-- Install Command Card -->
         <div style="background:var(--card-bg,#1a1f2c);border:1px solid var(--border,#2d3748);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
@@ -7890,16 +7908,85 @@ function viewSendEmails() {
         </div>
       </div>
 
-      <!-- ── Mailer iframe ── -->
+      <!-- ── Mailer iframe + overlay ── -->
       <div style="flex:1;position:relative;min-height:400px;border-radius:12px;overflow:hidden;border:1px solid var(--border,#2d3748);box-shadow:0 8px 30px rgba(0,0,0,0.25)">
         <iframe id="mailer-iframe" src="/mailer" style="width:100%;height:100%;border:none;display:block;background:#0d1117"></iframe>
+        <!-- Offline overlay — shown when /mailer returns non-OK or times out -->
+        <div id="mailer-offline-overlay" style="display:none;position:absolute;inset:0;background:rgba(13,17,23,0.97);backdrop-filter:blur(6px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;border-radius:12px">
+          <div style="font-size:48px">🔌</div>
+          <div style="text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px">Mailer Console Offline</div>
+            <div style="font-size:13px;color:var(--text-muted,#94a3b8);max-width:360px;line-height:1.6">The local mailer server isn't responding. Click <strong style="color:#10b981">Launch Server</strong> in the card above, then reload this frame.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button id="overlay-launch-btn" class="btn btn-sm" style="font-size:13px;padding:9px 22px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:10px;cursor:pointer;box-shadow:0 3px 12px rgba(16,185,129,0.4)">⚡ Launch Server</button>
+            <button id="overlay-reload-btn" class="btn btn-secondary btn-sm" style="font-size:13px;padding:9px 16px">🔄 Reload Frame</button>
+          </div>
+          <div id="overlay-launch-msg" style="font-size:12px;color:#10b981;min-height:18px"></div>
+        </div>
       </div>
     </div>`;
+
+  // ── Server status dot + iframe health check ──
+  async function checkMailerHealth() {
+    const dot = $('server-status-dot');
+    const overlay = $('mailer-offline-overlay');
+    try {
+      const r = await fetch('/api/server/status', { cache: 'no-store' });
+      if (r.ok) {
+        if (dot) { dot.style.background = '#10b981'; dot.title = 'Server running'; }
+        if (overlay) overlay.style.display = 'none';
+        return true;
+      }
+    } catch { /* network error — server down */ }
+    if (dot) { dot.style.background = '#ef4444'; dot.title = 'Server not reachable'; }
+    if (overlay) { overlay.style.display = 'flex'; }
+    return false;
+  }
+  checkMailerHealth();
 
   // ── Reload iframe ──
   $('reload-mailer-frame')?.addEventListener('click', () => {
     const frame = $('mailer-iframe');
     if (frame) { frame.src = '/mailer?t=' + Date.now(); toast('Reloading mailer...', 'info', 1500); }
+    checkMailerHealth();
+  });
+
+  // ── Start Server button (shared handler) ──
+  async function launchServer(msgEl) {
+    try {
+      if (msgEl) msgEl.textContent = '⏳ Opening terminal...';
+      const r = await fetch('/api/server/open-terminal', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.textContent = '✅ Terminal opened! Wait ~3s then reload the frame.';
+        setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 6000);
+      }
+      toast('✅ Terminal launched — wait a few seconds then reload the frame', 'success', 5000);
+      // Auto-reload frame after 4s
+      setTimeout(() => {
+        const frame = $('mailer-iframe');
+        if (frame) { frame.src = '/mailer?t=' + Date.now(); }
+        setTimeout(checkMailerHealth, 500);
+      }, 4000);
+    } catch (e) {
+      if (msgEl) { msgEl.style.display = 'block'; msgEl.textContent = '❌ ' + e.message; msgEl.style.color = '#f87171'; }
+      toast('Launch failed: ' + e.message, 'error');
+    }
+  }
+
+  $('btn-start-server')?.addEventListener('click', () => launchServer($('server-launch-msg')));
+  $('overlay-launch-btn')?.addEventListener('click', () => {
+    const msg = $('overlay-launch-msg');
+    if (msg) msg.textContent = '⏳ Opening terminal...';
+    launchServer(msg);
+  });
+  $('overlay-reload-btn')?.addEventListener('click', () => {
+    const frame = $('mailer-iframe');
+    if (frame) { frame.src = '/mailer?t=' + Date.now(); }
+    setTimeout(checkMailerHealth, 800);
   });
 
   // ── Generate Install Command ──

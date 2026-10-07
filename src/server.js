@@ -487,6 +487,41 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // ── Server Control API ─────────────────────────────────────────────────
+    // POST /api/server/open-terminal  — open a new terminal window running
+    // START-HERE.bat so the operator can start the mailer server from the UI.
+    // GET  /api/server/status         — simple liveness ping (always 200 if server is up).
+    if (pathname.startsWith('/api/server/')) {
+      if (pathname === '/api/server/status' && method === 'GET') {
+        sendJson(res, 200, { ok: true, uptime: Math.round(process.uptime()), port: DEFAULT_PORT });
+        return;
+      }
+      if (pathname === '/api/server/open-terminal' && method === 'POST') {
+        try {
+          const { spawn } = await import('child_process');
+          const projectRoot = path.resolve(__dirname, '..');
+          const batFile = path.join(projectRoot, 'START-HERE.bat');
+          if (!fs.existsSync(batFile)) {
+            sendJson(res, 404, { error: 'START-HERE.bat not found in project root' });
+            return;
+          }
+          // Open a new visible cmd.exe window running the batch file
+          spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', `"${batFile}"`], {
+            cwd: projectRoot,
+            detached: true,
+            stdio: 'ignore',
+            shell: false,
+          }).unref();
+          sendJson(res, 200, { ok: true, launched: batFile });
+        } catch (e) {
+          sendJson(res, 500, { error: e.message });
+        }
+        return;
+      }
+      sendJson(res, 404, { error: 'Server control route not found' });
+      return;
+    }
+
     // ── Authentication Routes  (public — no session required) ─────────────
     // All /api/auth/* routes are handled before any auth check so that the
     // login page can reach them with no existing session cookie.
