@@ -93,8 +93,8 @@ id = "c44955e25a1c4791a89f3f3783213e12"
 #   npm run test:dashboard  and read the sheet-id drift section
 # ---------------------------------------------------------------------------
 [vars]
-CW_SPREADSHEET_ID = "1yu1oPX7Y3NEomyLLIFUlJ2E6wy6c_XuIzMM_dBqgiu8"
-RM_SPREADSHEET_ID = "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU"
+CW_SPREADSHEET_ID = "1Ua3ttqdT7AkiDCHlq6WyMIotRfXGTWWhw7Hzm-c4im8"
+RM_SPREADSHEET_ID = "1UHR_PP-Ri1OPU042l62c55LvMVA5KJ-8RufY7KBkr2I"
 
 # ---------------------------------------------------------------------------
 # Secrets (set with `wrangler secret put`, never committed):

@@ -108,6 +108,21 @@ function parseBody(req) {
   });
 }
 
+function isSafeTunnelUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    if (url.protocol !== 'https:' || url.username || url.password || url.port) return false;
+    const host = url.hostname.toLowerCase();
+    // This endpoint transfers credentials. It must never be an open fetch proxy
+    // to localhost or a private network address.
+    if (!host || host === 'localhost' || host.endsWith('.localhost') || host === '::1') return false;
+    if (/^(127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -338,12 +353,8 @@ async function startCloudflareTunnel(port = DEFAULT_PORT) {
           ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
         },
         body: JSON.stringify({ url: urlFound }),
-      }).then((r) => r.json()).then(async (data) => {
-        if (data && data.bundle) {
-          const { applySettingsBundle } = await import('./cloudSync.js');
-          applySettingsBundle(data.bundle);
-          console.log('[tunnel] Applied cloud credentials (Sheets & ClickUp) from cloud worker response');
-        }
+      }).then((r) => {
+        if (!r.ok) console.warn(`[tunnel] Cloud dashboard rejected registration: HTTP ${r.status}`);
       }).catch(() => {});
     } catch {}
   }
@@ -670,7 +681,9 @@ const server = http.createServer(async (req, res) => {
             } catch {}
           }
 
-          // 3. Merge vars into database record & process.env
+          // 3. Merge vars into database record & process.env. src/config.js
+          // resolves account configuration live, so CW/RM edits affect the
+          // next request without restarting Node or the Worker isolate.
           for (const [k, v] of Object.entries(vars)) {
             dbCreds.vars[k] = v;
             process.env[k] = v;
@@ -679,6 +692,11 @@ const server = http.createServer(async (req, res) => {
 
           // 4. Save to database (writes to KV on Cloudflare, data/*.json locally)
           db.dbWrite('mailer-credentials', dbCreds);
+
+          // Sheet Manager is a separate collection from Mailer Settings. Keep
+          // its built-in CW/RM cards aligned so "Open Dashboard" always reads
+          // the same sheets that the mailer uses.
+          const sheetAlignment = db.syncMaintenanceSheetCredentialsFromMailerVars(dbCreds.vars);
 
           // 5. Merge vars into local .env if on Node.js
           try {
@@ -708,12 +726,31 @@ const server = http.createServer(async (req, res) => {
             }
           } catch {}
 
+          // Sheet IDs/tabs or the service account may have changed. Clear the
+          // cached Google client and old sheet reads so a correct save cannot
+          // look as if it kept using the former RM sheet.
+          try {
+            const { resetSheetsClient } = await import('./sheets.js');
+            resetSheetsClient();
+            invalidateCache();
+          } catch (cacheError) {
+            console.warn('[credentials] Could not reset Sheets cache:', cacheError.message);
+          }
+
+          const configuredAccounts = ['CW', 'RM'].map((account) => ({
+            account,
+            spreadsheetId: String(dbCreds.vars[`${account}_SPREADSHEET_ID`] || process.env[`${account}_SPREADSHEET_ID`] || '').trim(),
+            masterTabName: String(dbCreds.vars[`${account}_MASTER_TAB_NAME`] || process.env[`${account}_MASTER_TAB_NAME`] || 'Website List').trim(),
+          }));
+
           sendJson(res, 200, {
             ok: true,
             inDatabase: true,
             updated: Object.keys(vars).length,
             saUpdated: !!saJson,
             updatedAt: dbCreds.updatedAt,
+            configuredAccounts,
+            sheetManagerRecordsUpdated: sheetAlignment.updated,
           });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
@@ -847,8 +884,8 @@ const server = http.createServer(async (req, res) => {
         try {
           const body = await parseBody(req);
           const tunnelUrl = (body.url || '').trim();
-          if (!tunnelUrl || !tunnelUrl.startsWith('https://')) {
-            sendJson(res, 400, { error: 'Invalid tunnel URL' });
+          if (!isSafeTunnelUrl(tunnelUrl)) {
+            sendJson(res, 400, { error: 'A public HTTPS tunnel URL is required' });
             return;
           }
           global._tunnelUrl = tunnelUrl;
@@ -858,9 +895,10 @@ const server = http.createServer(async (req, res) => {
           console.log(`[tunnel] Registered active tunnel: ${tunnelUrl}`);
 
           // Export full cloud credentials bundle (Sheets, ClickUp, SMTP, Service Account)
-          const { getExportBundle, applySettingsBundle } = await import('./cloudSync.js');
+          const { getExportBundle } = await import('./cloudSync.js');
           const bundle = getExportBundle();
           let pushStats = null;
+          let delivery = { attempted: true, ok: false, error: null };
 
           // Push cloud credentials directly to the connected Mailer via the tunnel
           const cleanTunnel = tunnelUrl.replace(/\/+$/, '');
@@ -874,9 +912,13 @@ const server = http.createServer(async (req, res) => {
             if (pushRes.ok) {
               const pushData = await pushRes.json();
               pushStats = pushData?.stats;
+              delivery = { attempted: true, ok: true, stats: pushStats || null };
               console.log(`[tunnel] Pushed cloud credentials to mailer (${cleanTunnel}):`, pushStats);
+            } else {
+              delivery.error = `Mailer returned HTTP ${pushRes.status}`;
             }
           } catch (syncErr) {
+            delivery.error = syncErr.message;
             console.warn(`[tunnel] Note: Could not direct-push credentials to mailer: ${syncErr.message}`);
           }
 
@@ -884,21 +926,20 @@ const server = http.createServer(async (req, res) => {
           const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
           if (!isWorkerEnv) {
             const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL || 'https://officeos-dashboard.taion16240.workers.dev';
+            const cfToken = process.env.DASHBOARD_ADMIN_TOKEN || process.env.CLOUDFLARE_WORKER_TOKEN;
             if (cfUrl && cfUrl.startsWith('http')) {
               try {
                 const regRes = await fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/register`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
+                  },
                   body: JSON.stringify({ url: tunnelUrl }),
                   signal: AbortSignal.timeout(15000),
                 });
-                if (regRes.ok) {
-                  const regData = await regRes.json();
-                  if (regData.bundle) {
-                    const localStats = applySettingsBundle(regData.bundle);
-                    pushStats = localStats;
-                    console.log(`[tunnel] Applied cloud credentials from cloud worker`);
-                  }
+                if (!regRes.ok) {
+                  console.warn(`[tunnel] Cloud worker rejected tunnel registration: HTTP ${regRes.status}`);
                 }
               } catch (cfErr) {
                 console.warn(`[tunnel] Cloud worker register error: ${cfErr.message}`);
@@ -909,9 +950,9 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 200, {
             ok: true,
             url: tunnelUrl,
-            synced: true,
+            synced: delivery.ok,
             stats: pushStats,
-            bundle,
+            delivery,
           });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
@@ -1350,11 +1391,19 @@ const server = http.createServer(async (req, res) => {
           const { getTabValues } = await import('./sheets.js');
           // Prefer the live env var, then fall back to the value stored in DB, then hardcoded default
           const dbMailerCreds = db.dbRead('mailer-credentials');
-          const CW_ID = process.env.CW_SPREADSHEET_ID ||
-            dbMailerCreds?.vars?.CW_SPREADSHEET_ID ||
+          // The database/KV is the source of truth for settings saved through
+          // Mailer Settings. Check it before process.env because a Worker can
+          // retain a deployment-time fallback ID until KV hydration completes.
+          const CW_ID = dbMailerCreds?.vars?.CW_SPREADSHEET_ID ||
+            process.env.CW_SPREADSHEET_ID ||
             '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
-          const CW_TAB = process.env.CW_MASTER_TAB_NAME || dbMailerCreds?.vars?.CW_MASTER_TAB_NAME || 'Website List';
-          const rows = await getTabValues(CW_TAB, 'A2:ZZ2', CW_ID);
+          const CW_TAB = dbMailerCreds?.vars?.CW_MASTER_TAB_NAME || process.env.CW_MASTER_TAB_NAME || 'Website List';
+          // Top-bar month data is non-critical. Never leave the whole UI in
+          // "Loading…" while the Google API queue retries a slow header read.
+          const rows = await Promise.race([
+            getTabValues(CW_TAB, 'A2:ZZ2', CW_ID),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Sheet header read timed out')), 8000)),
+          ]);
           const headers = rows?.[0] || [];
           // Month columns: anything that looks like a month name (with optional year) after first 9 fixed columns
           sheetMonths = headers
@@ -3955,9 +4004,12 @@ const server = http.createServer(async (req, res) => {
             ok: true,
             status: 'ok',
             tabs,
+            tabCount: tabs?.length || 0,
             rowCount,
+            sampleRowCount: rowCount,
             headerCols,
             credential: updated,
+            title: updated.title || cred.title,
             message: `Connected successfully! Found ${tabs?.length || 0} tab(s) and ${headerCols.length} columns.`,
           });
         } catch (e) {

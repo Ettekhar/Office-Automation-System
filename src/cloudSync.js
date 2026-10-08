@@ -161,6 +161,11 @@ export function applySettingsBundle(bundle) {
   if (data['mailer-credentials'] && typeof data['mailer-credentials'] === 'object') {
     const creds = data['mailer-credentials'];
     db.dbWrite('mailer-credentials', creds);
+    // A cloud/tunnel credential push must also update the two Sheet Manager
+    // system cards. Otherwise a connected local Mailer can receive the new RM
+    // ID while its interactive dashboard still reads the former one.
+    const sheetAlignment = db.syncMaintenanceSheetCredentialsFromMailerVars(creds.vars || {});
+    stats.maintenanceSheetsAligned = sheetAlignment.updated;
     stats.keysApplied.push('mailer-credentials');
 
     // Service Account JSON

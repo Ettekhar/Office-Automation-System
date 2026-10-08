@@ -8,7 +8,12 @@ const serviceAccountKeyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON
   ? null
   : (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH || './service-account.json');
 
-export const accounts = {
+// Build from the current environment on every read. On the Cloudflare
+// dashboard settings are hydrated from KV after modules are imported, so a
+// startup snapshot made a newly saved RM spreadsheet ID look ignored until the
+// Worker isolate restarted.
+function buildAccounts() {
+  return {
   CW: {
     key: 'CW',
     name: getEnv('CW_NAME', 'CW Maintenance'),
@@ -43,19 +48,28 @@ export const accounts = {
     fromName: getEnv('RM_FROM_NAME', 'RM Maintenance Team'),
     bccEmail: getEnv('RM_BCC_EMAIL', getEnv('BCC_EMAIL', null)) || null,
   },
+  };
+}
+
+// Keep the existing `accounts.CW` / `accounts.RM` API for older callers while
+// ensuring both properties are live rather than frozen startup values.
+export const accounts = {
+  get CW() { return buildAccounts().CW; },
+  get RM() { return buildAccounts().RM; },
 };
 
 export function getAccountConfig(accountKey = 'CW') {
   const key = String(accountKey || 'CW').toUpperCase();
-  if (accounts[key]) {
-    return accounts[key];
+  const current = buildAccounts();
+  if (current[key]) {
+    return current[key];
   }
   // Fallback to CW if not recognized
-  return accounts.CW;
+  return current.CW;
 }
 
 export function getAllAccountConfigs() {
-  return Object.values(accounts);
+  return Object.values(buildAccounts());
 }
 
 // Backwards-compatible default config pointing to CW
@@ -90,4 +104,3 @@ export const COLS = {
 
 // The exact text a month cell needs to contain (case-insensitive) to count as "done" this month.
 export const DONE_MARKER = 'updated & backup';
-

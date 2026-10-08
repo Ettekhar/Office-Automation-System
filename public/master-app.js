@@ -1032,7 +1032,17 @@ async function updateActiveMonthUI() {
     } else if (list) {
       list.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:#64748b">No months found. Add one below.</div>';
     }
-  } catch { }
+  } catch (error) {
+    // The selected month is already persisted locally. Keep it visible when a
+    // live Sheet request is slow/offline instead of leaving "Loading…" forever.
+    const lbl = $('active-month-label');
+    if (lbl) lbl.textContent = currentActiveMonth || 'Select month';
+    const list = $('month-dropdown-list');
+    if (list && !list.children.length) {
+      list.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:#fbbf24">Month list is temporarily unavailable. Refresh to retry.</div>';
+    }
+    console.warn('[month-selector] Could not refresh months:', error);
+  }
 }
 
 async function selectMonth(monthName) {
@@ -8128,16 +8138,8 @@ function viewSendEmails() {
     btn.textContent = '⏳ Connecting & Syncing...';
     try {
       const res = await POST('/api/tunnel/register', { url });
-
-      // Direct client-side push of cloud bundle to mailer if available
-      if (res && res.bundle) {
-        try {
-          await fetch(`${url.replace(/\/+$/, '')}/api/cloud-sync/push`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(res.bundle),
-          });
-        } catch {}
+      if (!res?.synced) {
+        throw new Error(res?.delivery?.error || 'The mailer did not confirm that it applied the settings');
       }
 
       await refreshTunnelStatus();
@@ -8148,8 +8150,8 @@ function viewSendEmails() {
         frame.src = url.replace(/\/+$/, '') + '/mailer?t=' + Date.now();
       }
 
-      const sheetsCount = res?.stats?.sheetsUpdated || 'all';
-      toast(`🌐 Connected! Synced ${sheetsCount} sheet(s), ClickUp token & cloud credentials to Mailer. Loading Sheet Manager…`, 'success', 5000);
+      const sheetsCount = res?.stats?.sheetsUpdated ?? 'all';
+      toast(`🌐 Connected and verified. Synced ${sheetsCount} sheet setting(s), ClickUp token & credentials to the Mailer.`, 'success', 5000);
 
       // Navigate to Sheet Manager so the user can see all synced sheet links & credential data
       setTimeout(() => viewSheetManager(), 800);
@@ -9247,7 +9249,7 @@ async function viewSheetManager() {
         if (statusLbl) statusLbl.textContent = 'Connected';
         if (diagBox) diagBox.className = 'sm-diag-box ok';
         if (diagMsg) {
-          diagMsg.textContent = `✓ Reachable! ${res.tabCount} tab(s) found: (${(res.tabs || []).slice(0, 3).join(', ')}${(res.tabs || []).length > 3 ? '…' : ''}). Row sample: ${res.sampleRowCount} rows.`;
+          diagMsg.textContent = `✓ Reachable! ${res.tabCount ?? (res.tabs || []).length} tab(s) found: (${(res.tabs || []).slice(0, 3).join(', ')}${(res.tabs || []).length > 3 ? '…' : ''}). Row sample: ${res.sampleRowCount ?? res.rowCount ?? 0} rows.`;
         }
         toast(`Connected to "${res.title || 'Sheet'}"!`, 'success');
       } else {
@@ -11060,6 +11062,10 @@ async function viewMailerSettings() {
         setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 6000);
       }
       toast('✅ Credentials saved to database!', 'success', 3000);
+      if (Array.isArray(result.configuredAccounts)) {
+        const missing = result.configuredAccounts.filter(a => !a.spreadsheetId).map(a => a.account);
+        if (missing.length) toast(`⚠️ ${missing.join(' and ')} Spreadsheet ID is still empty. It cannot sync until you save it.`, 'warning', 5500);
+      }
       // Clear SA JSON box after successful save
       if ($('ms-sa-json')) $('ms-sa-json').value = '';
       // Reload to show updated SA status & DB badge

@@ -147,8 +147,10 @@ export default {
       // Pass ctx.waitUntil so session KV writes finish even after a redirect response.
       await ensureWarm(env, ctx);
 
-      // ---- Auth & Tunnel routes are PUBLIC — no token required ----------------
-      const isAuthRoute = url.pathname.startsWith('/api/auth/') || url.pathname.startsWith('/api/tunnel/');
+      // Authentication endpoints are public by definition. Tunnel operations
+      // are not: registering a tunnel delivers credentials to that URL, so it
+      // requires a browser session or admin bearer token like other APIs.
+      const isAuthRoute = url.pathname.startsWith('/api/auth/');
       const isLoginPage = url.pathname === '/login.html' || url.pathname === '/login';
       // All static files bypass the gate — HTML pages load client-side JS which
       // calls /api/auth/me to enforce authentication. CSS/JS/images are always public.

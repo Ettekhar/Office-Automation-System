@@ -1777,6 +1777,48 @@ export function updateSheetCredential(id, updates) {
   return list[idx];
 }
 
+/**
+ * Keep the two built-in Sheet Manager records aligned with Mailer Settings.
+ *
+ * The dashboard reads Sheet Manager credentials directly, while mail sending
+ * reads `mailer-credentials.vars`. Previously these were separate stores, so
+ * changing RM in Mailer Settings could leave "Open Dashboard" pointed at an
+ * older spreadsheet. Mailer Settings is now the source of truth for CW/RM.
+ */
+export function syncMaintenanceSheetCredentialsFromMailerVars(vars = {}) {
+  if (!vars || typeof vars !== 'object') return { updated: 0 };
+  const list = getSheetCredentials();
+  let updated = 0;
+
+  for (const [id, prefix] of [['cw-maintenance', 'CW'], ['rm-maintenance', 'RM']]) {
+    const idx = list.findIndex((item) => item.id === id);
+    if (idx < 0) continue;
+    const spreadsheetId = String(vars[`${prefix}_SPREADSHEET_ID`] || '').trim();
+    const tabName = String(vars[`${prefix}_MASTER_TAB_NAME`] || '').trim();
+    const current = list[idx];
+    const changed = (spreadsheetId && current.spreadsheetId !== spreadsheetId)
+      || (tabName && current.tabName !== tabName);
+    if (!changed) continue;
+
+    list[idx] = {
+      ...current,
+      ...(spreadsheetId ? { spreadsheetId } : {}),
+      ...(tabName ? { tabName } : {}),
+      // A changed source must be re-tested; never retain a green badge from
+      // the previous spreadsheet.
+      connectionStatus: 'untested',
+      lastChecked: null,
+      lastError: null,
+      detectedTabs: [],
+      updatedAt: now(),
+    };
+    updated++;
+  }
+
+  if (updated) setSheetCredentials(list);
+  return { updated };
+}
+
 export function createSheetCredential({
   title, spreadsheetId, tabName = 'Sheet1', category = 'Operations',
   navSection = 'Operations', visibleTo = ['superadmin', 'admin', 'user'],
