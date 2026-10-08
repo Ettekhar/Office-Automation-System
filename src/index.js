@@ -122,7 +122,7 @@ async function processAccount(acct) {
     }
 
     try {
-      const reportRows = await getTabValues(matchedTab, 'A1:D200', acct.spreadsheetId);
+      const reportRows = await getTabValues(matchedTab, 'A1:Z300', acct.spreadsheetId);
       const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
       const conditionalNotes = resolveConditionalNotes(
         reportRows,

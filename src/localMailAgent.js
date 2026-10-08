@@ -124,7 +124,7 @@ export async function runJob(job) {
   try {
     // 1. The report tab is read here, not in the Worker, so the report content
     //    comes from exactly the same call the CLI makes.
-    const reportRows = await getTabValues(job.matchedTab, 'A1:D200', job.spreadsheetId);
+    const reportRows = await getTabValues(job.matchedTab, 'A1:Z300', job.spreadsheetId);
     const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
 
     // 2. Conditional notes are resolved locally too: they live in this repo's

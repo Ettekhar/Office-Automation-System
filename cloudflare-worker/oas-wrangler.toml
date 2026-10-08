@@ -1,0 +1,97 @@
+# oas-wrangler.toml
+#
+# WHY THIS FILE EXISTS
+#
+# There are two dashboard URLs and only one of them worked:
+#
+#   officeos-dashboard        full stack: Worker backend + public/ assets
+#                             GET /api/* -> 200, gated behind ADMIN_TOKEN
+#
+#   office-automation-system  static assets ONLY - it served public/master.html
+#                             and public/index.html but had NO Worker behind
+#                             them, so every fetch the page makes
+#                             (/api/master/stats, /api/master/sites, ...)
+#                             returned HTTP 404. The page rendered, then showed
+#                             nothing. That is the "404" and the "it isn't
+#                             full" - not a data problem and not a bug in src/.
+#
+# This config deploys the SAME worker code under the office-automation-system
+# name so the URL that is already bookmarked and shared serves the real thing:
+# same KV namespace (so the same 701 records), same assets, same gate.
+#
+# It is deliberately a separate file rather than a rename, because
+# officeos-dashboard is live and working. Renaming it would delete it. Two
+# names, one codebase, one namespace.
+#
+#     npm run oas:deploy
+#
+# ---------------------------------------------------------------------------
+# NOT A SECRET-BEARING FILE. No credentials here, same as dashboard-wrangler:
+# the KV id and the spreadsheet ids are identifiers, not secrets. ADMIN_TOKEN
+# and GOOGLE_SERVICE_ACCOUNT_JSON are set with `wrangler secret put` and live
+# only in Cloudflare.
+# ---------------------------------------------------------------------------
+
+name = "office-automation-system"
+main = "dashboard-worker.js"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+[observability]
+enabled = true
+
+# The real public/ directory, served as-is - byte-for-byte the same files
+# officeos-dashboard serves, so both URLs show an identical UI.
+[assets]
+directory = "../public"
+binding = "ASSETS"
+# Non-negotiable. Without this, Cloudflare answers /master from the asset store
+# before the Worker runs, and the dashboard UI is served to an unauthenticated
+# visitor while the API behind it stays gated. The UI alone leaks the client
+# list of custom sheets and the nav structure.
+run_worker_first = true
+
+# The SAME namespace as officeos-dashboard. Both Workers read one set of
+# records; there is no second copy of client data and nothing to keep in sync.
+[[kv_namespaces]]
+binding = "DASHBOARD_KV"
+id = "c44955e25a1c4791a89f3f3783213e12"
+
+# Same sheet ids, same reason as in dashboard-wrangler.toml: without these the
+# Worker has no .env, the `|| 'literal'` in src/ wins, and the cloud copy reads
+# a different spreadsheet than the laptop - both returning HTTP 200 while
+# disagreeing about the data.
+[vars]
+CW_SPREADSHEET_ID = "1yu1oPX7Y3NEomyLLIFUlJ2E6wy6c_XuIzMM_dBqgiu8"
+RM_SPREADSHEET_ID = "1XYfeNLyF6Qy7_a4BDF24etyNv7fL2QhakdAHRpqMCuU"
+
+# ---------------------------------------------------------------------------
+# Secrets, set per-Worker (a secret on one Worker is not visible to another):
+#   ADMIN_TOKEN                  Bearer token for every non-health route.
+#                                REQUIRED. Unset means the Worker refuses
+#                                every request - it fails closed, because this
+#                                surface can delete columns from client
+#                                spreadsheets. The browser cannot send a header
+#                                on a plain navigation, so the gate also accepts
+#                                HTTP Basic: username anything, password = the
+#                                token.
+#   GOOGLE_SERVICE_ACCOUNT_JSON  the service account, on one line, full
+#                                spreadsheets scope (it writes).
+# ---------------------------------------------------------------------------
+
+# The [alias] table is the whole port. Node-only modules are redirected at
+# bundler level so src/server.js and src/db.js run byte-for-byte unchanged -
+# the email and ClickUp logic is not edited, forked, or reimplemented.
+[alias]
+"node:fs" = "./dashboard/kv-shim.js"
+"fs" = "./dashboard/kv-shim.js"
+"node:http" = "./dashboard/http-shim.js"
+"http" = "./dashboard/http-shim.js"
+"node:url" = "./dashboard/url-shim.js"
+"url" = "./dashboard/url-shim.js"
+"googleapis" = "./dashboard/google-shim.js"
+"google-auth-library" = "./dashboard/google-shim.js"
+"nodemailer" = "./dashboard/nodemailer-stub.js"
+"dotenv/config" = "./dashboard/dotenv-stub.js"

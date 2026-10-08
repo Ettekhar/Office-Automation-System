@@ -8149,13 +8149,17 @@ function viewSendEmails() {
       }
 
       const sheetsCount = res?.stats?.sheetsUpdated || 'all';
-      toast(`🌐 Connected! Synced ${sheetsCount} sheet(s), ClickUp token & cloud credentials to Mailer.`, 'success', 5000);
+      toast(`🌐 Connected! Synced ${sheetsCount} sheet(s), ClickUp token & cloud credentials to Mailer. Loading Sheet Manager…`, 'success', 5000);
+
+      // Navigate to Sheet Manager so the user can see all synced sheet links & credential data
+      setTimeout(() => viewSheetManager(), 800);
     } catch (e) {
       toast('Failed to connect: ' + e.message, 'error');
     }
     btn.disabled = false;
     btn.textContent = '🔗 Connect URL';
   });
+
 
   $('input-manual-tunnel-url')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') $('btn-save-manual-tunnel')?.click();
@@ -9088,6 +9092,8 @@ async function viewSheetManager() {
         const visibleTo = Array.from(mainEl.querySelectorAll(`.perm-view-chk[data-id="${id}"]:checked`)).map(el => el.value);
         const editableBy = Array.from(mainEl.querySelectorAll(`.perm-edit-chk[data-id="${id}"]:checked`)).map(el => el.value);
 
+        const previousSpreadsheetId = credentials.find(c => c.id === id)?.spreadsheetId;
+
         try {
           await PUT(`/api/master/sheet-credentials/${id}`, {
             spreadsheetId,
@@ -9112,6 +9118,13 @@ async function viewSheetManager() {
 
           toast(`Saved settings for "${title || target?.title || 'Sheet'}"!`, 'success');
           buildCustomSheetNav();
+
+          // Auto re-test connection when spreadsheet ID changed so status & data refresh immediately
+          if (spreadsheetId && spreadsheetId !== previousSpreadsheetId) {
+            const checkBtn = mainEl.querySelector(`.check-sheet-btn[data-id="${id}"]`);
+            toast(`Spreadsheet ID changed — verifying new connection…`, 'info');
+            await testSingleSheet(id, checkBtn);
+          }
         } catch (e) {
           toast('Save failed: ' + e.message, 'error');
         } finally {

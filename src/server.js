@@ -1348,8 +1348,13 @@ const server = http.createServer(async (req, res) => {
         let sheetMonths = [];
         try {
           const { getTabValues } = await import('./sheets.js');
-          const CW_ID = process.env.CW_SPREADSHEET_ID || '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
-          const rows = await getTabValues('Website List', 'A2:ZZ2', CW_ID);
+          // Prefer the live env var, then fall back to the value stored in DB, then hardcoded default
+          const dbMailerCreds = db.dbRead('mailer-credentials');
+          const CW_ID = process.env.CW_SPREADSHEET_ID ||
+            dbMailerCreds?.vars?.CW_SPREADSHEET_ID ||
+            '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
+          const CW_TAB = process.env.CW_MASTER_TAB_NAME || dbMailerCreds?.vars?.CW_MASTER_TAB_NAME || 'Website List';
+          const rows = await getTabValues(CW_TAB, 'A2:ZZ2', CW_ID);
           const headers = rows?.[0] || [];
           // Month columns: anything that looks like a month name (with optional year) after first 9 fixed columns
           sheetMonths = headers
@@ -3881,7 +3886,23 @@ const server = http.createServer(async (req, res) => {
         const b = await body();
         try {
           sheetProgressCache.delete(id);
+
+          // Invalidate Sheets cache for the OLD spreadsheet ID (before update) so next fetch is fresh
+          const existing = db.getSheetCredentialById(id) || db.getCustomSheetById(id);
+          if (existing && existing.spreadsheetId) {
+            const { invalidateCacheForSpreadsheet } = await import('./sheetsCache.js');
+            invalidateCacheForSpreadsheet(existing.spreadsheetId);
+          }
+
           const updated = db.updateSheetCredential(id, b);
+
+          // Also invalidate for the NEW spreadsheet ID if it changed
+          if (b.spreadsheetId && b.spreadsheetId !== existing?.spreadsheetId) {
+            const { invalidateCacheForSpreadsheet } = await import('./sheetsCache.js');
+            invalidateCacheForSpreadsheet(b.spreadsheetId);
+            console.log(`[sheet-credentials] Spreadsheet ID changed for "${id}" — cache cleared for both old and new IDs`);
+          }
+
           return ok({ success: true, credential: updated });
         } catch (e) { return err(400, e.message); }
       }
@@ -3940,16 +3961,21 @@ const server = http.createServer(async (req, res) => {
             message: `Connected successfully! Found ${tabs?.length || 0} tab(s) and ${headerCols.length} columns.`,
           });
         } catch (e) {
-          const updated = db.updateSheetCredential(id, {
-            connectionStatus: 'error',
-            lastChecked: new Date().toISOString(),
-            lastError: e.message,
-          });
+          // Safely attempt to persist the error status — updateSheetCredential throws if
+          // the sheet lives only in custom-sheets, so we guard against a double-throw (→ HTTP 500).
+          let updatedOnErr = null;
+          try {
+            updatedOnErr = db.updateSheetCredential(id, {
+              connectionStatus: 'error',
+              lastChecked: new Date().toISOString(),
+              lastError: e.message,
+            });
+          } catch { /* ignore secondary update failure */ }
           return ok({
             ok: false,
             status: 'error',
             error: e.message,
-            credential: updated,
+            credential: updatedOnErr || cred,
             message: `Connection failed: ${e.message}`,
           });
         }

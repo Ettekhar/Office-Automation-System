@@ -316,7 +316,7 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
   let conditionalNotes = [];
 
   if (matchedTab) {
-    const reportRows = await getTabValues(matchedTab, 'A1:D200', targetAcct.spreadsheetId);
+    const reportRows = await getTabValues(matchedTab, 'A1:Z300', targetAcct.spreadsheetId);
     const tableRes = rowsToHtmlTable(reportRows);
     reportHtml = tableRes.reportHtml;
     hasAdditionalIssues = tableRes.hasAdditionalIssues;
@@ -393,7 +393,7 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
     const site = readySites[i];
     try {
       const siteAcct = getAccountConfig(site.account);
-      const reportRows = await getTabValues(site.matchedTab, 'A1:D200', siteAcct.spreadsheetId);
+      const reportRows = await getTabValues(site.matchedTab, 'A1:Z300', siteAcct.spreadsheetId);
       const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
       const conditionalNotes = resolveConditionalNotes(
         reportRows,
