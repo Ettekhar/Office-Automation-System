@@ -8125,12 +8125,31 @@ function viewSendEmails() {
     }
     const btn = $('btn-save-manual-tunnel');
     btn.disabled = true;
-    btn.textContent = '⏳ Connecting...';
+    btn.textContent = '⏳ Connecting & Syncing...';
     try {
-      await POST('/api/tunnel/register', { url });
+      const res = await POST('/api/tunnel/register', { url });
+
+      // Direct client-side push of cloud bundle to mailer if available
+      if (res && res.bundle) {
+        try {
+          await fetch(`${url.replace(/\/+$/, '')}/api/cloud-sync/push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(res.bundle),
+          });
+        } catch {}
+      }
+
       await refreshTunnelStatus();
       checkMailerHealth();
-      toast('🌐 Connected to tunnel: ' + url, 'success', 4000);
+
+      const frame = $('mailer-iframe');
+      if (frame) {
+        frame.src = url.replace(/\/+$/, '') + '/mailer?t=' + Date.now();
+      }
+
+      const sheetsCount = res?.stats?.sheetsUpdated || 'all';
+      toast(`🌐 Connected! Synced ${sheetsCount} sheet(s), ClickUp token & cloud credentials to Mailer.`, 'success', 5000);
     } catch (e) {
       toast('Failed to connect: ' + e.message, 'error');
     }

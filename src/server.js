@@ -338,6 +338,12 @@ async function startCloudflareTunnel(port = DEFAULT_PORT) {
           ...(cfToken ? { Authorization: `Bearer ${cfToken}` } : {}),
         },
         body: JSON.stringify({ url: urlFound }),
+      }).then((r) => r.json()).then(async (data) => {
+        if (data && data.bundle) {
+          const { applySettingsBundle } = await import('./cloudSync.js');
+          applySettingsBundle(data.bundle);
+          console.log('[tunnel] Applied cloud credentials (Sheets & ClickUp) from cloud worker response');
+        }
       }).catch(() => {});
     } catch {}
   }
@@ -836,7 +842,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // POST /api/tunnel/register — register live tunnel from local operator PC
+      // POST /api/tunnel/register — register live tunnel and sync cloud credentials to Mailer
       if (pathname === '/api/tunnel/register' && method === 'POST') {
         try {
           const body = await parseBody(req);
@@ -850,7 +856,63 @@ const server = http.createServer(async (req, res) => {
             db.dbWrite('active-tunnel', { url: tunnelUrl, updatedAt: new Date().toISOString(), active: true });
           } catch {}
           console.log(`[tunnel] Registered active tunnel: ${tunnelUrl}`);
-          sendJson(res, 200, { ok: true, url: tunnelUrl });
+
+          // Export full cloud credentials bundle (Sheets, ClickUp, SMTP, Service Account)
+          const { getExportBundle, applySettingsBundle } = await import('./cloudSync.js');
+          const bundle = getExportBundle();
+          let pushStats = null;
+
+          // Push cloud credentials directly to the connected Mailer via the tunnel
+          const cleanTunnel = tunnelUrl.replace(/\/+$/, '');
+          try {
+            const pushRes = await fetch(`${cleanTunnel}/api/cloud-sync/push`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bundle),
+              signal: AbortSignal.timeout(15000),
+            });
+            if (pushRes.ok) {
+              const pushData = await pushRes.json();
+              pushStats = pushData?.stats;
+              console.log(`[tunnel] Pushed cloud credentials to mailer (${cleanTunnel}):`, pushStats);
+            }
+          } catch (syncErr) {
+            console.warn(`[tunnel] Note: Could not direct-push credentials to mailer: ${syncErr.message}`);
+          }
+
+          // If running locally, also forward registration to cloud worker
+          const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
+          if (!isWorkerEnv) {
+            const cfUrl = process.env.DASHBOARD_WORKER_URL || process.env.CLOUDFLARE_WORKER_URL || 'https://officeos-dashboard.taion16240.workers.dev';
+            if (cfUrl && cfUrl.startsWith('http')) {
+              try {
+                const regRes = await fetch(`${cfUrl.replace(/\/+$/, '')}/api/tunnel/register`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url: tunnelUrl }),
+                  signal: AbortSignal.timeout(15000),
+                });
+                if (regRes.ok) {
+                  const regData = await regRes.json();
+                  if (regData.bundle) {
+                    const localStats = applySettingsBundle(regData.bundle);
+                    pushStats = localStats;
+                    console.log(`[tunnel] Applied cloud credentials from cloud worker`);
+                  }
+                }
+              } catch (cfErr) {
+                console.warn(`[tunnel] Cloud worker register error: ${cfErr.message}`);
+              }
+            }
+          }
+
+          sendJson(res, 200, {
+            ok: true,
+            url: tunnelUrl,
+            synced: true,
+            stats: pushStats,
+            bundle,
+          });
         } catch (e) {
           sendJson(res, 500, { error: e.message });
         }

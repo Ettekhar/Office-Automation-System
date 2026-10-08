@@ -27,6 +27,7 @@ const DEFAULT_CLOUD_URL = 'https://officeos-dashboard.taion16240.workers.dev';
 const SYNC_KEYS = [
   'sheet-credentials',
   'custom-sheets',
+  'sheet-schema',
   'mailer-credentials',
   'assistant-config',
   'users',
@@ -73,6 +74,45 @@ export function getExportBundle() {
       }
     } catch {}
   }
+
+  // Ensure mailer-credentials has complete ClickUp, Sheets, and SA configs
+  if (!bundle['mailer-credentials']) {
+    bundle['mailer-credentials'] = { vars: {} };
+  }
+  if (!bundle['mailer-credentials'].vars) {
+    bundle['mailer-credentials'].vars = {};
+  }
+  const vars = bundle['mailer-credentials'].vars;
+
+  // Include ClickUp configuration if present in environment
+  if (process.env.CLICKUP_API_TOKEN && !vars.CLICKUP_API_TOKEN) {
+    vars.CLICKUP_API_TOKEN = process.env.CLICKUP_API_TOKEN;
+  }
+  if (process.env.CLICKUP_AUTO_CLOSE_ENABLED && !vars.CLICKUP_AUTO_CLOSE_ENABLED) {
+    vars.CLICKUP_AUTO_CLOSE_ENABLED = process.env.CLICKUP_AUTO_CLOSE_ENABLED;
+  }
+
+  // Include Sheet IDs and Master Tabs if present in environment
+  for (const k of [
+    'CW_SPREADSHEET_ID', 'CW_MASTER_TAB_NAME',
+    'RM_SPREADSHEET_ID', 'RM_MASTER_TAB_NAME',
+    'CW_NAME', 'RM_NAME',
+    'CW_SMTP_HOST', 'CW_SMTP_PORT', 'CW_SMTP_SECURE', 'CW_SMTP_USER', 'CW_SMTP_PASS', 'CW_FROM_EMAIL', 'CW_FROM_NAME',
+    'RM_SMTP_HOST', 'RM_SMTP_PORT', 'RM_SMTP_SECURE', 'RM_SMTP_USER', 'RM_SMTP_PASS', 'RM_FROM_EMAIL', 'RM_FROM_NAME',
+    'MAX_EMAILS_PER_RUN', 'DASHBOARD_ADMIN_TOKEN', 'ADMIN_TOKEN'
+  ]) {
+    if (process.env[k] && !vars[k]) {
+      vars[k] = process.env[k];
+    }
+  }
+
+  // Include service account if present in environment
+  if (!bundle['mailer-credentials'].serviceAccount && process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON) {
+    try {
+      bundle['mailer-credentials'].serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON);
+    } catch {}
+  }
+
   return {
     ok: true,
     version: '2026.10',
@@ -102,7 +142,7 @@ export function applySettingsBundle(bundle) {
     keysApplied: [],
   };
 
-  // 1. Sheet Credentials & Custom Sheets
+  // 1. Sheet Credentials & Custom Sheets & Schema
   if (Array.isArray(data['sheet-credentials'])) {
     db.dbWrite('sheet-credentials', data['sheet-credentials']);
     stats.sheetsUpdated = data['sheet-credentials'].length;
@@ -111,6 +151,10 @@ export function applySettingsBundle(bundle) {
   if (Array.isArray(data['custom-sheets'])) {
     db.dbWrite('custom-sheets', data['custom-sheets']);
     stats.keysApplied.push('custom-sheets');
+  }
+  if (data['sheet-schema'] && typeof data['sheet-schema'] === 'object') {
+    db.dbWrite('sheet-schema', data['sheet-schema']);
+    stats.keysApplied.push('sheet-schema');
   }
 
   // 2. Mailer Credentials & Environment Hydration
@@ -134,6 +178,13 @@ export function applySettingsBundle(bundle) {
           }
           process.env.GOOGLE_SERVICE_ACCOUNT_KEY_JSON = JSON.stringify(saObj);
           stats.serviceAccountUpdated = true;
+
+          // Reset cached Google Sheets API client so it re-authorizes with new SA
+          try {
+            import('./sheets.js').then((m) => {
+              if (typeof m.resetSheetsClient === 'function') m.resetSheetsClient();
+            }).catch(() => {});
+          } catch {}
         }
       } catch (e) {
         console.warn('[cloud-sync] Warning: Could not write service-account.json:', e.message);

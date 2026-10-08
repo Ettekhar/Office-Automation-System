@@ -146,6 +146,10 @@ export async function getSheetsClient() {
   return sheetsClient;
 }
 
+export function resetSheetsClient() {
+  sheetsClient = null;
+}
+
 // ─── Serial Request Queue ────────────────────────────────────────────────────
 /**
  * A simple FIFO async queue.
