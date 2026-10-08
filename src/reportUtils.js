@@ -569,13 +569,35 @@ export function parseReportSections(rawRows) {
 }
 
 /**
+ * The report table's own columns (A:D).
+ *
+ * The grid is fetched as A1:Z300 so resolveConditionalNotes() can see notes
+ * written into E..Z, but nothing right of D is ever table content. Those
+ * columns hold an unrelated scaffold that shares row 1 with the section band —
+ *
+ *     A1 "Plugin Updated"   F1 "Domain Expire Date"  G1 "GA4 Check"
+ *                           H1 "GTM Check"  I1 "GSC Check"  J1 "Speed Test"
+ *
+ * — or a conditional note such as "a11y:<link>". Handing them to
+ * getSectionHeaderType() pushes its "exactly one filled cell" test past 1, the
+ * header reads as null, and parseReportSections() then discards every row of
+ * that section because currentSec is still null. The grid is therefore narrowed
+ * back to A:D here, which is the contract parseReportSections documents.
+ */
+const REPORT_BODY_COLS = 4;
+
+/**
  * Turn a per-site report tab's raw grid into an HTML table.
+ * - Rows are narrowed to A:D first (REPORT_BODY_COLS); a fetch wider than that
+ *   must not change what is rendered.
  * - Only sections with rows are rendered (empty bands like empty "Deactivated" or "Premium Plugin" are omitted).
  * - Additional Issue Fixed is rendered only if it contains active issue rows.
  * - Returns { reportHtml, hasAdditionalIssues }.
  */
 export function rowsToHtmlTable(rawRows) {
-  const sections = parseReportSections(rawRows);
+  const sections = parseReportSections(
+    (rawRows || []).map((row) => (row || []).slice(0, REPORT_BODY_COLS)),
+  );
 
   const mainSections = sections.filter(
     (s) => s.type !== "additional_issue" && s.rows.length > 0,

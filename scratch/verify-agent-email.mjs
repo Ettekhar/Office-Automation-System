@@ -260,9 +260,38 @@ console.log('── the one gap a fixture cannot cover ──');
   // The report range must be the same string in both. buildEmail turns whatever
   // rows it is given straight into the client's table, so a narrower range is a
   // quietly shorter report and nothing else would notice.
-  const range = /'A1:D200'/;
-  check(range.test(agent), 'the agent reads the report range A1:D200');
-  check(range.test(cli), 'the CLI reads the report range A1:D200');
+  //
+  // The literal is deliberately no longer pinned: the fetch was widened to
+  // A1:Z300 so conditional notes living in E..Z are visible, and the two
+  // callers agreeing matters more than which column they stop at. What must
+  // still hold is that neither reads less than the table's own A:D body.
+  const reportRangeOf = (src) =>
+    (src.match(/reportRows\s*=\s*await getTabValues\([^,]+,\s*'([^']+)'/) || [])[1] || '';
+  const colIndexOf = (r) => {
+    const m = /^A1:([A-Z]+)/.exec(r);
+    return m ? m[1].split('').reduce((n, c) => n * 26 + (c.charCodeAt(0) - 64), 0) : 0;
+  };
+  const agentRange = reportRangeOf(agent);
+  const cliRange = reportRangeOf(cli);
+
+  check(!!agentRange && agentRange === cliRange,
+    'the agent and the CLI read the SAME report range',
+    `agent=${agentRange || 'not found'} cli=${cliRange || 'not found'}`);
+  check(colIndexOf(agentRange) >= 4,
+    'the report range reaches at least column D (a narrower read is a quietly shorter report)',
+    agentRange || 'not found');
+
+  // Widening the fetch must not widen the table. The grid carries an unrelated
+  // scaffold sharing row 1 with the section band ("Domain Expire Date",
+  // "GA4 Check", "GTM Check", "GSC Check", "Speed Test"), which pushes
+  // getSectionHeaderType()'s "exactly one filled cell" test past 1, after which
+  // parseReportSections() discards every row of that section because
+  // currentSec is still null — 90 of 103 live tabs lost their "Plugin Updated"
+  // table exactly this way.
+  const reportUtils = read('src/reportUtils.js');
+  check(/slice\(0,\s*REPORT_BODY_COLS\)/.test(reportUtils),
+    'rowsToHtmlTable narrows the grid to the report body before parsing sections',
+    (reportUtils.match(/const REPORT_BODY_COLS = \d+;/) || ['(REPORT_BODY_COLS not found)'])[0]);
 
   // The account must be threaded into the note lookup, and enabledOnly must be
   // set, in both. The expressions differ legitimately — the agent has a job
