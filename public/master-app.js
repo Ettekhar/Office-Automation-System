@@ -8673,6 +8673,9 @@ async function viewSheetManager() {
               </div>
             </div>
             <div class="sm-hero-actions">
+              <button class="btn btn-secondary btn-sm" id="sm-cloud-sync-btn" style="display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa" title="Pull latest sheet links & mailer configs from Cloud">
+                ☁️ Sync from Cloud
+              </button>
               <button class="btn btn-secondary btn-sm" id="sm-test-all-btn" style="display:inline-flex;align-items:center;gap:6px">
                 ${getSvg('network', 13)} Test All Connections
               </button>
@@ -9124,6 +9127,30 @@ async function viewSheetManager() {
           toast(e.message, 'error');
         }
       });
+    // Sync from Cloud
+    $('sm-cloud-sync-btn')?.addEventListener('click', async () => {
+      const btn = $('sm-cloud-sync-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Syncing…';
+      }
+      toast('Pulling latest sheet links and mailer configs from Cloud…', 'info');
+      try {
+        const res = await POST('/api/cloud-sync/pull', {});
+        if (res.ok) {
+          toast(`✅ Synced with Cloud! Updated ${res.stats?.sheetsUpdated || 0} sheets and mailer settings.`, 'success');
+          viewSheetManager();
+        } else {
+          toast(`Cloud sync: ${res.error || 'Failed'}`, 'error');
+        }
+      } catch (err) {
+        toast(`Sync failed: ${err.message}`, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '☁️ Sync from Cloud';
+        }
+      }
     });
 
     // Test All Connections

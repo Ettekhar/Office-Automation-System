@@ -744,6 +744,61 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // ── Cloud Sync API (Seamless Local ↔ Cloud Settings Sync) ──────────────
+    // GET  /api/cloud-sync/export — export settings bundle (sheet-credentials, mailer-credentials, etc.)
+    // POST /api/cloud-sync/push   — apply settings bundle to current environment (KV or local)
+    // POST /api/cloud-sync/pull   — pull and apply settings from the cloud dashboard
+    // GET  /api/cloud-sync/status — check cloud sync status and configured endpoint
+    if (pathname.startsWith('/api/cloud-sync/')) {
+      const {
+        getExportBundle,
+        applySettingsBundle,
+        pullSettingsFromCloud,
+        getCloudConfig,
+      } = await import('./cloudSync.js');
+
+      if (pathname === '/api/cloud-sync/export' && method === 'GET') {
+        const bundle = getExportBundle();
+        sendJson(res, 200, bundle);
+        return;
+      }
+
+      if (pathname === '/api/cloud-sync/push' && method === 'POST') {
+        try {
+          const body = await parseBody(req);
+          const stats = applySettingsBundle(body);
+          sendJson(res, 200, { ok: true, stats, appliedAt: new Date().toISOString() });
+        } catch (e) {
+          sendJson(res, 400, { ok: false, error: e.message });
+        }
+        return;
+      }
+
+      if (pathname === '/api/cloud-sync/pull' && method === 'POST') {
+        try {
+          const result = await pullSettingsFromCloud();
+          sendJson(res, result.ok ? 200 : 502, result);
+        } catch (e) {
+          sendJson(res, 500, { ok: false, error: e.message });
+        }
+        return;
+      }
+
+      if (pathname === '/api/cloud-sync/status' && method === 'GET') {
+        const config = getCloudConfig();
+        sendJson(res, 200, {
+          ok: true,
+          cloudUrl: config.url,
+          hasToken: !!config.token,
+          lastExport: new Date().toISOString(),
+        });
+        return;
+      }
+
+      sendJson(res, 404, { error: 'Cloud sync route not found' });
+      return;
+    }
+
     // ── Cloudflare Quick Tunnel API ────────────────────────────────────────
     // /api/tunnel/start    POST — start local tunnel or return registered cloud tunnel
     // /api/tunnel/register POST — register live tunnel URL from local PC to cloud
@@ -4256,6 +4311,15 @@ function startServer(port, maxTries = 5) {
 
     // Auto-launch Cloudflare tunnel on local PC
     const isWorkerEnv = typeof fs.createWriteStream !== 'function' || typeof process?.versions?.node === 'undefined';
+    if (!isWorkerEnv) {
+      // Auto-pull cloud settings (sheets, mailer credentials, assistant config) on startup
+      import('./cloudSync.js').then(({ pullSettingsFromCloud, startCloudSyncScheduler }) => {
+        pullSettingsFromCloud().catch(() => {});
+        startCloudSyncScheduler(10 * 60 * 1000); // sync every 10 minutes in background
+      }).catch((e) => {
+        console.warn('[cloud-sync] Boot sync init warning:', e.message);
+      });
+    }
     if (!isWorkerEnv && process.env.AUTO_TUNNEL !== 'false') {
       startCloudflareTunnel(port).then((tunnelUrl) => {
         console.log(`============================================================`);
