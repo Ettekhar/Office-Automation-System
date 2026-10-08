@@ -9127,6 +9127,8 @@ async function viewSheetManager() {
           toast(e.message, 'error');
         }
       });
+    });
+
     // Sync from Cloud
     $('sm-cloud-sync-btn')?.addEventListener('click', async () => {
       const btn = $('sm-cloud-sync-btn');
