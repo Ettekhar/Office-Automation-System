@@ -284,7 +284,7 @@ async function startCloudflareTunnel(port = DEFAULT_PORT) {
     console.log('[tunnel] cloudflared downloaded');
   }
 
-  const proc = spawn(cfBin, ['tunnel', '--url', `http://localhost:${port}`], {
+  const proc = spawn(cfBin, ['tunnel', '--url', `http://localhost:${port}`, '--no-autoupdate'], {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   global._tunnelProc = proc;
@@ -299,6 +299,9 @@ async function startCloudflareTunnel(port = DEFAULT_PORT) {
         clearTimeout(timer);
         proc.stdout.off('data', onData);
         proc.stderr.off('data', onData);
+        // CRITICAL: Continuously drain stdout and stderr so cloudflared never blocks on full pipe buffer
+        proc.stdout.resume();
+        proc.stderr.resume();
         resolve(match[0]);
       }
     };
@@ -307,6 +310,15 @@ async function startCloudflareTunnel(port = DEFAULT_PORT) {
     proc.on('error', (e) => { clearTimeout(timer); reject(e); });
     proc.on('exit', (code) => { clearTimeout(timer); reject(new Error(`cloudflared exited with code ${code}`)); });
   });
+
+  // Wait for Cloudflare edge DNS to propagate so users never hit NXDOMAIN
+  for (let i = 0; i < 15; i++) {
+    try {
+      const ping = await fetch(urlFound, { method: 'HEAD', signal: AbortSignal.timeout(2000) });
+      if (ping.status < 500) break;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 1000));
+  }
 
   global._tunnelUrl = urlFound;
   console.log(`[tunnel] Live at ${urlFound}`);

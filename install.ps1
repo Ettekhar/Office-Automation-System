@@ -302,6 +302,7 @@ if ($tunnelUrl) {
         Set-Clipboard -Value $tunnelUrl
         Write-OK "URL copied to clipboard! (Ready to paste in Quick Public URL)"
     } catch {}
+    try { Clear-DnsClientCache -ErrorAction SilentlyContinue } catch {}
     Write-OK "Automatically synced with Cloudflare dashboard!"
     Write-Host "    Cloud Dashboard: https://officeos-dashboard.taion16240.workers.dev" -ForegroundColor Cyan
 } else {
