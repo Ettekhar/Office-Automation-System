@@ -1,0 +1,23 @@
+#!/bin/sh
+# pre-commit: block any commit that would record a credential.
+#
+# The repo is PUBLIC. .gitignore keeps .env, service-account.json and the live
+# data/ files out, but that only covers the paths someone anticipated. This hook
+# checks the STAGED content - exactly what the commit would record - for:
+#
+#   - a credential file being added at all (even via `git add -f`)
+#   - the literal live value of anything in .env or service-account.json
+#   - generic credential shapes (PEM keys, cloud tokens, webhooks, JWTs)
+#
+# It never prints a secret value, only the file, line and KIND.
+#
+# Bypass only in a real emergency, and understand what you are accepting:
+#     git commit --no-verify
+#
+# Skip just this hook (e.g. mid-rebase), never globally:
+#     git commit --no-verify
+#
+# Install:  npm run hooks:install
+# Verify:   node scratch/verify-no-credentials.mjs
+
+exec node "$(git rev-parse --show-toplevel)/scratch/verify-no-credentials.mjs"
