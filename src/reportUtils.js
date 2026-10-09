@@ -569,6 +569,48 @@ export function parseReportSections(rawRows) {
 }
 
 /**
+ * Leading rows that parseReportSections() is about to drop silently.
+ *
+ * parseReportSections() keeps every non-empty row in the section it is currently
+ * inside, and it only enters a section when it sees a band (getSectionHeaderType).
+ * A row that arrives BEFORE the first band therefore has nowhere to go and is
+ * discarded. Normally the first row is the band, so nothing is lost.
+ *
+ * It is lost when the band text is gone. On 2026-10-09 woodcliffhotelspa.com had
+ * A1 = " " (one space) instead of "Plugin Updated": the ten plugin rows below it
+ * were dropped, the email still looked complete, and nothing reported it. This
+ * function is the detector for that - it returns the rows that would vanish.
+ *
+ * Read-only, and deliberately never throws: a broken warning must not be able to
+ * fail a send. Returns [] when the grid is empty or starts with a band.
+ *
+ * Reads the table's own columns (REPORT_BODY_COLS), so it reports what the email
+ * a caller is about to build will actually lose - feeding it the raw A1:Z grid
+ * must not make the band look missing here when rowsToHtmlTable would find it.
+ */
+export function findUnsectionedRows(rawRows) {
+  try {
+    const out = [];
+    for (const row of rawRows || []) {
+      if (!Array.isArray(row)) continue;
+      const body = row.slice(0, REPORT_BODY_COLS);
+      if (!body.some((c) => String(c ?? "").trim() !== "")) continue;
+      if (getSectionHeaderType(body)) break; // first band: every later row has a home
+      out.push(body);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/** The first bit of text an operator can search for in the sheet (name, else col A). */
+function describeRow(row) {
+  const text = String(row?.[1] ?? "").trim() || String(row?.[0] ?? "").trim();
+  return text.slice(0, 60);
+}
+
+/**
  * The report table's own columns (A:D).
  *
  * The grid is fetched as A1:Z300 so resolveConditionalNotes() can see notes
@@ -592,12 +634,29 @@ const REPORT_BODY_COLS = 4;
  *   must not change what is rendered.
  * - Only sections with rows are rendered (empty bands like empty "Deactivated" or "Premium Plugin" are omitted).
  * - Additional Issue Fixed is rendered only if it contains active issue rows.
- * - Returns { reportHtml, hasAdditionalIssues }.
+ * - Returns { reportHtml, hasAdditionalIssues, hasPremiumPlugins, unsectionedRows }.
+ *   unsectionedRows is advisory only - it names the rows that were dropped for
+ *   want of a section band, so a caller can warn (it never affects reportHtml).
  */
 export function rowsToHtmlTable(rawRows) {
-  const sections = parseReportSections(
-    (rawRows || []).map((row) => (row || []).slice(0, REPORT_BODY_COLS)),
-  );
+  // Detection and parsing must see the SAME grid, or the warning could disagree
+  // with what actually rendered. Narrow once, use for both.
+  const bodyRows = (rawRows || []).map((row) => (row || []).slice(0, REPORT_BODY_COLS));
+
+  // Rows above the first band are dropped by parseReportSections(). Say so once
+  // per render, before the result scrolls past, and never let it throw: the
+  // warning is worth strictly less than the email it is describing.
+  const unsectionedRows = findUnsectionedRows(bodyRows);
+  if (unsectionedRows.length > 0) {
+    try {
+      console.warn(
+        `⚠ [report] ${unsectionedRows.length} row(s) sit above the first section band and will NOT appear in the email ` +
+        `— is a band row blank on this tab? (e.g. "Plugin Updated" in A1; first dropped: "${describeRow(unsectionedRows[0])}")`,
+      );
+    } catch { /* a warning must never break a render */ }
+  }
+
+  const sections = parseReportSections(bodyRows);
 
   const mainSections = sections.filter(
     (s) => s.type !== "additional_issue" && s.rows.length > 0,
@@ -630,7 +689,7 @@ export function rowsToHtmlTable(rawRows) {
       ? "<p><em>(No report content found on this tab.)</em></p>"
       : `${mainTable}${issueTable}`;
 
-  return { reportHtml, hasAdditionalIssues, hasPremiumPlugins };
+  return { reportHtml, hasAdditionalIssues, hasPremiumPlugins, unsectionedRows };
 }
 
 function renderMainSectionsTable(sections, numCols, pad) {
