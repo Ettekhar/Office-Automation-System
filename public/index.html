@@ -322,6 +322,7 @@
               <th>Month Status</th>
               <th>Contact Email(s)</th>
               <th>Report Tab</th>
+              <th>Website Sheet</th>
               <th class="col-timetrack" title="ClickUp Time Track &mdash; the &quot;Maintenance time tracking ClickUp URL&quot; column">Time Track</th>
               <th>CMS / AM</th>
               <th width="130" style="text-align: right;">Action</th>
@@ -329,7 +330,7 @@
           </thead>
           <tbody id="sitesTableBody">
             <tr>
-              <td colspan="10" class="table-loading">
+              <td colspan="11" class="table-loading">
                 <div class="spinner"></div>
                 <p>Loading spreadsheet data...</p>
               </td>
@@ -500,6 +501,7 @@
             <span id="modalPremiumTag" class="tag tag-premium hidden">Premium Plugin</span>
             <span id="modalIssuesTag" class="tag tag-issues hidden">Issues Fixed</span>
             <span id="modalEditedTag" class="tag tag-edited hidden">✏️ Custom Edited</span>
+            <span id="modalNoTableTag" class="tag hidden" style="background:#b91c1c;color:#fff;" title="This report tab has no section band, so some rows were dropped from the email.">⚠ Missing Table</span>
           </div>
         </div>
         <button id="closeModalBtn" class="btn-icon" title="Close Preview">

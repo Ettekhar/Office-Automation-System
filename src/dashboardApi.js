@@ -1,5 +1,5 @@
 import { config, accounts, getAccountConfig, getAllAccountConfigs, DONE_MARKER } from './config.js';
-import { listTabTitles, getTabValues } from './sheets.js';
+import { listTabTitles, listTabMeta, getTabValues } from './sheets.js';
 import {
   findHeaderRow,
   detectColumns,
@@ -11,6 +11,7 @@ import {
   parseContacts,
   rowsToHtmlTable,
   resolveConditionalNotes,
+  missingSectionInfo,
 } from './reportUtils.js';
 import { buildEmail, sendReportEmail } from './mailer.js';
 import { getConditionalNotes, getSites } from './db.js';
@@ -51,6 +52,43 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
 
   const monthCol = reportMonth.columnIndex;
   const dataRows = masterRows.slice(headerRowIndex + 1);
+
+  // Per-site sheet link, so the mailer console can show exactly which tab a
+  // report is built from. Sourced in order of directness:
+  //   1. the master sheet's own URL cell (CW's "Maintenance Report URL"),
+  //   2. the site registry (RM's "Website List" has no URL column, so its links
+  //      were resolved during a previous sync),
+  //   3. a deep link built from the report tab's gid.
+  // Advisory only and never fatal: a site with no link shows a dash, and a
+  // Sheets hiccup must not stop the overview loading.
+  const registry = (() => { try { return getSites({}) || []; } catch { return []; } })();
+  const normUrl = (u) => String(u || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  const registryByUrl = new Map(registry.map((s) => [normUrl(s.url), s]));
+  const tabGidCache = {}; // spreadsheetId -> Map(title -> gid) | null
+
+  async function sheetUrlFor(masterCell, matchedTab, websiteUrl) {
+    const direct = String(masterCell ?? '').trim();
+    if (/^https?:\/\//i.test(direct)) return direct;
+
+    const stored = String(registryByUrl.get(normUrl(websiteUrl))?.reportUrl ?? '').trim();
+    if (/^https?:\/\//i.test(stored)) return stored;
+
+    if (!matchedTab) return '';
+    if (tabGidCache[acct.spreadsheetId] === undefined) {
+      try {
+        const tabs = await listTabMeta(acct.spreadsheetId);
+        tabGidCache[acct.spreadsheetId] = new Map((tabs || []).map((t) => [t.title, t.gid]));
+      } catch (e) {
+        console.warn(`[overview] could not list tabs for ${acct.name}: ${e.message}`);
+        tabGidCache[acct.spreadsheetId] = null;
+      }
+    }
+    const gids = tabGidCache[acct.spreadsheetId];
+    const gid = gids ? gids.get(matchedTab) : undefined;
+    return gid !== undefined && gid !== null && gid !== ''
+      ? `https://docs.google.com/spreadsheets/d/${acct.spreadsheetId}/edit#gid=${gid}`
+      : '';
+  }
 
   const sites = [];
   let totalActive = 0;
@@ -112,6 +150,7 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
       }
     }
 
+    const reportUrl = await sheetUrlFor(row[cols.REPORT_URL], matchedTab, websiteUrl);
     sites.push({
       id: `${acct.key.toLowerCase()}-site-${index + 1}`,
       account: acct.key,
@@ -131,6 +170,7 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
       isReady: ready,
       contacts,
       matchedTab,
+      reportUrl,
       status,
       extra,
     });
@@ -314,6 +354,7 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
   let hasAdditionalIssues = false;
   let hasPremiumPlugins = false;
   let conditionalNotes = [];
+  let missingSectionRows = null;
 
   if (matchedTab) {
     const reportRows = await getTabValues(matchedTab, 'A1:Z300', targetAcct.spreadsheetId);
@@ -321,6 +362,7 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
     reportHtml = tableRes.reportHtml;
     hasAdditionalIssues = tableRes.hasAdditionalIssues;
     hasPremiumPlugins = tableRes.hasPremiumPlugins;
+    missingSectionRows = missingSectionInfo(tableRes.unsectionedRows);
     conditionalNotes = resolveConditionalNotes(
       reportRows,
       getConditionalNotes({ account: targetAcct.key, enabledOnly: true }),
@@ -364,6 +406,9 @@ export async function getSitePreview(websiteUrl, requestedMonth = null, accountK
     html,
     hasAdditionalIssues,
     hasPremiumPlugins,
+    // Operator-only: non-null when the tab has no section band and rows were
+    // dropped from the email. Shown as a console notice, never sent.
+    missingSectionRows,
     // Which conditions fired, and which cell each link came from. Surfaced so
     // the dashboard can show the operator why a paragraph appeared.
     conditionalNotes: conditionalNotes.map((n) => ({
@@ -388,13 +433,15 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
   const readySites = overview.sites.filter((s) => s.status === 'ready');
   const previews = [];
   const errors = [];
+  const missingSectionSites = [];
 
   for (let i = 0; i < readySites.length; i++) {
     const site = readySites[i];
     try {
       const siteAcct = getAccountConfig(site.account);
       const reportRows = await getTabValues(site.matchedTab, 'A1:Z300', siteAcct.spreadsheetId);
-      const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
+      const { reportHtml, hasAdditionalIssues, hasPremiumPlugins, unsectionedRows } = rowsToHtmlTable(reportRows);
+      const missingSectionRows = missingSectionInfo(unsectionedRows);
       const conditionalNotes = resolveConditionalNotes(
         reportRows,
         getConditionalNotes({ account: site.account, enabledOnly: true }),
@@ -427,12 +474,21 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
         html,
         hasAdditionalIssues,
         hasPremiumPlugins,
+        missingSectionRows,
         conditionalNotes: conditionalNotes.map((n) => ({
           condition: n.condition,
           url: n.url,
           sourceCell: n.sourceCell,
         })),
       });
+
+      if (missingSectionRows) {
+        missingSectionSites.push({
+          websiteUrl: site.websiteUrl,
+          account: site.account,
+          ...missingSectionRows,
+        });
+      }
     } catch (err) {
       errors.push({
         websiteUrl: site.websiteUrl,
@@ -447,6 +503,8 @@ export async function generateAllPreviews(requestedMonth = null, accountKey = 'a
     totalReady: readySites.length,
     generatedCount: previews.length,
     errorCount: errors.length,
+    missingSectionCount: missingSectionSites.length,
+    missingSectionSites,
     previews,
     errors,
   };

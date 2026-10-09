@@ -605,9 +605,23 @@ export function findUnsectionedRows(rawRows) {
 }
 
 /** The first bit of text an operator can search for in the sheet (name, else col A). */
-function describeRow(row) {
+export function describeRow(row) {
   const text = String(row?.[1] ?? "").trim() || String(row?.[0] ?? "").trim();
   return text.slice(0, 60);
+}
+
+/**
+ * Reduce the rows findUnsectionedRows() returned to a small, serialisable shape
+ * for operator surfaces (the end-of-run CLI summary and the dashboard notice):
+ * how many rows were dropped, and the text of the first one so an operator can
+ * find it in the sheet. Returns null when nothing was dropped.
+ *
+ * Operator-only and purely informational - this value is never used to build an
+ * email, and it is never sent to a client. Never throws.
+ */
+export function missingSectionInfo(unsectionedRows) {
+  if (!Array.isArray(unsectionedRows) || unsectionedRows.length === 0) return null;
+  return { count: unsectionedRows.length, first: describeRow(unsectionedRows[0]) };
 }
 
 /**

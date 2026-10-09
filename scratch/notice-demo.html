@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>Missing-table notice — operator-only</title>
+<style>
+  body{background:#0f1420;color:#e6edf7;font-family:system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:28px 32px;}
+  h1{font-size:19px;margin:0 0 4px;} .sub{color:#8b9bb4;font-size:13px;margin-bottom:22px;}
+  h2{font-size:14px;margin:26px 0 10px;color:#cdd9ea;}
+  .card{background:#141b2b;border:1px solid #243049;border-radius:10px;padding:16px 18px;}
+  pre{margin:0;background:#0b101a;border:1px solid #243049;border-radius:8px;padding:14px 16px;
+      font-family:Consolas,monospace;font-size:12.5px;line-height:1.55;color:#f0d090;white-space:pre-wrap;}
+  .warn{color:#ffb454;} .red{color:#ff7b72;}
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #243049;vertical-align:top;}
+  th{color:#8b9bb4;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-right:6px;}
+  .tag-tab{background:#1e2a44;color:#9fc0ff;} .tag-edited{background:#2a3a1e;color:#bfe08a;}
+  .tag-missing{background:#b91c1c;color:#fff;}
+  .tags{display:flex;align-items:center;gap:8px;background:#0b101a;border:1px solid #243049;border-radius:8px;padding:12px 14px;}
+  .tags strong{font-size:14px;margin-right:8px;}
+  .note{color:#8b9bb4;font-size:12px;margin-top:10px;}
+</style></head><body>
+<h1>Missing-table notice — operator-only</h1>
+<div class="sub">Shown to us only. Never in an email body, never to a client. Every report is healthy today, so in normal use none of this is visible.</div>
+
+<h2>1 · End of a local run (terminal) — <code>node src/index.js</code></h2>
+<div class="card"><pre>========================================
+⚠ 1 report(s) are MISSING THEIR TABLE (no section band on the tab):
+   - [CW] https://woodcliffhotelspa.com (10 row(s) dropped, first: &quot;All-in-One WP Migration and Backup&quot;)
+========================================</pre>
+<div class="note">The same run also prints a per-render line on stderr the moment a report is built:</div>
+<pre style="margin-top:10px">⚠ [report] 10 row(s) sit above the first section band and will NOT appear in the email — is a band row blank on this tab? (e.g. &quot;Plugin Updated&quot; in A1; first dropped: &quot;All-in-One WP Migration and Backup&quot;)</pre></div>
+
+<h2>2 · Mailer console — sites list (per-site badge)</h2>
+<div class="card"><table>
+<tr><th>Site</th><th>Status</th><th>Report Tab</th><th>Website Sheet</th></tr>
+<tr>
+  <td><div style="font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+    <span>https://woodcliffhotelspa.com</span>
+    <span class="tag tag-edited">✏️ Edited</span>
+    <span class="tag" style="background:#b91c1c;color:#fff;" title="No section band on this tab — 10 row(s) will not appear in the email. First: &quot;All-in-One WP Migration and Backup&quot;">⚠ Missing Table (10)</span>
+  </div><div style="color:#8b9bb4;font-size:11px;">Woodcliff Hotel &amp; Spa</div></td>
+  <td><span class="tag tag-tab">Ready to Send</span></td>
+  <td><span class="tag tag-tab" title="https://woodcliffhotelspa.com">https://woodcliffhot…</span></td>
+  <td><span class="tag tag-tab">Sheet ↗</span></td>
+</tr>
+</table><div class="note">The badge appears once a preview has been generated for that site (same trigger as the existing “Edited” badge).</div></div>
+
+<h2>3 · Mailer console — preview modal header</h2>
+<div class="card"><div class="tags">
+  <strong>Report: https://woodcliffhotelspa.com</strong>
+  <span class="tag tag-tab">CW (info@…)</span>
+  <span class="tag tag-tab">Tab: "https://woodcliffhotelspa.com"</span>
+  <span class="tag tag-edited">✏️ Custom Edited</span>
+  <span id="modalNoTableTag" class="tag" style="background:#b91c1c;color:#fff;" title="No section band on this tab. First dropped row: &quot;All-in-One WP Migration and Backup&quot;">⚠ Missing Table (10 rows dropped)</span>
+</div><div class="note">Clicking the badge or opening the preview shows the count and the first dropped row (hover the tag for details).</div></div>
+</body></html>

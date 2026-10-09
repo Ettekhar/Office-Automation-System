@@ -67,6 +67,7 @@ const modalTabTag = document.getElementById('modalTabTag');
 const modalPremiumTag = document.getElementById('modalPremiumTag');
 const modalIssuesTag = document.getElementById('modalIssuesTag');
 const modalEditedTag = document.getElementById('modalEditedTag');
+const modalNoTableTag = document.getElementById('modalNoTableTag');
 const editToInput = document.getElementById('editToInput');
 const editSubjectInput = document.getElementById('editSubjectInput');
 const tabVisualPreview = document.getElementById('tabVisualPreview');
@@ -273,7 +274,7 @@ async function loadOverview(month = null, account = null) {
   try {
     sitesTableBody.innerHTML = `
       <tr>
-        <td colspan="10" class="table-loading">
+        <td colspan="11" class="table-loading">
           <div class="spinner"></div>
           <p>Loading spreadsheet data...</p>
         </td>
@@ -305,7 +306,7 @@ async function loadOverview(month = null, account = null) {
     showToast(`Error loading data: ${err.message}`, 'error');
     sitesTableBody.innerHTML = `
       <tr>
-        <td colspan="10" style="text-align: center; color: #ef4444; padding: 32px;">
+        <td colspan="11" style="text-align: center; color: #ef4444; padding: 32px;">
           Failed to load data: ${err.message}
         </td>
       </tr>
@@ -450,7 +451,10 @@ function renderSitesTable() {
       const matchCompany = site.company.toLowerCase().includes(q);
       const matchAm = site.accountManager.toLowerCase().includes(q);
       const matchAcct = (site.account || '').toLowerCase().includes(q) || (site.accountName || '').toLowerCase().includes(q);
-      if (!matchUrl && !matchContacts && !matchCompany && !matchAm && !matchAcct) return false;
+      // Placeholder promises "sheet" search: the report tab name and the sheet
+      // URL are both matches.
+      const matchSheet = (site.matchedTab || '').toLowerCase().includes(q) || (site.reportUrl || '').toLowerCase().includes(q);
+      if (!matchUrl && !matchContacts && !matchCompany && !matchAm && !matchAcct && !matchSheet) return false;
     }
     return true;
   });
@@ -458,7 +462,7 @@ function renderSitesTable() {
   if (filteredSites.length === 0) {
     sitesTableBody.innerHTML = `
       <tr>
-        <td colspan="10" style="text-align:center; padding: 40px; color: var(--text-muted);">
+        <td colspan="11" style="text-align:center; padding: 40px; color: var(--text-muted);">
           No websites found matching your criteria.
         </td>
       </tr>
@@ -495,6 +499,13 @@ function renderSitesTable() {
         ? `<span class="tag tag-edited" title="Custom edits saved">✏️ Edited</span>`
         : '';
 
+      // Operator-only: this site's report tab has no section band, so rows were
+      // dropped from its email. Only known once a preview has been generated.
+      const noTableInfo = preview && preview.missingSectionRows;
+      const noTableBadge = noTableInfo && noTableInfo.count > 0
+        ? `<span class="tag" style="background:#b91c1c;color:#fff;" title="No section band on this tab — ${escapeHtml(String(noTableInfo.count))} row(s) will not appear in the email. First: &quot;${escapeHtml(noTableInfo.first || '')}&quot;">⚠ Missing Table (${escapeHtml(String(noTableInfo.count))})</span>`
+        : '';
+
       const monthStatusDisplay = site.monthCell
         ? `<strong>${escapeHtml(site.monthCell)}</strong>`
         : '<span style="color:var(--text-subtle);">&mdash;</span>';
@@ -513,6 +524,14 @@ function renderSitesTable() {
           ? `<span style="color:var(--text-subtle); font-size:11px;" title="Not a usable http(s) link">Not a link</span>`
           : '<span style="color:var(--text-subtle);">&mdash;</span>');
 
+      // The exact Google Sheet tab this report is built from (CW and RM alike).
+      // A blank stays visibly blank rather than guessing at a wrong link.
+      const sheetHref = safeExternalUrl(site.reportUrl);
+      const sheetCell = sheetHref
+        ? `<a href="${escapeHtml(sheetHref)}" target="_blank" rel="noopener noreferrer"
+              class="btn btn-secondary btn-sm" title="${escapeHtml(site.reportUrl)}">Sheet &#8599;</a>`
+        : '<span style="color:var(--text-subtle);">&mdash;</span>';
+
       return `
         <tr>
           <td class="col-checkbox">
@@ -523,6 +542,7 @@ function renderSitesTable() {
             <div style="font-weight: 600; color: #ffffff; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
               <span class="site-domain">${escapeHtml(site.websiteUrl)}</span>
               ${editedBadge}
+              ${noTableBadge}
             </div>
             ${site.company ? `<div class="site-company">${escapeHtml(site.company)}</div>` : ''}
           </td>
@@ -539,6 +559,9 @@ function renderSitesTable() {
             ${site.matchedTab
           ? `<span class="tag tag-tab" title="${escapeHtml(site.matchedTab)}">${escapeHtml(site.matchedTab.slice(0, 24))}${site.matchedTab.length > 24 ? '...' : ''}</span>`
           : '<span style="color:var(--text-subtle); font-size:11px;">(No tab)</span>'}
+          </td>
+          <td class="col-sheet">
+            ${sheetCell}
           </td>
           <td class="col-timetrack">
             ${timeTrackCell}
@@ -620,6 +643,7 @@ async function openPreviewModal(websiteUrl, account = null) {
     modalPremiumTag.classList.add('hidden');
     modalIssuesTag.classList.add('hidden');
     modalEditedTag.classList.add('hidden');
+    modalNoTableTag.classList.add('hidden');
     editToInput.value = '';
     editSubjectInput.value = '';
     rawHtmlTextarea.value = '';
@@ -658,6 +682,13 @@ async function openPreviewModal(websiteUrl, account = null) {
     if (previewData.hasPremiumPlugins) modalPremiumTag.classList.remove('hidden');
     if (previewData.hasAdditionalIssues) modalIssuesTag.classList.remove('hidden');
     if (previewData.isCustomEdited) modalEditedTag.classList.remove('hidden');
+    if (previewData.missingSectionRows && previewData.missingSectionRows.count > 0) {
+      // Operator-only notice. This tag lives in the console header, never in the
+      // email body, so it cannot reach a client.
+      modalNoTableTag.textContent = `⚠ Missing Table (${previewData.missingSectionRows.count} row${previewData.missingSectionRows.count === 1 ? '' : 's'} dropped)`;
+      modalNoTableTag.title = `No section band on this tab. First dropped row: "${previewData.missingSectionRows.first || ''}"`;
+      modalNoTableTag.classList.remove('hidden');
+    }
 
     editToInput.value = Array.isArray(previewData.contacts) ? previewData.contacts.join(', ') : previewData.contacts;
     editSubjectInput.value = previewData.subject;
@@ -1273,7 +1304,11 @@ generateAllBtn.addEventListener('click', async () => {
       }
     }
 
-    showToast(`Generated ${data.generatedCount} email previews for review!`);
+    let genMsg = `Generated ${data.generatedCount} email previews for review!`;
+    if (data.missingSectionCount > 0) {
+      genMsg += ` ⚠ ${data.missingSectionCount} report(s) have no section band — see the red "Missing Table" badge (rows were dropped).`;
+    }
+    showToast(genMsg, data.missingSectionCount > 0 ? 'error' : undefined);
     updateActionButtons();
     renderStats();
     renderSitesTable();

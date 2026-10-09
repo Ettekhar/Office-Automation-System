@@ -11,6 +11,7 @@ import {
   parseContacts,
   rowsToHtmlTable,
   resolveConditionalNotes,
+  missingSectionInfo,
 } from './reportUtils.js';
 import { buildEmail, sendReportEmail } from './mailer.js';
 import { getConditionalNotes } from './db.js';
@@ -88,6 +89,7 @@ async function processAccount(acct) {
   let skippedNoContact = 0;
   let skippedNoTab = 0;
   let errors = 0;
+  const missingTables = [];
 
   for (const row of dataRows) {
     const status = row[cols.STATUS];
@@ -123,7 +125,7 @@ async function processAccount(acct) {
 
     try {
       const reportRows = await getTabValues(matchedTab, 'A1:Z300', acct.spreadsheetId);
-      const { reportHtml, hasAdditionalIssues, hasPremiumPlugins } = rowsToHtmlTable(reportRows);
+      const { reportHtml, hasAdditionalIssues, hasPremiumPlugins, unsectionedRows } = rowsToHtmlTable(reportRows);
       const conditionalNotes = resolveConditionalNotes(
         reportRows,
         getConditionalNotes({ account: acct.key, enabledOnly: true }),
@@ -152,6 +154,14 @@ async function processAccount(acct) {
       });
       console.log(`${SEND ? '✅ Sent' : '📝 Would send'} [${acct.key}]: ${websiteUrl} -> ${contacts.join(', ')} (tab: "${matchedTab}")`);
 
+      // Operator-only: remember any report whose tab had no section band, so the
+      // run ends with one list of emails that went out missing a table. This
+      // never touches the email that was just built.
+      const missing = missingSectionInfo(unsectionedRows);
+      if (missing) {
+        missingTables.push({ websiteUrl, account: acct.key, ...missing });
+      }
+
       if (row[cols.TIME_TRACK_URL]) {
         try {
           await completeClickUpMaintenanceTask({
@@ -179,8 +189,14 @@ async function processAccount(acct) {
   console.log(`${SEND ? 'Sent' : 'Would send'}: ${sent}`);
   console.log(`Skipped: ${skippedInactive + skippedNotDone + skippedNoContact + skippedNoTab}`);
   console.log(`Errors: ${errors}`);
+  if (missingTables.length > 0) {
+    console.warn(`⚠ Reports missing a section band: ${missingTables.length}`);
+    for (const m of missingTables) {
+      console.warn(`   - ${m.websiteUrl} — ${m.count} row(s) dropped (first: "${m.first}")`);
+    }
+  }
 
-  return { sent, errors };
+  return { sent, errors, missingTables };
 }
 
 async function main() {
@@ -192,8 +208,22 @@ async function main() {
     ? [getAccountConfig(targetAccount)]
     : getAllAccountConfigs();
 
+  const allMissingTables = [];
   for (const acct of accountsToProcess) {
-    await processAccount(acct);
+    const result = await processAccount(acct);
+    if (result && Array.isArray(result.missingTables)) allMissingTables.push(...result.missingTables);
+  }
+
+  // The block to look for at the end of a run: every email that went out (or
+  // would go out) without its table, because the tab had no section band.
+  // Operator-only - nothing here is part of any email.
+  if (allMissingTables.length > 0) {
+    console.warn('\n========================================');
+    console.warn(`⚠ ${allMissingTables.length} report(s) are MISSING THEIR TABLE (no section band on the tab):`);
+    for (const m of allMissingTables) {
+      console.warn(`   - [${m.account}] ${m.websiteUrl} (${m.count} row(s) dropped, first: "${m.first}")`);
+    }
+    console.warn('========================================');
   }
 
   if (!SEND) {
