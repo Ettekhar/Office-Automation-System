@@ -18,6 +18,34 @@ import { getConditionalNotes, getSites } from './db.js';
 import { completeClickUpMaintenanceTask } from './clickup.js';
 
 /**
+ * Distinct Account Manager strings currently present in the master tab's AM
+ * column of every account (CW + RM). Read fresh on every call so the operator
+ * directory follows the sheet - new names appear, removed names disappear.
+ *
+ * Read-only and never fatal: an account whose master tab cannot be read is
+ * skipped with a warning instead of failing the directory.
+ */
+export async function getAllSheetAccountManagers() {
+  const rawCells = [];
+  for (const acct of getAllAccountConfigs()) {
+    try {
+      const masterRows = await getTabValues(acct.masterTabName, 'A1:ZZ2000', acct.spreadsheetId);
+      const { headerRow, headerRowIndex } = findHeaderRow(masterRows || []);
+      if (!headerRow) continue;
+      const cols = detectColumns(headerRow);
+      const dataRows = (masterRows || []).slice((headerRowIndex ?? -1) + 1);
+      for (const row of dataRows) {
+        const raw = String(row[cols.AM] ?? '').trim();
+        if (raw) rawCells.push(raw);
+      }
+    } catch (err) {
+      console.warn(`[clickup] could not read the AM column for ${acct.name}: ${err.message}`);
+    }
+  }
+  return rawCells;
+}
+
+/**
  * Fetch overview data for a single account.
  */
 async function getAccountOverviewData(acct, requestedMonth = null) {

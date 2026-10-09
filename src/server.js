@@ -8,9 +8,11 @@ import {
   getSitePreview,
   generateAllPreviews,
   sendSingleEmail,
+  getAllSheetAccountManagers,
 } from './dashboardApi.js';
 import {
   getAccountManagersList,
+  getClickUpMembers,
   getClickUpTaskPreview,
   completeClickUpMaintenanceTask,
 } from './clickup.js';
@@ -1143,9 +1145,29 @@ const server = http.createServer(async (req, res) => {
     }
 
     // API Route: Get all Account Managers directory (names, IDs, fresh email addresses)
+    // Sheet-derived: distinct AM names from the master tabs (fresh every call),
+    // each linked via AM_DIRECTORY or proposed from the live ClickUp roster.
+    // `?refresh=1` bypasses the 10-minute ClickUp-member cache.
     if (pathname === '/api/clickup/account-managers' && method === 'GET') {
-      const data = getAccountManagersList();
-      sendJson(res, 200, { success: true, ...data });
+      try {
+        const refresh = reqUrl.searchParams.get('refresh') === '1';
+        const [sheetNames, membersState] = await Promise.all([
+          getAllSheetAccountManagers(),
+          getClickUpMembers(refresh),
+        ]);
+        const data = getAccountManagersList({ sheetNames, members: membersState.members });
+        sendJson(res, 200, {
+          success: true,
+          ...data,
+          membersInfo: {
+            count: membersState.members.length,
+            error: membersState.error || null,
+            at: membersState.at,
+          },
+        });
+      } catch (err) {
+        sendJson(res, 500, { success: false, error: err.message });
+      }
       return;
     }
 

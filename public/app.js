@@ -296,6 +296,9 @@ async function loadOverview(month = null, account = null) {
     }
 
     currentOverview = await res.json();
+    // The sheet changed: the operator directory ("View All AMs") must follow, so
+    // next time it opens it refetches from the freshly-read master tabs.
+    cachedAccountManagers = null;
     populateWorkspaceSelect();
     populateMonthSelect();
     updateActionButtons();
@@ -1213,6 +1216,17 @@ if (refreshClickUpBtn) {
 }
 
 // --- Account Manager Directory Modal ---
+function applyAccountManagerMeta(data) {
+  const list = data.accountManagers || [];
+  if (amCountBadge) {
+    amCountBadge.textContent =
+      `${list.length} Account Managers — ${data.linked ?? 0} linked · ${data.suggested ?? 0} suggested · ${data.notLinked ?? 0} not linked`;
+  }
+  if (viewAllAmsBtn) {
+    viewAllAmsBtn.textContent = `👥 View All AMs (${list.length})`;
+  }
+}
+
 async function openAmDirectoryModal() {
   if (!amDirectoryModal) return;
   amDirectoryModal.classList.remove('hidden');
@@ -1224,7 +1238,7 @@ async function openAmDirectoryModal() {
   }
 
   if (amDirectoryTableBody) {
-    amDirectoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading verified Account Managers and ClickUp profiles...</td></tr>';
+    amDirectoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading Account Managers from the sheet &amp; matching ClickUp members...</td></tr>';
   }
 
   try {
@@ -1232,7 +1246,7 @@ async function openAmDirectoryModal() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     cachedAccountManagers = data.accountManagers || [];
-    if (amCountBadge) amCountBadge.textContent = `${cachedAccountManagers.length} Verified ClickUp Members`;
+    applyAccountManagerMeta(data);
     renderAmDirectoryTable(cachedAccountManagers);
   } catch (err) {
     if (amDirectoryTableBody) {
@@ -1241,11 +1255,26 @@ async function openAmDirectoryModal() {
   }
 }
 
+function amStatusTag(m) {
+  if (m.status === 'linked') {
+    return '<span class="tag" style="background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);" title="Has a verified ClickUp @mention id via AM_DIRECTORY.">✓ Linked</span>';
+  }
+  if (m.status === 'suggested') {
+    const why = m.confidence === 'email' ? 'matched by email'
+      : m.confidence === 'exact' ? 'exact username match'
+        : m.confidence === 'full' ? 'full name match'
+          : m.confidence === 'first' ? 'first-name-only match (weak)'
+            : 'roster match';
+    return `<span class="tag" style="background:rgba(245,158,11,0.14);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);" title="Matched against the live ClickUp roster (${why}). UNVERIFIED — shown here for you to confirm; it is never used in an email or @mention until it is added to AM_DIRECTORY.">~ Suggested</span>`;
+  }
+  return '<span class="tag" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3);" title="In the sheet, but no ClickUp user found for this name. Add the exact spelling to AM_DIRECTORY in src/clickup.js to link it.">⚠ Not Linked</span>';
+}
+
 function renderAmDirectoryTable(list, query = '') {
   if (!amDirectoryTableBody) return;
   const q = query.trim().toLowerCase();
   const filtered = q
-    ? list.filter((m) => (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || String(m.id).includes(q))
+    ? list.filter((m) => (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q) || String(m.id || '').includes(q))
     : list;
 
   if (filtered.length === 0) {
@@ -1256,9 +1285,9 @@ function renderAmDirectoryTable(list, query = '') {
   amDirectoryTableBody.innerHTML = filtered.map((m) => `
     <tr>
       <td><strong>${escapeHtml(m.name)}</strong></td>
-      <td><code class="am-id-code">@${m.id}</code></td>
-      <td><span class="am-email-text">${escapeHtml(m.email)}</span></td>
-      <td><span class="tag tag-issues" style="background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);">✓ Active</span></td>
+      <td>${m.id != null ? `<code class="am-id-code">@${m.id}</code>` : '<span style="color:#64748b;">—</span>'}</td>
+      <td>${m.email ? `<span class="am-email-text">${escapeHtml(m.email)}</span>` : '<span style="color:#64748b;">—</span>'}</td>
+      <td>${amStatusTag(m)}</td>
     </tr>
   `).join('');
 }
@@ -1303,6 +1332,9 @@ generateAllBtn.addEventListener('click', async () => {
         generatedPreviews.set(p.websiteUrl, p);
       }
     }
+
+    // Previews were rebuilt from the current sheet: same for the AM directory.
+    cachedAccountManagers = null;
 
     let genMsg = `Generated ${data.generatedCount} email previews for review!`;
     if (data.missingSectionCount > 0) {

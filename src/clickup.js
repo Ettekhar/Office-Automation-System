@@ -142,6 +142,113 @@ export const OVI_CLICKUP_USER = {
   email: 'ovi@razibmarketing.net',
 };
 
+// ── Live ClickUp workspace members (read-only, cached) ──────────────────────
+// The roster is used ONLY to *propose* a ClickUp user for a sheet AM name that
+// is not in AM_DIRECTORY (see getAccountManagersList). A proposed match is
+// always surfaced as unverified - it can never be @-mentioned in a comment,
+// because resolveAccountManager() (the source of @mentions) does not read it.
+const membersCache = { value: null, expiresAt: 0 };
+const MEMBERS_TTL = 10 * 60 * 1000; // ClickUp roster refreshes on the same cadence
+
+/**
+ * Read-only list of every workspace member the token can see.
+ *  - GET /api/v2/team            -> team ids
+ *  - GET /api/v2/team/{id}?include_members=true -> that team's members
+ * Never throws: a ClickUp hiccup must not break the mailer console. The caller
+ * receives { members, error, at } and shows whatever it could get.
+ */
+export async function getClickUpMembers(force = false) {
+  if (!force && membersCache.value && membersCache.expiresAt > Date.now()) {
+    return membersCache.value;
+  }
+  const token = String(process.env.CLICKUP_API_TOKEN || '').trim();
+  const result = { members: [], error: '', at: new Date().toISOString() };
+  if (!token) {
+    result.error = 'no CLICKUP_API_TOKEN configured';
+    membersCache.value = result;
+    membersCache.expiresAt = Date.now() + MEMBERS_TTL;
+    return result;
+  }
+  try {
+    const teamsRes = await fetch('https://api.clickup.com/api/v2/team', {
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
+    });
+    if (!teamsRes.ok) throw new Error(`ClickUp team lookup returned HTTP ${teamsRes.status}`);
+    const teamsData = await teamsRes.json();
+    const teams = Array.isArray(teamsData.teams) ? teamsData.teams : [];
+
+    const seen = new Set();
+    for (const team of teams) {
+      try {
+        const memberRes = await fetch(
+          `https://api.clickup.com/api/v2/team/${encodeURIComponent(team.id)}?include_members=true`,
+          { headers: { Authorization: token, 'Content-Type': 'application/json' } },
+        );
+        if (!memberRes.ok) continue;
+        const memberData = await memberRes.json();
+        for (const entry of memberData.team?.members || []) {
+          const user = entry?.user || entry;
+          if (!user || user.id == null || seen.has(user.id)) continue;
+          seen.add(user.id);
+          result.members.push({
+            id: user.id,
+            username: String(user.username || ''),
+            email: String(user.email || user.email_address || ''),
+          });
+        }
+      } catch {
+        // one team failing must not kill the directory
+      }
+    }
+    result.members.sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+  } catch (err) {
+    result.error = String(err && err.message ? err.message : err);
+  }
+  membersCache.value = result;
+  membersCache.expiresAt = Date.now() + MEMBERS_TTL;
+  return result;
+}
+
+/**
+ * Try to find a ClickUp member for a single sheet AM token.
+ * Confidence is deliberately conservative:
+ *   'email' and 'exact' and 'full' are strong; 'first' (first-name only) is weak
+ *   and is only ever shown as an unverified suggestion.
+ * Never throws, never guesses when nothing matches.
+ */
+export function matchClickUpMember(rawToken, members) {
+  const token = String(rawToken || '').trim().toLowerCase();
+  if (!token || !Array.isArray(members) || members.length === 0) return null;
+
+  if (token.includes('@')) {
+    const byEmail = members.find((m) => (m.email || '').trim().toLowerCase() === token);
+    if (byEmail) return { ...byEmail, confidence: 'email' };
+  }
+
+  const exact = members.find((m) => (m.username || '').trim().toLowerCase() === token);
+  if (exact) return { ...exact, confidence: 'exact' };
+
+  const tokenWords = token.split(/\s+/).filter(Boolean);
+  if (tokenWords.length >= 2) {
+    const full = members.find((m) => {
+      const words = (m.username || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+      return words.length >= 2 && tokenWords.every((w) => words.includes(w));
+    });
+    if (full) return { ...full, confidence: 'full' };
+  }
+
+  const firstWord = tokenWords[0];
+  if (firstWord && firstWord.length >= 2) {
+    const first = members.find((m) => {
+      const uname = (m.username || '').trim().toLowerCase();
+      const words = uname.split(/\s+/).filter(Boolean);
+      return uname === firstWord || words.includes(firstWord) || uname.startsWith(firstWord + ' ');
+    });
+    if (first) return { ...first, confidence: 'first' };
+  }
+  return null;
+}
+
 /**
  * Builds the notification comment text with @mentions for the Account Manager(s) and Ovi.
  * Handles single names, full names, multi-assignees (e.g. "Rifat, Sajedur"),
@@ -192,22 +299,115 @@ export function resolveAccountManager(rawAm) {
   };
 }
 
-export function getAccountManagersList() {
-  const map = new Map();
-  for (const [key, val] of Object.entries(AM_DIRECTORY)) {
-    if (!map.has(val.id)) {
-      map.set(val.id, {
-        id: val.id,
+/**
+ * The operator directory shown by "👥 View All AMs".
+ *
+ * Source of truth is the sheet: pass the distinct AM strings currently present
+ * in the master tabs' Account Manager column (getAllSheetAccountManagers in
+ * dashboardApi.js). Each name is then placed in one of three states:
+ *
+ *   linked     -> in AM_DIRECTORY, so it has a verified ClickUp @mention id
+ *   suggested  -> not in AM_DIRECTORY, but matched against the live ClickUp
+ *                 roster (matchClickUpMember). UNVERIFIED: shown in the console
+ *                 only, never fed to a comment's @mentions.
+ *   not_linked -> in the sheet but matched to nothing. No id is fabricated.
+ *
+ * When no sheet data is available (or every name filtered out), it falls back
+ * to the hardcoded AM_DIRECTORY so a sheets hiccup never empties the directory.
+ */
+export function getAccountManagersList({ sheetNames = null, members = [] } = {}) {
+  const NO_PERSON_RE = /^(n\/?a|no\s*am|none)/i;
+  const SUPPORT_RE = /support\s*(team|email)/i;
+  const collected = new Map(); // key (lowercased) -> display spelling from the sheet
+  if (Array.isArray(sheetNames)) {
+    for (const raw of sheetNames) {
+      const cell = String(typeof raw === 'object' && raw !== null ? raw.name ?? raw : raw ?? '').trim();
+      if (!cell || NO_PERSON_RE.test(cell) || SUPPORT_RE.test(cell)) continue;
+      const tokens = cell
+        .split(/[,&/]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      for (const token of tokens) {
+        if (!token || NO_PERSON_RE.test(token) || SUPPORT_RE.test(token)) continue;
+        const key = token.toLowerCase();
+        if (key && !collected.has(key)) collected.set(key, token);
+      }
+    }
+  }
+
+  const entries = [];
+  const seenIds = new Set();
+
+  for (const [key, display] of collected) {
+    // the same precedence resolveAccountManager uses for @mentions
+    let am = AM_DIRECTORY[key];
+    if (!am) am = AM_DIRECTORY[key.split(/\s+/)[0]];
+    if (am) {
+      if (!seenIds.has(am.id)) {
+        seenIds.add(am.id);
+        entries.push({
+          name: am.name,
+          token: display,
+          id: am.id,
+          email: am.email,
+          status: 'linked',
+          source: 'directory',
+        });
+      }
+      continue;
+    }
+
+    const match = matchClickUpMember(key, members);
+    if (match) {
+      if (!seenIds.has(match.id)) {
+        seenIds.add(match.id);
+        entries.push({
+          name: match.username || display,
+          token: display,
+          id: match.id,
+          email: match.email,
+          status: 'suggested',
+          source: 'clickup',
+          confidence: match.confidence,
+        });
+      }
+      continue;
+    }
+
+    entries.push({ name: display, token: display, status: 'not_linked' });
+  }
+
+  // Defensive fallback: no usable sheet names -> the old hardcoded directory,
+  // so the button never shows an empty list because a sheet read failed.
+  if (entries.length === 0) {
+    const map = new Map();
+    for (const val of Object.values(AM_DIRECTORY)) {
+      if (!map.has(val.id)) map.set(val.id, val);
+    }
+    for (const val of map.values()) {
+      entries.push({
         name: val.name,
+        token: val.name,
+        id: val.id,
         email: val.email,
+        status: 'linked',
+        source: 'directory',
       });
     }
   }
-  const list = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+  const rank = { linked: 0, suggested: 1, not_linked: 2 };
+  entries.sort(
+    (a, b) => rank[a.status] - rank[b.status] || (a.name || '').localeCompare(b.name || ''),
+  );
+
   return {
-    accountManagers: list,
+    accountManagers: entries,
+    total: entries.length,
+    linked: entries.filter((e) => e.status === 'linked').length,
+    suggested: entries.filter((e) => e.status === 'suggested').length,
+    notLinked: entries.filter((e) => e.status === 'not_linked').length,
     fyiUser: OVI_CLICKUP_USER,
-    total: list.length,
   };
 }
 
