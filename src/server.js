@@ -15,7 +15,11 @@ import {
   getClickUpMembers,
   getClickUpTaskPreview,
   completeClickUpMaintenanceTask,
+  getPromotedAmMatches,
+  setPromotedAmMatch,
+  removePromotedAmMatch,
 } from './clickup.js';
+import { runClickUpCloseout } from './clickupCloseout.js';
 import { invalidateCache, getCacheStatus } from './sheetsCache.js';
 import { syncAssignmentToUserTabs } from './assignmentWriteBack.js';
 import { findMonthlyHistoryEntry, shouldWriteReconciledStatus, maintenanceStatusRank } from './maintenanceStatus.js';
@@ -1155,7 +1159,11 @@ const server = http.createServer(async (req, res) => {
           getAllSheetAccountManagers(),
           getClickUpMembers(refresh),
         ]);
-        const data = getAccountManagersList({ sheetNames, members: membersState.members });
+        const data = getAccountManagersList({
+          sheetNames,
+          members: membersState.members,
+          promoted: getPromotedAmMatches(),
+        });
         sendJson(res, 200, {
           success: true,
           ...data,
@@ -1164,6 +1172,68 @@ const server = http.createServer(async (req, res) => {
             error: membersState.error || null,
             at: membersState.at,
           },
+        });
+      } catch (err) {
+        sendJson(res, 500, { success: false, error: err.message });
+      }
+      return;
+    }
+
+    // API Route: Promote a suggested roster match to a verified @mention pair.
+    // Writes the runtime pairing (data/am-promoted.json), NOT source code — so
+    // the operator confirms ambiguous names once in the UI instead of editing
+    // AM_DIRECTORY by hand. The member id is cross-checked against the live
+    // roster before it is accepted, so an id can never be fabricated.
+    if (pathname === '/api/clickup/account-managers/promote' && method === 'POST') {
+      try {
+        const body = await parseBody(req);
+        const token = String(body.token || '').trim();
+        const memberId = Number(body.memberId ?? body.id);
+        if (!token || !memberId) {
+          sendJson(res, 400, { success: false, error: 'token and memberId are required' });
+          return;
+        }
+        const membersState = await getClickUpMembers();
+        const member = (membersState.members || []).find((m) => Number(m.id) === memberId);
+        if (!member) {
+          sendJson(res, 400, { success: false, error: `No ClickUp member found with id ${memberId}` });
+          return;
+        }
+        const ok = setPromotedAmMatch(token, member);
+        if (!ok) {
+          sendJson(res, 400, { success: false, error: 'Could not save the promoted pairing' });
+          return;
+        }
+        const [sheetNames, roster, promoted] = await Promise.all([
+          getAllSheetAccountManagers(),
+          getClickUpMembers(),
+          Promise.resolve(getPromotedAmMatches()),
+        ]);
+        sendJson(res, 200, {
+          success: true,
+          promoted: promoted[token.toLowerCase()] || null,
+          ...getAccountManagersList({ sheetNames, members: roster.members, promoted }),
+        });
+      } catch (err) {
+        sendJson(res, 500, { success: false, error: err.message });
+      }
+      return;
+    }
+
+    // API Route: Unlink a promoted AM pairing (back to suggested / not linked).
+    if (pathname === '/api/clickup/account-managers/promote' && method === 'DELETE') {
+      try {
+        const body = await parseBody(req);
+        const removed = removePromotedAmMatch(body.token || '');
+        const [sheetNames, roster, promoted] = await Promise.all([
+          getAllSheetAccountManagers(),
+          getClickUpMembers(),
+          Promise.resolve(getPromotedAmMatches()),
+        ]);
+        sendJson(res, 200, {
+          success: true,
+          removed,
+          ...getAccountManagersList({ sheetNames, members: roster.members, promoted }),
         });
       } catch (err) {
         sendJson(res, 500, { success: false, error: err.message });
@@ -1208,6 +1278,22 @@ const server = http.createServer(async (req, res) => {
       });
 
       sendJson(res, 200, { success: true, result });
+      return;
+    }
+
+    // API Route: Monthly ClickUp close-out — close + notify every task the
+    // sheet overview shows as currently "in progress", skipping already-closed /
+    // to-do / errored tasks. dryRun (default true) returns a read-only plan;
+    // a live pass additionally requires CLICKUP_AUTO_CLOSE_ENABLED=true.
+    if (pathname === '/api/clickup/closeout' && method === 'POST') {
+      try {
+        const body = await parseBody(req);
+        const dryRun = body.dryRun !== false; // safest default: plan only
+        const result = await runClickUpCloseout({ dryRun });
+        sendJson(res, 200, { success: true, ...result });
+      } catch (e) {
+        sendJson(res, 400, { success: false, error: e.message });
+      }
       return;
     }
 

@@ -1238,7 +1238,7 @@ async function openAmDirectoryModal() {
   }
 
   if (amDirectoryTableBody) {
-    amDirectoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading Account Managers from the sheet &amp; matching ClickUp members...</td></tr>';
+    amDirectoryTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Loading Account Managers from the sheet &amp; matching ClickUp members...</td></tr>';
   }
 
   try {
@@ -1250,14 +1250,15 @@ async function openAmDirectoryModal() {
     renderAmDirectoryTable(cachedAccountManagers);
   } catch (err) {
     if (amDirectoryTableBody) {
-      amDirectoryTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#ef4444;">Failed to load account managers: ${escapeHtml(err.message)}</td></tr>`;
+      amDirectoryTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#ef4444;">Failed to load account managers: ${escapeHtml(err.message)}</td></tr>`;
     }
   }
 }
 
 function amStatusTag(m) {
   if (m.status === 'linked') {
-    return '<span class="tag" style="background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);" title="Has a verified ClickUp @mention id via AM_DIRECTORY.">✓ Linked</span>';
+    const src = m.source === 'promoted' ? 'promoted by operator (runtime data)' : 'AM_DIRECTORY';
+    return `<span class="tag" style="background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);" title="Has a verified ClickUp @mention id (${src}).">✓ Linked</span>`;
   }
   if (m.status === 'suggested') {
     const why = m.confidence === 'email' ? 'matched by email'
@@ -1265,9 +1266,9 @@ function amStatusTag(m) {
         : m.confidence === 'full' ? 'full name match'
           : m.confidence === 'first' ? 'first-name-only match (weak)'
             : 'roster match';
-    return `<span class="tag" style="background:rgba(245,158,11,0.14);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);" title="Matched against the live ClickUp roster (${why}). UNVERIFIED — shown here for you to confirm; it is never used in an email or @mention until it is added to AM_DIRECTORY.">~ Suggested</span>`;
+    return `<span class="tag" style="background:rgba(245,158,11,0.14);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);" title="Matched against the live ClickUp roster (${why}). UNVERIFIED — press ✅ Link to promote it to a verified @mention (stored at runtime, not in source code).">~ Suggested</span>`;
   }
-  return '<span class="tag" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3);" title="In the sheet, but no ClickUp user found for this name. Add the exact spelling to AM_DIRECTORY in src/clickup.js to link it.">⚠ Not Linked</span>';
+  return '<span class="tag" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3);" title="In the sheet, but no ClickUp user was found for this name — check the exact spelling in the sheet.">⚠ Not Linked</span>';
 }
 
 function renderAmDirectoryTable(list, query = '') {
@@ -1278,7 +1279,7 @@ function renderAmDirectoryTable(list, query = '') {
     : list;
 
   if (filtered.length === 0) {
-    amDirectoryTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#94a3b8;">No matching account managers found.</td></tr>';
+    amDirectoryTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">No matching account managers found.</td></tr>';
     return;
   }
 
@@ -1288,8 +1289,25 @@ function renderAmDirectoryTable(list, query = '') {
       <td>${m.id != null ? `<code class="am-id-code">@${m.id}</code>` : '<span style="color:#64748b;">—</span>'}</td>
       <td>${m.email ? `<span class="am-email-text">${escapeHtml(m.email)}</span>` : '<span style="color:#64748b;">—</span>'}</td>
       <td>${amStatusTag(m)}</td>
+      <td>${amActionCell(m)}</td>
     </tr>
   `).join('');
+}
+
+// Single-click "Link" promotes a suggested roster match to a verified @mention
+// pair — persisted at runtime (data/am-promoted.json), never by editing source.
+// "Unlink" removes that pairing. Member ids are cross-checked server-side
+// against the live roster before they are accepted.
+function amActionCell(m) {
+  const token = encodeURIComponent(m.token || '');
+  const id = m.id != null ? m.id : '';
+  if (m.status === 'suggested' && id !== '' && token) {
+    return `<button class="btn" style="padding:2px 10px;font-size:12px;" data-am-promote data-token="${token}" data-id="${id}" title="Confirm: the sheet name &quot;${escapeHtml(m.token || m.name)}&quot; will @mention this ClickUp user in completion comments from now on.">✅ Link</button>`;
+  }
+  if (m.status === 'linked' && m.source === 'promoted' && token) {
+    return `<button class="btn" style="padding:2px 10px;font-size:12px;" data-am-unlink data-token="${token}" title="Remove this promoted pairing; the name returns to suggested / not linked.">↩︎ Unlink</button>`;
+  }
+  return '';
 }
 
 if (viewAllAmsBtn) viewAllAmsBtn.addEventListener('click', openAmDirectoryModal);
@@ -1298,6 +1316,35 @@ if (closeAmModalBottomBtn) closeAmModalBottomBtn.addEventListener('click', () =>
 if (amSearchInput) {
   amSearchInput.addEventListener('input', (e) => {
     if (cachedAccountManagers) renderAmDirectoryTable(cachedAccountManagers, e.target.value);
+  });
+}
+
+// Promote / unlink actions inside the AM directory table.
+if (amDirectoryTableBody) {
+  amDirectoryTableBody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-am-promote], [data-am-unlink]');
+    if (!btn) return;
+    const token = decodeURIComponent(btn.getAttribute('data-token') || '');
+    const memberId = btn.getAttribute('data-id') || '';
+    const isUnlink = btn.hasAttribute('data-am-unlink');
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/clickup/account-managers/promote', {
+        method: isUnlink ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, memberId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to update pairing');
+      cachedAccountManagers = data.accountManagers || [];
+      applyAccountManagerMeta(data);
+      renderAmDirectoryTable(cachedAccountManagers, amSearchInput ? amSearchInput.value : '');
+      showToast(isUnlink ? `Unlinked "${token}"` : `Linked "${token}" — will be @mentioned in completion comments.`);
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error');
+    } finally {
+      btn.disabled = false;
+    }
   });
 }
 

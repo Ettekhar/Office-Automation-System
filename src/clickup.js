@@ -1,13 +1,49 @@
-/** Read-only ClickUp task lookup used to enrich a linked maintenance row. */
+/**
+ * Read-only ClickUp task lookup used to enrich a linked maintenance row.
+ *
+ * AM @mention resolution is ROSTER-FIRST: the sheet's Account Manager name is
+ * matched against the live ClickUp workspace roster and auto-mentioned on
+ * strong matches (email / exact / full — see STRONG_CONFIDENCE below). The
+ * hardcoded AM_DIRECTORY remains as (a) the fallback for people pinned before
+ * this mode existed and (b) the override for genuinely ambiguous names.
+ * Confirmed ambiguous matches are promoted at runtime (data/am-promoted.json,
+ * via "👥 View All AMs") — not by hand-editing source.
+ */
+import { dbRead, dbWrite } from './db.js';
+
 const cache = new Map();
 const TTL = 5 * 60 * 1000;
 
-function taskIdFromUrl(url) {
+/** matchClickUpMember() confidences that are safe to auto-@mention. */
+export const STRONG_CONFIDENCE = new Set(['email', 'exact', 'full']);
+const PROMOTED_AM_KEY = 'am-promoted';
+
+export function taskIdFromUrl(url) {
   const value = String(url || '').trim();
   // ClickUp accepts both /t/<task> and /t/<workspace>/<task>.  Always use
   // the final path segment so a workspace id is never mistaken for a task id.
   const match = value.match(/clickup\.com\/t\/([^?#/]+)(?:\/([^?#/]+))?/i);
   return match ? (match[2] || match[1]) : '';
+}
+
+/**
+ * Read the task's CURRENT status straight from the API — deliberately never
+ * served from the 5-minute preview cache, so a decision like "close it?" is
+ * always made against the latest state.
+ */
+export async function getClickUpFreshStatus(taskId) {
+  const token = String(process.env.CLICKUP_API_TOKEN || '').trim();
+  if (!token) throw new Error('CLICKUP_API_TOKEN is missing in environment');
+  const response = await fetch(`https://api.clickup.com/api/v2/task/${encodeURIComponent(taskId)}`, {
+    headers: { Authorization: token, 'Content-Type': 'application/json' },
+  });
+  if (!response.ok) throw new Error(`ClickUp task lookup returned HTTP ${response.status}`);
+  const task = await response.json();
+  return {
+    status: task.status?.status || '',
+    name: task.name || '',
+    id: task.id || taskId,
+  };
 }
 
 export async function getClickUpTask(taskUrl) {
@@ -134,6 +170,10 @@ export const AM_DIRECTORY = {
 
   // Dana / Dana Sparks
   'dana': { name: 'Dana Sparks', id: 57226062, email: 'accounting@cogwheelmarketing.com' },
+
+  // Shelley / Shelley Warsaw
+  'shelley': { name: 'Shelley Warsaw', id: 87477102, email: 'shelley@cogwheelmarketing.com' },
+  'shelley warsaw': { name: 'Shelley Warsaw', id: 87477102, email: 'shelley@cogwheelmarketing.com' },
 };
 
 export const OVI_CLICKUP_USER = {
@@ -143,10 +183,11 @@ export const OVI_CLICKUP_USER = {
 };
 
 // ── Live ClickUp workspace members (read-only, cached) ──────────────────────
-// The roster is used ONLY to *propose* a ClickUp user for a sheet AM name that
-// is not in AM_DIRECTORY (see getAccountManagersList). A proposed match is
-// always surfaced as unverified - it can never be @-mentioned in a comment,
-// because resolveAccountManager() (the source of @mentions) does not read it.
+// The roster feeds BOTH surfaces: strong matches (email / exact / full-name)
+// are auto-@mentioned by resolveAccountManager, while weaker matches are
+// surfaced as "suggested" in "👥 View All AMs" for one-time promotion into the
+// runtime store. A proposed match is still never mentioned on weak confidence
+// alone (see STRONG_CONFIDENCE).
 const membersCache = { value: null, expiresAt: 0 };
 const MEMBERS_TTL = 10 * 60 * 1000; // ClickUp roster refreshes on the same cadence
 
@@ -209,6 +250,68 @@ export async function getClickUpMembers(force = false) {
   return result;
 }
 
+// ── Runtime "promote to verified" store ───────────────────────────────────────
+// AM names that are ambiguous against the roster (e.g. first-name-only cells,
+// two people sharing a first name) are NOT auto-mentioned. The operator
+// confirms them once in "👥 View All AMs" and the pairing is persisted here
+// (data/am-promoted.json) instead of in source. Keys are the lowercased sheet
+// token ("mike", "shelley warsaw"); values carry the verified ClickUp member.
+export function getPromotedAmMatches() {
+  const data = dbRead(PROMOTED_AM_KEY);
+  return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+
+export function setPromotedAmMatch(token, member) {
+  const all = getPromotedAmMatches();
+  const key = String(token || '').trim().toLowerCase();
+  if (!key || !member || member.id == null) return false;
+  all[key] = {
+    name: String(member.name || member.username || ''),
+    id: Number(member.id),
+    email: String(member.email || ''),
+    promotedAt: new Date().toISOString(),
+  };
+  dbWrite(PROMOTED_AM_KEY, all);
+  return true;
+}
+
+export function removePromotedAmMatch(token) {
+  const all = getPromotedAmMatches();
+  const key = String(token || '').trim().toLowerCase();
+  if (key && Object.prototype.hasOwnProperty.call(all, key)) {
+    delete all[key];
+    dbWrite(PROMOTED_AM_KEY, all);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * The shared context used for live @mention resolution: the (cached) ClickUp
+ * roster plus any operator-promoted pairs. Fetch once per batch and reuse.
+ */
+export async function getAmMentionContext(options = {}) {
+  const [membersState, promoted] = await Promise.all([
+    getClickUpMembers(Boolean(options && options.refresh)),
+    Promise.resolve(getPromotedAmMatches()),
+  ]);
+  return {
+    roster: (membersState && membersState.members) || [],
+    promoted,
+  };
+}
+
+/**
+ * Roster-first resolution for live flows: fetch the roster context (or accept
+ * one supplied by the caller) and resolve the sheet name against it.
+ */
+export async function resolveAccountManagerLive(rawAm, options = {}) {
+  if (options && (options.roster || options.promoted)) {
+    return resolveAccountManager(rawAm, options);
+  }
+  return resolveAccountManager(rawAm, await getAmMentionContext(options));
+}
+
 /**
  * Try to find a ClickUp member for a single sheet AM token.
  * Confidence is deliberately conservative:
@@ -250,11 +353,23 @@ export function matchClickUpMember(rawToken, members) {
 }
 
 /**
- * Builds the notification comment text with @mentions for the Account Manager(s) and Ovi.
- * Handles single names, full names, multi-assignees (e.g. "Rifat, Sajedur"),
- * and provides safe fallbacks so sending emails NEVER gets stuck.
+ * Resolves a sheet Account Manager cell into @mention-able ClickUp users.
+ *
+ * Precedence (first match wins per token):
+ *   1. promoted   — a pairing the operator confirmed in "👥 View All AMs"
+ *                   (runtime data, wins over the hardcoded default);
+ *   2. directory  — AM_DIRECTORY (people pinned before roster-first existed);
+ *   3. roster     — live ClickUp roster via matchClickUpMember, but ONLY when
+ *                   the confidence is strong (email / exact / full). Weak
+ *                   first-name-only matches go to `rosterWeak` so the operator
+ *                   can promote them; they are never auto-mentioned.
+ *
+ * Callers that want roster-first behaviour must pass extras = { roster,
+ * promoted } (see getAmMentionContext / resolveAccountManagerLive). With no
+ * extras this behaves exactly as the legacy directory-only resolver, which is
+ * what the deterministic unit suite tests.
  */
-export function resolveAccountManager(rawAm) {
+export function resolveAccountManager(rawAm, extras = {}) {
   const raw = String(rawAm || '').trim();
   const isNonPerson =
     !raw ||
@@ -267,23 +382,61 @@ export function resolveAccountManager(rawAm) {
       isNonPerson: true,
       matchedUsers: [],
       unmatchedNames: [],
+      rosterWeak: [],
       fyiUser: OVI_CLICKUP_USER,
     };
   }
 
+  const roster = Array.isArray(extras?.roster) ? extras.roster : null;
+  const promoted = extras && typeof extras.promoted === 'object' && extras.promoted ? extras.promoted : null;
   const tokens = raw.split(/[,&/]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
   const matchedUsers = [];
   const unmatchedNames = [];
+  const rosterWeak = [];
 
   for (const token of tokens) {
-    let am = AM_DIRECTORY[token];
-    if (!am) {
-      const firstWord = token.split(/\s+/)[0];
-      am = AM_DIRECTORY[firstWord];
+    const firstWord = token.split(/\s+/)[0];
+
+    // 1. operator-promoted pairing (runtime data, highest trust)
+    let am = null;
+    let via = '';
+    if (promoted) {
+      const p = promoted[token] || promoted[firstWord];
+      if (p && p.id != null) {
+        am = { id: Number(p.id), name: String(p.name || ''), email: String(p.email || '') };
+        via = 'promoted';
+      }
     }
+
+    // 2. legacy pinned directory
+    if (!am) {
+      am = AM_DIRECTORY[token] || AM_DIRECTORY[firstWord];
+      if (am) via = 'directory';
+    }
+
+    // 3. live roster — strong matches only
     if (am) {
       if (!matchedUsers.some((u) => u.id === am.id)) {
-        matchedUsers.push(am);
+        matchedUsers.push({ ...am, via });
+      }
+    } else if (roster) {
+      const match = matchClickUpMember(token, roster);
+      if (match && STRONG_CONFIDENCE.has(match.confidence)) {
+        if (!matchedUsers.some((u) => u.id === match.id)) {
+          matchedUsers.push({
+            id: Number(match.id),
+            name: String(match.username || token),
+            email: String(match.email || ''),
+            via: 'roster',
+            confidence: match.confidence,
+          });
+        }
+      } else if (match) {
+        // weak / unverified match: surface for promotion, never mention
+        rosterWeak.push({ ...match, token });
+        unmatchedNames.push(token);
+      } else {
+        unmatchedNames.push(token);
       }
     } else {
       unmatchedNames.push(token);
@@ -295,6 +448,7 @@ export function resolveAccountManager(rawAm) {
     isNonPerson: false,
     matchedUsers,
     unmatchedNames,
+    rosterWeak,
     fyiUser: OVI_CLICKUP_USER,
   };
 }
@@ -306,16 +460,17 @@ export function resolveAccountManager(rawAm) {
  * in the master tabs' Account Manager column (getAllSheetAccountManagers in
  * dashboardApi.js). Each name is then placed in one of three states:
  *
- *   linked     -> in AM_DIRECTORY, so it has a verified ClickUp @mention id
+ *   linked     -> in AM_DIRECTORY or the operator-promoted runtime store, so it
+ *                 has a verified ClickUp @mention id (source: directory | promoted)
  *   suggested  -> not in AM_DIRECTORY, but matched against the live ClickUp
  *                 roster (matchClickUpMember). UNVERIFIED: shown in the console
- *                 only, never fed to a comment's @mentions.
+ *                 only, never fed to a comment's @mentions until promoted.
  *   not_linked -> in the sheet but matched to nothing. No id is fabricated.
  *
  * When no sheet data is available (or every name filtered out), it falls back
  * to the hardcoded AM_DIRECTORY so a sheets hiccup never empties the directory.
  */
-export function getAccountManagersList({ sheetNames = null, members = [] } = {}) {
+export function getAccountManagersList({ sheetNames = null, members = [], promoted = null } = {}) {
   const NO_PERSON_RE = /^(n\/?a|no\s*am|none)/i;
   const SUPPORT_RE = /support\s*(team|email)/i;
   const collected = new Map(); // key (lowercased) -> display spelling from the sheet
@@ -339,19 +494,30 @@ export function getAccountManagersList({ sheetNames = null, members = [] } = {})
   const seenIds = new Set();
 
   for (const [key, display] of collected) {
-    // the same precedence resolveAccountManager uses for @mentions
-    let am = AM_DIRECTORY[key];
-    if (!am) am = AM_DIRECTORY[key.split(/\s+/)[0]];
+    // Same precedence resolveAccountManager uses for @mentions:
+    // operator-promoted (runtime) > AM_DIRECTORY > live roster.
+    const firstWord = key.split(/\s+/)[0];
+    let am = null;
+    let source = 'directory';
+    if (promoted && promoted[key] && promoted[key].id != null) {
+      am = promoted[key];
+      source = 'promoted';
+    } else if (promoted && promoted[firstWord] && promoted[firstWord].id != null) {
+      am = promoted[firstWord];
+      source = 'promoted';
+    } else {
+      am = AM_DIRECTORY[key] || AM_DIRECTORY[firstWord];
+    }
     if (am) {
-      if (!seenIds.has(am.id)) {
-        seenIds.add(am.id);
+      if (!seenIds.has(Number(am.id))) {
+        seenIds.add(Number(am.id));
         entries.push({
-          name: am.name,
+          name: String(am.name || display),
           token: display,
-          id: am.id,
-          email: am.email,
+          id: Number(am.id),
+          email: String(am.email || ''),
           status: 'linked',
-          source: 'directory',
+          source,
         });
       }
       continue;
@@ -416,14 +582,17 @@ export function getAccountManagersList({ sheetNames = null, members = [] } = {})
  * Builds the plain-text preview string (used in the UI preview panel).
  * @mentions are shown as `@userId` for human readability only.
  */
-export function buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName }) {
+export function buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName, amResolution }) {
   const cleanUrl = String(websiteUrl || '')
     .trim()
     .replace(/^https?:\/\//i, '')
     .replace(/\/+$/, '');
 
   const month = monthName || 'the current month';
-  const amRes = resolveAccountManager(accountManager);
+  // amResolution lets live flows supply a roster-first resolution (see
+  // completeClickUpMaintenanceTask); without it this falls back to the
+  // directory-only resolver so previews and tests stay deterministic.
+  const amRes = amResolution || resolveAccountManager(accountManager);
 
   if (amRes.isNonPerson) {
     return `We have completed Maintenance for the month of ${month} and sent email to clients for ${cleanUrl}. FYI @${OVI_CLICKUP_USER.id}`;
@@ -461,14 +630,14 @@ export function buildMaintenanceNotificationComment({ accountManager, websiteUrl
  *   "notify_all": false
  * }
  */
-export function buildMaintenanceNotificationBlocks({ accountManager, websiteUrl, monthName }) {
+export function buildMaintenanceNotificationBlocks({ accountManager, websiteUrl, monthName, amResolution }) {
   const cleanUrl = String(websiteUrl || '')
     .trim()
     .replace(/^https?:\/\//i, '')
     .replace(/\/+$/, '');
 
   const month = monthName || 'the current month';
-  const amRes = resolveAccountManager(accountManager);
+  const amRes = amResolution || resolveAccountManager(accountManager);
 
   const blocks = [];
 
@@ -509,8 +678,8 @@ export async function getClickUpTaskPreview({
   monthName,
 }) {
   const taskId = taskIdFromUrl(timeTrackUrl);
-  const amResolution = resolveAccountManager(accountManager);
-  const commentText = buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName });
+  const amResolution = resolveAccountManager(accountManager, await getAmMentionContext());
+  const commentText = buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName, amResolution });
   const isAutoCloseEnabled = String(process.env.CLICKUP_AUTO_CLOSE_ENABLED || 'false').toLowerCase() === 'true';
   const token = String(process.env.CLICKUP_API_TOKEN || '').trim();
   const hasToken = Boolean(token);
@@ -628,9 +797,14 @@ export async function completeClickUpMaintenanceTask({
     return { skipped: true, reason: 'No valid ClickUp task ID found in time track URL' };
   }
 
-  const commentText = buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName });
+  // AM resolution is ROSTER-FIRST for the real message: the sheet name is
+  // matched against the live ClickUp roster and auto-mentioned on strong
+  // matches (email / exact / full). AM_DIRECTORY remains the fallback for
+  // legacy-pinned names, and runtime-promoted pairs override everything.
+  const amResolution = resolveAccountManager(accountManager, await getAmMentionContext());
+  const commentText = buildMaintenanceNotificationComment({ accountManager, websiteUrl, monthName, amResolution });
   // Rich-text blocks for the actual API call (produces real @mention tags)
-  const commentBlocks = buildMaintenanceNotificationBlocks({ accountManager, websiteUrl, monthName });
+  const commentBlocks = buildMaintenanceNotificationBlocks({ accountManager, websiteUrl, monthName, amResolution });
 
   // STRICT SAFETY GUARD:
   // Must be explicitly enabled via CLICKUP_AUTO_CLOSE_ENABLED=true in .env to perform live mutations.
@@ -656,24 +830,85 @@ export async function completeClickUpMaintenanceTask({
     throw new Error('CLICKUP_API_TOKEN is missing in environment');
   }
 
-  // 1. Post notification comment using the rich-text `comment` blocks array.
-  // Per clickup-comment-with-mention.md: `comment_text` with "@userId" strings
-  // does NOT create real mention tags — only the root-level `comment` array does.
-  const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${encodeURIComponent(taskId)}/comment`, {
-    method: 'POST',
-    headers: { Authorization: token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      comment: commentBlocks,   // ← root-level array, NOT comment_text
-      notify_all: false,        // assignees/watchers are always notified regardless
-    }),
-  });
-  if (!commentRes.ok) {
-    const errText = await commentRes.text().catch(() => '');
-    throw new Error(`ClickUp post comment failed (HTTP ${commentRes.status}): ${errText}`);
+  // STATUS GATE — this function only ever touches tasks that are currently
+  // "in progress". An already-closed, to-do, or otherwise-not-in-progress
+  // task is returned as skipped WITHOUT posting a comment or writing any
+  // status. This is what prevents the duplicate-comment failure of clicking
+  // the sync button on a task that had already been closed.
+  const current = await getClickUpFreshStatus(taskId);
+  if (String(current.status).trim().toLowerCase() !== 'in progress') {
+    console.log(`[ClickUp SKIP] task ${taskId} is "${current.status || 'unknown'}" — not in progress, not touched`);
+    return {
+      skipped: true,
+      reason: `Task is "${current.status || 'unknown'}" — only "in progress" tasks are auto-closed`,
+      taskId,
+      currentStatus: current.status || '',
+    };
   }
-  const commentData = await commentRes.json();
 
-  // 2. Change status to "Closed"
+  // 2. RE-RUN / DUPLICATE GUARD — a close-out posts 60–70 comments, so it must
+  // be safe to re-run after a partial failure (e.g. the comment landed but the
+  // status PUT failed, leaving the task "in progress"). Before posting we list
+  // the task's existing comments and look for THIS MONTH'S completion message
+  // (matched on month + site text). If found, skip the POST and only finish the
+  // close, so a re-run never produces a duplicate message. A comment from a
+  // PREVIOUS month's cycle names an earlier month, so it never suppresses the
+  // current month's notification.
+  const cleanUrlCmp = String(websiteUrl || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+  const monthCmp = String(monthName || '').trim().toLowerCase();
+  const coreMatch = monthCmp
+    ? `completed maintenance for the month of ${monthCmp} and sent email to clients for ${cleanUrlCmp}`
+    : `completed maintenance for the month of and sent email to clients for ${cleanUrlCmp}`;
+  const normalizeComment = (t) => String(t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+  let commentId = null;
+  let alreadyCommented = false;
+  try {
+    const existingRes = await fetch(`https://api.clickup.com/api/v2/task/${encodeURIComponent(taskId)}/comment`, {
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
+    });
+    if (existingRes.ok) {
+      const existingBody = await existingRes.json();
+      const existingComments = Array.isArray(existingBody.comments) ? existingBody.comments : [];
+      for (const c of existingComments) {
+        if (normalizeComment(commentBody(c)).includes(normalizeComment(coreMatch))) {
+          commentId = String(c.id || '');
+          alreadyCommented = true;
+          break;
+        }
+      }
+    }
+  } catch {
+    // A comment read failure must never block the close — fall through to POST.
+  }
+
+  if (!alreadyCommented) {
+    // 3. Post notification comment using the rich-text `comment` blocks array.
+    // Per clickup-comment-with-mention.md: `comment_text` with "@userId" strings
+    // does NOT create real mention tags — only the root-level `comment` array does.
+    const commentRes = await fetch(`https://api.clickup.com/api/v2/task/${encodeURIComponent(taskId)}/comment`, {
+      method: 'POST',
+      headers: { Authorization: token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        comment: commentBlocks,   // ← root-level array, NOT comment_text
+        notify_all: false,        // assignees/watchers are always notified regardless
+      }),
+    });
+    if (!commentRes.ok) {
+      const errText = await commentRes.text().catch(() => '');
+      throw new Error(`ClickUp post comment failed (HTTP ${commentRes.status}): ${errText}`);
+    }
+    const commentData = await commentRes.json();
+    commentId = commentData.id;
+  } else {
+    console.log(`[ClickUp RE-RUN SAFE] task ${taskId} already has this month's completion comment (${commentId}) — skipping duplicate POST, closing only`);
+  }
+
+  // 4. Change status to "Closed"
   const statusRes = await fetch(`https://api.clickup.com/api/v2/task/${encodeURIComponent(taskId)}`, {
     method: 'PUT',
     headers: { Authorization: token, 'Content-Type': 'application/json' },
@@ -695,7 +930,8 @@ export async function completeClickUpMaintenanceTask({
     success: true,
     taskId,
     status: taskData.status?.status || 'Closed',
-    commentId: commentData.id,
+    commentId,
+    alreadyCommented,
     commentText,
   };
 }

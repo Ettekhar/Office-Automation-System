@@ -10920,8 +10920,18 @@ async function viewMailerSettings() {
           ${msPassField('CLICKUP_API_TOKEN','ClickUp API Token')}
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted,#94a3b8);cursor:pointer">
-          <input type="checkbox" id="ms-CLICKUP_AUTO_CLOSE_ENABLED" style="width:14px;height:14px"> Auto-close ClickUp task when email is sent
+          <input type="checkbox" id="ms-CLICKUP_AUTO_CLOSE_ENABLED" style="width:14px;height:14px"> Allow ClickUp auto-close / close-out (read-only preview works without this)
         </label>
+
+        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border,#2d3748);padding-top:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text,#fff)">Monthly ClickUp Close-out</div>
+          <div style="font-size:11px;color:var(--text-muted,#94a3b8)">Closes &amp; notifies every time-track task currently "in progress" (account manager from the sheet + Ovi tag). Skips already-closed and to-do tasks. No emails, no sheet writes.</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary" id="ms-clickup-closeout-preview" style="font-size:12px;padding:6px 14px">🔍 Preview</button>
+            <button class="btn" id="ms-clickup-closeout-run" style="font-size:12px;padding:6px 14px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.4);color:#f87171">▶ Run close-out</button>
+          </div>
+          <div id="ms-clickup-closeout-status" style="font-size:11px;color:var(--text-muted,#94a3b8);white-space:pre-wrap"></div>
+        </div>
       </div>
 
       <!-- AI Keys -->
@@ -11102,4 +11112,66 @@ async function viewMailerSettings() {
   $('ms-save-btn-2')?.addEventListener('click', saveCredentials);
   $('ms-sync-cloud-btn')?.addEventListener('click', syncToCloudflare);
   $('ms-reload-btn')?.addEventListener('click', () => { loadCredentials(); toast('Reloaded credentials', 'info', 1500); });
+
+  // ── Monthly ClickUp close-out ──
+  async function runCloseOut(dryRun) {
+    const statusEl = $('ms-clickup-closeout-status');
+    const previewBtn = $('ms-clickup-closeout-preview');
+    const runBtn = $('ms-clickup-closeout-run');
+    const setStatus = (html, color) => {
+      if (!statusEl) return;
+      statusEl.innerHTML = html;
+      if (color) statusEl.style.color = color;
+      else statusEl.style.color = '';
+    };
+    const busy = (b) => {
+      if (previewBtn) previewBtn.disabled = b;
+      if (runBtn) runBtn.disabled = b;
+    };
+    if (!statusEl) return;
+    busy(true);
+    try {
+      setStatus(dryRun ? '📖 Reading all ClickUp tasks (read-only)…' : '📝 Running close-out — only tasks currently "in progress" will be commented & closed…');
+      const res = await POST('/api/clickup/closeout', { dryRun });
+      if (!res.success) throw new Error(res.error || 'close-out failed');
+      const c = res.counts || {};
+      if (res.dryRun) {
+        const row = (n, t) => `${n} <span style="color:var(--text-muted,#94a3b8)">${esc(t)}</span>`;
+        setStatus(
+          `<div style="line-height:1.8">
+            <div style="font-weight:700;color:var(--text,#fff)">Plan — report month: ${esc(res.monthName || '?')}${res.autoCloseEnabled ? '' : ' <span style="color:#fbbf24">(auto-close is OFF — a live run will be refused until you enable &amp; save it)</span>'}</div>
+            <div>🔴 ${row(c.inProgress ?? 0, 'will be closed + notified (in progress)')}</div>
+            <div>⚪ ${row(c.skippedClosed ?? 0, 'already closed — skipped untouched')}</div>
+            <div>⏸ ${row(c.skippedOther ?? 0, 'not in progress (to do / Open) — skipped untouched')}</div>
+            <div>⚠️ ${row(c.errors ?? 0, 'lookup errors — skipped (never written blind)')}</div>
+          </div>`);
+      } else {
+        const s = res.summary || {};
+        setStatus(`<div style="line-height:1.8;font-weight:700;color:var(--text,#fff)">
+          ✅ Closed + notified: ${s.closed ?? 0} &nbsp;·&nbsp; Skipped untouched: ${s.skipped ?? 0} &nbsp;·&nbsp; Errors: ${s.errors ?? 0}
+        </div>`);
+        toast(`ClickUp close-out: ${s.closed ?? 0} closed, ${s.skipped ?? 0} skipped, ${s.errors ?? 0} errors`, 'success', 5000);
+      }
+    } catch (e) {
+      setStatus('❌ ' + esc(e.message), '#f87171');
+      toast('Close-out failed: ' + e.message, 'error', 5000);
+    } finally {
+      busy(false);
+    }
+  }
+
+  $('ms-clickup-closeout-preview')?.addEventListener('click', () => runCloseOut(true));
+  $('ms-clickup-closeout-run')?.addEventListener('click', () => {
+    const toggle = $('ms-CLICKUP_AUTO_CLOSE_ENABLED');
+    if (toggle && !toggle.checked) {
+      const statusEl = $('ms-clickup-closeout-status');
+      if (statusEl) {
+        statusEl.innerHTML = '⚠️ Enable "Allow ClickUp auto-close / close-out" and Save first — the live run is refused while it is off.';
+        statusEl.style.color = '#fbbf24';
+      }
+      return;
+    }
+    if (!confirm('Close + notify every ClickUp task currently "in progress"?\n\nAlready-closed and to-do tasks are skipped untouched. No emails, no sheets.')) return;
+    runCloseOut(false);
+  });
 }

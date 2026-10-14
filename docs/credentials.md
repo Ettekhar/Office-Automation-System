@@ -105,3 +105,43 @@ bypassed, and then protects nothing.
 exposure, already pushed in 10+ commits. A commit cannot undo that; it needs a
 history rewrite, which is the operator's decision. `npm run test:dashboard`
 prints the full list on every run.
+
+---
+
+## Monthly ClickUp close-out (built-in)
+
+`src/clickupCloseout.js` + `POST /api/clickup/closeout` (from the dashboard
+settings page: **Integrations & Limits → Monthly ClickUp Close-out**).
+
+How it behaves:
+
+- Builds the plan from the sheet overview (same source as the dashboard),
+  deduped by ClickUp task id.
+- Read-only **preview** (`dryRun`) works with the toggle off and lists exactly
+  which tasks would be closed+notified.
+- The **live run** only acts on tasks whose *fresh* ClickUp status is exactly
+  `in progress`. Already-closed, `to do`, and other statuses are skipped
+  untouched — never commented, never written.
+- Comment = the standard completion message with the sheet's account manager
+  (real ClickUp id) plus the Ovi tag. AM resolution is **roster-first**: the
+  name is matched against the live ClickUp roster and @-mentioned automatically
+  on strong matches (email / exact / full-name); weak first-name-only matches
+  are never auto-mentioned — they are surfaced in **👥 View All AMs** with a
+  `✅ Link` button that promotes the pairing to runtime data
+  (`data/am-promoted.json`), so no one ever has to hand-edit source to make a
+  mention work.
+- Live runs are refused while `CLICKUP_AUTO_CLOSE_ENABLED` is not `true`
+  (same guard as the per-row auto-close). No emails, no sheet writes — ClickUp
+  only.
+- Defense in depth: `completeClickUpMaintenanceTask` re-checks a fresh status
+  immediately before any write and returns `{skipped}` instead of commenting on
+  a task that is no longer `in progress`.
+- **Re-run safe / no duplicate messages:** before posting, the task's comments
+  are checked for *this month's* completion message (matched on month + site
+  text). If a partial failure left the comment posted but the task still
+  `in progress`, a re-run skips the POST and only closes (`alreadyCommented`,
+  counted as `reusedComments` in the report). A previous month's identical
+  message names an earlier month and never suppresses the current one.
+- Closed **recurrent** tasks roll back to `to do` automatically (ClickUp
+  auto-schedule) — that is the next cycle, not an error; the run only ever
+  touches tasks whose *current* status is `in progress`.

@@ -99,20 +99,51 @@ check('removed AM (Dana) not in directory', !dir2.accountManagers.some((e) => e.
 
 // ── no sheet names -> hardcoded fallback (old behaviour) ────────────────────
 const fallback = clickup.getAccountManagersList();
-check('no-args fallback returns 17 unique linked AMs', fallback.total === 17 && fallback.linked === 17 && fallback.suggested === 0 && fallback.notLinked === 0, `got ${fallback.total}/${fallback.linked}`);
+check('no-args fallback returns 18 unique linked AMs', fallback.total === 18 && fallback.linked === 18 && fallback.suggested === 0 && fallback.notLinked === 0, `got ${fallback.total}/${fallback.linked}`);
 check('fallback includes same ids as AM_DIRECTORY', fallback.accountManagers.some((e) => e.id === 30032526) && fallback.accountManagers.some((e) => e.id === 57226062));
+check('fallback includes Shelley Warsaw id', fallback.accountManagers.some((e) => e.id === 87477102));
 
 const fallback2 = clickup.getAccountManagersList({ sheetNames: [], members: [] });
-check('empty sheetNames + empty members -> fallback 17', fallback2.total === 17 && fallback2.notLinked === 0);
+check('empty sheetNames + empty members -> fallback 18', fallback2.total === 18 && fallback2.notLinked === 0);
 
 // ── @mention behaviour must be untouched ────────────────────────────────────
 console.log('resolveAccountManager (unchanged):');
 const res = clickup.resolveAccountManager('Mohammed');
 check('Mohammed resolves to the same @mention id', res.matchedUsers.length === 1 && res.matchedUsers[0].id === 30032526);
+const resShelley = clickup.resolveAccountManager('Shelley Warsaw');
+check('Shelley Warsaw resolves to her real @mention id', resShelley.matchedUsers.length === 1 && resShelley.matchedUsers[0].id === 87477102);
 const resMulti = clickup.resolveAccountManager('Rifat, Sajedur');
 check('multi-assignee mention behaviour unchanged', resMulti.matchedUsers.map((u) => u.id).sort().join(',') === '182653419,57032730');
 const resFyi = clickup.resolveAccountManager('Support Team');
 check('non-person still yields FYI-only mention', resFyi.isNonPerson === true && resFyi.matchedUsers.length === 0);
+
+// ── roster-first resolution (live context shape) ─────────────────────────────
+console.log('resolveAccountManager (roster-first):');
+const rosterWithShelley = [{ id: 87477102, username: 'Shelley Warsaw', email: 'shelley@cogwheelmarketing.com' }];
+const resRoster = clickup.resolveAccountManager('Mika Rosten', { roster: [{ id: 87477102, username: 'Mika Rosten', email: 'mika@example.com' }], promoted: {} });
+check('roster exact match is auto-mentioned', resRoster.matchedUsers.length === 1 && resRoster.matchedUsers[0].id === 87477102 && resRoster.matchedUsers[0].via === 'roster');
+const resPinned = clickup.resolveAccountManager('Shelley Warsaw', { roster: rosterWithShelley, promoted: {} });
+check('directory pin wins over roster (pins are the override list)', resPinned.matchedUsers.length === 1 && resPinned.matchedUsers[0].id === 87477102 && resPinned.matchedUsers[0].via === 'directory');
+const resEmail = clickup.resolveAccountManager('shelley@cogwheelmarketing.com', { roster: rosterWithShelley, promoted: {} });
+check('email match is auto-mentioned', resEmail.matchedUsers.length === 1 && resEmail.matchedUsers[0].id === 87477102 && resEmail.matchedUsers[0].via === 'roster');
+const resWeak = clickup.resolveAccountManager('Mike', {
+  roster: [{ id: 111, username: 'Mike Tarver', email: '' }, { id: 222, username: 'Mike Jones', email: '' }],
+  promoted: {},
+});
+check('first-name-only ambiguous match is NOT mentioned', resWeak.matchedUsers.length === 0 && resWeak.unmatchedNames.includes('mike') && resWeak.rosterWeak.length === 1);
+const resPromoted = clickup.resolveAccountManager('Mike', {
+  roster: [{ id: 111, username: 'Mike Tarver', email: '' }],
+  promoted: { mike: { id: 999, name: 'Mika Anderson', email: 'mika@example.com' } },
+});
+check('promoted pairing overrides roster', resPromoted.matchedUsers.length === 1 && resPromoted.matchedUsers[0].id === 999 && resPromoted.matchedUsers[0].via === 'promoted');
+const resNoCtx = clickup.resolveAccountManager('Shelley Warsaw');
+check('no-context resolver stays directory-only', resNoCtx.matchedUsers.length === 1 && resNoCtx.matchedUsers[0].id === 87477102 && resNoCtx.matchedUsers[0].via === 'directory');
+const dirPromoted = clickup.getAccountManagersList({
+  sheetNames: ['Mike'],
+  members: [{ id: 111, username: 'Mike Tarver', email: '' }],
+  promoted: { mike: { id: 999, name: 'Mika Anderson', email: 'mika@example.com' } },
+});
+check('promoted entry lists as linked (source promoted)', dirPromoted.accountManagers.length === 1 && dirPromoted.accountManagers[0].status === 'linked' && dirPromoted.accountManagers[0].id === 999 && dirPromoted.linked === 1);
 
 // ── no-token path of getClickUpMembers is offline-safe ──────────────────────
 console.log('getClickUpMembers (no token):');
