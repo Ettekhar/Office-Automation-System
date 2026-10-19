@@ -114,6 +114,11 @@ import { resolveUserTabUrlColumn, getUserTabFallbackUrlColumn } from './columnMa
 import {
   cacheGet,
   cacheSet,
+  peekStale,
+  observeStaleServe,
+  observeRefresh,
+  swrEnabled,
+  maxStaleMs,
   tabTitlesCacheKey,
   tabMetaCacheKey,
   tabValuesCacheKey,
@@ -228,17 +233,53 @@ async function withRetry(fn, maxRetries = 5, baseDelayMs = 3000) {
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+/**
+ * Read through the cache with STALE-WHILE-REVALIDATE.
+ *
+ *   fresh      → return it; no API call
+ *   stale      → return it NOW, refresh in the background through the same
+ *                rate-limited queue, so nobody waits on Google for a value the
+ *                server has already seen once
+ *   absent/old → fetch synchronously (first ever read of this tab, or the copy
+ *                is past the stale window)
+ *
+ * The background refresh goes through enqueue(), which is keyed by cacheKey:
+ * repeated requests for the same tab cannot stack duplicate refreshes, and the
+ * 1.4 s quota spacing still applies because it is the same queue.
+ *
+ * Exported so scratch/verify-cache-layer.mjs can assert the fresh/stale/miss
+ * decision without going near the real Sheets API.
+ */
+export function readThrough(cacheKey, fetcher) {
+  const fresh = cacheGet(cacheKey);
+  if (fresh !== undefined) return Promise.resolve(fresh);
+
+  if (swrEnabled) {
+    const stale = peekStale(cacheKey, { maxAgeMs: maxStaleMs });
+    if (stale) {
+      observeStaleServe(cacheKey, stale.ageMs);
+      enqueue(cacheKey, async () => {
+        const value = await fetcher();
+        observeRefresh(cacheKey);
+        return value;
+      }).catch((e) => console.warn(`[sheets] background refresh failed for ${cacheKey}: ${e?.message || e}`));
+      return Promise.resolve(stale.value);
+    }
+  }
+
+  return enqueue(cacheKey, async () => {
+    const value = await fetcher();
+    observeRefresh(cacheKey);
+    return value;
+  });
+}
+
 /** Returns an array of every tab title in the spreadsheet. */
 export async function listTabTitles(spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
   const cacheKey = tabTitlesCacheKey(targetId);
 
-  // 1. Cache hit → instant return, no queue
-  const cached = cacheGet(cacheKey);
-  if (cached !== undefined) return cached;
-
-  // 2. Queue the real API call (deduplicated + rate-limited)
-  return enqueue(cacheKey, async () => {
+  return readThrough(cacheKey, async () => {
     // Double-check cache (another request may have filled it while we waited)
     const fresh = cacheGet(cacheKey);
     if (fresh !== undefined) return fresh;
@@ -262,10 +303,7 @@ export async function listTabMeta(spreadsheetId = null) {
   const targetId = spreadsheetId || config.spreadsheetId;
   const cacheKey = tabMetaCacheKey(targetId);
 
-  const cached = cacheGet(cacheKey);
-  if (cached !== undefined) return cached;
-
-  return enqueue(cacheKey, async () => {
+  return readThrough(cacheKey, async () => {
     const fresh = cacheGet(cacheKey);
     if (fresh !== undefined) return fresh;
 
@@ -288,12 +326,7 @@ export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId =
   const targetId = spreadsheetId || config.spreadsheetId;
   const cacheKey = tabValuesCacheKey(targetId, tabName, range);
 
-  // 1. Cache hit → instant return, no queue
-  const cached = cacheGet(cacheKey);
-  if (cached !== undefined) return cached;
-
-  // 2. Queue the real API call (deduplicated + rate-limited)
-  return enqueue(cacheKey, async () => {
+  return readThrough(cacheKey, async () => {
     // Double-check cache
     const fresh = cacheGet(cacheKey);
     if (fresh !== undefined) return fresh;
@@ -1767,7 +1800,15 @@ export async function createNewProjectTabWithSitemapInSheet({ projectName, urls 
  * Development columns "weren't showing" while other tabs looked broken too.
  * When a tab's header row can't be understood we fall back to the 7-col default.
  */
-export async function fetchDevTrackerSheetData() {
+export async function fetchDevTrackerSheetData({ forceRefresh = false } = {}) {
+  if (forceRefresh) {
+    // A caller that asks for a live read has to actually get one. Until now this
+    // argument did not exist: the dev-assistant passed { forceRefresh: true },
+    // it was silently dropped, and up-to-5-minute-old cached rows were presented
+    // in the UI as a "live read from the sheet". Dropping this spreadsheet's
+    // entries first makes the reads below hit the API for real.
+    invalidateCacheForSpreadsheet(DEV_TRACKER_SPREADSHEET_ID);
+  }
   const tabs = await listTabTitles(DEV_TRACKER_SPREADSHEET_ID);
   const projects = [];
 

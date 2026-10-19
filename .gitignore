@@ -72,8 +72,29 @@ scratch/route-classification.json
 scratch/live-sweep.json
 
 scratch/kv-seed-dryrun.json
+# Runtime scratch artefacts: test transcripts, server logs, dot-prefixed probes.
+scratch/.*
+# Data dumps written by the scratch investigation scripts (ClickUp payloads,
+# session exports, audit snapshots). The .mjs scripts themselves stay tracked.
+scratch/am-comment-cleanup-*.json
+scratch/batch-clickup-results-*.json
+scratch/clickup-task-audit.json
+scratch/comment-am-update-*.json
+scratch/kv-seed-manifest.json
+scratch/sessions-empty.json
+scratch/users-raw.txt
+scratch/users-upload.json
+scratch/verify-*.json
+# Live email conditional notes, synced through cloudSync like notices.
+# (The older entry above names this file differently; both are kept.)
+data/conditional-notes.json
+# Warm-start copy of the Google Sheets read cache — sheet CONTENT, never commit.
+data/sheets-cache.json
+data/sheets-cache.json.tmp
 
 cloudflare-worker/.dev.vars
 
 # First-run setup wizard flag — machine-local, never commit
 data/.setup-complete
+
+backups/

@@ -41,6 +41,11 @@ import { configure as configureGoogle } from './dashboard/google-shim.js';
 import '../src/server.js';
 import { getHandler, getListenPort } from './dashboard/http-shim.js';
 
+// Tells src/uptimeMonitor.js that it is running inside a Worker isolate, so the
+// Node-only setInterval scheduler is never armed here — the cron trigger and
+// the scheduled() handler below are the cloud monitoring path instead.
+globalThis.__OFFICEOS_WORKER__ = true;
+
 // The dashboard's state, as KV key names. data/*.json -> same basename.
 const STATE_KEYS = [
   'users', 'sites', 'tasks', 'properties', 'dev-projects', 'notices',
@@ -208,6 +213,29 @@ export default {
       console.error('[dashboard] unhandled:', err && (err.stack || err.message || err));
       return json({ error: 'dashboard_error', detail: String(err && err.message || err) }, 500);
     }
+  },
+
+  /**
+   * Cloud cron entry point — see [triggers] in dashboard-wrangler.toml.
+   *
+   * Runs the proactive uptime sweep with a BOUNDED slice per tick (offline
+   * sites first, then never-checked, then the stalest) rather than the whole
+   * fleet, because a Worker invocation may only make ~50 subrequests and KV
+   * bills one write per key per tick. One sweep writes data/sites.json once and
+   * meta.json once, no matter how many sites changed.
+   */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil((async () => {
+      try {
+        await ensureWarm(env, ctx);
+        const { runCloudSweep } = await import('../src/uptimeMonitor.js');
+        const r = await runCloudSweep();
+        const downNote = r.downCount ? ` — ${r.downCount} DOWN` : '';
+        console.log(`[uptime] cloud sweep (${event && event.cron || 'cron'}): ${r.checked} checked, ${r.online} up, ${r.offline} down, ${r.transitions.length} transitions, ${r.tookMs}ms${downNote}`);
+      } catch (e) {
+        console.error('[uptime] cloud sweep failed:', e && (e.stack || e.message || e));
+      }
+    })());
   },
 };
 

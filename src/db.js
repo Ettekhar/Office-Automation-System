@@ -23,13 +23,64 @@ export const uuid = () => crypto.randomUUID();
 // ─── Low-level I/O ───────────────────────────────────────────────────────────
 function fp(name) { return path.join(DATA_DIR, `${name}.json`); }
 
+/**
+ * Read memoisation.
+ *
+ * Every dbRead() used to hit the disk and JSON.parse the WHOLE file, and the hot
+ * routes call the same getter more than once per request (GET /api/master/
+ * daily-review alone reads sites twice and daily-review several times). That is
+ * measurable: data/sites.json is ~560 KB, so each call is ~2.4 ms of read+parse —
+ * and inside the Cloudflare Worker the fs shim is worse still, because it does
+ * JSON.stringify(...) on its in-memory copy and db.js parses it straight back
+ * (~3.6 ms per call on a 10 ms CPU budget per invocation).
+ *
+ * So: parse once, hand out the parsed value, drop it when the data changes.
+ *
+ * Correctness notes:
+ *   - dbWrite() is the ONLY writer of these collections in the codebase (every
+ *     setter funnels through it; verified by grep), so a write is a reliable
+ *     invalidation signal and it clears exactly that collection.
+ *   - DB_MEMO_TTL_MS (default 5 s) bounds how long a cached copy can live, so a
+ *     value mutated in place by a caller that forgot to write self-heals almost
+ *     immediately instead of sticking for the process lifetime.
+ *   - DB_MEMO=false restores the original read-every-time behaviour.
+ */
+const memo = new Map(); // name -> { value, at }
+const MEMO_TTL_MS = Number(process.env.DB_MEMO_TTL_MS ?? 5000);
+const MEMO_ENABLED = String(process.env.DB_MEMO ?? 'true').toLowerCase() !== 'false';
+
+/** Drop one collection (or all) from the read memo. */
+export function dbInvalidate(name) {
+  if (name === undefined || name === null) memo.clear();
+  else memo.delete(name);
+}
+
+/** Memo counters for the cache-status endpoint. */
+export function getDbMemoStatus() {
+  return {
+    enabled: MEMO_ENABLED,
+    ttlMs: MEMO_TTL_MS,
+    entries: [...memo.keys()].sort(),
+    names: [...memo.entries()].map(([name, e]) => ({ name, ageMs: Date.now() - e.at })),
+  };
+}
+
 export function dbRead(name) {
-  try { return fs.existsSync(fp(name)) ? JSON.parse(fs.readFileSync(fp(name), 'utf8')) : null; }
-  catch { return null; }
+  if (MEMO_ENABLED) {
+    const hit = memo.get(name);
+    if (hit && Date.now() - hit.at < MEMO_TTL_MS) return hit.value;
+  }
+  let value = null;
+  try { value = fs.existsSync(fp(name)) ? JSON.parse(fs.readFileSync(fp(name), 'utf8')) : null; }
+  catch { value = null; }
+  if (MEMO_ENABLED) memo.set(name, { value, at: Date.now() });
+  return value;
 }
 
 export function dbWrite(name, data) {
   fs.writeFileSync(fp(name), JSON.stringify(data, null, 2), 'utf8');
+  // The one place the data can change: make the next read see it immediately.
+  memo.delete(name);
 }
 
 // ─── Timestamp ───────────────────────────────────────────────────────────────

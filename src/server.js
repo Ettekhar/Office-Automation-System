@@ -3863,6 +3863,26 @@ const server = http.createServer(async (req, res) => {
           offline: updated.filter(s => s.uptimeStatus === 'offline').length });
       }
 
+      // ── UPTIME SNAPSHOT / SWEEP (background monitor) ───────────
+      // GET /api/master/uptime-snapshot
+      // Pure local-state read (no Google, no outbound HTTP) — this is what the
+      // UI polls so uptime dots stay live WITHOUT opening the Uptime Monitor.
+      if (pathname === '/api/master/uptime-snapshot' && method === 'GET') {
+        const { getSnapshot } = await import('./uptimeMonitor.js');
+        return ok(getSnapshot());
+      }
+
+      // POST /api/master/uptime-sweep   body: { limit?, siteIds? }
+      // Manual "Check now" + the scheduler entry point. One sweep, one write.
+      if (pathname === '/api/master/uptime-sweep' && method === 'POST') {
+        const b = await body();
+        const { runSweep } = await import('./uptimeMonitor.js');
+        const limit = Number(b.limit) > 0 ? Math.min(Number(b.limit), 500) : 0;
+        const siteIds = Array.isArray(b.siteIds) && b.siteIds.length ? b.siteIds : null;
+        const result = await runSweep({ limit, siteIds, source: b.source || 'manual' });
+        return ok(result);
+      }
+
       // ── NOTICES (Notice Board) ──────────────────────────────────
       // GET /api/master/notices
       if (pathname === '/api/master/notices' && method === 'GET') {
@@ -4567,6 +4587,23 @@ function startServer(port, maxTries = 5) {
       }).catch((e) => {
         console.warn('[cloud-sync] Boot sync init warning:', e.message);
       });
+
+      // Proactive uptime monitoring: continuous background sweeps so a site
+      // that goes down shows as down without anyone opening the Uptime
+      // Monitor. Full sweep every 3 min by default (UPTIME_MONITOR_INTERVAL_MS
+      // / UPTIME_MONITOR_ENABLED are read-only knobs; nothing to configure).
+      import('./uptimeMonitor.js').then(({ startLocalScheduler }) => {
+        startLocalScheduler();
+      }).catch((e) => {
+        console.warn('[uptime] monitor init warning:', e.message);
+      });
+
+      // Prime the sheet cache a few seconds in, so the app's own boot traffic
+      // (cloud settings pull) reaches the Google queue first. Fire-and-forget:
+      // it must never delay a response, and stale-while-revalidate means a cold
+      // read never blocks the user anyway.
+      const warmTimer = setTimeout(() => { warmSheetCacheOnBoot(); }, 8000);
+      if (warmTimer.unref) warmTimer.unref();
     }
     if (!isWorkerEnv && process.env.AUTO_TUNNEL !== 'false') {
       startCloudflareTunnel(port).then((tunnelUrl) => {
@@ -4639,6 +4676,75 @@ function startRagScheduler() {
   };
   console.log(`[rag] scheduled sync enabled every ${Math.round(interval / 60000)} minutes`);
   setInterval(run, interval).unref();
+}
+
+// ─── Sheet cache priming ─────────────────────────────────────────────────────
+
+/**
+ * Prime the sheet cache for the reads the default views need.
+ *
+ * The first visit of the day used to pay for those reads one at a time through
+ * the shared 1.4 s queue, so opening the dashboard after a restart felt like the
+ * data was being fetched from scratch — because it was. This runs shortly after
+ * boot, in the background, so the UI that follows is served from cache.
+ *
+ * Deliberately small. The queue is FIFO, so front-loading dozens of calls would
+ * push a real user's first request behind them; three cheap master-sheet reads
+ * are the whole budget. Everything else warms itself on first use, because
+ * readThrough() serves the last known value while it refreshes.
+ */
+async function warmSheetCacheOnBoot() {
+  const started = Date.now();
+  try {
+    const { getTabValues, listTabTitles, listTabMeta } = await import('./sheets.js');
+    const creds = db.dbRead('mailer-credentials');
+    const CW_ID = creds?.vars?.CW_SPREADSHEET_ID ||
+      process.env.CW_SPREADSHEET_ID ||
+      '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
+    const CW_TAB = creds?.vars?.CW_MASTER_TAB_NAME || process.env.CW_MASTER_TAB_NAME || 'Website List';
+    const jobs = [
+      ['tab titles', () => listTabTitles(CW_ID)],
+      ['tab meta', () => listTabMeta(CW_ID)],
+      ['month header', () => getTabValues(CW_TAB, 'A2:ZZ2', CW_ID)],
+    ];
+    for (const [label, job] of jobs) {
+      try { await job(); } catch (e) { console.warn(`[warm] ${label} failed: ${e.message}`); }
+    }
+    console.log(`[warm] sheet cache primed in ${Date.now() - started}ms`);
+  } catch (e) {
+    console.warn('[warm] sheet cache priming skipped:', e?.message || e);
+  }
+
+  // ── Phase 2: the OPERATIONS menu (custom sheets) ──────────────────────────
+  // Each custom sheet is a single tab read, but they share one FIFO queue with a
+  // 1.4 s gap, so opening the LAST sheet in the menu used to pay for every sheet
+  // before it. Measured on a cold server: five custom sheets opened in a row
+  // answered in 3 s, 5 s, 7 s, 9 s and 11 s. Priming them in the background means
+  // the first visit of the day is instant instead. Deliberately started after
+  // phase 1 so the app's own boot traffic is served before any of this.
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  await sleep(15000);
+  try {
+    const { getTabValues } = await import('./sheets.js');
+    const all = [...db.getSheetCredentials(), ...db.getCustomSheets()];
+    const seen = new Set();
+    let primed = 0;
+    for (const c of all) {
+      if (!c || !c.spreadsheetId || c.active === false) continue;
+      const key = `${c.spreadsheetId}::${c.tabName || ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      try {
+        await getTabValues(c.tabName || 'Sheet1', 'A1:ZZ2000', c.spreadsheetId);
+        primed++;
+      } catch (e) {
+        console.warn(`[warm] ${c.name || c.id || 'sheet'}: ${e.message}`);
+      }
+    }
+    console.log(`[warm] primed ${primed} custom sheet tab(s)`);
+  } catch (e) {
+    console.warn('[warm] custom sheet priming skipped:', e?.message || e);
+  }
 }
 
 startServer(DEFAULT_PORT);

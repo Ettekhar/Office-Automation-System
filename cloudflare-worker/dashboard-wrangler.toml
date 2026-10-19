@@ -9,6 +9,26 @@
 #     npm run dashboard:deploy
 #
 # ---------------------------------------------------------------------------
+# Proactive uptime monitoring (free-tier aware)
+#
+# The Worker runs src/server.js unmodified, so it already owns the dashboard's
+# state in KV. This cron makes the Worker re-check site URLs on its own, so a
+# dead site shows as down with the operator's laptop OFF.
+#
+# Per tick: a bounded slice (src/uptimeMonitor.js CLOUD_SLICE_SIZE = 40 sites,
+# offline first, then never-checked, then stalest) — deliberately under the
+# Workers subrequest cap, and one tick writes at most ONE sites.json write plus
+# ONE meta.json write because a whole sweep is a single state write.
+#
+# Budget at */10: 144 ticks/day x 2 writes = ~288 KV writes/day, inside the
+# free tier's 1,000 writes/day with room for normal dashboard use. Tightening
+# to */5 (~576 writes/day) or */1 (~1440/day, over budget) is a one-line change
+# here — leave it at 10 minutes unless the KV usage dashboard says otherwise.
+# ---------------------------------------------------------------------------
+[triggers]
+crons = ["*/10 * * * *"]
+
+# ---------------------------------------------------------------------------
 # THE [alias] TABLE IS THE WHOLE TRICK
 # ---------------------------------------------------------------------------
 # src/server.js is a Node http server that keeps state on disk and talks to
