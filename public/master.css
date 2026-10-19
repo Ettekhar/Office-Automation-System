@@ -6,13 +6,13 @@
   /* Obsidian Linear Dark Mode Palette (Default) */
   --accent: #5e6ad2;
   --accent-hover: #6f7de3;
-  --accent-2: #818cf8;
-  --accent-glow: rgba(94, 106, 210, 0.25);
-  --accent-subtle: rgba(94, 106, 210, 0.12);
+  --accent-2: #7CE7C0;
+  --accent-glow: rgba(52,211,153, 0.125);
+  --accent-subtle: rgba(52,211,153, 0.06);
 
   /* Status Colors */
   --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.2);
+  --success-glow: rgba(16,185,129, 0.1);
   --warning: #f59e0b;
   --warning-glow: rgba(245, 158, 11, 0.2);
   --danger: #f43f5e;
@@ -34,7 +34,7 @@
   --border-color: rgba(255, 255, 255, 0.07);
   --border-subtle: rgba(255, 255, 255, 0.04);
   --border-strong: rgba(255, 255, 255, 0.12);
-  --border-accent: rgba(94, 106, 210, 0.4);
+  --border-accent: rgba(52,211,153, 0.2);
 
   /* Typography Colors */
   --text-primary: #f7f8f8;
@@ -67,13 +67,13 @@
 html[data-theme="light"] {
   /* Shadcn Signature Slate & Modern Blue Design Tokens */
   /* Vibrant Indigo & Modern Design Tokens (consistent with dark theme) */
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
+  --accent: #059669;
+  --accent-hover: #047857;
   --accent-foreground: #ffffff;
-  --accent-2: #6366f1;
-  --accent-2-hover: #4f46e5;
-  --accent-glow: rgba(79, 70, 229, 0.2);
-  --accent-subtle: #eef2ff;
+  --accent-2: #34D399;
+  --accent-2-hover: #059669;
+  --accent-glow: rgba(5,150,105, 0.1);
+  --accent-subtle: #ECFDF5;
 
   /* Status Colors (Shadcn Light standard) */
   --success: #16a34a;
@@ -260,7 +260,7 @@ textarea {
 .g1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, #6366f1, transparent);
+  background: radial-gradient(circle, #34D399, transparent);
   top: -120px;
   left: -100px;
 }
@@ -306,7 +306,7 @@ textarea {
   padding: 44px 40px;
   width: 100%;
   max-width: 490px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(52,211,153, 0.075);
   animation: cardAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -334,8 +334,8 @@ textarea {
   margin-bottom: 16px;
   padding: 6px 14px;
   border-radius: 99px;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(52,211,153, 0.05);
+  border: 1px solid rgba(52,211,153, 0.125);
 }
 
 .logo-icon {
@@ -351,7 +351,7 @@ textarea {
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #fff 30%, #818cf8);
+  background: linear-gradient(135deg, #fff 30%, #7CE7C0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -375,7 +375,7 @@ textarea {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #38bdf8 100%);
+  background: linear-gradient(135deg, #7CE7C0 0%, #c084fc 50%, #38bdf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -415,9 +415,9 @@ textarea {
 }
 
 .role-card.active {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(52,211,153, 0.075);
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(52,211,153, 0.125);
 }
 
 .rc-icon {
@@ -486,7 +486,7 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #34D399 0%, #6EE7B7 100%);
   color: #fff;
   padding: 13px 22px;
   border-radius: var(--radius);
@@ -495,13 +495,13 @@ textarea {
   border: none;
   transition: all var(--transition);
   margin-top: 4px;
-  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 24px rgba(52,211,153, 0.2);
 }
 
 .btn-enter:hover {
   opacity: 0.95;
   transform: translateY(-1px);
-  box-shadow: 0 10px 32px rgba(99, 102, 241, 0.55);
+  box-shadow: 0 10px 32px rgba(52,211,153, 0.275);
 }
 
 .landing-footer-note {
@@ -741,7 +741,7 @@ textarea {
   padding-top: 6px;
 }
 .nav-section-assigned-sites .nav-item .nav-icon {
-  color: #818cf8;
+  color: #7CE7C0;
 }
 .nav-section-assigned-sites .nav-item:hover .nav-icon {
   color: #a5b4fc;
@@ -840,9 +840,9 @@ textarea {
   letter-spacing: 0.5px;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16,185,129, 0.075);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16,185,129, 0.15);
 }
 
 /* Connected Sheets section — sidebar sheet list */
@@ -1281,8 +1281,8 @@ textarea {
   color: #6ee7b7;
   padding: 0 10px;
   border-radius: 20px;
-  background: rgba(16, 185, 129, 0.09);
-  border: 1px solid rgba(16, 185, 129, 0.24);
+  background: rgba(16,185,129, 0.045);
+  border: 1px solid rgba(16,185,129, 0.12);
   white-space: nowrap;
 }
 
@@ -1364,6 +1364,15 @@ textarea {
   overflow-x: hidden;
 }
 
+/* Pinned notice slot — lives in the shell above .main-content so the banner
+   paints as soon as the app opens, independent of the slow view data. */
+#global-notice-banner {
+  flex-shrink: 0;
+  padding: 16px 24px 0;
+}
+#global-notice-banner:empty { display: none; }
+#global-notice-banner .pinned-notice-banner { margin-bottom: 0; }
+
 /* ═══════════════════════════════════════════════════════════════════════════
    STATS & CARDS
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1391,13 +1400,13 @@ textarea {
 }
 
 .stat-card.accent {
-  border-color: rgba(94, 106, 210, 0.25);
-  background: rgba(94, 106, 210, 0.05);
+  border-color: rgba(52,211,153, 0.125);
+  background: rgba(52,211,153, 0.025);
 }
 
 .stat-card.success {
-  border-color: rgba(16, 185, 129, 0.25);
-  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16,185,129, 0.125);
+  background: rgba(16,185,129, 0.025);
 }
 
 .stat-card.warning {
@@ -1534,9 +1543,9 @@ textarea {
 }
 
 .linear-filter-opt.active {
-  background: rgba(94, 106, 210, 0.18);
-  border-color: rgba(94, 106, 210, 0.4);
-  color: #818cf8;
+  background: rgba(52,211,153, 0.09);
+  border-color: rgba(52,211,153, 0.2);
+  color: #7CE7C0;
 }
 
 .card {
@@ -1588,7 +1597,7 @@ textarea {
 .progress-fill {
   height: 100%;
   border-radius: 99px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #34D399, #6EE7B7);
   transition: width 0.4s ease;
 }
 
@@ -1692,7 +1701,7 @@ tr:last-child td {
 }
 
 .table-smart-fit tr.active-row td {
-  background: rgba(99, 102, 241, 0.07);
+  background: rgba(52,211,153, 0.035);
 }
 
 /* ─── Maintenance Mode (My Sites user view) ─── */
@@ -1728,9 +1737,9 @@ tr:last-child td {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16,185,129, 0.075);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16,185,129, 0.15);
   padding: 4px 9px;
   border-radius: 6px;
   font-size: 11px;
@@ -1741,7 +1750,7 @@ tr:last-child td {
 }
 
 .table-maint-mode td[data-col="sheet"] .btn-sheet:hover {
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(16,185,129, 0.125);
   color: #fff;
   transform: translateY(-1px);
 }
@@ -1844,13 +1853,13 @@ tr:last-child td {
 }
 
 .btn-report-toggle.sent {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16,185,129, 0.075);
   color: #34d399;
-  border-color: rgba(16, 185, 129, 0.35);
+  border-color: rgba(16,185,129, 0.175);
 }
 
 .btn-report-toggle.sent:hover {
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(16,185,129, 0.125);
 }
 
 .btn-report-toggle.pending {
@@ -1903,7 +1912,7 @@ tr:last-child td {
 
 .live-status-dot.online {
   background: #10b981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8), 0 0 2px #10b981;
+  box-shadow: 0 0 8px rgba(16,185,129, 0.4), 0 0 2px #10b981;
 }
 
 .live-status-dot.offline {
@@ -1949,7 +1958,7 @@ tr:last-child td {
 }
 
 .site-identity-cell .site-domain-link:hover {
-  color: var(--accent-2, #6366f1);
+  color: var(--accent-2, #34D399);
   text-decoration: underline;
 }
 
@@ -1970,15 +1979,15 @@ tr:last-child td {
 }
 
 .btn-copy-url:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(52,211,153, 0.1);
+  border-color: rgba(52,211,153, 0.25);
   color: #fff;
   transform: translateY(-0.5px);
 }
 
 .btn-copy-url.copied {
-  background: rgba(16, 185, 129, 0.25) !important;
-  border-color: rgba(16, 185, 129, 0.6) !important;
+  background: rgba(16,185,129, 0.125) !important;
+  border-color: rgba(16,185,129, 0.3) !important;
   color: #34d399 !important;
 }
 
@@ -2051,8 +2060,8 @@ tr:last-child td {
 }
 
 .btn-uptime-check:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(52,211,153, 0.1);
+  border-color: rgba(52,211,153, 0.25);
   color: #fff;
 }
 
@@ -2123,8 +2132,8 @@ tr:last-child td {
   left: 50%;
   transform: translateX(-50%);
   background: rgba(18, 24, 38, 0.96);
-  border: 1px solid rgba(99, 102, 241, 0.5);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(52,211,153, 0.25);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(52,211,153, 0.15);
   border-radius: 12px;
   padding: 10px 20px;
   display: flex;
@@ -2171,8 +2180,8 @@ tr:last-child td {
 
 /* ─── Pinned Notice Banner ─── */
 .pinned-notice-banner {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, rgba(52,211,153, 0.06) 0%, rgba(168, 85, 247, 0.08) 100%);
+  border: 1px solid rgba(52,211,153, 0.15);
   border-radius: var(--radius);
   padding: 12px 18px;
   margin-bottom: 20px;
@@ -2199,7 +2208,7 @@ tr:last-child td {
   justify-content: center;
   width: 38px;
   height: 38px;
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(52,211,153, 0.1);
   border-radius: 8px;
   flex-shrink: 0;
 }
@@ -2242,13 +2251,13 @@ tr:last-child td {
   align-items: center;
   gap: 6px;
   text-decoration: none;
-  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 10px rgba(16,185,129, 0.15);
   transition: all var(--transition);
 }
 
 .btn-notice-meet:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 14px rgba(16,185,129, 0.25);
 }
 
 /* ─── GA4 Report Status Dropdown & Pill ─── */
@@ -2301,9 +2310,9 @@ tr:last-child td {
 }
 
 .badge-expiry-safe {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16,185,129, 0.075);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16,185,129, 0.15);
   font-size: 10.5px;
   padding: 2px 7px;
   border-radius: 99px;
@@ -2344,8 +2353,8 @@ tr:last-child td {
 }
 
 .btn-edit-expiry:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(52,211,153, 0.1);
+  border-color: rgba(52,211,153, 0.25);
   color: #fff;
 }
 
@@ -2454,7 +2463,7 @@ tr:last-child td {
 .detail-accordion-row td {
   padding: 0 !important;
   background: rgba(14, 18, 30, 0.6) !important;
-  border-bottom: 2px solid rgba(99, 102, 241, 0.3) !important;
+  border-bottom: 2px solid rgba(52,211,153, 0.15) !important;
 }
 
 .row-detail-bento {
@@ -2571,9 +2580,9 @@ tr:last-child td {
 }
 
 .badge-success {
-  background: rgba(16, 185, 129, 0.14);
+  background: rgba(16,185,129, 0.07);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.28);
+  border: 1px solid rgba(16,185,129, 0.14);
 }
 
 .badge-warning {
@@ -2771,15 +2780,15 @@ tr:last-child td {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #34D399, #6EE7B7);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 14px rgba(52,211,153, 0.175);
 }
 
 .btn-primary:hover {
   opacity: 0.92;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 6px 20px rgba(52,211,153, 0.25);
 }
 
 .btn-secondary {
@@ -2899,7 +2908,7 @@ tr:last-child td {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, #34D399, #a855f7);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -2932,7 +2941,7 @@ tr:last-child td {
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 580px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(52,211,153, 0.125);
   overflow: hidden;
   animation: cmdAppear 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -2997,7 +3006,7 @@ tr:last-child td {
 
 .cmd-item:hover,
 .cmd-item.selected {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(52,211,153, 0.075);
   color: #fff;
 }
 
@@ -3127,8 +3136,8 @@ tr:last-child td {
 }
 
 .toast.success {
-  background: rgba(16, 185, 129, 0.16);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16,185,129, 0.08);
+  border: 1px solid rgba(16,185,129, 0.175);
   color: #34d399;
 }
 
@@ -3171,7 +3180,7 @@ tr:last-child td {
 
 .sync-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #34D399, #a855f7);
   border-radius: 99px;
   transition: width 0.35s ease;
 }
@@ -3301,6 +3310,10 @@ tr:last-child td {
 
   .main-content {
     padding: 14px;
+  }
+
+  #global-notice-banner {
+    padding: 12px 14px 0;
   }
 
   .top-bar {
@@ -3447,8 +3460,8 @@ tr:last-child td {
   font-size: 11px;
   font-family: var(--font-mono);
   color: var(--success);
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16,185,129, 0.04);
+  border: 1px solid rgba(16,185,129, 0.1);
   padding: 4px 9px;
   border-radius: var(--radius-sm);
   font-weight: 500;
@@ -3660,7 +3673,7 @@ tr:last-child td {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(94, 106, 210, 0.3);
+  box-shadow: 0 2px 8px rgba(52,211,153, 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3815,7 +3828,7 @@ tr:last-child td {
 
 .btn-linear-primary:hover {
   background: #6f7de3;
-  box-shadow: 0 2px 6px rgba(94, 106, 210, 0.35);
+  box-shadow: 0 2px 6px rgba(52,211,153, 0.175);
 }
 
 .btn-linear-primary .linear-kbd {
@@ -4294,7 +4307,7 @@ html[data-theme="light"] .site-domain-link {
 
 html[data-theme="light"] .site-identity-cell .site-domain-link:hover,
 html[data-theme="light"] .site-domain-link:hover {
-  color: #4f46e5 !important;
+  color: #059669 !important;
   text-decoration: underline;
 }
 
@@ -4400,8 +4413,8 @@ html[data-theme="light"] .select-maint-compact:hover {
 }
 
 html[data-theme="light"] .select-maint-compact:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5,150,105, 0.075);
 }
 
 html[data-theme="light"] .select-maint-compact option {
@@ -4561,9 +4574,9 @@ html[data-theme="light"] .mode-btn:hover {
 }
 
 html[data-theme="light"] .mode-btn.active {
-  background: #4f46e5;
+  background: #059669;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 2px 6px rgba(5,150,105, 0.125);
 }
 
 html[data-theme="light"] .chip-btn {
@@ -4579,9 +4592,9 @@ html[data-theme="light"] .chip-btn:hover {
 }
 
 html[data-theme="light"] .chip-btn.active {
-  background: #4f46e5;
+  background: #059669;
   color: #ffffff;
-  border-color: #4f46e5;
+  border-color: #059669;
 }
 
 /* -------------------------------------------------------------------------------
@@ -4781,9 +4794,9 @@ html[data-theme="light"] .smc-lbl {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  color: #818cf8;
+  background: linear-gradient(135deg, rgba(52,211,153, 0.1), rgba(168, 85, 247, 0.2));
+  border: 1px solid rgba(52,211,153, 0.175);
+  color: #7CE7C0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4850,8 +4863,8 @@ html[data-theme="light"] .smc-lbl {
 .sm-sa-callout {
   margin-top: 16px;
   padding: 12px 16px;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(52,211,153, 0.03);
+  border: 1px solid rgba(52,211,153, 0.11);
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -4861,7 +4874,7 @@ html[data-theme="light"] .smc-lbl {
 }
 
 .sm-sa-icon {
-  color: #818cf8;
+  color: #7CE7C0;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -4908,7 +4921,7 @@ html[data-theme="light"] .smc-lbl {
 /* Sync progress bar */
 .sm-sync-banner {
   background: var(--bg-card);
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  border: 1px solid rgba(52,211,153, 0.2);
   border-radius: 10px;
   padding: 14px 18px;
   margin-bottom: 20px;
@@ -4926,7 +4939,7 @@ html[data-theme="light"] .smc-lbl {
 
 .sm-sync-pct {
   font-family: var(--font-mono, monospace);
-  color: #818cf8;
+  color: #7CE7C0;
 }
 
 .sm-progress-bar-track {
@@ -4938,7 +4951,7 @@ html[data-theme="light"] .smc-lbl {
 
 .sm-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #34D399, #a855f7);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -4981,7 +4994,7 @@ html[data-theme="light"] .smc-lbl {
 }
 
 .sheet-manager-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(52,211,153, 0.2);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
 
@@ -5013,8 +5026,8 @@ html[data-theme="light"] .smc-lbl {
   letter-spacing: 0.05em;
   padding: 2px 7px;
   border-radius: 4px;
-  background: rgba(99, 102, 241, 0.14);
-  color: #818cf8;
+  background: rgba(52,211,153, 0.07);
+  color: #7CE7C0;
   margin-bottom: 5px;
 }
 
@@ -5271,7 +5284,7 @@ html[data-theme="light"] .sheet-manager-card {
 }
 
 html[data-theme="light"] .sheet-manager-card:hover {
-  border-color: #818cf8;
+  border-color: #7CE7C0;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -5349,8 +5362,8 @@ select option:checked,
 }
 
 .cs-tab-select:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+  border-color: #34D399 !important;
+  box-shadow: 0 0 0 2px rgba(52,211,153, 0.125) !important;
 }
 
 /* Role-Based Access Control Box Styling */
@@ -5473,7 +5486,7 @@ html[data-theme="light"] .sm-role-chk-label:hover {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+  background: linear-gradient(90deg, #34D399, #38bdf8, #10b981);
 }
 
 .cs-hero-top {
@@ -5553,7 +5566,7 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 .cs-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+  background: linear-gradient(90deg, #34D399, #38bdf8, #10b981);
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
 }
@@ -5594,9 +5607,9 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 }
 
 .cs-kpi-card.active {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.08);
-  box-shadow: 0 0 16px rgba(99, 102, 241, 0.2);
+  border-color: #34D399;
+  background: rgba(52,211,153, 0.04);
+  box-shadow: 0 0 16px rgba(52,211,153, 0.1);
 }
 
 .cs-kpi-top {
@@ -5681,9 +5694,9 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 }
 
 .cs-view-btn.active {
-  background: #6366f1;
+  background: #34D399;
   color: #ffffff;
-  box-shadow: 0 1px 6px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 1px 6px rgba(52,211,153, 0.2);
 }
 
 /* Visual Cards View Grid */
@@ -5754,7 +5767,7 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 }
 
 .cs-card-status-select:focus {
-  border-color: #6366f1;
+  border-color: #34D399;
 }
 
 .cs-item-card-title {
@@ -5820,7 +5833,7 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 
 .overview-sheet-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: rgba(52,211,153, 0.2);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -5868,7 +5881,7 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 
 .osc-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #10b981);
+  background: linear-gradient(90deg, #34D399, #10b981);
   border-radius: 999px;
   transition: width 0.6s ease;
 }
@@ -5900,9 +5913,9 @@ html[data-theme="light"] .sm-role-chk-label:hover {
 }
 
 .osc-action-btn:hover {
-  background: #6366f1;
+  background: #34D399;
   color: #ffffff;
-  border-color: #6366f1;
+  border-color: #34D399;
 }
 
 /* Light Mode Support for Smart Sheet Dashboard */
@@ -6003,7 +6016,7 @@ html[data-theme="light"] .osc-title {
   height: 9px;
   border-radius: 50%;
   background: var(--success);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 0 3px rgba(16,185,129, 0.125);
   animation: ai-pulse 2s ease-in-out infinite;
 }
 
@@ -6057,7 +6070,7 @@ html[data-theme="light"] .osc-title {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: linear-gradient(135deg, rgba(94, 106, 210, 0.16) 0%, rgba(129, 140, 248, 0.07) 100%);
+  background: linear-gradient(135deg, rgba(52,211,153, 0.08) 0%, rgba(129, 140, 248, 0.07) 100%);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -6348,7 +6361,7 @@ html[data-theme="light"] .ai-msg-bot {
 }
 
 html[data-theme="light"] .ai-msg-bot strong {
-  color: #4f46e5;
+  color: #059669;
 }
 
 html[data-theme="light"] .ai-chat-input {
@@ -6357,7 +6370,7 @@ html[data-theme="light"] .ai-chat-input {
 }
 
 html[data-theme="light"] .ai-chat-header {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
+  background: linear-gradient(135deg, rgba(5,150,105, 0.04) 0%, rgba(52,211,153, 0.02) 100%);
 }
 
 html[data-theme="light"] .ai-chip {
@@ -6455,10 +6468,10 @@ html[data-theme="light"] .ai-msg .ai-quote {
   --border: rgba(255, 255, 255, .11);
   --border-subtle: rgba(255, 255, 255, .065);
   --border-strong: rgba(255, 255, 255, .2);
-  --accent: #7568f5;
+  --accent: #34D399;
   --accent-hover: #948aff;
-  --accent-subtle: rgba(117, 104, 245, .15);
-  --accent-glow: rgba(117, 104, 245, .25);
+  --accent-subtle: rgba(52,211,153, 0.075);
+  --accent-glow: rgba(52,211,153, 0.125);
 }
 
 html[data-theme="light"] {
@@ -6475,8 +6488,8 @@ html[data-theme="light"] {
   --border-strong: rgba(27, 39, 69, .2);
   --accent: #5b50d4;
   --accent-hover: #493fb8;
-  --accent-subtle: rgba(91, 80, 212, .1);
-  --accent-glow: rgba(91, 80, 212, .18);
+  --accent-subtle: rgba(5,150,105, 0.05);
+  --accent-glow: rgba(5,150,105, 0.09);
 }
 
 html,
@@ -6512,7 +6525,7 @@ html[data-theme="light"] #sidebar {
 }
 
 .brand-logo-mark {
-  background: linear-gradient(135deg, var(--accent), #aa9fff);
+  background: linear-gradient(135deg, var(--accent), #7CE7C0);
   box-shadow: 0 10px 26px var(--accent-glow);
 }
 
@@ -6533,7 +6546,7 @@ html[data-theme="light"] #sidebar {
 .sidebar-nav-item.active {
   color: #fff;
   background: linear-gradient(90deg, var(--accent-subtle), transparent);
-  border-color: rgba(117, 104, 245, .35);
+  border-color: rgba(52,211,153, 0.175);
   box-shadow: inset 3px 0 var(--accent);
 }
 
@@ -7307,6 +7320,10 @@ html[data-theme="light"] [data-tooltip]::before {
   .main-content {
     padding: 20px 14px 32px;
   }
+
+  #global-notice-banner {
+    padding: 12px 14px 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -7346,9 +7363,9 @@ textarea.form-control:hover {
 input.form-control:focus,
 select.form-control:focus,
 textarea.form-control:focus {
-  border-color: #6366f1;
+  border-color: #34D399;
   background: rgba(22, 28, 44, 0.98);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 3px rgba(52,211,153, 0.125), inset 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .form-control::placeholder,
@@ -7560,9 +7577,9 @@ html[data-theme="light"] .ai-field-label {
 .ai-settings-view input[type="number"]:not(.form-control):focus,
 .ai-settings-view select:not(.form-control):focus,
 .ai-settings-view textarea:not(.form-control):focus {
-  border-color: #6366f1;
+  border-color: #34D399;
   background: rgba(22, 28, 44, 0.98);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 0 3px rgba(52,211,153, 0.125);
 }
 
 html[data-theme="light"] .ai-settings-view input[type="text"]:not(.form-control),
@@ -7599,7 +7616,7 @@ html[data-theme="light"] .ai-settings-view textarea:not(.form-control):focus {
 .ai-settings-view input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: #6366f1;
+  accent-color: #34D399;
   border-radius: 4px;
   cursor: pointer;
   margin: 0;
@@ -7645,7 +7662,7 @@ html[data-theme="light"] .ai-checkbox-label:hover {
 
 .ai-rag-option:hover {
   background: rgba(22, 30, 52, 0.55);
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(52,211,153, 0.125);
 }
 
 .ai-rag-option input[type="checkbox"] {
@@ -7721,7 +7738,7 @@ html[data-theme="light"] .ai-chain-pill {
 
 .ai-pillar-card:hover {
   background: rgba(15, 23, 42, 0.65);
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: rgba(52,211,153, 0.15);
   transform: translateY(-1px);
 }
 
@@ -7790,8 +7807,8 @@ html[data-theme="light"] .ai-sticky-save-footer {
 }
 
 .ai-sticky-save-footer .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  box-shadow: 0 4px 14px rgba(52,211,153, 0.175);
   font-weight: 600;
   padding: 9px 22px;
   border-radius: 8px;
@@ -7800,8 +7817,8 @@ html[data-theme="light"] .ai-sticky-save-footer {
 }
 
 .ai-sticky-save-footer .btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 20px rgba(52,211,153, 0.25);
   transform: translateY(-1px);
 }
 
@@ -7845,9 +7862,9 @@ html[data-theme="light"] .ai-sticky-save-footer {
 #main-content input[type="number"]:focus,
 #main-content select:focus,
 #main-content textarea:focus {
-  border-color: #6366f1;
+  border-color: #34D399;
   background: rgba(22, 28, 44, 0.98);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25), inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 3px rgba(52,211,153, 0.125), inset 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 #main-content input::placeholder,
@@ -7978,7 +7995,7 @@ html[data-theme="light"] #main-content div[style*="border-radius:10px"]:hover {
 
 #main-content div[style*="background:rgba(15,23,42,.28)"]:hover {
   background: rgba(20, 28, 50, 0.75) !important;
-  border-color: rgba(99, 102, 241, 0.35) !important;
+  border-color: rgba(52,211,153, 0.175) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -8011,8 +8028,8 @@ html[data-theme="light"] #main-content div[style*="position:sticky;bottom:0"] {
 }
 
 #main-content button#ai-save-all {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35) !important;
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%) !important;
+  box-shadow: 0 4px 14px rgba(52,211,153, 0.175) !important;
   font-weight: 600 !important;
   padding: 9px 22px !important;
   border-radius: 8px !important;
@@ -8023,8 +8040,8 @@ html[data-theme="light"] #main-content div[style*="position:sticky;bottom:0"] {
 }
 
 #main-content button#ai-save-all:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5) !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 6px 20px rgba(52,211,153, 0.25) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -8032,7 +8049,7 @@ html[data-theme="light"] #main-content div[style*="position:sticky;bottom:0"] {
 #main-content input[type="checkbox"] {
   width: 16px !important;
   height: 16px !important;
-  accent-color: #6366f1 !important;
+  accent-color: #34D399 !important;
   border-radius: 4px !important;
   cursor: pointer !important;
   vertical-align: middle !important;
@@ -8112,12 +8129,12 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
 }
 
 .team-kpi-card.accent .kpi-icon-wrap {
-  background: rgba(99, 102, 241, 0.12);
-  color: #6366f1;
+  background: rgba(52,211,153, 0.06);
+  color: #34D399;
 }
 
 .team-kpi-card.success .kpi-icon-wrap {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16,185,129, 0.06);
   color: #10b981;
 }
 
@@ -8133,7 +8150,7 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
 
 .team-kpi-card.primary .kpi-icon-wrap {
   background: rgba(139, 92, 246, 0.12);
-  color: #8b5cf6;
+  color: #6EE7B7;
 }
 
 .team-kpi-card.dim .kpi-icon-wrap {
@@ -8217,7 +8234,7 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
   background: var(--accent);
   color: #ffffff;
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(52,211,153, 0.125);
   font-weight: 600;
 }
 
@@ -8296,9 +8313,9 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
 }
 
 .member-pill-btn.active {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: #6366f1;
-  color: #6366f1;
+  background: rgba(52,211,153, 0.06);
+  border-color: #34D399;
+  color: #34D399;
   font-weight: 600;
 }
 
@@ -8326,8 +8343,8 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0.03) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: linear-gradient(135deg, rgba(52,211,153, 0.04) 0%, rgba(52,211,153, 0.02) 100%);
+  border: 1px solid rgba(52,211,153, 0.125);
   border-radius: 10px;
   padding: 12px 18px;
   flex-wrap: wrap;
@@ -8343,14 +8360,14 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #34D399;
   color: #fff;
   font-weight: 700;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(52,211,153, 0.15);
 }
 
 .mfb-title {
@@ -8501,7 +8518,7 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
   width: 17px;
   height: 17px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #34D399;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -8580,14 +8597,14 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
 }
 
 .btn-site-status-toggle.active {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16,185,129, 0.05);
   color: #10b981;
-  border-color: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16,185,129, 0.125);
 }
 
 .btn-site-status-toggle.active .status-indicator-dot {
   background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 6px rgba(16,185,129, 0.3);
 }
 
 .btn-site-status-toggle.active:hover {
@@ -8612,14 +8629,14 @@ html[data-theme="light"] #main-content label:has(input[type="checkbox"]):hover {
 }
 
 .btn-site-status-toggle.deactive:hover {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16,185,129, 0.06);
   color: #10b981;
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16,185,129, 0.15);
 }
 
 .btn-site-status-toggle.deactive:hover .status-indicator-dot {
   background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 6px rgba(16,185,129, 0.3);
 }
 
 /* Light mode overrides for Team Progress */
@@ -8641,8 +8658,8 @@ html[data-theme="light"] .team-tab-pill:hover {
 }
 
 html[data-theme="light"] .team-tab-pill.active {
-  background: #4f46e5;
-  border-color: #4f46e5;
+  background: #059669;
+  border-color: #059669;
   color: #ffffff;
 }
 
@@ -8658,9 +8675,9 @@ html[data-theme="light"] .member-pill-btn {
 }
 
 html[data-theme="light"] .member-pill-btn.active {
-  background: rgba(79, 70, 229, 0.08);
-  border-color: #4f46e5;
-  color: #4f46e5;
+  background: rgba(5,150,105, 0.04);
+  border-color: #059669;
+  color: #059669;
 }
 
 html[data-theme="light"] .team-filter-bar {
@@ -8738,7 +8755,7 @@ html[data-theme="light"] .team-assignee-pill {
 .dev-main-tab-btn.active {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 10px rgba(94, 106, 210, 0.35);
+  box-shadow: 0 2px 10px rgba(52,211,153, 0.175);
 }
 
 .dev-main-tab-badge {
@@ -8866,8 +8883,8 @@ html[data-theme="light"] .team-assignee-pill {
   font-size: 12px;
   font-weight: 600;
   color: var(--accent);
-  background: rgba(94, 106, 210, 0.08);
-  border: 1px solid rgba(94, 106, 210, 0.2);
+  background: rgba(52,211,153, 0.04);
+  border: 1px solid rgba(52,211,153, 0.1);
   padding: 4px 10px;
   border-radius: 6px;
 }
@@ -9131,7 +9148,7 @@ html[data-theme="light"] .recent-update-note-box {
   gap: 4px;
   font-weight: 600;
   color: var(--accent);
-  background: rgba(94, 106, 210, 0.1);
+  background: rgba(52,211,153, 0.05);
   padding: 2px 7px;
   border-radius: 4px;
   font-size: 11px;
@@ -9355,14 +9372,14 @@ html[data-theme="light"] .dev-qv-stream-item:hover {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-primary);
-  background: rgba(94, 106, 210, 0.1);
-  border: 1px solid rgba(94, 106, 210, 0.25);
+  background: rgba(52,211,153, 0.05);
+  border: 1px solid rgba(52,211,153, 0.125);
   cursor: pointer;
   transition: all var(--transition);
 }
 
 .team-assignee-badge:hover {
-  background: rgba(94, 106, 210, 0.2);
+  background: rgba(52,211,153, 0.1);
   border-color: var(--accent);
 }
 
@@ -9386,7 +9403,7 @@ html[data-theme="light"] .dev-qv-stream-item:hover {
   background: #181b26;
   border: 1px solid var(--accent);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(94, 106, 210, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(52,211,153, 0.15);
   padding: 12px 20px;
   display: flex;
   align-items: center;
@@ -9475,9 +9492,9 @@ html[data-theme="light"] .team-bulk-dock-count {
 }
 
 .page-view-segmented .segmented-btn.active {
-  background: var(--accent, #6366f1);
+  background: var(--accent, #34D399);
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(52,211,153, 0.175);
 }
 
 .btn-warning-soft {
@@ -9497,8 +9514,8 @@ html[data-theme="light"] .team-bulk-dock-count {
 
 .btn-reverse-highlight {
   position: relative;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12)) !important;
-  border: 1px solid rgba(99, 102, 241, 0.45) !important;
+  background: linear-gradient(135deg, rgba(52,211,153, 0.06), rgba(168, 85, 247, 0.12)) !important;
+  border: 1px solid rgba(52,211,153, 0.225) !important;
   color: var(--text-primary) !important;
   font-weight: 600;
   display: inline-flex;
@@ -9507,9 +9524,9 @@ html[data-theme="light"] .team-bulk-dock-count {
 }
 
 .btn-reverse-highlight:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.22)) !important;
+  background: linear-gradient(135deg, rgba(52,211,153, 0.11), rgba(168, 85, 247, 0.22)) !important;
   border-color: var(--accent) !important;
-  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 10px rgba(52,211,153, 0.125);
 }
 
 html[data-theme="light"] .page-view-segmented {
@@ -9527,7 +9544,7 @@ html[data-theme="light"] .page-view-segmented .segmented-btn:hover {
 }
 
 html[data-theme="light"] .page-view-segmented .segmented-btn.active {
-  background: var(--accent, #6366f1) !important;
+  background: var(--accent, #34D399) !important;
   color: #ffffff !important;
 }
 
@@ -9573,3 +9590,2092 @@ html[data-theme="light"] .page-view-segmented .segmented-btn.active {
 .select-maint-compact {
   min-width: 115px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OFFICE OS — DESIGN SYSTEM  (design.md)  ·  FULL RENOVATION LAYER
+   ---------------------------------------------------------------------------
+   One integrated system for BOTH themes (dark + light) and all breakpoints.
+   Every rule is scoped to `html[data-theme]` (set inline in <head>) and marked
+   !important so it wins over the earlier pixel layers regardless of order.
+
+   Sections
+     1. Theme tokens (dark / light)
+     2. Canvas + app frame
+     3. Chrome — sidebar, top bar, nav, pills
+     4. Surfaces — cards, panels, modals, dropdowns, toasts
+     5. Typography
+     6. Buttons
+     7. Badges / chips
+     8. Forms
+     9. Tables
+    10. Progress — tick-bar signature
+    11. Overlays, empty states, loaders
+    12. Notice banner, AI panel, misc
+    13. Responsive
+    14. Accessibility & motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. THEME TOKENS ─────────────────────────────────────────────────────── */
+
+html[data-theme="dark"] {
+  /* color = meaning (§2.1) */
+  --accent: #34D399;
+  --accent-hover: #4EE0AC;
+  --accent-2: #3B82F6;
+  --accent-subtle: rgba(52,211,153, 0.06);
+  --accent-glow: rgba(52,211,153, 0.175);
+  --border-accent: rgba(52,211,153, 0.2);
+  --success: #34D399;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+
+  /* surfaces — near-black canvas, green-tinted frame */
+  --bg-base: #070B0A;
+  --bg-surface: #0B100E;
+  --bg-surface-2: #0F1513;
+  --bg-surface-3: #141B18;
+  --bg-elevated: #18211D;
+  --bg-card: #0F1513;
+
+  --border: rgba(255, 255, 255, .06);
+  --border-color: rgba(255, 255, 255, .06);
+  --border-subtle: rgba(255, 255, 255, .05);
+  --border-strong: rgba(255, 255, 255, .12);
+
+  --text-primary: #F4F7F5;
+  --text-secondary: #9AA6A0;
+  --text-muted: #5E6A64;
+  --text-dim: #4A544F;
+
+  --transition: .16s cubic-bezier(.16, 1, .3, 1);
+
+  /* semantic pairs */
+  --ds-ok-bg: rgba(52,211,153, 0.07);
+  --ds-ok-fg: #34D399;
+  --ds-ok-line: rgba(52,211,153, 0.15);
+  --ds-warn-bg: rgba(245, 158, 11, .14);
+  --ds-warn-fg: #FBBF24;
+  --ds-warn-line: rgba(245, 158, 11, .30);
+  --ds-bad-bg: rgba(239, 68, 68, .14);
+  --ds-bad-fg: #F87171;
+  --ds-bad-line: rgba(239, 68, 68, .30);
+  --ds-info-bg: rgba(59, 130, 246, .14);
+  --ds-info-fg: #60A5FA;
+  --ds-info-line: rgba(59, 130, 246, .30);
+  --ds-purple-bg: rgba(168, 85, 247, .14);
+  --ds-purple-fg: #C084FC;
+  --ds-purple-line: rgba(168, 85, 247, .30);
+  --ds-neutral-bg: rgba(255, 255, 255, .06);
+  --ds-neutral-fg: #9AA6A0;
+  --ds-neutral-line: rgba(255, 255, 255, .10);
+
+  /* KPI tints */
+  --ds-tint-ok: linear-gradient(180deg, rgba(52,211,153, 0.05), rgba(52,211,153, 0.02));
+  --ds-tint-info: linear-gradient(180deg, rgba(59, 130, 246, .10), rgba(59, 130, 246, .02));
+  --ds-tint-warn: linear-gradient(180deg, rgba(245, 158, 11, .10), rgba(245, 158, 11, .02));
+  --ds-tint-bad: linear-gradient(180deg, rgba(239, 68, 68, .10), rgba(239, 68, 68, .02));
+  --ds-tint-purple: linear-gradient(180deg, rgba(168, 85, 247, .10), rgba(168, 85, 247, .02));
+
+  /* component tokens */
+  --ds-card-bg: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .01)), #0F1513;
+  --ds-card-raised: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .02)), #141B18;
+  --ds-card-border: rgba(255, 255, 255, .06);
+  --ds-card-shadow: 0 8px 30px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .05);
+  --ds-card-shadow-hover: 0 14px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .07);
+  --ds-chrome-bg: rgba(11, 16, 14, .86);
+  --ds-sidebar-bg: linear-gradient(180deg, #0B100E 0%, #080C0B 100%);
+  --ds-shell-bg: #0B100E;
+  --ds-shell-shadow: 0 24px 70px rgba(0, 0, 0, .55);
+  --ds-input-bg: #0F1513;
+  --ds-track: rgba(255, 255, 255, .08);
+  --ds-overlay: rgba(2, 6, 5, .72);
+  --ds-focus: rgba(52,211,153, 0.125);
+  --ds-glow: 0 0 22px rgba(52,211,153, 0.09);
+  --ds-head-bg: rgba(255, 255, 255, .03);
+  --ds-row-hover: rgba(52,211,153, 0.025);
+  --ds-hover-bg: rgba(52,211,153, 0.03);
+
+  /* radii (§2.2) */
+  --ds-r-frame: 24px;
+  --ds-r-card: 18px;
+  --ds-r-tile: 14px;
+  --ds-r-ctl: 10px;
+  --ds-r-pill: 999px;
+}
+
+html[data-theme="light"] {
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-2: #2563EB;
+  --accent-subtle: rgba(5,150,105, 0.05);
+  --accent-glow: rgba(5,150,105, 0.09);
+  --border-accent: rgba(5,150,105, 0.175);
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #0284C7;
+
+  --bg-base: #F4F7F6;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #F6F9F8;
+  --bg-surface-3: #EDF3F1;
+  --bg-elevated: #FFFFFF;
+  --bg-card: #FFFFFF;
+
+  --border: rgba(9, 30, 24, .09);
+  --border-color: rgba(9, 30, 24, .09);
+  --border-subtle: rgba(9, 30, 24, .06);
+  --border-strong: rgba(9, 30, 24, .16);
+
+  --text-primary: #0B1512;
+  --text-secondary: #4B5A54;
+  --text-muted: #7A8A84;
+  --text-dim: #9BAAA4;
+
+  --transition: .16s cubic-bezier(.16, 1, .3, 1);
+
+  --ds-ok-bg: #E7F8F1;
+  --ds-ok-fg: #047857;
+  --ds-ok-line: #A7E8CE;
+  --ds-warn-bg: #FEF4E2;
+  --ds-warn-fg: #B45309;
+  --ds-warn-line: #F8DFB0;
+  --ds-bad-bg: #FDECEC;
+  --ds-bad-fg: #B91C1C;
+  --ds-bad-line: #F7C9C9;
+  --ds-info-bg: #E8F1FE;
+  --ds-info-fg: #1D4ED8;
+  --ds-info-line: #BFD8FB;
+  --ds-purple-bg: #F5ECFE;
+  --ds-purple-fg: #7E22CE;
+  --ds-purple-line: #E2CCFB;
+  --ds-neutral-bg: #F2F6F5;
+  --ds-neutral-fg: #4B5A54;
+  --ds-neutral-line: #E1E9E7;
+
+  --ds-tint-ok: linear-gradient(180deg, #FFFFFF, #F3FBF7);
+  --ds-tint-info: linear-gradient(180deg, #FFFFFF, #F3F7FE);
+  --ds-tint-warn: linear-gradient(180deg, #FFFFFF, #FEFAF1);
+  --ds-tint-bad: linear-gradient(180deg, #FFFFFF, #FEF5F5);
+  --ds-tint-purple: linear-gradient(180deg, #FFFFFF, #FAF6FE);
+
+  --ds-card-bg: linear-gradient(180deg, #FFFFFF, #FCFEFD);
+  --ds-card-raised: linear-gradient(180deg, #FFFFFF, #F5FAF8);
+  --ds-card-border: rgba(9, 30, 24, .08);
+  --ds-card-shadow: 0 8px 26px rgba(12, 32, 26, .06), inset 0 1px 0 rgba(255, 255, 255, .9);
+  --ds-card-shadow-hover: 0 14px 34px rgba(12, 32, 26, .10), inset 0 1px 0 rgba(255, 255, 255, .95);
+  --ds-chrome-bg: rgba(255, 255, 255, .88);
+  --ds-sidebar-bg: linear-gradient(180deg, #FFFFFF 0%, #F6FAF8 100%);
+  --ds-shell-bg: #FFFFFF;
+  --ds-shell-shadow: 0 24px 60px rgba(12, 32, 26, .10);
+  --ds-input-bg: #FFFFFF;
+  --ds-track: rgba(9, 30, 24, .08);
+  --ds-overlay: rgba(9, 30, 24, .35);
+  --ds-focus: rgba(5,150,105, 0.09);
+  --ds-glow: 0 0 22px rgba(5,150,105, 0.05);
+  --ds-head-bg: rgba(9, 30, 24, .03);
+  --ds-row-hover: rgba(5,150,105, 0.025);
+  --ds-hover-bg: rgba(5,150,105, 0.03);
+
+  --ds-r-frame: 24px;
+  --ds-r-card: 18px;
+  --ds-r-tile: 14px;
+  --ds-r-ctl: 10px;
+  --ds-r-pill: 999px;
+}
+
+/* ── 2. CANVAS + APP FRAME ───────────────────────────────────────────────── */
+
+html[data-theme] body {
+  background: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] body::before {
+  background: radial-gradient(640px 320px at 55% -6%, var(--accent-subtle), transparent 70%) !important;
+  opacity: 1 !important;
+}
+
+/* floating rounded shell (§3) */
+html[data-theme] #app-shell {
+  width: calc(100vw - 20px) !important;
+  max-width: calc(100vw - 20px) !important;
+  height: calc(100vh - 20px) !important;
+  max-height: calc(100vh - 20px) !important;
+  margin: 10px !important;
+  background: var(--ds-shell-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  border-radius: var(--ds-r-frame) !important;
+  box-shadow: var(--ds-shell-shadow) !important;
+  overflow: hidden !important;
+}
+
+html[data-theme] #sidebar,
+html[data-theme] .main-wrap {
+  height: 100% !important;
+  max-height: 100% !important;
+}
+
+/* ── 3. CHROME ───────────────────────────────────────────────────────────── */
+
+html[data-theme] #sidebar {
+  background: var(--ds-sidebar-bg) !important;
+  border-right: 1px solid var(--ds-card-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] .sidebar-header {
+  border-bottom: 1px solid var(--ds-card-border) !important;
+}
+
+html[data-theme] .brand-logo-mark {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover)) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+html[data-theme] .top-bar {
+  background: var(--ds-chrome-bg) !important;
+  border-bottom: 1px solid var(--ds-card-border) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+/* nav items */
+html[data-theme] .nav-item,
+html[data-theme] .sidebar-nav-item {
+  border-radius: var(--ds-r-ctl) !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .nav-item:hover,
+html[data-theme] .sidebar-nav-item:hover {
+  background: var(--ds-hover-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .nav-item.active,
+html[data-theme] .sidebar-nav-item.active {
+  color: var(--text-primary) !important;
+  background: linear-gradient(90deg, var(--accent-subtle), transparent 88%) !important;
+  border-color: var(--border-accent) !important;
+  box-shadow: inset 3px 0 var(--accent), var(--ds-glow) !important;
+}
+
+html[data-theme] .nav-item.active .nav-icon,
+html[data-theme] .sidebar-nav-item.active .nav-icon {
+  color: var(--accent) !important;
+}
+
+html[data-theme] .nav-icon:not([style*="color"]) {
+  color: var(--text-muted);
+}
+
+/* top-bar pills, icon buttons */
+html[data-theme] .quick-search-trigger,
+html[data-theme] .month-selector-btn,
+html[data-theme] .role-pill-btn {
+  border-radius: var(--ds-r-pill) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  background: var(--bg-surface-2) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .quick-search-trigger:hover,
+html[data-theme] .month-selector-btn:hover,
+html[data-theme] .role-pill-btn:hover,
+html[data-theme] .btn-icon:hover {
+  border-color: var(--border-accent) !important;
+  background: var(--accent-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .btn-icon {
+  border-radius: var(--ds-r-ctl) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  background: var(--bg-surface-2) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .role-pill-btn.active {
+  background: var(--accent-subtle) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--accent) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+/* ── 4. SURFACES ─────────────────────────────────────────────────────────── */
+
+html[data-theme] .card,
+html[data-theme] .panel,
+html[data-theme] .stat-card,
+html[data-theme] .table-wrap,
+html[data-theme] .user-progress-card,
+html[data-theme] .modal-box,
+html[data-theme] .cmd-box,
+html[data-theme] .month-dropdown,
+html[data-theme] .ai-chat-panel,
+html[data-theme] .dev-feedback-section,
+html[data-theme] .feedback-round-card,
+html[data-theme] .sheet-manager-card,
+html[data-theme] .empty-state {
+  background: var(--ds-card-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  border-radius: var(--ds-r-card) !important;
+  box-shadow: var(--ds-card-shadow) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .user-progress-card,
+html[data-theme] .month-dropdown,
+html[data-theme] .ai-chat-panel {
+  border-radius: var(--ds-r-tile) !important;
+}
+
+html[data-theme] .modal-box {
+  border-color: var(--border-strong) !important;
+}
+
+html[data-theme] .stat-card:hover,
+html[data-theme] .user-progress-card:hover,
+html[data-theme] .sheet-manager-card:hover {
+  background: var(--ds-card-raised) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--ds-card-shadow-hover) !important;
+  transform: translateY(-1px);
+}
+
+html[data-theme] .card-header,
+html[data-theme] .modal-header,
+html[data-theme] .card-footer,
+html[data-theme] .modal-footer {
+  border-color: var(--ds-card-border) !important;
+}
+
+/* semantic KPI tints */
+html[data-theme] .stat-card.accent,
+html[data-theme] .stat-card.success {
+  background: var(--ds-tint-ok), var(--bg-card) !important;
+  border-color: var(--ds-ok-line) !important;
+}
+
+html[data-theme] .stat-card.info {
+  background: var(--ds-tint-info), var(--bg-card) !important;
+  border-color: var(--ds-info-line) !important;
+}
+
+html[data-theme] .stat-card.warning {
+  background: var(--ds-tint-warn), var(--bg-card) !important;
+  border-color: var(--ds-warn-line) !important;
+}
+
+html[data-theme] .stat-card.danger {
+  background: var(--ds-tint-bad), var(--bg-card) !important;
+  border-color: var(--ds-bad-line) !important;
+}
+
+html[data-theme] .stat-card.purple {
+  background: var(--ds-tint-purple), var(--bg-card) !important;
+  border-color: var(--ds-purple-line) !important;
+}
+
+/* ── 5. TYPOGRAPHY ───────────────────────────────────────────────────────── */
+
+html[data-theme] body,
+html[data-theme] input,
+html[data-theme] select,
+html[data-theme] textarea,
+html[data-theme] button {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+
+html[data-theme] .page-title,
+html[data-theme] .card-title,
+html[data-theme] .modal-title {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  letter-spacing: -.01em !important;
+}
+
+html[data-theme] .page-title {
+  font-size: 17px !important;
+}
+
+html[data-theme] .card-title,
+html[data-theme] .modal-title {
+  font-size: 14px !important;
+}
+
+html[data-theme] .page-subtitle,
+html[data-theme] .card-subtitle,
+html[data-theme] .upc-meta,
+html[data-theme] .stat-label {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme] .stat-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
+
+html[data-theme] .stat-value,
+html[data-theme] .upc-pct,
+html[data-theme] .metric-value {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -.02em !important;
+}
+
+html[data-theme] .stat-value {
+  font-size: 27px !important;
+  line-height: 1.15 !important;
+}
+
+html[data-theme] .upc-pct {
+  color: var(--accent) !important;
+}
+
+html[data-theme] code,
+html[data-theme] .mono,
+html[data-theme] .url-cell a {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace !important;
+}
+
+html[data-theme] a {
+  color: var(--accent) !important;
+}
+
+html[data-theme] .url-cell a:hover,
+html[data-theme] a:hover {
+  color: var(--accent-hover) !important;
+}
+
+/* ── 6. BUTTONS ──────────────────────────────────────────────────────────── */
+
+html[data-theme] .btn {
+  border-radius: var(--ds-r-pill) !important;
+  font-weight: 500 !important;
+}
+
+html[data-theme] .btn-primary {
+  background: var(--accent-subtle) !important;
+  border: 1px solid var(--border-accent) !important;
+  color: var(--accent) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+html[data-theme] .btn-primary:hover {
+  background: var(--accent-glow) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-hover) !important;
+  box-shadow: 0 0 26px var(--accent-glow) !important;
+  opacity: 1 !important;
+  transform: translateY(-1px);
+}
+
+html[data-theme] .btn-secondary {
+  background: var(--bg-surface-2) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .btn-secondary:hover {
+  background: var(--bg-surface-3) !important;
+  border-color: var(--border-strong) !important;
+}
+
+html[data-theme] .btn-ghost {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+}
+
+html[data-theme] .btn-ghost:hover {
+  background: var(--ds-hover-bg) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .btn-danger {
+  background: var(--ds-bad-bg) !important;
+  border: 1px solid var(--ds-bad-line) !important;
+  color: var(--ds-bad-fg) !important;
+}
+
+html[data-theme] .btn[disabled],
+html[data-theme] .btn:disabled {
+  opacity: .45 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* ── 7. BADGES / CHIPS ───────────────────────────────────────────────────── */
+
+html[data-theme] .badge,
+html[data-theme] .tab-pill-badge {
+  border-radius: var(--ds-r-pill) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: 1px solid transparent !important;
+}
+
+html[data-theme] .badge-success,
+html[data-theme] .badge-expiry-safe {
+  background: var(--ds-ok-bg) !important;
+  color: var(--ds-ok-fg) !important;
+  border-color: var(--ds-ok-line) !important;
+}
+
+html[data-theme] .badge-warning,
+html[data-theme] .badge-expiry-warning {
+  background: var(--ds-warn-bg) !important;
+  color: var(--ds-warn-fg) !important;
+  border-color: var(--ds-warn-line) !important;
+}
+
+html[data-theme] .badge-danger,
+html[data-theme] .badge-expiry-danger {
+  background: var(--ds-bad-bg) !important;
+  color: var(--ds-bad-fg) !important;
+  border-color: var(--ds-bad-line) !important;
+}
+
+html[data-theme] .badge-info,
+html[data-theme] .badge-cw {
+  background: var(--ds-info-bg) !important;
+  color: var(--ds-info-fg) !important;
+  border-color: var(--ds-info-line) !important;
+}
+
+html[data-theme] .badge-purple {
+  background: var(--ds-purple-bg) !important;
+  color: var(--ds-purple-fg) !important;
+  border-color: var(--ds-purple-line) !important;
+}
+
+html[data-theme] .badge-dim,
+html[data-theme] .badge-rm,
+html[data-theme] .badge-xs {
+  background: var(--ds-neutral-bg) !important;
+  color: var(--ds-neutral-fg) !important;
+  border-color: var(--ds-neutral-line) !important;
+}
+
+/* ── 8. FORMS ────────────────────────────────────────────────────────────── */
+
+html[data-theme] .form-input,
+html[data-theme] .form-select,
+html[data-theme] .form-textarea,
+html[data-theme] input[type="text"],
+html[data-theme] input[type="search"],
+html[data-theme] input[type="email"],
+html[data-theme] input[type="number"],
+html[data-theme] input[type="date"],
+html[data-theme] select,
+html[data-theme] textarea {
+  background: var(--ds-input-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  border-radius: var(--ds-r-ctl) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .form-input::placeholder,
+html[data-theme] input::placeholder,
+html[data-theme] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme] .form-input:focus,
+html[data-theme] .form-select:focus,
+html[data-theme] .form-textarea:focus,
+html[data-theme] input:focus,
+html[data-theme] select:focus,
+html[data-theme] textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--ds-focus) !important;
+  outline: none !important;
+}
+
+html[data-theme] select option {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── 9. TABLES ───────────────────────────────────────────────────────────── */
+
+html[data-theme] .table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-theme] table thead th {
+  background: var(--ds-head-bg) !important;
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid var(--ds-card-border) !important;
+}
+
+html[data-theme] table tbody td {
+  border-bottom: 1px solid var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] table tbody tr:hover td {
+  background: var(--ds-row-hover) !important;
+}
+
+html[data-theme] table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* ── 10. PROGRESS — TICK-BAR SIGNATURE (§4.5) ────────────────────────────── */
+
+html[data-theme] .progress-wrap {
+  height: 11px !important;
+  background: transparent !important;
+  background-image: repeating-linear-gradient(90deg, var(--ds-track) 0 2px, transparent 2px 5px) !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+}
+
+html[data-theme] .progress-fill,
+html[data-theme] .sync-progress-fill,
+html[data-theme] .sm-progress-bar-fill,
+html[data-theme] .cs-bar-fill,
+html[data-theme] .osc-bar-fill {
+  background: repeating-linear-gradient(90deg, var(--accent) 0 2px, transparent 2px 5px) !important;
+  border-radius: 3px !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 0 3px var(--accent-glow));
+  transition: width .4s cubic-bezier(.16, 1, .3, 1) !important;
+}
+
+html[data-theme] .sync-progress-bar,
+html[data-theme] .sm-progress-bar-track,
+html[data-theme] .cs-bar-wrap,
+html[data-theme] .osc-bar-wrap {
+  background: transparent !important;
+  background-image: repeating-linear-gradient(90deg, var(--ds-track) 0 2px, transparent 2px 5px) !important;
+  border-radius: 3px !important;
+}
+
+/* ── 11. OVERLAYS, EMPTY STATES, LOADERS ────────────────────────────────── */
+
+html[data-theme] .modal-overlay,
+html[data-theme] .cmd-overlay {
+  background: var(--ds-overlay) !important;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+html[data-theme] .toast {
+  background: var(--ds-card-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  border-radius: var(--ds-r-tile) !important;
+  box-shadow: var(--ds-card-shadow) !important;
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+}
+
+html[data-theme] .empty-state .empty-icon {
+  background: var(--ds-card-raised) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  border-radius: 50% !important;
+  color: var(--text-muted) !important;
+}
+
+html[data-theme] .loading-spinner {
+  border-color: var(--ds-track) !important;
+  border-top-color: var(--accent) !important;
+}
+
+@keyframes ds-shimmer {
+  0% { background-position: -320px 0; }
+  100% { background-position: 320px 0; }
+}
+
+html[data-theme] .skeleton {
+  background: linear-gradient(90deg, var(--ds-track) 0 25%, var(--ds-card-raised) 37%, var(--ds-track) 63%) !important;
+  background-size: 320px 100% !important;
+  border-radius: 8px !important;
+  animation: ds-shimmer 1.3s linear infinite !important;
+}
+
+/* ── 12. NOTICE BANNER, AI PANEL, MISC ──────────────────────────────────── */
+
+html[data-theme] .pinned-notice-banner {
+  background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--ds-info-bg) 100%) !important;
+  border: 1px solid var(--border-accent) !important;
+  border-radius: var(--ds-r-tile) !important;
+}
+
+html[data-theme] .pnb-icon {
+  background: var(--accent-subtle) !important;
+  color: var(--accent) !important;
+}
+
+html[data-theme] .ai-chat-header {
+  background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--ds-info-bg) 100%) !important;
+  border-bottom: 1px solid var(--ds-card-border) !important;
+}
+
+html[data-theme] ::-webkit-scrollbar-thumb {
+  background: var(--ds-track) !important;
+  border-radius: 99px !important;
+}
+
+html[data-theme] ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-accent) !important;
+}
+
+/* ── 13. RESPONSIVE (§8) ────────────────────────────────────────────────── */
+
+@media (max-width: 1180px) {
+  html[data-theme] .stat-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  html[data-theme] .main-content {
+    padding: 18px !important;
+  }
+
+  html[data-theme] .stat-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  html[data-theme] #app-shell {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  html[data-theme] .main-content {
+    padding: 14px !important;
+  }
+
+  html[data-theme] .card-header {
+    padding: 13px 15px !important;
+  }
+
+  html[data-theme] .card-body {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html[data-theme] .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  html[data-theme] .top-bar {
+    height: 58px !important;
+    min-height: 58px !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+  }
+
+  html[data-theme] .page-title {
+    font-size: 15px !important;
+  }
+
+  html[data-theme] .stat-value {
+    font-size: 23px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-theme] #global-notice-banner {
+    padding: 12px 12px 0 !important;
+  }
+
+  html[data-theme] .pinned-notice-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  html[data-theme] .pnb-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  html[data-theme] .main-content {
+    padding: 12px !important;
+  }
+
+  html[data-theme] .card-body,
+  html[data-theme] .card-header {
+    padding: 12px !important;
+  }
+
+  html[data-theme] .card {
+    margin-bottom: 14px !important;
+  }
+
+  html[data-theme] .btn {
+    padding: 7px 13px !important;
+    font-size: 12px !important;
+  }
+
+  html[data-theme] table {
+    font-size: 12px !important;
+  }
+
+  html[data-theme] .modal-box {
+    max-width: calc(100vw - 20px) !important;
+    border-radius: var(--ds-r-tile) !important;
+  }
+
+  html[data-theme] .ai-chat-panel {
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    bottom: 74px !important;
+    height: auto !important;
+    max-height: calc(100vh - 110px) !important;
+  }
+
+  html[data-theme] .progress-wrap {
+    height: 9px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  html[data-theme] .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html[data-theme] .stat-card {
+    padding: 11px 12px !important;
+  }
+
+  html[data-theme] .page-subtitle {
+    display: none !important;
+  }
+
+  html[data-theme] .main-content {
+    padding: 10px !important;
+  }
+}
+
+/* ── 14. ACCESSIBILITY & MOTION (§9) ────────────────────────────────────── */
+
+html[data-theme] :focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
+@media (hover: none) {
+  html[data-theme] .stat-card:hover,
+  html[data-theme] .user-progress-card:hover,
+  html[data-theme] .sheet-manager-card:hover,
+  html[data-theme] .btn-primary:hover {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMART CARD, CHIP & MOTION SYSTEM   (design.md §2.2, §2.3, §4.4, §4.5, §7, §9)
+   ---------------------------------------------------------------------------
+   Turns the flat KPI tiles into the reference "smart" cards:
+     · 40px circular icon chip + colour-coded status label   (§4.4, §7)
+     · big tabular number + caption                          (§2.2)
+     · segmented tick meter with glow                        (§4.5)
+     · wordmark / icon-chip treatment for the brand & nav    (§4.1, §7)
+     · entrance stagger, hover lift, fill-on-load            (§2.3)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Fonts (§2.2): Inter everywhere, display face for the wordmark ───────── */
+html[data-theme] {
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ── Brand lockup (§4.1) ────────────────────────────────────────────────── */
+html[data-theme] .brand-logo-mark {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(140deg, #4ADE80 0%, #34D399 45%, #0E9F6E 100%) !important;
+  color: #04160F !important;
+  box-shadow: 0 6px 18px rgba(52,211,153, 0.175), inset 0 1px 0 rgba(255, 255, 255, .45) !important;
+}
+
+html[data-theme="light"] .brand-logo-mark {
+  background: linear-gradient(140deg, #34D399 0%, #059669 65%, #047857 100%) !important;
+  color: #FFFFFF !important;
+}
+
+html[data-theme] .brand-logo-mark svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+html[data-theme] .sidebar-brand {
+  font-family: var(--font-display) !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: -.02em !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .sidebar-plan-tag {
+  font-family: var(--font-body) !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: .1em !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  background: var(--accent-subtle) !important;
+  color: var(--accent) !important;
+  border: 1px solid var(--border-accent) !important;
+}
+
+html[data-theme] .sidebar-sub {
+  font-size: 10px !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Icons always sit in a raised chip (§7) ─────────────────────────────── */
+html[data-theme] .nav-item .nav-icon,
+html[data-theme] .sidebar-nav-item .nav-icon {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015)), var(--bg-surface-2) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease !important;
+}
+
+html[data-theme="light"] .nav-item .nav-icon,
+html[data-theme="light"] .sidebar-nav-item .nav-icon {
+  background: linear-gradient(180deg, #FFFFFF, #F4F8F7) !important;
+}
+
+html[data-theme] .nav-icon:not([style*="color"]) {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .nav-icon svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+html[data-theme] .nav-item:hover .nav-icon,
+html[data-theme] .sidebar-nav-item:hover .nav-icon {
+  border-color: var(--border-strong) !important;
+  transform: translateY(-1px) !important;
+}
+
+html[data-theme] .nav-item.active .nav-icon,
+html[data-theme] .sidebar-nav-item.active .nav-icon {
+  background: var(--accent-subtle) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--accent) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+/* small icon buttons follow the same chip language */
+html[data-theme] .btn svg,
+html[data-theme] .btn-icon svg,
+html[data-theme] .btn-user-action svg {
+  flex-shrink: 0 !important;
+}
+
+html[data-theme] .btn:active,
+html[data-theme] .btn-icon:active,
+html[data-theme] .role-pill-btn:active {
+  transform: scale(.98) !important;
+}
+
+html[data-theme] [disabled],
+html[data-theme] .is-disabled {
+  opacity: .4 !important;
+  pointer-events: none !important;
+}
+
+/* ── KPI smart card (§4.4 + §4.5) ───────────────────────────────────────── */
+html[data-theme] .stat-grid {
+  gap: 12px !important;
+  margin-bottom: 20px !important;
+}
+
+html[data-theme] .stat-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  min-height: 134px !important;
+  padding: 16px 18px !important;
+  border-radius: var(--ds-r-card) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: ds-card-in .5s cubic-bezier(.16, 1, .3, 1) both !important;
+  animation-delay: calc(var(--ds-i, 0) * 40ms) !important;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+}
+
+/* very faint green light in the card's bottom-left corner (allowed §2.1) */
+html[data-theme] .stat-card::before {
+  content: '' !important;
+  position: absolute !important;
+  left: -25% !important;
+  bottom: -70% !important;
+  width: 80% !important;
+  height: 150% !important;
+  background: radial-gradient(closest-side, rgba(52,211,153, 0.06), transparent) !important;
+  pointer-events: none !important;
+}
+
+html[data-theme="light"] .stat-card::before {
+  background: radial-gradient(closest-side, rgba(5,150,105, 0.035), transparent) !important;
+}
+
+html[data-theme] .stat-card > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+html[data-theme] .ds-kpi-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+html[data-theme] .ds-chip {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  color: var(--text-secondary) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)), var(--bg-surface-2) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html[data-theme="light"] .ds-chip {
+  background: linear-gradient(180deg, #FFFFFF, #F4F8F7) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+html[data-theme] .ds-chip svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+html[data-theme] .ds-chip-ok {
+  color: var(--accent) !important;
+  border-color: var(--border-accent) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+html[data-theme] .ds-chip-info {
+  color: var(--info) !important;
+  border-color: var(--ds-info-line) !important;
+}
+
+html[data-theme] .ds-chip-warn {
+  color: var(--warning) !important;
+  border-color: var(--ds-warn-line) !important;
+}
+
+html[data-theme] .ds-chip-bad {
+  color: var(--danger) !important;
+  border-color: var(--ds-bad-line) !important;
+}
+
+html[data-theme] .ds-chip-purple {
+  color: var(--purple) !important;
+  border-color: var(--ds-purple-line) !important;
+}
+
+html[data-theme] .ds-kpi-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  background: var(--ds-neutral-bg) !important;
+  color: var(--ds-neutral-fg) !important;
+  border: 1px solid var(--ds-neutral-line) !important;
+}
+
+html[data-theme] .ds-kpi-status::before {
+  content: '' !important;
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+html[data-theme] .ds-st-ok {
+  background: var(--ds-ok-bg) !important;
+  color: var(--ds-ok-fg) !important;
+  border-color: var(--ds-ok-line) !important;
+}
+
+html[data-theme] .ds-st-info {
+  background: var(--ds-info-bg) !important;
+  color: var(--ds-info-fg) !important;
+  border-color: var(--ds-info-line) !important;
+}
+
+html[data-theme] .ds-st-warn {
+  background: var(--ds-warn-bg) !important;
+  color: var(--ds-warn-fg) !important;
+  border-color: var(--ds-warn-line) !important;
+}
+
+html[data-theme] .ds-st-bad {
+  background: var(--ds-bad-bg) !important;
+  color: var(--ds-bad-fg) !important;
+  border-color: var(--ds-bad-line) !important;
+}
+
+html[data-theme] .ds-st-purple {
+  background: var(--ds-purple-bg) !important;
+  color: var(--ds-purple-fg) !important;
+  border-color: var(--ds-purple-line) !important;
+}
+
+html[data-theme] .ds-kpi-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  margin-top: auto !important;
+}
+
+html[data-theme] .stat-card .stat-value {
+  font-size: 27px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.02em !important;
+}
+
+html[data-theme] .stat-card .stat-label {
+  font-size: 11px !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+}
+
+/* segmented tick meter (§4.5) */
+html[data-theme] .ds-tickbar {
+  height: 12px !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+  background-image: repeating-linear-gradient(90deg, var(--ds-track) 0 2px, transparent 2px 5px) !important;
+}
+
+html[data-theme] .ds-tickfill {
+  display: block !important;
+  height: 100% !important;
+  width: 0 !important;
+  filter: drop-shadow(0 0 3px var(--accent-glow)) !important;
+  background-image: repeating-linear-gradient(90deg, var(--ds-bar-color, var(--accent)) 0 2px, transparent 2px 5px) !important;
+  transition: width .9s cubic-bezier(.16, 1, .3, 1) !important;
+  transition-delay: calc(var(--ds-i, 0) * 60ms) !important;
+}
+
+html[data-theme] .stat-card.accent,
+html[data-theme] .stat-card.success {
+  --ds-bar-color: var(--accent);
+}
+
+html[data-theme] .stat-card.info {
+  --ds-bar-color: var(--info);
+}
+
+html[data-theme] .stat-card.warning {
+  --ds-bar-color: var(--warning);
+}
+
+html[data-theme] .stat-card.danger {
+  --ds-bar-color: var(--danger);
+}
+
+html[data-theme] .stat-card.purple {
+  --ds-bar-color: var(--purple);
+}
+
+/* ── Card entrance + tick fills (load motion §2.3) ──────────────────────── */
+@keyframes ds-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-theme] .card,
+html[data-theme] .user-progress-card,
+html[data-theme] .sheet-manager-card {
+  animation: ds-card-in .45s cubic-bezier(.16, 1, .3, 1) both !important;
+}
+
+html[data-theme] .card-body > .card,
+html[data-theme] .modal-box,
+html[data-theme] .cmd-box,
+html[data-theme] .ai-chat-panel {
+  animation: none !important;
+}
+
+/* tabular figures for every number in the UI (§2.2) */
+html[data-theme] table td,
+html[data-theme] table th,
+html[data-theme] .stat-value,
+html[data-theme] .ds-kpi-body,
+html[data-theme] .upc-pct,
+html[data-theme] .badge,
+html[data-theme] .sidebar-plan-tag {
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── Table selects read as status pills (§5.3) ──────────────────────────── */
+html[data-theme] table select {
+  border-radius: 999px !important;
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background-color: var(--bg-surface-2) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+  transition: border-color .16s ease, background .16s ease !important;
+}
+
+html[data-theme] table select:hover {
+  border-color: var(--border-accent) !important;
+  background-color: var(--accent-subtle) !important;
+}
+
+/* ── Build stamp (diagnostic: confirms which design build the browser runs) */
+html[data-theme] .ds-build {
+  margin: 8px 12px 10px !important;
+  font-size: 9.5px !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+  color: var(--text-dim) !important;
+  user-select: text !important;
+}
+
+html[data-theme] .ds-build b {
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+}
+
+/* ── Motion preferences (§9) — keep last so it governs the new motion ───── */
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] *,
+  html[data-theme] *::before,
+  html[data-theme] *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SITE ROW — COPY-URL CHIP  (added 2026-10-19)
+   The per-row "check live uptime" (↺) chip in the CW/RM + spreadsheet site
+   tables is now a one-click copy-URL chip. Markup lives in public/master-app.js
+   (search "btn-copy-url"). Delete this block to revert the chip styling only.
+   ══════════════════════════════════════════════════════════════════════════ */
+.site-identity-cell .btn-copy-url {
+  border-radius: 8px;
+  padding: 3px 7px;
+  min-height: 21px;
+  min-width: 24px;
+  background: rgba(52,211,153, 0.035);
+  border: 1px solid rgba(52,211,153, 0.14);
+  color: var(--text-secondary);
+}
+.site-identity-cell .btn-copy-url:hover {
+  background: rgba(52,211,153, 0.1);
+  border-color: rgba(52,211,153, 0.275);
+  color: var(--text-primary);
+  transform: translateY(-0.5px);
+}
+.site-identity-cell .btn-copy-url.copied {
+  background: rgba(16,185,129, 0.14) !important;
+  border-color: rgba(52,211,153, 0.35) !important;
+  color: #34d399 !important;
+}
+html[data-theme="light"] .site-identity-cell .btn-copy-url {
+  background: rgba(5,150,105, 0.04);
+  border-color: rgba(5,150,105, 0.14);
+  color: #475569;
+}
+html[data-theme="light"] .site-identity-cell .btn-copy-url:hover {
+  background: rgba(5,150,105, 0.08);
+  border-color: rgba(5,150,105, 0.25);
+  color: #0f172a;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PALETTE REBALANCE — "GREEN AS ACCENT ONLY"  (v5, 2026-10-19)
+
+   Green now appears ONLY on: the brand mark, primary buttons, success /
+   online states, the KPI tick fill, progress fills and focus rings.
+
+   Everything else became a true neutral (the old greys were green-tinted,
+   which is what made the whole UI read as "greenish"), and links / secondary
+   accents moved to the cool blue --link. Green washes on card surfaces,
+   table hovers, chips, nav, banner and URL text are gone.
+
+   This whole block is self-contained: delete it to go back to the previous
+   green-forward palette (see backups/design-20261019/master.css.pre-rebalance).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Tokens ──────────────────────────────────────────────────────────── */
+html[data-theme="dark"] {
+  /* --text / --bg are used by inline styles in master-app.js (e.g.
+     `color:var(--text,#fff)`, `background:var(--bg,#0d1117)`). They were never
+     defined, so day mode fell back to the hardcoded dark values and rendered
+     white-on-white. Defining them makes those inline styles theme-correct. */
+  --text: #F5F6F7 !important;
+  --bg: #131517 !important;
+  --link: #7FB0F5 !important;
+  --accent: #34D399 !important;
+  --accent-hover: #4EE0AC !important;
+  --accent-subtle: rgba(52, 211, 153, .09) !important;
+  --accent-glow: rgba(52, 211, 153, .16) !important;
+  --border-accent: rgba(52, 211, 153, .26) !important;
+
+  --bg-base: #08090B !important;
+  --bg-surface: #0E1011 !important;
+  --bg-surface-2: #131517 !important;
+  --bg-surface-3: #181A1C !important;
+  --bg-elevated: #1C1F21 !important;
+  --bg-card: #131517 !important;
+
+  --text-primary: #F5F6F7 !important;
+  --text-secondary: #9BA1A6 !important;
+  --text-muted: #666C70 !important;
+  --text-dim: #4B5054 !important;
+
+  --ds-tint-ok: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)) !important;
+  --ds-tint-info: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)) !important;
+  --ds-tint-warn: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)) !important;
+  --ds-tint-bad: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)) !important;
+  --ds-tint-purple: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)) !important;
+
+  --ds-card-bg: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)), #131517 !important;
+  --ds-card-raised: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)), #181A1C !important;
+  --ds-card-border: rgba(255, 255, 255, .07) !important;
+
+  --ds-chrome-bg: rgba(14, 16, 17, .86) !important;
+  --ds-sidebar-bg: linear-gradient(180deg, #0E1011 0%, #0A0B0D 100%) !important;
+  --ds-shell-bg: #0E1011 !important;
+  --ds-input-bg: #131517 !important;
+
+  --ds-head-bg: rgba(255, 255, 255, .03) !important;
+  --ds-row-hover: rgba(255, 255, 255, .04) !important;
+  --ds-hover-bg: rgba(255, 255, 255, .05) !important;
+  --ds-overlay: rgba(4, 5, 6, .72) !important;
+
+  --ds-neutral-bg: rgba(255, 255, 255, .06) !important;
+  --ds-neutral-fg: #9BA1A6 !important;
+  --ds-neutral-line: rgba(255, 255, 255, .10) !important;
+  --ds-glow: 0 4px 16px rgba(0, 0, 0, .35) !important;
+
+  --ds-ok-bg: rgba(52, 211, 153, .11) !important;
+  --ds-ok-line: rgba(52, 211, 153, .24) !important;
+  --ds-focus: rgba(52, 211, 153, .20) !important;
+}
+
+html[data-theme="light"] {
+  --text: #0F1216 !important;
+  --bg: #FFFFFF !important;
+  --link: #2563EB !important;
+  --accent: #059669 !important;
+  --accent-hover: #047857 !important;
+  --accent-2: #2563EB !important;
+  --accent-subtle: rgba(5, 150, 105, .07) !important;
+  --accent-glow: rgba(5, 150, 105, .10) !important;
+  --border-accent: rgba(5, 150, 105, .22) !important;
+
+  --bg-base: #F6F7F8 !important;
+  --bg-surface: #FFFFFF !important;
+  --bg-surface-2: #F5F6F8 !important;
+  --bg-surface-3: #EDEFF2 !important;
+  --bg-elevated: #FFFFFF !important;
+  --bg-card: #FFFFFF !important;
+
+  --border: rgba(15, 23, 42, .09) !important;
+  --border-color: rgba(15, 23, 42, .09) !important;
+  --border-subtle: rgba(15, 23, 42, .06) !important;
+  --border-strong: rgba(15, 23, 42, .16) !important;
+
+  --text-primary: #0F1216 !important;
+  --text-secondary: #4B5563 !important;
+  --text-muted: #6B7280 !important;
+  --text-dim: #9CA3AF !important;
+
+  --ds-tint-ok: linear-gradient(180deg, #FFFFFF, #FAFBFC) !important;
+  --ds-tint-info: linear-gradient(180deg, #FFFFFF, #FAFBFC) !important;
+  --ds-tint-warn: linear-gradient(180deg, #FFFFFF, #FAFBFC) !important;
+  --ds-tint-bad: linear-gradient(180deg, #FFFFFF, #FAFBFC) !important;
+  --ds-tint-purple: linear-gradient(180deg, #FFFFFF, #FAFBFC) !important;
+
+  --ds-card-bg: linear-gradient(180deg, #FFFFFF, #FBFCFD) !important;
+  --ds-card-raised: linear-gradient(180deg, #FFFFFF, #F6F7F9) !important;
+  --ds-card-border: rgba(15, 23, 42, .08) !important;
+  --ds-card-shadow: 0 8px 26px rgba(15, 23, 42, .06), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+  --ds-card-shadow-hover: 0 14px 34px rgba(15, 23, 42, .10), inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+
+  --ds-chrome-bg: rgba(255, 255, 255, .88) !important;
+  --ds-sidebar-bg: linear-gradient(180deg, #FFFFFF 0%, #F7F8FA 100%) !important;
+  --ds-shell-bg: #FFFFFF !important;
+  --ds-shell-shadow: 0 24px 60px rgba(15, 23, 42, .10) !important;
+  --ds-input-bg: #FFFFFF !important;
+  --ds-track: rgba(15, 23, 42, .08) !important;
+  --ds-overlay: rgba(15, 23, 42, .35) !important;
+
+  --ds-neutral-bg: #F3F4F6 !important;
+  --ds-neutral-fg: #4B5563 !important;
+  --ds-neutral-line: #E5E7EB !important;
+  --ds-glow: 0 4px 14px rgba(15, 23, 42, .08) !important;
+
+  --ds-row-hover: rgba(15, 23, 42, .035) !important;
+  --ds-hover-bg: rgba(15, 23, 42, .045) !important;
+  --ds-head-bg: rgba(15, 23, 42, .03) !important;
+
+  --ds-ok-bg: #E9F7F1 !important;
+  --ds-ok-line: #B7E7D2 !important;
+  --ds-focus: rgba(5, 150, 105, .16) !important;
+}
+
+/* ── 2. Ambient glow behind the app: neutral, not green ─────────────────── */
+html[data-theme] body::before {
+  background: radial-gradient(640px 320px at 55% -6%, rgba(255, 255, 255, .045), transparent 70%) !important;
+}
+
+html[data-theme="light"] body::before {
+  background: radial-gradient(640px 320px at 55% -6%, rgba(15, 23, 42, .035), transparent 70%) !important;
+}
+
+/* ── 3. KPI cards: neutral glass, colour only in glyph / status / tick ──── */
+html[data-theme] .stat-card {
+  background: var(--ds-card-bg) !important;
+  border-color: var(--ds-card-border) !important;
+}
+
+html[data-theme] .stat-card::before {
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .05), transparent) !important;
+}
+
+html[data-theme="light"] .stat-card::before {
+  background: radial-gradient(closest-side, rgba(15, 23, 42, .035), transparent) !important;
+}
+
+html[data-theme] .ds-chip-ok {
+  border-color: var(--ds-card-border) !important;
+  box-shadow: var(--ds-glow) !important;
+}
+
+html[data-theme] .stat-card.accent,
+html[data-theme] .stat-card.success,
+html[data-theme] .stat-card.info,
+html[data-theme] .stat-card.warning,
+html[data-theme] .stat-card.danger,
+html[data-theme] .stat-card.purple {
+  background: var(--ds-card-bg) !important;
+}
+
+/* ── 4. Navigation: neutral active row, green kept only in the icon ─────── */
+html[data-theme] .nav-item.active,
+html[data-theme] .sidebar-nav-item.active {
+  background: var(--ds-neutral-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .nav-item.active .nav-icon,
+html[data-theme] .sidebar-nav-item.active .nav-icon {
+  color: var(--accent) !important;
+  background: var(--accent-subtle) !important;
+}
+
+html[data-theme] .nav-item.active::before,
+html[data-theme] .sidebar-nav-item.active::before,
+html[data-theme] .nav-item.active::after,
+html[data-theme] .sidebar-nav-item.active::after {
+  background: var(--accent) !important;
+  opacity: 1 !important;
+}
+
+/* ── 5. Notice banner: neutral card, green only on the icon ─────────────── */
+html[data-theme] .pinned-notice-banner {
+  background: var(--ds-card-bg) !important;
+  background-image: none !important;
+  border: 1px solid var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .pnb-icon {
+  color: var(--accent) !important;
+}
+
+/* ── 6. Links: table URLs neutral, every other link cool blue ───────────── */
+html[data-theme] .site-domain-link,
+html[data-theme] .site-identity-cell .site-domain-link,
+html[data-theme] .linear-title,
+html[data-theme] .url-cell a {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] a,
+html[data-theme] .card a,
+html[data-theme] .modal-box a {
+  color: var(--link) !important;
+}
+
+html[data-theme] .site-domain-link:hover,
+html[data-theme] .site-identity-cell .site-domain-link:hover,
+html[data-theme] .linear-title:hover,
+html[data-theme] .url-cell a:hover,
+html[data-theme] a:hover {
+  color: var(--link) !important;
+}
+
+html[data-theme] .ext-icon {
+  color: var(--text-dim) !important;
+}
+
+/* ── 7. Row action chips: neutral until hovered ────────────────────────── */
+html[data-theme] .site-identity-cell .btn-copy-url {
+  background: rgba(255, 255, 255, .05) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .site-identity-cell .btn-copy-url:hover {
+  background: var(--accent-subtle) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="light"] .site-identity-cell .btn-copy-url {
+  background: #FFFFFF !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="light"] .site-identity-cell .btn-copy-url:hover {
+  background: var(--accent-subtle) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── 8. Tables: neutral hover / selection rows ──────────────────────────── */
+html[data-theme] table tbody tr:hover td,
+html[data-theme] .table-smart-fit tr:hover td,
+html[data-theme] .smart-row:hover td {
+  background: var(--ds-row-hover) !important;
+}
+
+html[data-theme] table tbody tr.active-row td,
+html[data-theme] table tbody tr.selected td {
+  background: var(--ds-hover-bg) !important;
+}
+
+/* ── 9. Chips/pills that were washed green → neutral until they mean "ok" ─ */
+html[data-theme] .status-select:hover,
+html[data-theme] .select-maint-compact:hover,
+html[data-theme] .select-ga4-status:hover,
+html[data-theme] .mode-btn:hover,
+html[data-theme] .chip-btn:hover,
+html[data-theme] .btn-ghost:hover,
+html[data-theme] .btn-secondary:hover {
+  background: var(--ds-hover-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .mode-btn.active,
+html[data-theme] .chip-btn.active,
+html[data-theme] .segmented-btn.active,
+html[data-theme] .dev-subnav-btn.active,
+html[data-theme] .team-tab-pill.active {
+  background: var(--ds-neutral-bg) !important;
+  background-image: none !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+/* ── 10. Small green leftovers in the chrome → neutral, green kept in dots ─ */
+html[data-theme] .nav-item.active .nav-label,
+html[data-theme] .sidebar-nav-item.active .nav-label,
+html[data-theme] .nav-item.active span:not(.nav-icon),
+html[data-theme] .sidebar-nav-item.active span:not(.nav-icon) {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .sync-badge {
+  background: var(--ds-neutral-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .sync-badge .sync-dot,
+html[data-theme] .sync-dot {
+  background: var(--accent) !important;
+}
+
+html[data-theme] .role-pill-btn.active {
+  background: var(--ds-neutral-bg) !important;
+  background-image: none !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] .role-pill-btn.active::before,
+html[data-theme] .role-pill-btn.active::after {
+  background: var(--accent) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme] .user-role-badge,
+html[data-theme] .sidebar-plan-tag {
+  background: var(--ds-neutral-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ── 11. Dense tables: green is the *status*, not the wallpaper ─────────── */
+/* Uptime pills: neutral surface, green reads from the status dot/outline */
+html[data-theme] .linear-uptime-pill,
+html[data-theme] .linear-uptime-pill.online,
+html[data-theme] .uptime-pill,
+html[data-theme] .uptime-pill.online {
+  background: var(--ds-neutral-bg) !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .linear-uptime-pill.online b,
+html[data-theme] .linear-uptime-pill.online strong {
+  color: var(--accent) !important;
+}
+
+/* "✓ None" style success badges: quiet, not a green fill.
+   "None / no issue" is the default state — green stays for real success. */
+html[data-theme] .badge-success,
+html[data-theme] .badge-expiry-safe {
+  background: var(--ds-neutral-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* CW / RM account labels: distinct hues so the tables are not one colour */
+html[data-theme] .linear-badge.cw,
+html[data-theme] .badge-cw {
+  background: rgba(59, 130, 246, .12) !important;
+  border-color: rgba(59, 130, 246, .28) !important;
+  color: #7FB0F5 !important;
+}
+
+html[data-theme] .linear-badge.rm,
+html[data-theme] .badge-rm {
+  background: rgba(168, 85, 247, .12) !important;
+  border-color: rgba(168, 85, 247, .28) !important;
+  color: #C9A2FA !important;
+}
+
+html[data-theme="light"] .linear-badge.cw,
+html[data-theme="light"] .badge-cw {
+  background: #EAF1FE !important;
+  border-color: #C6DAFB !important;
+  color: #1D4ED8 !important;
+}
+
+html[data-theme="light"] .linear-badge.rm,
+html[data-theme="light"] .badge-rm {
+  background: #F4ECFE !important;
+  border-color: #E0CCFB !important;
+  color: #7E22CE !important;
+}
+
+/* nav counters, row action text, sheet tabs: neutral, green only when active */
+html[data-theme] .nav-pill-badge,
+html[data-theme] .tab-pill-badge {
+  background: var(--ds-neutral-bg) !important;
+  border-color: var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .btn-linear-action,
+html[data-theme] .toggle-status-btn {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .btn-linear-action:hover,
+html[data-theme] .toggle-status-btn:hover {
+  color: var(--text-primary) !important;
+  background: var(--ds-hover-bg) !important;
+}
+
+html[data-theme] .site-tab-pill.active,
+html[data-theme] .cs-tab.active {
+  background: var(--ds-neutral-bg) !important;
+  background-image: none !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+/* inactive nav icons go neutral; only the active one keeps the brand green */
+html[data-theme] .nav-item .nav-icon,
+html[data-theme] .sidebar-nav-item .nav-icon {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+
+html[data-theme] .nav-item:hover .nav-icon,
+html[data-theme] .sidebar-nav-item:hover .nav-icon {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] #sidebar .nav-item.active .nav-label,
+html[data-theme] #sidebar .sidebar-nav-item.active .nav-label,
+html[data-theme] #sidebar .nav-item.active .nav-text,
+html[data-theme] #sidebar .sidebar-nav-item.active .nav-text {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] #sidebar .nav-item.active .nav-icon,
+html[data-theme] #sidebar .sidebar-nav-item.active .nav-icon {
+  color: var(--accent) !important;
+  background: var(--accent-subtle) !important;
+}
+
+/* ── 12. Linear-density pages: dark-only hardcoded whites fixed for day mode
+        (`.linear-view-title` was #f7f8f8 with no light override → invisible
+        title on the All Sites page in light mode; same for the filter capsule) */
+html[data-theme] .linear-view-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .linear-count-pill {
+  background: var(--ds-neutral-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .btn-linear-capsule {
+  color: var(--text-secondary) !important;
+  border-color: var(--ds-card-border) !important;
+}
+
+html[data-theme] .btn-linear-capsule.active {
+  background: var(--ds-neutral-bg) !important;
+  background-image: none !important;
+  border-color: var(--border-accent) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] .btn-linear-capsule span,
+html[data-theme] .btn-linear-capsule svg {
+  color: inherit !important;
+}
+
+html[data-theme] .linear-kbd {
+  background: var(--ds-neutral-bg) !important;
+  border: 1px solid var(--ds-card-border) !important;
+  color: var(--text-muted) !important;
+}
+
+html[data-theme] .linear-code {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme] .linear-action-bar {
+  border-color: var(--ds-card-border) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROACTIVE UPTIME — outage banner, nav badge, monitor bar, row hints
+   One self-contained, deletable block. Remove it and the JS still works: the
+   banner simply falls back to unstyled and the badge loses its colour.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Pinned outage banner — fixed, so it shows from ANY view ─────────────── */
+.uptime-alert-banner {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 320;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 11px 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(244, 63, 94, .38);
+  background: rgba(24, 12, 16, .84);
+  backdrop-filter: blur(18px) saturate(1.1);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .45);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  animation: uptimeBannerIn .28s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+
+@keyframes uptimeBannerIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes uptimePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+.uptime-alert-banner .uab-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #f43f5e;
+  box-shadow: 0 0 0 4px rgba(244, 63, 94, .18);
+  animation: uptimePulse 1.8s ease-in-out infinite;
+}
+
+.uptime-alert-banner .uab-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uptime-alert-banner .uab-text b { color: #ff8fa3; }
+
+.uptime-alert-banner .uab-view,
+.uptime-alert-banner .uab-close {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font: inherit;
+  border-radius: 9px;
+  padding: 5px 11px;
+  border: 1px solid rgba(244, 63, 94, .36);
+  background: rgba(244, 63, 94, .14);
+  color: #ffd7de;
+  transition: background .16s ease, transform .16s ease, border-color .16s ease;
+}
+
+.uptime-alert-banner .uab-view:hover { background: rgba(244, 63, 94, .26); transform: translateY(-1px); }
+
+.uptime-alert-banner .uab-close {
+  padding: 5px 8px;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.uptime-alert-banner .uab-close:hover { background: rgba(255, 255, 255, .06); color: var(--text-primary); }
+
+html[data-theme="light"] .uptime-alert-banner {
+  background: rgba(255, 245, 247, .95);
+  border-color: rgba(225, 29, 72, .3);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, .16);
+}
+
+html[data-theme="light"] .uptime-alert-banner .uab-text b { color: #be123c; }
+html[data-theme="light"] .uptime-alert-banner .uab-view { color: #9f1239; background: rgba(244, 63, 94, .1); }
+html[data-theme="light"] .uptime-alert-banner .uab-close { color: #64748b; }
+html[data-theme="light"] .uptime-alert-banner .uab-close:hover { background: rgba(15, 23, 42, .06); color: var(--text-primary); }
+
+/* ── Nav badge — red down-count ──────────────────────────────────────────── */
+.nav-pill-badge--danger {
+  background: rgba(244, 63, 94, .18) !important;
+  color: #ff8fa3 !important;
+  border: 1px solid rgba(244, 63, 94, .34);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme="light"] .nav-pill-badge--danger {
+  background: rgba(244, 63, 94, .12) !important;
+  color: #be123c !important;
+}
+
+/* ── Monitor status bar on the Uptime view ───────────────────────────────── */
+.uptime-monitor-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.uptime-monitor-bar b { color: var(--text-primary); font-weight: 600; }
+.uptime-monitor-bar .umb-sep { opacity: .5; }
+
+.uptime-monitor-bar .umb-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+.uptime-monitor-bar .umb-led.on {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .16);
+  animation: uptimePulse 2.4s ease-in-out infinite;
+}
+
+.uptime-monitor-bar .umb-down {
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, .16);
+  color: #ff8fa3;
+  font-weight: 600;
+}
+
+.uptime-monitor-bar .umb-ok {
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .05);
+}
+
+html[data-theme="light"] .uptime-monitor-bar .umb-down { color: #be123c; }
+
+/* ── Per-row hints in the uptime grid ────────────────────────────────────── */
+.uptime-item .uptime-fails {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, .16);
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.uptime-item .uptime-age {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* "up, but the listed path did not answer" — a caveat, not an outage. */
+.uptime-item .uptime-note {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, .16);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* The failure reason on a down row, truncated by the template. */
+.uptime-item .uptime-err {
+  font-size: 10.5px;
+  color: #fda4af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+html[data-theme="light"] .uptime-item .uptime-err { color: #be123c; }
+
+/* Not part of the monitored set (no URL / inactive): visible, but muted. */
+.uptime-item.unwatched {
+  opacity: .7;
+  border-left: 3px solid var(--border);
+}
+
+html[data-theme="light"] .uptime-item .uptime-fails { color: #b45309; }
+
+/* Narrow screens: drop the banner to the bottom so it never covers the header */
+@media (max-width: 720px) {
+  .uptime-alert-banner {
+    top: auto;
+    bottom: 14px;
+    right: 14px;
+    left: 14px;
+    max-width: none;
+  }
+
+  .uptime-monitor-bar { font-size: 11.5px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Custom-sheet tab switcher — label clipping fix
+   The blanket `html[data-theme="light"] select` rule (padding: 8px 12px,
+   font-size: 13px — both !important) out-specifies .cs-tab-select's own
+   metrics, while the switcher keeps its fixed height: 28px. 16px of vertical
+   padding inside 28px clips the label's glyphs (the "Distribution and Work
+   Sheet" bug). Let the switcher own its box in both themes; nothing else moves.
+   ───────────────────────────────────────────────────────────────────────────── */
+html[data-theme] .cs-tab-select {
+  height: auto !important;
+  min-height: 30px !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  box-sizing: border-box !important;
+}
+

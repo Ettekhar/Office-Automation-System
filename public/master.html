@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="/master.css?v=20261005_fast">
+  <link rel="stylesheet" href="/master.css?v=20261019_uptime_v7">
   <script>
     (function() {
       try {
@@ -245,6 +245,11 @@
       </div>
     </header>
 
+    <!-- Pinned announcement slot — painted by the shell as soon as the app
+         opens, so it shows while the slow view data is still loading.
+         Populated by refreshNoticeBanner() in master-app.js. -->
+    <div id="global-notice-banner"></div>
+
     <main id="main-content" class="main-content"></main>
   </div>
 </div>
@@ -305,7 +310,7 @@
   </form>
 </div>
 
-<script src="/master-app.js?v=20261008_fix_syntax" defer></script>
+<script src="/master-app.js?v=20261019_uptime_v7" defer></script>
 </body>
 </html>
 

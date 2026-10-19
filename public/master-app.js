@@ -60,15 +60,34 @@ async function api(url, opts = {}) {
 // TTL: 60 s for volatile data (db-status, months), 5 min for static lists (users).
 // Cache is stored in memory (not sessionStorage) so it is never stale across
 // hard-reloads. Call invalidateCache(url) after any write that changes the data.
-const _getCache = new Map(); // url -> { data, expiresAt }
+//
+// WHAT IS IN THIS LIST MATTERS. Every entry here is Google-backed or effectively
+// static, because those are the reads that used to make navigation wait on the
+// Sheets API. Local-state endpoints (/sites, /tasks, /daily-review) are
+// deliberately absent: they are a few milliseconds off the JSON DB and they
+// change under the user's cursor, so caching them would buy nothing and show
+// stale rows right after an edit.
+const _getCache = new Map(); // url -> { data, expiresAt, at }
 function _cacheGet(url) {
   const entry = _getCache.get(url);
   if (!entry) return null;
   if (Date.now() > entry.expiresAt) { _getCache.delete(url); return null; }
   return entry.data;
 }
+/**
+ * Last known value for a url even after its fresh TTL, as long as it is inside
+ * `maxAgeMs` — the client half of stale-while-revalidate. A view switch after the
+ * TTL answers instantly with the previous payload while a fresh copy is fetched
+ * in the background for the NEXT switch.
+ */
+function _cachePeek(url, maxAgeMs) {
+  const entry = _getCache.get(url);
+  if (!entry) return null;
+  if (Date.now() - entry.at > maxAgeMs) { _getCache.delete(url); return null; }
+  return entry.data;
+}
 function _cacheSet(url, data, ttlMs) {
-  _getCache.set(url, { data, expiresAt: Date.now() + ttlMs });
+  _getCache.set(url, { data, expiresAt: Date.now() + ttlMs, at: Date.now() });
 }
 function invalidateCache(urlPrefix) {
   for (const k of _getCache.keys()) {
@@ -76,14 +95,19 @@ function invalidateCache(urlPrefix) {
   }
 }
 
-// URLs whose responses are safe to cache (prefix match).
+// URLs whose responses are safe to cache (prefix match, first match wins).
 // Anything not in this list is always fetched fresh.
 const _CACHEABLE = [
+  // Google-backed reads first — the slow ones, and the reason this list exists.
+  { prefix: '/api/master/sheet-credentials?progress=1', ttl: 60_000 },
+  { prefix: '/api/master/dev-projects',   ttl: 60_000 },
+  { prefix: '/api/master/sheet-schema',   ttl: 5 * 60_000 },
+  // Effectively static lists.
   { prefix: '/api/master/users',      ttl: 5 * 60_000 },
-  { prefix: '/api/master/db-status',  ttl: 60_000 },
-  { prefix: '/api/master/months',     ttl: 60_000 },
   { prefix: '/api/master/properties', ttl: 5 * 60_000 },
   { prefix: '/api/master/notices',    ttl: 2 * 60_000 },
+  { prefix: '/api/master/db-status',  ttl: 60_000 },
+  { prefix: '/api/master/months',     ttl: 60_000 },
 ];
 
 function _cacheTtl(url) {
@@ -94,12 +118,41 @@ function _cacheTtl(url) {
 // In-flight deduplication: if two parts of the page call GET(url) at the same
 // time before the first resolves, only one fetch goes to the network.
 const _inflight = new Map(); // url -> Promise
+// When a cached value was last refreshed in the background, so a hit does not
+// re-trigger a revalidation on every single call.
+const _revalidatedAt = new Map(); // url -> timestamp
+
+/** Kick off a background refresh of a cached url (deduped, at most one per half-TTL). */
+function _revalidate(url, ttl) {
+  if (_inflight.has(url)) return;
+  const last = _revalidatedAt.get(url) || 0;
+  if (Date.now() - last < Math.max(5000, ttl / 2)) return;
+  _revalidatedAt.set(url, Date.now());
+  const p = api(url).then(data => {
+    _cacheSet(url, data, ttl);
+    _inflight.delete(url);
+    return data;
+  }).catch(() => {
+    _revalidatedAt.delete(url);
+    _inflight.delete(url);
+  });
+  _inflight.set(url, p);
+}
 
 async function GET(url) {
   const ttl = _cacheTtl(url);
   if (ttl > 0) {
     const cached = _cacheGet(url);
-    if (cached !== null) return cached;
+    if (cached !== null) {
+      _revalidate(url, ttl);           // fresh enough to return, refresh for later
+      return cached;
+    }
+    // Past the fresh TTL but still recognisable: answer now, refresh behind it.
+    const stale = _cachePeek(url, ttl * 5);
+    if (stale !== null) {
+      _revalidate(url, ttl);
+      return stale;
+    }
     // Deduplicate concurrent identical requests
     if (_inflight.has(url)) return _inflight.get(url);
     const p = api(url).then(data => {
@@ -121,11 +174,13 @@ const DELETE = url => api(url, { method: 'DELETE' });
 // Warm the session cache for the most common boot requests in one parallel burst.
 // Called immediately so that by the time initLanding runs, data is often ready.
 async function prefetchBootData() {
-  // Fire all three in parallel; results land in _getCache so GET() hits cache.
+  // Fire the boot burst in parallel; results land in _getCache so GET() hits
+  // cache. Notices ride along so the pinned banner can paint with the shell.
   await Promise.allSettled([
     GET('/api/master/db-status'),
     GET('/api/master/users'),
     GET('/api/master/months'),
+    GET('/api/master/notices'),
   ]);
 }
 prefetchBootData();
@@ -449,6 +504,10 @@ function buildNav(role) {
 
   // Append dynamic custom sheet tabs after static nav
   buildCustomSheetNav();
+
+  // Re-apply the proactive-uptime badge — the nav is rebuilt on login and role
+  // change, so the down-count badge has to be repainted with it.
+  applyUptimeNavBadge();
 }
 
 function getAssignedCoveringUsers() {
@@ -509,7 +568,7 @@ function buildAssignedSitesNav() {
         <div class="nav-item ${S.view === 'assigned-sites-' + u.id ? 'active' : ''}" data-view="assigned-sites-${u.id}" id="nav-assigned-sites-${u.id}" title="Assigned Checklist for ${esc(u.name)}">
           <span class="nav-icon">${getNavSvg('my-sites')}</span>
           <span class="nav-label">${esc(u.name)}</span>
-          <span class="nav-pill-badge" style="background:rgba(99,102,241,0.2);color:#818cf8;border:1px solid rgba(99,102,241,0.3)">Sites</span>
+          <span class="nav-pill-badge" style="background:rgba(52,211,153, 0.1);color:var(--text-primary);border:1px solid rgba(52,211,153, 0.15)">Sites</span>
         </div>
       `).join('')}
     </div>
@@ -558,6 +617,9 @@ const viewFns = {
 function navigate(viewId) {
   S.view = viewId;
   setActiveNav(viewId);
+  // Leaving the uptime view stops its 30 s live refresh. The global watcher
+  // keeps polling either way, so nothing is missed.
+  if (viewId !== 'uptime' && UPTIME.viewTimer) { clearInterval(UPTIME.viewTimer); UPTIME.viewTimer = null; }
   mainEl.innerHTML = `<div class="empty-state"><div class="loading-spinner"></div><p>Loading…</p></div>`;
   if (viewId.startsWith('assigned-sites-')) {
     const targetUserId = viewId.replace('assigned-sites-', '');
@@ -768,7 +830,33 @@ async function initLanding() {
     });
   });
 
-  // ── Status pill + full users list ─────────────────────────────────────────
+  // ── FAST PATH — the app shell (header) must paint before slow boot data. ──
+  // A remembered session (officeos_session) is enough to reveal the shell as
+  // soon as the auth check passes; db-status / users / months keep loading in
+  // the background (prefetchBootData already has them in flight) and only
+  // refine details (user identity, status pill) once they land.
+  let enteredFromSaved = false;
+  try {
+    const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
+    const isManualLogout = sessionStorage.getItem('officeos_logged_out');
+    if (saved.role && !isManualLogout) {
+      const allowedRoles = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
+      if ((allowedRoles[userRole] || ['user']).includes(saved.role)) {
+        S.role = saved.role;
+        if (saved.role === 'user') {
+          S.userName = saved.userName || authUser.name || 'User';
+          S.userId   = saved.userId || authUser.id || null;
+        } else {
+          S.userName = saved.role === 'admin' ? 'Admin' : 'Superadmin';
+          S.userId   = null;
+        }
+        enterApp(); // ← header paints now, not after the boot data below
+        enteredFromSaved = true;
+      }
+    }
+  } catch { }
+
+  // ── Status pill + full users list — background data; never gates the paint ──
   const statusEl = $('landing-status');
   let loadedUsers = [];
   try {
@@ -811,6 +899,28 @@ async function initLanding() {
     }
   }
 
+  // Fast path already revealed the shell: refine the stored identity against
+  // the now-known roster, then stop (nothing below may block a paint).
+  if (enteredFromSaved) {
+    if (S.role === 'user' && loadedUsers.length) {
+      const matchById   = loadedUsers.find(u => u.id === S.userId);
+      const matchByName = loadedUsers.find(u => u.name.toLowerCase() === (S.userName || '').toLowerCase());
+      const selfMatch   = loadedUsers.find(u => u.id === authUser.id);
+      const resolved    = matchById || matchByName || selfMatch || null;
+      if (resolved && (resolved.name !== S.userName || resolved.id !== S.userId)) {
+        const nameChanged = resolved.name !== S.userName;
+        S.userName = resolved.name;
+        S.userId   = resolved.id;
+        try { localStorage.setItem('officeos_session', JSON.stringify({ role: S.role, userName: S.userName, userId: S.userId })); } catch { }
+        if (nameChanged) {
+          const activeView = document.querySelector('.nav-item.active')?.dataset?.view;
+          if (activeView === 'my-sites') navigate('my-sites');
+        }
+      }
+    }
+    return;
+  }
+
   function handleEnter() {
     const role = $('role-select').value;
     // Enforce: cannot enter a role above your auth level
@@ -841,34 +951,6 @@ async function initLanding() {
   if (enterBtn) {
     enterBtn.onclick = handleEnter;
   }
-
-  // Auto-restore session if previously entered and not explicitly logged out
-  try {
-    const saved = JSON.parse(localStorage.getItem('officeos_session') || '{}');
-    const isManualLogout = sessionStorage.getItem('officeos_logged_out');
-    if (saved.role && !isManualLogout) {
-      // Verify the saved role is still allowed for this auth user
-      const allowedRoles = { user: ['user'], admin: ['user','admin'], superadmin: ['user','admin','superadmin'] };
-      const canUseRole = (allowedRoles[userRole] || ['user']).includes(saved.role);
-      if (canUseRole) {
-        S.role = saved.role;
-        if (saved.role === 'user') {
-          const matchById   = loadedUsers.find(u => u.id   === saved.userId);
-          const matchByName = loadedUsers.find(u => u.name.toLowerCase() === (saved.userName || '').toLowerCase());
-          // Prefer the authenticated user's own record
-          const selfMatch = loadedUsers.find(u => u.id === authUser.id);
-          const resolved  = matchById || matchByName || selfMatch || null;
-          S.userName = resolved ? resolved.name : (saved.userName || authUser.name || 'User');
-          S.userId   = resolved ? resolved.id   : (authUser.id || null);
-        } else {
-          S.userName = saved.userName || (saved.role === 'admin' ? 'Admin' : 'Superadmin');
-          S.userId   = saved.userId || null;
-        }
-        enterApp();
-        return;
-      }
-    }
-  } catch { }
 
   // Default: enter with the auth user's role
   S.role = userRole;
@@ -986,19 +1068,42 @@ function enterApp() {
     updateActiveMonthUI();
   });
 
-  // Show sync-status if synced — reuse cached db-status from initLanding if available
+  // Show sync-status if synced — paint instantly from the last known value so
+  // the header never waits on the request; the live value replaces it when the
+  // request lands (and is remembered for the next boot).
   const _showSyncStatus = (st) => {
     if (st && st.lastSync) {
       $('sync-status').classList.remove('hidden');
-      const ago = Math.round((Date.now() - new Date(st.lastSync)) / 60000);
-      $('sync-status-text').textContent = ago < 1 ? 'Synced just now' : `Synced ${ago}m ago`;
+      const mins = Math.round((Date.now() - new Date(st.lastSync)) / 60000);
+      $('sync-status-text').textContent =
+        mins < 1 ? 'Synced just now'
+        : mins < 60 ? `Synced ${mins}m ago`
+        : mins < 2880 ? `Synced ${Math.round(mins / 60)}h ago`
+        : `Synced ${Math.round(mins / 1440)}d ago`;
     }
   };
+  const _rememberSync = (st) => {
+    if (st && st.lastSync) { try { localStorage.setItem('officeos_lastSync', st.lastSync); } catch { } }
+  };
+  try {
+    const _cachedSync = localStorage.getItem('officeos_lastSync');
+    if (_cachedSync) _showSyncStatus({ lastSync: _cachedSync });
+  } catch { }
   if (S._cachedDbStatus) {
+    _rememberSync(S._cachedDbStatus);
     _showSyncStatus(S._cachedDbStatus); // instant — no extra request
   } else {
-    GET('/api/master/db-status').then(_showSyncStatus).catch(() => { });
+    GET('/api/master/db-status').then((st) => { _rememberSync(st); _showSyncStatus(st); }).catch(() => { });
   }
+
+  // Pinned notice banner — shell-level slot, painted independently of the slow
+  // view data so it is visible while the default view is still loading.
+  refreshNoticeBanner();
+
+  // Proactive uptime: poll the background monitor's snapshot so a site going
+  // down surfaces here (banner + nav badge + toast) without anyone opening the
+  // Uptime Monitor. Nothing is checked from the browser — the server sweeps.
+  startUptimeWatch();
 
   // Default view
   const defaultViews = { user: 'my-sites', admin: 'overview', superadmin: 'overview' };
@@ -1010,6 +1115,10 @@ let currentActiveMonth = (typeof localStorage !== 'undefined' && localStorage.ge
 let _monthDropdownOpen = false;
 
 async function updateActiveMonthUI() {
+  // Paint the last-known month immediately — the header must never wait on the
+  // months request; the live value replaces it when the request lands.
+  const _lblEarly = $('active-month-label');
+  if (_lblEarly && currentActiveMonth) _lblEarly.textContent = currentActiveMonth;
   try {
     const data = await GET('/api/master/months');
     if (data.activeMonth) {
@@ -1205,6 +1314,19 @@ async function getNoticeBannerHtml() {
   }
 }
 
+// Shell-level banner slot: paints the pinned notice independently of the slow
+// view data so it is visible while a view is still loading. Called on app
+// entry and after notice mutations.
+async function refreshNoticeBanner() {
+  const slot = $('global-notice-banner');
+  if (!slot) return;
+  const html = await getNoticeBannerHtml();
+  S._cachedNoticeBannerHtml = html;
+  slot.innerHTML = html;
+  slot.querySelectorAll('.btn-open-notices').forEach(btn =>
+    btn.addEventListener('click', openNoticeBoardModal));
+}
+
 async function openNoticeBoardModal() {
   let notices = [];
   try {
@@ -1217,7 +1339,7 @@ async function openNoticeBoardModal() {
   const canManage = ['admin', 'superadmin'].includes(S.role);
 
   const noticesListHtml = notices.length ? notices.map(n => `
-    <div style="background:var(--bg-surface-2);border:1px solid ${n.pinned ? 'rgba(99,102,241,0.5)' : 'var(--border)'};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;position:relative;${n.pinned ? 'box-shadow:0 0 16px rgba(99,102,241,0.15)' : ''}">
+    <div style="background:var(--bg-surface-2);border:1px solid ${n.pinned ? 'rgba(52,211,153, 0.25)' : 'var(--border)'};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;position:relative;${n.pinned ? 'box-shadow:0 0 16px rgba(52,211,153, 0.075)' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px">
           ${n.pinned ? `<span class="badge badge-accent" style="font-size:10.5px;display:inline-flex;align-items:center;gap:4px">${getSvg('pin', 10)} Pinned</span>` : ''}
@@ -1290,8 +1412,9 @@ async function openNoticeBoardModal() {
                   authorRole: S.role || 'admin',
                 });
                 toast('Notice published!', 'success');
+                invalidateCache('/api/master/notices');
+                refreshNoticeBanner();
                 openNoticeBoardModal();
-                if (S.view) navigate(S.view);
               } catch (e) { toast(e.message, 'error'); }
             }
           }
@@ -1306,8 +1429,9 @@ async function openNoticeBoardModal() {
         try {
           await PUT(`/api/master/notices/${id}`, { pinned: targetPinned });
           toast(targetPinned ? 'Notice pinned to top!' : 'Notice unpinned', 'success');
+          invalidateCache('/api/master/notices');
+          refreshNoticeBanner();
           openNoticeBoardModal();
-          if (S.view) navigate(S.view);
         } catch (e) { toast(e.message, 'error'); }
       });
     });
@@ -1318,8 +1442,9 @@ async function openNoticeBoardModal() {
         try {
           await DELETE(`/api/master/notices/${btn.dataset.id}`);
           toast('Notice deleted', 'success');
+          invalidateCache('/api/master/notices');
+          refreshNoticeBanner();
           openNoticeBoardModal();
-          if (S.view) navigate(S.view);
         } catch (e) { toast(e.message, 'error'); }
       });
     });
@@ -1352,8 +1477,9 @@ async function openNoticeBoardModal() {
                     pinned: $('en-pin').checked,
                   });
                   toast('Notice updated', 'success');
+                  invalidateCache('/api/master/notices');
+                  refreshNoticeBanner();
                   openNoticeBoardModal();
-                  if (S.view) navigate(S.view);
                 } catch (e) { toast(e.message, 'error'); }
               }
             }
@@ -2039,7 +2165,6 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
   setPage('My Sites', `Assigned checklist for ${effectiveUserName || 'Team'}`);
 
   let rows = preloadedRows || [];
-  let noticeBannerHtml = S._cachedNoticeBannerHtml || '';
   if (!preloadedRows) {
     try {
       const queryParts = [];
@@ -2054,13 +2179,8 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
       }
       const qStr = queryParts.length ? `?${queryParts.join('&')}` : '';
 
-      const [data, nHtml] = await Promise.all([
-        GET(`/api/master/daily-review${qStr}`),
-        getNoticeBannerHtml()
-      ]);
+      const data = await GET(`/api/master/daily-review${qStr}`);
       rows = data.rows || [];
-      noticeBannerHtml = nHtml;
-      S._cachedNoticeBannerHtml = nHtml;
     } catch (e) { toast(e.message, 'error'); }
   }
 
@@ -2075,7 +2195,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
   const isMaint = activeViewMode === 'maintenance';
 
   const coveringNoticeHtml = isCoveringView ? `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.28);border-radius:var(--radius);margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:rgba(52,211,153, 0.06);border:1px solid rgba(52,211,153, 0.14);border-radius:var(--radius);margin-bottom:16px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-primary)">
         <span style="font-size:16px">⚡</span>
         <span>Temporary Coverage: Viewing and managing <strong>${esc(effectiveUserName)}'s</strong> assigned site checklist.</span>
@@ -2089,7 +2209,6 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
   mainEl.innerHTML = `
     <div class="fade-in">
       ${coveringNoticeHtml}
-      ${noticeBannerHtml}
       <div class="stat-grid">
         <div class="stat-card accent"><div class="stat-value" id="stat-total">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
         <div class="stat-card success"><div class="stat-value" id="stat-completed">${completed}</div><div class="stat-label">Completed</div></div>
@@ -2710,7 +2829,6 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
               <button class="btn-copy-url" data-url="${esc(r.siteUrl)}" title="Copy site URL to clipboard">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
-              <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
             </div>
             ${smartExpiryBadge}
           </div>
@@ -2792,7 +2910,9 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         <div class="site-identity-cell">
           ${liveBall}
           <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))} ↗</a>
-          <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+          <button class="btn-copy-url" data-url="${esc(r.siteUrl)}" title="Copy website URL to clipboard">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
         </div>
       </td>
       <td data-col="company"><span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'}">${esc(co)}</span></td>
@@ -2864,7 +2984,9 @@ function maintSiteRow(r, i) {
           <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
             ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
           </a>
-          <button class="btn-uptime-check" data-row-id="${r.id}" data-site-url="${esc(r.siteUrl)}" data-site-id="${r.siteId || ''}" title="Check live uptime now">↺</button>
+          <button class="btn-copy-url" data-url="${esc(r.siteUrl)}" title="Copy website URL to clipboard">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
         </div>
       </td>
       <td data-col="company"><span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'}">${esc(co)}</span></td>
@@ -3049,14 +3171,12 @@ async function viewMyTasks() {
 async function viewOverview() {
   setPage('Overview', 'Team-wide snapshot');
   let stats = {}, summary = [];
-  let noticeBannerHtml = '';
   let sheetCredsData = { credentials: [] };
   let reportStatus = { rows: [], latestDate: null, today: '', count: 0, configured: false, freshness: {} };
   try {
-    [stats, { summary }, noticeBannerHtml, sheetCredsData, reportStatus] = await Promise.all([
+    [stats, { summary }, sheetCredsData, reportStatus] = await Promise.all([
       GET('/api/master/stats'),
       GET(`/api/master/summary?month=${encodeURIComponent(currentActiveMonth || '')}`),
-      getNoticeBannerHtml(),
       GET(`/api/master/sheet-credentials?role=${S.role}&progress=1`).catch(() => ({ credentials: [] })),
       GET(`/api/master/report-status?role=${encodeURIComponent(S.role || '')}`).catch(() => ({ rows: [], latestDate: null, today: '', count: 0, configured: false, freshness: {} }))
     ]);
@@ -3069,7 +3189,6 @@ async function viewOverview() {
 
   mainEl.innerHTML = `
     <div class="fade-in">
-      ${noticeBannerHtml}
       <div class="stat-grid">
         <div class="stat-card accent"><div class="stat-value">${stats.totalSites || 0}</div><div class="stat-label">Total Sites</div></div>
         <div class="stat-card success"><div class="stat-value">${overallPct}%</div><div class="stat-label">Today's Completion</div></div>
@@ -3206,7 +3325,6 @@ async function viewAllUsers() {
   let users = [];
   let summary = [];
   let dailyReviewRows = [];
-  let noticeBannerHtml = '';
 
   let selectedSiteIds = new Set();
   let dirSearch = '';
@@ -3217,17 +3335,15 @@ async function viewAllUsers() {
 
   async function loadData() {
     try {
-      const [sData, uData, sumData, nHtml, drData] = await Promise.all([
+      const [sData, uData, sumData, drData] = await Promise.all([
         GET('/api/master/sites'),
         GET('/api/master/users'),
         GET(`/api/master/summary?month=${encodeURIComponent(currentActiveMonth || '')}`),
-        getNoticeBannerHtml(),
         GET(`/api/master/daily-review?month=${encodeURIComponent(currentActiveMonth || '')}`).catch(() => ({ rows: [] }))
       ]);
       sites = sData.sites || [];
       users = uData.users || S.users || [];
       summary = sumData.summary || [];
-      noticeBannerHtml = nHtml || '';
       dailyReviewRows = drData.rows || [];
       if (!activeMemberId && summary.length) {
         activeMemberId = summary[0].userId;
@@ -3739,8 +3855,6 @@ async function viewAllUsers() {
             ➕ Add Multiple Websites to ${esc(currentTabUser.user)}
           </button>
         </div>
-
-        ${noticeBannerHtml}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
           ${tabs.map(u => `
@@ -5163,7 +5277,7 @@ async function viewDomainExpiry() {
             <span class="stat-label">Domain Portfolio</span>
             <span class="linear-badge feature" style="font-size:10px">Total</span>
           </div>
-          <div class="stat-value" style="color:#818cf8">${domains.length}</div>
+          <div class="stat-value" style="color:var(--text-primary)">${domains.length}</div>
           <div class="stat-sub">Monitored domain records</div>
         </div>
       </div>
@@ -5190,124 +5304,446 @@ async function viewDomainExpiry() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: UPTIME MONITOR
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// PROACTIVE UPTIME WATCH
+//
+// The server sweeps site URLs in the background (src/uptimeMonitor.js). This
+// block keeps the UI in step with that sweep WITHOUT anyone opening the Uptime
+// Monitor: it polls the fast snapshot endpoint, raises a pinned banner + nav
+// badge + toast when something is down, and repaints the uptime dots already on
+// screen (site tables, cards). Nothing here triggers network checks of its own —
+// only the background sweep and the explicit "check now" buttons do that.
+// ═══════════════════════════════════════════════════════════════════════════════
+const UPTIME_POLL_MS = 60_000;          // snapshot poll while the tab is visible
+const UPTIME_VIEW_REFRESH_MS = 30_000;  // uptime view repaint while it is open
+const UPTIME = {
+  timer: null,
+  viewTimer: null,
+  startedAt: 0,
+  snapshot: null,
+  inFlight: null,
+  lastFetchAt: 0,
+  seenAlerts: new Set(),
+  bannerHiddenFor: null,
+};
+
+/** Same normalisation the sheet/DB layers use, so URLs match across sources. */
+function _normUrl(u) {
+  return String(u || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/+$/, '');
+}
+
+function _uptimeAge(iso) {
+  if (!iso) return 'never';
+  const ms = Date.now() - Date.parse(iso);
+  if (!Number.isFinite(ms)) return 'never';
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.round(s / 60) + 'm ago';
+  if (s < 86400) return Math.round(s / 3600) + 'h ago';
+  return Math.round(s / 86400) + 'd ago';
+}
+
+/** Replace the uptime pill inside an existing row with the current status. */
+function _patchUptimePill(host, status) {
+  if (!host) return;
+  const pill = host.querySelector('.linear-uptime-pill, .uptime-pill, .uptime-dot');
+  if (pill) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = uptimeDot(status).trim();
+    const next = tmp.firstElementChild;
+    if (next) pill.replaceWith(next);
+  }
+  if (host.dataset) host.dataset.uptime = status;
+  const tip = host.querySelector('[data-tooltip^="Uptime:"]');
+  if (tip) tip.setAttribute('data-tooltip', 'Uptime: ' + status);
+}
+
+/**
+ * Repaint every uptime dot currently in the DOM from the snapshot.
+ * Rows are matched by site id first, then by URL — the All Sites table carries
+ * data-url, and the identity cells carry a copy chip with data-url.
+ */
+function _applyUptimeDots(snap) {
+  if (!snap || !Array.isArray(snap.sites)) return 0;
+  const byId = new Map();
+  const byUrl = new Map();
+  const byHost = new Map();
+  for (const r of snap.sites) {
+    byId.set(r.id, r);
+    const n = _normUrl(r.u);
+    byUrl.set(n, r);
+    const h = n.split('/')[0];
+    if (h && !byHost.has(h)) byHost.set(h, r);
+  }
+  const resolve = (host) => {
+    if (!host || !host.dataset) return null;
+    const id = host.dataset.siteId || host.dataset.id;
+    if (id && byId.has(id)) return byId.get(id);
+    const raw = host.dataset.url || host.dataset.siteUrl;
+    if (raw) {
+      const n = _normUrl(raw);
+      if (byUrl.has(n)) return byUrl.get(n);
+      if (byHost.has(n.split('/')[0])) return byHost.get(n.split('/')[0]);
+    }
+    const chip = host.querySelector && host.querySelector('.btn-copy-url[data-url]');
+    if (chip) {
+      const n = _normUrl(chip.dataset.url);
+      if (byUrl.has(n)) return byUrl.get(n);
+      if (byHost.has(n.split('/')[0])) return byHost.get(n.split('/')[0]);
+    }
+    return null;
+  };
+
+  let patched = 0;
+  document.querySelectorAll('.linear-uptime-pill, .uptime-dot').forEach((el) => {
+    const host = el.closest('[data-site-id], [data-url], .uptime-item, tr') || el.parentElement;
+    const row = resolve(host);
+    if (!row) return;
+    const status = row.s || 'unknown';
+    if (host.dataset.uptime !== status) _patchUptimePill(host, status);
+    patched++;
+  });
+  return patched;
+}
+
+/** Pinned red banner while anything is down. Session-dismissible per outage set. */
+function _renderUptimeBanner(snap) {
+  const down = (snap && snap.down) || [];
+  let el = document.getElementById('uptime-alert-banner');
+  const sig = down.map(d => d.id).sort().join(',');
+  if (!down.length || UPTIME.bannerHiddenFor === sig) { if (el) el.remove(); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'uptime-alert-banner';
+    el.className = 'uptime-alert-banner';
+    document.body.appendChild(el);
+  }
+  const names = down.slice(0, 3).map(d => shortUrl(d.url, 26)).join(', ');
+  const extra = down.length > 3 ? ` +${down.length - 3} more` : '';
+  el.innerHTML = `
+    <span class="uab-dot"></span>
+    <span class="uab-text"><b>${down.length} site${down.length === 1 ? '' : 's'} down</b> — ${esc(names)}${esc(extra)}</span>
+    <button class="uab-view" type="button">View</button>
+    <button class="uab-close" type="button" title="Hide until this outage set changes">✕</button>`;
+  const viewBtn = el.querySelector('.uab-view');
+  if (viewBtn) viewBtn.onclick = () => navigate('uptime');
+  const closeBtn = el.querySelector('.uab-close');
+  if (closeBtn) closeBtn.onclick = () => { UPTIME.bannerHiddenFor = sig; el.remove(); };
+}
+
+/** Red count badge on the Uptime Monitor nav item. */
+function applyUptimeNavBadge(snap) {
+  const s = snap || UPTIME.snapshot;
+  const count = (s && s.summary && s.summary.downCount) || 0;
+  const item = document.getElementById('nav-uptime');
+  if (!item) return;
+  let badge = item.querySelector('.nav-pill-badge[data-uptime-badge]');
+  if (!count) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'nav-pill-badge';
+    badge.dataset.uptimeBadge = '1';
+    item.appendChild(badge);
+  }
+  badge.textContent = String(count);
+  badge.classList.add('nav-pill-badge--danger');
+  item.setAttribute('title', `Uptime Monitor — ${count} site${count === 1 ? '' : 's'} down`);
+}
+
+/** Toast once per outage transition; historic ones stay silent on first paint. */
+function _uptimeToasts(snap) {
+  const alerts = (snap && snap.alerts) || [];
+  const freshAfter = Math.max(0, UPTIME.startedAt - 5 * 60_000);
+  for (const a of alerts) {
+    if (!a || a.type !== 'down') continue;
+    const key = a.siteId + '@' + a.at;
+    if (UPTIME.seenAlerts.has(key)) continue;
+    UPTIME.seenAlerts.add(key);
+    if (Date.parse(a.at) < freshAfter) continue;
+    toast(`🔴 Site down: ${shortUrl(a.url, 40)}${a.error ? ' · ' + a.error : ''}`, 'error', 9000);
+  }
+}
+
+/** One poll: fetch the snapshot and push it to every surface that shows uptime. */
+async function uptimeTick() {
+  if (UPTIME.inFlight) return UPTIME.inFlight;
+  UPTIME.inFlight = (async () => {
+    try {
+      const snap = await GET('/api/master/uptime-snapshot');
+      if (!snap || !snap.ok) return null;
+      UPTIME.snapshot = snap;
+      UPTIME.lastFetchAt = Date.now();
+      _uptimeToasts(snap);
+      _renderUptimeBanner(snap);
+      applyUptimeNavBadge(snap);
+      _applyUptimeDots(snap);
+      const bar = document.getElementById('uptime-monitor-bar');
+      if (bar) bar.innerHTML = uptimeMonitorBar(snap);
+      return snap;
+    } catch (e) {
+      return null;
+    } finally {
+      UPTIME.inFlight = null;
+    }
+  })();
+  return UPTIME.inFlight;
+}
+
+/** Start polling. Called once from enterApp(); safe to call again. */
+function startUptimeWatch() {
+  UPTIME.startedAt = Date.now();
+  uptimeTick();
+  if (UPTIME.timer) return;
+  UPTIME.timer = setInterval(() => {
+    if (document.hidden) return; // never poll a hidden tab
+    uptimeTick();
+  }, UPTIME_POLL_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - UPTIME.lastFetchAt > 30_000) uptimeTick();
+  });
+}
+
+// ─── Uptime view pieces ──────────────────────────────────────────────────────
+function uptimeMonitorBar(snap) {
+  const m = (snap && snap.monitor) || {};
+  const on = !!m.enabled;
+  const every = m.intervalMs ? Math.max(1, Math.round(m.intervalMs / 60000)) + 'm' : '';
+  const mode = m.mode === 'cloud' ? 'cloud cron' : (m.mode === 'local' ? 'local scheduler' : 'no scheduler');
+  const downCount = (snap && snap.summary && snap.summary.downCount) || 0;
+  return `
+    <span class="umb-led ${on ? 'on' : 'off'}"></span>
+    <b>${on ? 'Background monitor running' : 'Background monitor idle'}</b>
+    <span class="umb-sep">·</span>
+    <span>${mode}${on && every ? ' every ' + every : ''}</span>
+    <span class="umb-sep">·</span>
+    <span id="uptime-last-sweep">last sweep ${esc(_uptimeAge(snap && snap.lastSweepAt))}</span>
+    ${downCount
+      ? `<span class="umb-down">${downCount} down</span>`
+      : `<span class="umb-ok">all reachable</span>`}`;
+}
+
+/**
+ * Is this site actually part of the monitored set? Mirrors the server's rule
+ * (selectCandidates): a site needs a URL and must not be Deactive. Sites that
+ * fail this test keep whatever status an old manual check left on them, which is
+ * why they must never be counted as part of the current outage picture.
+ */
+function _monitorable(s) {
+  return !!s && !!String(s.url || '').trim() && String(s.status || '').toLowerCase() !== 'deactive';
+}
+
+/**
+ * Everything about a row that is visible in its markup. When this string is
+ * unchanged the helper can leave the row completely alone; when it changes the
+ * row is rebuilt, so the dot and the chips explaining it never drift apart.
+ */
+function _rowSignature(s) {
+  const watched = _monitorable(s);
+  const status = watched ? (s.uptimeStatus || 'unknown') : 'unknown';
+  return [
+    status,
+    watched ? 'w' : 'x',
+    watched ? (s.uptimeFails || 0) : 0,
+    s.uptimeNote || '',
+    s.uptimeLastError || '',
+    s.uptimeResponseTime || 0,
+    _uptimeAge(s.lastUptimeCheck),
+  ].join('|');
+}
+
+function uptimeItemHtml(s) {
+  const watched = _monitorable(s);
+  const status = watched ? (s.uptimeStatus || 'unknown') : 'unknown';
+  const fails = watched ? (s.uptimeFails || 0) : 0;
+  const sig = _rowSignature(s);
+  // A site can be up while the exact URL in the sheet is not answerable (a
+  // guarded /wp-admin/ path, say). Say so instead of showing a bare green dot
+  // that hides a real caveat.
+  const note = status === 'online' && s.uptimeNote
+    ? `<span class="uptime-note" title="${esc(s.uptimeNote)}">root only</span>`
+    : '';
+  const err = status === 'offline' && s.uptimeLastError
+    ? `<span class="uptime-err" title="${esc(s.uptimeLastError)}">${esc(String(s.uptimeLastError).slice(0, 26))}</span>`
+    : '';
+  const pending = status !== 'offline' && fails > 0
+    ? `<span class="uptime-fails" title="Consecutive failed checks — a site is only reported down after 2 in a row">${fails} failed</span>`
+    : '';
+  const skipped = !watched
+    ? `<span class="uptime-note" title="No URL, or the site is inactive, so the monitor skips it.">not monitored</span>`
+    : '';
+  return `<div class="uptime-item ${status}${watched ? '' : ' unwatched'}" data-sig="${esc(sig)}" data-site-id="${esc(s.id)}" data-url="${esc(_normUrl(s.url))}">
+      ${uptimeDot(status)}
+      <span class="uptime-url" title="${esc(s.url)}">${esc(shortUrl(s.url, 32))}</span>
+      ${s.uptimeResponseTime ? `<span class="uptime-ms">${s.uptimeResponseTime}ms</span>` : ''}
+      ${skipped}
+      ${err}
+      ${note}
+      ${pending}
+      <span class="uptime-age">${esc(_uptimeAge(s.lastUptimeCheck))}</span>
+      <button class="btn btn-ghost btn-sm check-one-btn" data-id="${s.id}" style="padding:2px 6px" title="Re-check this site now">↺</button>
+    </div>`;
+}
+
+/** In-place repaint of the open uptime view (no full re-render → no flicker). */
+function applyUptimeToView(sites) {
+  if (!Array.isArray(sites)) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el && el.textContent !== String(v)) el.textContent = String(v); };
+  const watched = sites.filter(_monitorable);
+  const online = watched.filter(s => s.uptimeStatus === 'online').length;
+  const offline = watched.filter(s => s.uptimeStatus === 'offline').length;
+  const unknown = watched.filter(s => !s.uptimeStatus || s.uptimeStatus === 'unknown').length;
+  set('upt-stat-online', online);
+  set('upt-stat-offline', offline);
+  set('upt-stat-unknown', unknown);
+  set('upt-stat-total', watched.length);
+  const sub = document.getElementById('upt-stat-offline-sub');
+  if (sub) sub.textContent = offline ? 'Requires team review' : 'No outages detected';
+
+  const grid = document.getElementById('uptime-grid');
+  if (!grid) return;
+  const existing = new Map();
+  grid.querySelectorAll('.uptime-item').forEach(el => existing.set(el.dataset.siteId, el));
+  for (const s of sites) {
+    const row = existing.get(s.id);
+    if (!row) { grid.insertAdjacentHTML('beforeend', uptimeItemHtml(s)); continue; }
+    existing.delete(s.id);
+    // Rebuild only the rows whose visible content actually changed. This is
+    // deliberately declarative: the old code patched the pill and forced
+    // `uptime-item <status>`, which silently dropped the extra classes and left
+    // the chips (root only / not monitored / failure reason) describing a state
+    // the dot was no longer in.
+    if (row.dataset.sig !== _rowSignature(s)) row.outerHTML = uptimeItemHtml(s);
+  }
+  for (const el of existing.values()) el.remove();
+}
+
 async function viewUptime() {
-  setPage('Uptime Monitor', 'Live site status');
+  setPage('Uptime Monitor', 'Continuous monitoring');
   let sites = [];
   try { ({ sites } = await GET('/api/master/sites')); } catch (e) { toast(e.message, 'error'); }
+  const snap = UPTIME.snapshot;
 
-  const online = sites.filter(s => s.uptimeStatus === 'online').length;
-  const offline = sites.filter(s => s.uptimeStatus === 'offline').length;
-  const unknown = sites.filter(s => s.uptimeStatus === 'unknown').length;
+  // Count only what the monitor actually watches, so these cards, the monitor
+  // bar above them and the outage banner always tell the same story. Sites with
+  // no URL, or Deactive ones, still appear in the grid below but are skipped by
+  // the monitor — and they keep whatever status an old manual check left behind.
+  const watched = sites.filter(_monitorable);
+  const skippedCount = sites.length - watched.length;
+  const online = watched.filter(s => s.uptimeStatus === 'online').length;
+  const offline = watched.filter(s => s.uptimeStatus === 'offline').length;
+  const unknown = watched.filter(s => !s.uptimeStatus || s.uptimeStatus === 'unknown').length;
 
   mainEl.innerHTML = `
     <div class="fade-in">
+      <div class="uptime-monitor-bar" id="uptime-monitor-bar">${uptimeMonitorBar(snap)}</div>
       <div class="stat-grid" style="margin-bottom:20px">
         <div class="stat-card success">
           <div class="stat-header">
             <span class="stat-label">Online Sites</span>
-            <span class="linear-badge active" style="font-size:10px">HTTP 200</span>
+            <span class="linear-badge active" style="font-size:10px">Reachable</span>
           </div>
-          <div class="stat-value" style="color:#10b981">${online}</div>
-          <div class="stat-sub">${Math.round(sites.length ? (online / sites.length) * 100 : 0)}% healthy responses</div>
+          <div class="stat-value" id="upt-stat-online">${online}</div>
+          <div class="stat-sub">${Math.round(watched.length ? (online / watched.length) * 100 : 0)}% healthy responses</div>
         </div>
         <div class="stat-card danger">
           <div class="stat-header">
             <span class="stat-label">Offline Detected</span>
             <span class="linear-badge bug" style="font-size:10px">Alert</span>
           </div>
-          <div class="stat-value" style="color:#f43f5e">${offline}</div>
-          <div class="stat-sub">${offline ? 'Requires team review' : 'No outages detected'}</div>
+          <div class="stat-value" id="upt-stat-offline">${offline}</div>
+          <div class="stat-sub" id="upt-stat-offline-sub">${offline ? 'Requires team review' : 'No outages detected'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
             <span class="stat-label">Pending Checks</span>
             <span class="linear-badge infra" style="font-size:10px">Queue</span>
           </div>
-          <div class="stat-value" style="color:#8a8f98">${unknown}</div>
-          <div class="stat-sub">Awaiting next uptime sweep</div>
+          <div class="stat-value" id="upt-stat-unknown">${unknown}</div>
+          <div class="stat-sub">Never checked yet</div>
         </div>
         <div class="stat-card accent">
           <div class="stat-header">
             <span class="stat-label">Total Monitored</span>
             <span class="linear-badge feature" style="font-size:10px">Active</span>
           </div>
-          <div class="stat-value" style="color:#818cf8">${sites.length}</div>
-          <div class="stat-sub">Across CW and RM checklists</div>
+          <div class="stat-value" id="upt-stat-total">${watched.length}</div>
+          <div class="stat-sub">${skippedCount ? `${skippedCount} skipped (no URL / inactive)` : 'Across CW and RM checklists'}</div>
         </div>
       </div>
       <div class="card">
         <div class="card-header">
           <span class="card-title">💓 Site Availability</span>
           <div class="card-actions">
-            <button class="btn btn-primary btn-sm" id="check-all-btn">🔄 Check All Sites</button>
+            <button class="btn btn-primary btn-sm" id="check-all-btn">🔄 Check all now</button>
             <div id="uptime-progress" class="hidden" style="font-size:12px;color:var(--text-muted)"></div>
           </div>
         </div>
         <div id="uptime-results" class="card-body">
-          <div class="uptime-grid">
-            ${sites.map(s => `
-              <div class="uptime-item ${s.uptimeStatus || 'unknown'}" data-site-id="${s.id}">
-                ${uptimeDot(s.uptimeStatus)}
-                <span class="uptime-url" title="${esc(s.url)}">${esc(shortUrl(s.url, 32))}</span>
-                ${s.uptimeResponseTime ? `<span class="uptime-ms">${s.uptimeResponseTime}ms</span>` : ''}
-                <button class="btn btn-ghost btn-sm check-one-btn" data-id="${s.id}" style="padding:2px 6px">↺</button>
-              </div>`).join('')}
+          <div class="uptime-grid" id="uptime-grid">
+            ${sites.map(uptimeItemHtml).join('')}
           </div>
         </div>
       </div>
     </div>`;
 
-  // Check all via SSE
+  // "Check all now" — one sweep, one state write, no SSE plumbing. The
+  // background monitor already keeps this fresh; this is just a manual nudge.
   $('check-all-btn').addEventListener('click', async () => {
     const btn = $('check-all-btn');
     const prog = $('uptime-progress');
-    btn.disabled = true; btn.textContent = '⏳ Checking…';
-    prog.classList.remove('hidden'); prog.textContent = '0 / ' + sites.length;
-    let done = 0;
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Checking…';
+    prog.classList.remove('hidden');
+    prog.textContent = `Sweeping ${sites.length} sites — the page stays responsive`;
     try {
-      const resp = await fetch('/api/master/check-uptime', {
-        method: 'POST', headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' },
-        body: '{}',
-      });
-      const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
-      while (true) {
-        const { value, done: d } = await reader.read(); if (d) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n'); buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const msg = JSON.parse(line.slice(6));
-            if (msg.url) {
-              done = msg.done;
-              prog.textContent = `${done} / ${msg.total}`;
-              // Update that site's row
-              const item = document.querySelector(`.uptime-item[data-site-id="${msg.url}"]`);
-              // We don't have id in msg, update by checking url — re-fetch handled by navigate
-            }
-            if (msg.complete) { toast(`✅ Done — ${done} sites checked`, 'success', 5000); navigate('uptime'); }
-          } catch { }
-        }
-      }
-    } catch (e) { toast(e.message, 'error'); }
-    btn.disabled = false; btn.textContent = '🔄 Check All Sites';
+      const r = await POST('/api/master/uptime-sweep', {});
+      prog.textContent = `${r.checked} checked · ${r.online} up · ${r.offline} down · ${Math.round((r.tookMs || 0) / 1000)}s`;
+      toast(`Sweep done — ${r.online} online, ${r.offline} down`, r.offline ? 'error' : 'success', 4000);
+      await uptimeTick();
+      const fresh = await GET('/api/master/sites').catch(() => null);
+      if (fresh && fresh.sites) applyUptimeToView(fresh.sites);
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
   });
 
-  // Check single
+  // Per-row re-check — patches the row in place. (The old code looked for a
+  // .uptime-dot element that no longer exists, so it threw after the request.)
   mainEl.querySelectorAll('.check-one-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
+      const label = btn.textContent;
       btn.textContent = '⏳';
       try {
         const { result } = await POST('/api/master/check-uptime', { siteId: btn.dataset.id });
         const item = btn.closest('.uptime-item');
-        item.className = `uptime-item ${result.status}`;
-        item.querySelector('.uptime-dot').className = `uptime-dot ${result.status}`;
-        item.querySelector('.uptime-dot').textContent = result.status === 'online' ? '🟢 Online' : '🔴 Offline';
-        btn.textContent = '↺';
+        if (item) { item.className = 'uptime-item ' + result.status; _patchUptimePill(item, result.status); }
+        btn.textContent = label;
         toast(`${result.status === 'online' ? '🟢 Online' : '🔴 Offline'}${result.responseTime ? ' · ' + result.responseTime + 'ms' : ''}`, result.status === 'online' ? 'success' : 'error');
-      } catch (e) { toast(e.message, 'error'); btn.textContent = '↺'; }
+        uptimeTick();
+      } catch (e) { toast(e.message, 'error'); btn.textContent = label; }
     });
   });
+
+  // Keep the open view live — dots, counters and the monitor bar repaint every
+  // 30 s without a full re-render.
+  if (UPTIME.viewTimer) clearInterval(UPTIME.viewTimer);
+  UPTIME.viewTimer = setInterval(async () => {
+    if (document.hidden || S.view !== 'uptime') return;
+    try {
+      const fresh = await GET('/api/master/sites');
+      if (fresh && fresh.sites) applyUptimeToView(fresh.sites);
+      const bar = document.getElementById('uptime-monitor-bar');
+      if (bar && UPTIME.snapshot) bar.innerHTML = uptimeMonitorBar(UPTIME.snapshot);
+    } catch { }
+  }, UPTIME_VIEW_REFRESH_MS);
+  applyUptimeToView(sites);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -7855,7 +8291,7 @@ function viewSendEmails() {
       <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:12px;flex-shrink:0">
 
         <!-- Start Server Card -->
-        <div style="background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04));border:1px solid rgba(16,185,129,0.35);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:220px">
+        <div style="background:linear-gradient(135deg,rgba(16,185,129, 0.06),rgba(16,185,129, 0.02));border:1px solid rgba(16,185,129, 0.175);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:220px">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:22px">⚡</span>
             <div style="flex:1">
@@ -7864,7 +8300,7 @@ function viewSendEmails() {
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <button id="btn-start-server" class="btn btn-sm" style="flex:1;font-size:12px;padding:7px 14px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:8px;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(16,185,129,0.35)">
+            <button id="btn-start-server" class="btn btn-sm" style="flex:1;font-size:12px;padding:7px 14px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:8px;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(16,185,129, 0.175)">
               🚀 Launch Server
             </button>
             <div id="server-status-dot" style="width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0;transition:background .4s" title="Server status"></div>
@@ -7938,7 +8374,7 @@ function viewSendEmails() {
             <div style="font-size:13px;color:var(--text-muted,#94a3b8);max-width:360px;line-height:1.6">The local mailer server isn't responding. Click <strong style="color:#10b981">Launch Server</strong> in the card above, then reload this frame.</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center">
-            <button id="overlay-launch-btn" class="btn btn-sm" style="font-size:13px;padding:9px 22px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:10px;cursor:pointer;box-shadow:0 3px 12px rgba(16,185,129,0.4)">⚡ Launch Server</button>
+            <button id="overlay-launch-btn" class="btn btn-sm" style="font-size:13px;padding:9px 22px;background:linear-gradient(135deg,#10b981,#059669);border:none;color:#fff;font-weight:700;border-radius:10px;cursor:pointer;box-shadow:0 3px 12px rgba(16,185,129, 0.2)">⚡ Launch Server</button>
             <button id="overlay-reload-btn" class="btn btn-secondary btn-sm" style="font-size:13px;padding:9px 16px">🔄 Reload Frame</button>
           </div>
           <div id="overlay-launch-msg" style="font-size:12px;color:#10b981;min-height:18px"></div>
@@ -8447,7 +8883,7 @@ async function viewSync() {
               } else {
                 // Real sync: success summary.
                 $('sync-result').innerHTML = `
-                  <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:16px;color:var(--success);font-size:13px">
+                  <div style="background:rgba(16,185,129, 0.05);border:1px solid rgba(16,185,129, 0.15);border-radius:8px;padding:16px;color:var(--success);font-size:13px">
                     ✅ Sync complete in ${msg.elapsed}s<br>
                     <span style="color:var(--text-muted);font-size:12px">
                       ${c.sites || 0} sites · ${c.dailyReviewRows || 0} daily rows · ${c.tasks || 0} tasks · ${c.properties || 0} properties · ${c.devProjects || 0} dev projects
@@ -9031,7 +9467,7 @@ async function viewSheetManager() {
             ${(S.users || []).map(u => `
               <label style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--bg-surface-2);border:1px solid var(--border);border-radius:8px;cursor:pointer">
                 <div style="display:flex;align-items:center;gap:10px">
-                  <span class="avatar-sm" style="width:26px;height:26px;border-radius:50%;background:rgba(99,102,241,0.2);color:#818cf8;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">
+                  <span class="avatar-sm" style="width:26px;height:26px;border-radius:50%;background:rgba(52,211,153, 0.1);color:var(--text-primary);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">
                     ${(u.name || 'U')[0].toUpperCase()}
                   </span>
                   <div>
@@ -9356,7 +9792,7 @@ async function viewSheetManager() {
           <input class="form-input" id="sm-modal-desc" placeholder="Brief note explaining what this sheet tracks" />
         </div>
         ${serviceAccountEmail ? `
-          <div style="padding:10px 14px;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.22);border-radius:8px;font-size:12px;color:var(--text-secondary)">
+          <div style="padding:10px 14px;background:rgba(52,211,153, 0.04);border:1px solid rgba(52,211,153, 0.11);border-radius:8px;font-size:12px;color:var(--text-secondary)">
             ${getSvg('shield', 12)} Remember to grant Viewer or Editor access to:<br/>
             <code style="font-size:11px;background:rgba(0,0,0,.25);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px">${esc(serviceAccountEmail)}</code>
           </div>
@@ -11002,7 +11438,7 @@ async function viewMailerSettings() {
       if (dbBadge) {
         if (data.inDatabase) {
           dbBadge.textContent = '📦 Database: Synced (KV & Local)';
-          dbBadge.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+          dbBadge.style.cssText = 'font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129, 0.075);color:#10b981;border:1px solid rgba(16,185,129, 0.15)';
           if (data.lastUpdated) {
             dbBadge.title = 'Last updated in database: ' + new Date(data.lastUpdated).toLocaleString();
           }
@@ -11018,7 +11454,7 @@ async function viewMailerSettings() {
       if (saBadge) {
         if (data.saStatus === 'ok') {
           saBadge.textContent = '✅ Connected';
-          saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+          saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(16,185,129, 0.075);color:#10b981;border:1px solid rgba(16,185,129, 0.15)';
         } else if (data.saStatus === 'missing') {
           saBadge.textContent = '⚠️ Not configured';
           saBadge.style.cssText = 'margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)';
@@ -11067,7 +11503,7 @@ async function viewMailerSettings() {
       const result = await POST('/api/settings/credentials', body);
       if (statusEl) {
         statusEl.style.display = 'block';
-        statusEl.style.cssText = 'display:block;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.3)';
+        statusEl.style.cssText = 'display:block;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;background:rgba(16,185,129, 0.06);color:#10b981;border:1px solid rgba(16,185,129, 0.15)';
         statusEl.textContent = `✅ Saved ${result.updated} credential(s)${result.saUpdated ? ' + service account' : ''} to database & environment.`;
         setTimeout(() => { if (statusEl) statusEl.style.display = 'none'; }, 6000);
       }
@@ -11175,3 +11611,240 @@ async function viewMailerSettings() {
     runCloseOut(false);
   });
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMART CARD SYSTEM — design.md §2.2 / §2.3 / §4.4 / §4.5 / §7
+   ---------------------------------------------------------------------------
+   Progressive enhancement: every `.stat-card` in any view becomes a reference
+   style KPI card:
+
+       [ 40px circular icon chip ]        [ colour-coded status label ]
+                     27
+               ASSIGNED SITES
+       ▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏  (segmented tick meter, fills on load)
+
+   Live value/label nodes are re-parented, never re-created, so views keep
+   working with their ids (e.g. `#stat-completed`). Idempotent; re-runs after
+   every render through a rAF-debounced MutationObserver.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function dsSmartCards() {
+  var BUILD = '20261019_design_v5';
+  var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  try { document.documentElement.setAttribute('data-ds-build', BUILD); } catch (e) { /* noop */ }
+
+  /* ── line icons, 1.6px stroke on a 24px grid (§7) ───────────────────── */
+  var ICONS = {
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.9 5.6 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.6-3.9-9S9.5 5.6 12 3z"/>',
+    checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8.4 12.2 2.5 2.5 4.7-5"/>',
+    pulse: '<path d="M3 12.5h3.6l2.2-6 3.6 11.5 2.3-5.5H21"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.4v5.1l3.2 1.9"/>',
+    alert: '<path d="M12 3.8 2.7 20h18.6L12 3.8z"/><path d="M12 9.8v4.1"/><path d="M12 17.3h.01"/>',
+    shield: '<path d="M12 3.2l7.4 2.9v5.3c0 4.3-2.9 7.7-7.4 9.6-4.5-1.9-7.4-5.3-7.4-9.6V6.1z"/><path d="m9.2 12.2 2 2 3.6-4"/>',
+    list: '<path d="M8.5 6.5h11.5M8.5 12h11.5M8.5 17.5h11.5"/><path d="M4.2 6.5h.01M4.2 12h.01M4.2 17.5h.01"/>',
+    users: '<circle cx="9.2" cy="8.4" r="3.3"/><path d="M3.6 19.4c.6-3.1 2.8-4.9 5.6-4.9s5 1.8 5.6 4.9"/><path d="M16.2 6.1a3.1 3.1 0 0 1 0 5.8"/><path d="M17.6 15.2c1.7.7 2.8 2.1 3.2 4.2"/>',
+    sync: '<path d="M20.4 4.6v5h-5"/><path d="M3.6 19.4v-5h5"/><path d="M20 9.4A8 8 0 0 0 6.3 6.7"/><path d="M4 14.6a8 8 0 0 0 13.7 2.7"/>',
+    db: '<ellipse cx="12" cy="6.2" rx="7.8" ry="2.9"/><path d="M4.2 6.2v11.6c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9V6.2"/><path d="M4.2 12c0 1.6 3.5 2.9 7.8 2.9s7.8-1.3 7.8-2.9"/>',
+    grid: '<rect x="3.8" y="3.8" width="7" height="7" rx="1.8"/><rect x="13.2" y="3.8" width="7" height="7" rx="1.8"/><rect x="3.8" y="13.2" width="7" height="7" rx="1.8"/><rect x="13.2" y="13.2" width="7" height="7" rx="1.8"/>',
+    server: '<rect x="3.4" y="4" width="17.2" height="6.6" rx="2"/><rect x="3.4" y="13.4" width="17.2" height="6.6" rx="2"/><path d="M7.2 7.3h.01M7.2 16.7h.01"/>'
+  };
+
+  var ICON_RULES = [
+    [/offline|down|error|fail|critical|urgent|expir|overdue|deactivat|blocked|conflict/i, 'alert'],
+    [/pending|review|awaiting|wait|stale|queue|idle/i, 'clock'],
+    [/in[ -]?progress|active|live|running|syncing|monitor/i, 'pulse'],
+    [/complet|done|healthy|online|synced|success|resolved/i, 'checkCircle'],
+    [/domain|ssl|certificate|uptime|security|registr/i, 'shield'],
+    [/task|row|record|item|column|field|entr/i, 'list'],
+    [/user|member|team|people|staff|assignee|assign/i, 'users'],
+    [/sheet|spreadsheet|source|connect|import|export/i, 'sync'],
+    [/storage|size|mb|gb|data|volume|usage/i, 'db'],
+    [/site|website|url|global|total/i, 'globe']
+  ];
+
+  /* variant → [tone, status word] (§4.4 colour-coded status label) */
+  var STATUS = {
+    accent: ['ok', 'Live'],
+    success: ['ok', 'Healthy'],
+    info: ['info', 'In progress'],
+    warning: ['warn', 'Needs review'],
+    danger: ['bad', 'Attention'],
+    purple: ['purple', 'Tracked'],
+    dim: ['neutral', 'Neutral']
+  };
+
+  var VARIANTS = ['accent', 'success', 'info', 'warning', 'danger', 'purple', 'dim'];
+
+  var busy = 0;
+  var queued = false;
+
+  function icon(name, size) {
+    var paths = ICONS[name] || ICONS.grid;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+      paths + '</svg>';
+  }
+
+  function pickIcon(text) {
+    var t = String(text || '');
+    for (var i = 0; i < ICON_RULES.length; i++) {
+      if (ICON_RULES[i][0].test(t)) return ICON_RULES[i][1];
+    }
+    return 'grid';
+  }
+
+  function variantOf(card) {
+    for (var i = 0; i < VARIANTS.length; i++) {
+      if (card.classList.contains(VARIANTS[i])) return VARIANTS[i];
+    }
+    return 'dim';
+  }
+
+  function numOf(text) {
+    var m = String(text == null ? '' : text).replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+
+  /* Tick meter length (§4.5 comparison semantics): % values use themselves,
+     plain counts use their share of the largest value in the same grid. */
+  function percentFor(card, valueEl) {
+    var raw = (valueEl && valueEl.textContent) || '';
+    var pct = raw.indexOf('%') !== -1 ? numOf(raw) : null;
+    if (pct == null) {
+      var grid = card.closest ? card.closest('.stat-grid') : null;
+      var group = grid ? Array.prototype.slice.call(grid.querySelectorAll('.stat-card')) : [card];
+      var vals = [];
+      group.forEach(function (c) {
+        var v = c.querySelector('.stat-value');
+        var n = v ? numOf(v.textContent) : null;
+        if (n != null) vals.push(Math.abs(n));
+      });
+      var own = numOf(raw);
+      var max = vals.length ? Math.max.apply(null, vals) : 0;
+      pct = (own != null && max > 0) ? (own / max) * 100 : 0;
+    }
+    pct = Math.max(0, Math.min(100, pct || 0));
+    return pct <= 0 ? 0 : Math.max(6, pct);
+  }
+
+  function syncCard(card) {
+    var valueEl = card.querySelector('.stat-value');
+    var fill = card.querySelector('.ds-tickfill');
+    if (!valueEl || !fill) return;
+    var w = percentFor(card, valueEl) + '%';
+    if (fill.style.width !== w) fill.style.width = w;
+  }
+
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () {
+      queued = false;
+      if (busy > 0) return;   /* count-ups own the DOM right now */
+      scan();
+    });
+  }
+
+  function countUp(el) {
+    var raw = el.textContent || '';
+    var target = numOf(raw);
+    if (target == null || target === 0) return;
+    if (REDUCED) return;
+    var suffix = raw.replace(/[\d,.\s-]/g, '');
+    var dot = raw.split('.')[1];
+    var decimals = dot ? dot.replace(/\D/g, '').length : 0;
+    var start = null;
+    busy++;
+    el.setAttribute('data-ds-anim', '1');
+    function step(t) {
+      if (start === null) start = t;
+      var p = Math.min(1, (t - start) / 700);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var v = target * eased;
+      el.textContent = (decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString()) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        el.textContent = raw;
+        el.removeAttribute('data-ds-anim');
+        busy = Math.max(0, busy - 1);
+        schedule();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function enhance() {
+    var cards = document.querySelectorAll('.stat-card:not([data-ds-smart])');
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var valueEl = card.querySelector('.stat-value');
+      var labelEl = card.querySelector('.stat-label');
+      if (!valueEl || !labelEl || card.querySelector('.ds-kpi-top')) continue;
+
+      card.setAttribute('data-ds-smart', '1');
+      card.style.setProperty('--ds-i', String(i % 8));
+
+      var meta = STATUS[variantOf(card)] || STATUS.dim;
+      var words = card.getAttribute('data-status') || meta[1];
+
+      /* 1 · icon chip + colour-coded status label */
+      var top = document.createElement('div');
+      top.className = 'ds-kpi-top';
+      var chip = document.createElement('span');
+      chip.className = 'ds-chip ds-chip-' + meta[0];
+      chip.innerHTML = icon(pickIcon((labelEl.textContent || '') + ' ' + (card.getAttribute('title') || '')), 19);
+      var status = document.createElement('span');
+      status.className = 'ds-kpi-status ds-st-' + meta[0];
+      status.textContent = words;
+      status.title = words;
+      top.appendChild(chip);
+      top.appendChild(status);
+      card.insertBefore(top, card.firstChild);
+
+      /* 2 · value + caption stack — moves the live nodes, keeps their ids */
+      var body = document.createElement('div');
+      body.className = 'ds-kpi-body';
+      valueEl.parentNode.insertBefore(body, valueEl);
+      body.appendChild(valueEl);
+      body.appendChild(labelEl);
+
+      /* 3 · segmented tick meter */
+      var bar = document.createElement('div');
+      bar.className = 'ds-tickbar';
+      var fill = document.createElement('span');
+      fill.className = 'ds-tickfill';
+      bar.appendChild(fill);
+      card.appendChild(bar);
+
+      card.classList.add('ds-smart');
+      syncCard(card);
+      countUp(valueEl);
+    }
+  }
+
+  function scan() {
+    enhance();
+    var smart = document.querySelectorAll('.stat-card[data-ds-smart]');
+    for (var i = 0; i < smart.length; i++) syncCard(smart[i]);
+  }
+
+  function stamp() {
+    var foot = document.querySelector('.sidebar-footer');
+    if (!foot || foot.querySelector('.ds-build')) return;
+    var el = document.createElement('div');
+    el.className = 'ds-build';
+    el.innerHTML = 'Design system &middot; <b>' + BUILD.split('_').pop() + '</b>';
+    el.title = 'OfficeOS design build ' + BUILD;
+    foot.appendChild(el);
+  }
+
+  function boot() {
+    stamp();
+    scan();
+    if (typeof MutationObserver === 'undefined') return;
+    new MutationObserver(schedule).observe(document.body, {
+      childList: true, subtree: true, characterData: true
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
