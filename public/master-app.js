@@ -8829,7 +8829,16 @@ async function viewSync() {
     try {
       const url = '/api/master/sync' + (dry ? '?dryRun=1' : '');
       const resp = await fetch(url, { method: 'POST', headers: { Accept: 'text/event-stream', 'Content-Type': 'application/json' }, body: '{}' });
+      // A refused or failed sync answers as JSON (e.g. the worker saying "run
+      // this locally"), not as an event stream — surface that message directly.
+      if (!(resp.headers.get('content-type') || '').includes('text/event-stream')) {
+        let detail = '';
+        try { detail = (await resp.json()).error || ''; } catch { /* not JSON */ }
+        throw new Error(detail || `Sync failed (HTTP ${resp.status})`);
+      }
       const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = '';
+      let finished = false;   // a `done` frame arrived
+      let serverError = '';   // an `error` frame arrived
       while (true) {
         const { value, done } = await reader.read(); if (done) break;
         buf += dec.decode(value, { stream: true });
@@ -8844,6 +8853,7 @@ async function viewSync() {
               log.appendChild(e); log.scrollTop = log.scrollHeight;
             }
             if (msg.done) {
+              finished = true;
               bar.style.width = '100%'; pct.textContent = '100%';
               $('sync-result').classList.remove('hidden');
               const c = msg.counts || {};
@@ -8895,10 +8905,15 @@ async function viewSync() {
                 $('sync-status').classList.remove('hidden'); $('sync-status-text').textContent = 'Synced just now';
               }
             }
-            if (msg.error) throw new Error(msg.error);
+            if (msg.error) serverError = msg.error;
           } catch { }
         }
       }
+      if (serverError) throw new Error(serverError);
+      // The server closed the stream without a `done` frame: it crashed, was
+      // killed mid-run (e.g. a Worker hitting its subrequest cap), or the
+      // connection dropped. Without this the UI stays on "Syncing…" forever.
+      if (!finished) throw new Error('The sync stopped before it finished — nothing after the last step was applied. If this is the Cloudflare worker URL, run Full Sync on the local server (a Worker invocation is capped at 50 subrequests).');
     } catch (e) {
       $('sync-result').classList.remove('hidden');
       $('sync-result').innerHTML = `<div style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);border-radius:8px;padding:16px;color:var(--danger)">${esc(e.message)}</div>`;

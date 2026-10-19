@@ -195,6 +195,18 @@ export default {
         return Response.redirect(new URL(dest, request.url).toString(), 302);
       }
 
+      // ---- full sync is local-only ------------------------------------------
+      // syncFromSheets imports all six spreadsheets: dozens of list/read calls
+      // over 2-4 minutes. A Worker invocation is capped at 50 subrequests on
+      // the free plan, so the import dies around 5% and the browser waits on a
+      // stream that will never finish. Refuse it up front with a useful answer.
+      if (url.pathname === '/api/master/sync' && request.method === 'POST') {
+        return json({
+          error: 'Full Sync must run on the local server. A Cloudflare Worker invocation is capped at 50 subrequests, so the import stops around 5%. Open http://localhost:3000, then Sheet Manager -> Full Sync.',
+          code: 'worker_sync_unsupported',
+        }, 409);
+      }
+
       // ---- static assets (master.html, login.html, app.js, css) ------------
       // Served by the ASSETS binding, which reads the public/ directory as it
       // was at deploy time. This is why the dashboard needs no filesystem.
