@@ -1,5 +1,6 @@
 import { config, accounts, getAccountConfig, getAllAccountConfigs, DONE_MARKER } from './config.js';
-import { listTabTitles, listTabMeta, getTabValues } from './sheets.js';
+import { listTabTitles, getTabValues } from './sheets.js';
+import { getTabMetaCached } from './tabMetaCache.js';
 import {
   findHeaderRow,
   detectColumns,
@@ -92,7 +93,6 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
   const registry = (() => { try { return getSites({}) || []; } catch { return []; } })();
   const normUrl = (u) => String(u || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   const registryByUrl = new Map(registry.map((s) => [normUrl(s.url), s]));
-  const tabGidCache = {}; // spreadsheetId -> Map(title -> gid) | null
 
   async function sheetUrlFor(masterCell, matchedTab, websiteUrl) {
     const direct = String(masterCell ?? '').trim();
@@ -102,17 +102,12 @@ async function getAccountOverviewData(acct, requestedMonth = null) {
     if (/^https?:\/\//i.test(stored)) return stored;
 
     if (!matchedTab) return '';
-    if (tabGidCache[acct.spreadsheetId] === undefined) {
-      try {
-        const tabs = await listTabMeta(acct.spreadsheetId);
-        tabGidCache[acct.spreadsheetId] = new Map((tabs || []).map((t) => [t.title, t.gid]));
-      } catch (e) {
-        console.warn(`[overview] could not list tabs for ${acct.name}: ${e.message}`);
-        tabGidCache[acct.spreadsheetId] = null;
-      }
-    }
-    const gids = tabGidCache[acct.spreadsheetId];
-    const gid = gids ? gids.get(matchedTab) : undefined;
+    // One bounded, module-wide lookup per spreadsheet (tabMetaCache.js). This
+    // used to call listTabMeta() straight from the row loop with no timeout and
+    // no shared cache, so on the worker (slow Sheets API) the whole overview
+    // waited on it once per account, per request.
+    const meta = await getTabMetaCached(acct.spreadsheetId);
+    const gid = meta ? meta.gidByTitle.get(matchedTab) : undefined;
     return gid !== undefined && gid !== null && gid !== ''
       ? `https://docs.google.com/spreadsheets/d/${acct.spreadsheetId}/edit#gid=${gid}`
       : '';

@@ -2460,26 +2460,17 @@ const server = http.createServer(async (req, res) => {
         // account's spreadsheet (tabs named after the URL) and build a deep link.
         const maintSites = db.getSites ? db.getSites({}) : [];
         const { findMatchingTab } = await import('./reportUtils.js');
-        const { listTabMeta } = await import('./sheets.js');
+        const { getTabMetaCached } = await import('./tabMetaCache.js');
         const { getAccountConfig } = await import('./config.js');
-        const tabMetaCache = {}; // spreadsheetId → { titles, gidByTitle }
 
         async function resolveSheetLink(site) {
           if (site.reportUrl) return site.reportUrl;
           const acct = getAccountConfig(site.account || 'CW');
-          if (tabMetaCache[acct.spreadsheetId] === undefined) {
-            try {
-              const tabs = await listTabMeta(acct.spreadsheetId);
-              tabMetaCache[acct.spreadsheetId] = {
-                titles: (tabs || []).map(t => t.title),
-                gidByTitle: new Map((tabs || []).map(t => [t.title, t.gid])),
-              };
-            } catch (e) {
-              console.warn('[maint] tab meta fallback failed: ' + e.message);
-              tabMetaCache[acct.spreadsheetId] = null;
-            }
-          }
-          const meta = tabMetaCache[acct.spreadsheetId];
+          // One bounded, module-wide lookup per spreadsheet (tabMetaCache.js).
+          // This used to call listTabMeta() per row with the cache living only
+          // inside this request: a timeout left it empty, so every row paid
+          // another 8 seconds and the worker spent 24s on this response.
+          const meta = await getTabMetaCached(acct.spreadsheetId);
           if (!meta) return '';
           const matched = findMatchingTab(meta.titles, site.url, acct.masterTabName);
           const gid = matched ? meta.gidByTitle.get(matched) : undefined;
@@ -2498,9 +2489,13 @@ const server = http.createServer(async (req, res) => {
           null;
 
         const enriched = [];
-        // Enrich with Google Sheets tab links — wrapped in a per-row timeout so a
-        // slow/unavailable Sheets API can't hang the whole response indefinitely.
-        const ENRICH_TIMEOUT_MS = 8000;
+        // Enrich with Google Sheets tab links. The lookup itself is cached
+        // module-wide (tabMetaCache.js) so it is normally free per row; the race
+        // below plus this overall deadline are the backstop that guarantees the
+        // response returns even if the Sheets API hangs mid-request.
+        const ENRICH_TIMEOUT_MS = 3000;
+        const ENRICH_BUDGET_MS = 4000;
+        const enrichDeadline = Date.now() + ENRICH_BUDGET_MS;
         for (const row of rows) {
           const site = findMaintSite(row);
           if (!site) {
@@ -2508,10 +2503,12 @@ const server = http.createServer(async (req, res) => {
             continue;
           }
           try {
-            const reportUrl = await Promise.race([
-              resolveSheetLink(site),
-              new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ENRICH_TIMEOUT_MS)),
-            ]);
+            const reportUrl = Date.now() < enrichDeadline
+              ? await Promise.race([
+                  resolveSheetLink(site),
+                  new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ENRICH_TIMEOUT_MS)),
+                ])
+              : '';
             enriched.push({
               ...row,
               accountManager: site.accountManager || '',
