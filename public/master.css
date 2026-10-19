@@ -11832,3 +11832,66 @@ html[data-theme] .uptime-url {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dev Tracker — simple feedback logger (default view)
+   Pick a website → pick a round → type comments. Everything else is optional.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dev-feedback-view { max-width: 1120px; }
+.df-head-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.df-card { margin-bottom: 18px; }
+.df-body { padding: 18px 22px 20px; display: flex; flex-direction: column; gap: 16px; }
+.df-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.df-summary { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.df-hint-inline { font-weight: 400; font-size: 11.5px; color: var(--text-muted); margin-left: 6px; }
+.df-hint-line { font-size: 12.5px; color: var(--text-muted); }
+.df-hint-line strong { color: var(--text-primary); font-weight: 600; }
+.df-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.df-preview { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.df-count {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 10px; border-radius: 999px;
+  background: rgba(16, 185, 129, 0.10); border: 1px solid rgba(16, 185, 129, 0.26);
+  color: #34D399; font-size: 11.5px; font-weight: 600;
+}
+html[data-theme="light"] .df-count { color: #059669; background: rgba(5, 150, 105, 0.08); border-color: rgba(5, 150, 105, 0.22); }
+.df-banner { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius); margin-bottom: 18px; font-size: 13px; flex-wrap: wrap; }
+.df-banner-icon { font-size: 15px; }
+.df-banner.success { background: rgba(16, 185, 129, 0.07); border: 1px solid rgba(16, 185, 129, 0.22); }
+.df-banner.error { background: rgba(244, 63, 94, 0.07); border: 1px solid rgba(244, 63, 94, 0.22); }
+.df-banner-link { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.df-banner-link:hover { text-decoration: underline; }
+.df-recent { padding: 4px 0; }
+.df-recent-row { display: flex; align-items: center; gap: 10px; padding: 10px 22px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.df-recent-row:last-child { border-bottom: none; }
+.df-recent-site { font-weight: 600; color: var(--text-primary); min-width: 110px; }
+.df-recent-note { flex: 1; min-width: 120px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.df-chip { font-size: 11px; color: var(--text-muted); background: var(--bg-surface-2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.df-status { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; color: var(--text-muted); background: var(--bg-surface-2); border: 1px solid var(--border); }
+.df-status.st-completed { color: #34D399; background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.24); }
+.df-status.st-in_progress { color: #fbbf24; background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.22); }
+html[data-theme="light"] .df-status.st-completed { color: #059669; }
+.df-empty { padding: 16px 22px; color: var(--text-muted); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .df-body { padding: 14px; }
+  .df-head-links { width: 100%; }
+  .df-recent-row { padding: 10px 14px; flex-wrap: wrap; }
+  .df-recent-note { white-space: normal; min-width: 100%; order: 5; }
+  .df-foot { align-items: stretch; }
+  .df-foot .btn-primary { width: 100%; }
+}
+
+/* Tooltip flip. `.card` and `.linear-list-card` clip (overflow: hidden) and
+   tooltips render ABOVE their element — so a toggle near a card's top edge had
+   its bubble cut in half by the card border (the "Table view mode" tooltip in
+   the checklist header). This variant drops the bubble below the element,
+   where a card always has room. */
+[data-tooltip].tip-below::before {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateX(-50%) translateY(-3px);
+}
+[data-tooltip].tip-below:hover::before {
+  transform: translateX(-50%) translateY(0);
+}
+

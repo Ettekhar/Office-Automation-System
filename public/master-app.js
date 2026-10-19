@@ -2222,7 +2222,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
           <div class="card-actions">
             <span class="completion-pct-text" style="font-size:12px;font-weight:600;color:var(--text-secondary)">${pct}% Completed</span>
             <div class="progress-wrap" style="width:120px"><div class="progress-fill completion-progress-fill" style="width:${pct}%"></div></div>
-            <div class="view-mode-toggle" id="table-mode-toggle" data-tooltip="Table view mode">
+            <div class="view-mode-toggle tip-below" id="table-mode-toggle" data-tooltip="Table view mode">
               <button class="btn btn-sm mode-btn ${activeViewMode === 'smart' ? 'active' : ''}" data-mode="smart" title="Smart Fit — compact 7-column view" style="display:inline-flex;align-items:center;gap:5px">${getSvg('zap', 11)} Smart Fit</button>
               <button class="btn btn-sm mode-btn ${activeViewMode === 'full' ? 'active' : ''}" data-mode="full" title="Full Spread — all 14 columns visible" style="display:inline-flex;align-items:center;gap:5px">${getSvg('columns', 11)} Full Spread</button>
               <button class="btn btn-sm mode-btn ${activeViewMode === 'maintenance' ? 'active' : ''}" data-mode="maintenance" title="Maintenance Mode — URL, company, status, ClickUp, sheet & account manager" style="display:inline-flex;align-items:center;gap:5px">${getSvg('shield', 11)} Maintenance Mode</button>
@@ -4397,7 +4397,7 @@ async function viewSites() {
         <div class="linear-action-bar-left">
           <!-- Interactive Filter Popover Trigger -->
           <div style="position:relative">
-            <button class="btn-linear-capsule active" id="btn-filter-capsule" data-tooltip="Open filter options (F)">
+            <button class="btn-linear-capsule tip-below active" id="btn-filter-capsule" data-tooltip="Open filter options (F)">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               <span>Filter</span>
               <kbd class="linear-kbd">F</kbd>
@@ -4453,7 +4453,7 @@ async function viewSites() {
           </div>
 
           <!-- + New Site [C] Button -->
-          <button class="btn-linear-primary" id="add-site-btn" data-tooltip="Add new site to inventory & Google Sheet (C)">
+          <button class="btn-linear-primary tip-below" id="add-site-btn" data-tooltip="Add new site to inventory & Google Sheet (C)">
             <span>+ New site</span>
             <kbd class="linear-kbd">C</kbd>
           </button>
@@ -6058,12 +6058,323 @@ async function viewDevProjects() {
     return list;
   }
 
+  // ── SIMPLE FEEDBACK LOGGER (the Dev Tracker's default view) ───────────────
+  // The old Quick View asked people to read a table, two tabs, four filters and
+  // a stats strip before they could log one sentence. This view is just the job:
+  //   1. pick a website, 2. pick a feedback round (or start the next one),
+  //   3. type as many comments as you like — one per line.
+  // Every comment is appended as its own row in that project's tab of the Dev
+  // Tracker sheet (Feedback-Date = today, Feedback-Notes = the comment, status
+  // = Todo) through the same endpoints the advanced workspace uses, so the
+  // sheet keeps its normal, filterable shape. The legacy Quick View
+  // (renderQuickView, below) and the full workspace are untouched and one click
+  // away, which also makes this trivial to revert.
+  let sfProjectId = projects[0] ? projects[0].id : '';
+  let sfRound = '';        // selected round name, or '__new__'
+  let sfComments = '';     // survives re-renders, so choosing a project never eats typed text
+  let sfSaving = false;
+  let sfLastSaved = null;  // { project, round, count }
+  let sfError = '';
+
+  /** Local calendar date (not UTC) — "today" means the user's today. */
+  function sfToday() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function sfProject() {
+    return projects.find((p) => p.id === sfProjectId) || projects[0] || null;
+  }
+
+  /** Feedback rounds of a project, in sheet order. */
+  function sfRounds(p) {
+    const names = [];
+    ((p && p.items) || []).forEach((it) => {
+      const g = String(it.feedbackGroup || '').trim();
+      // 'General' is the bucket bulk-imported sitemap pages carry — it is a page
+      // list, not a feedback round, so it is not offered as one.
+      if (!g || g.toLowerCase() === 'general') return;
+      if (!names.includes(g)) names.push(g);
+    });
+    return names;
+  }
+
+  /** Next free "Feedback N" name for a project. */
+  function sfNextRoundName(p) {
+    const names = sfRounds(p);
+    let max = 0;
+    names.forEach((n) => {
+      const m = n.match(/^feedback\s*(\d+)$/i);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return `Feedback ${max > 0 ? max + 1 : names.length + 1}`;
+  }
+
+  /** The textarea, one comment per line. Leading bullets are cosmetic — drop them. */
+  function sfParsedComments() {
+    return sfComments
+      .split('\n')
+      .map((line) => line.replace(/^\s*[-–•*·]\s*/, '').trim())
+      .filter(Boolean);
+  }
+
+  function sfPreviewHtml(comments, proj, roundName) {
+    if (sfSaving) return '<span class="df-count">⏳ Saving…</span>';
+    if (!comments.length) {
+      return `<span class="df-hint-line">Each line becomes its own row · dated ${sfToday()}</span>`;
+    }
+    return `<span class="df-count">${comments.length} comment${comments.length === 1 ? '' : 's'}</span>
+      <span class="df-hint-line">→ <strong>${esc(proj.project)}</strong> · <strong>${esc(roundName)}</strong> · ${sfToday()}</span>`;
+  }
+
+  function renderSimpleFeedback(allUpdates) {
+    const proj = sfProject();
+    if (!proj) return;
+
+    const rounds = sfRounds(proj);
+    if (!sfRound || (sfRound !== '__new__' && !rounds.includes(sfRound))) {
+      // Default to the newest round — logging into the latest feedback is the
+      // common case; a project with no rounds starts a new one.
+      sfRound = rounds.length ? rounds[rounds.length - 1] : '__new__';
+    }
+    const isNewRound = sfRound === '__new__';
+    const roundName = isNewRound ? sfNextRoundName(proj) : sfRound;
+    const comments = sfParsedComments();
+    const all = allUpdates || getAllRecentUpdates();
+    const recent = all.slice(0, 6);
+
+    mainEl.innerHTML = `
+      <div class="fade-in dev-feedback-view">
+        <div class="dev-qv-header">
+          <div class="dev-qv-title-group">
+            <div class="dev-qv-title"><span>⚡ Dev Tracker — Feedback Log</span></div>
+            <span class="dev-sync-tag">Live Google Sheets</span>
+          </div>
+          <div class="df-head-links">
+            <button class="btn btn-secondary btn-sm" id="df-refresh" title="Pull the latest rows from Google Sheets">↻ Refresh</button>
+            <a class="dev-sheet-link-btn" href="${SHEET_URL}" target="_blank" rel="noopener">Open sheet ↗</a>
+            <button class="btn btn-secondary btn-sm" id="df-advanced" title="Full sitemap / feedback workspace — the advanced view">Advanced workspace →</button>
+          </div>
+        </div>
+
+        ${sfLastSaved ? `<div class="df-banner success">
+          <span class="df-banner-icon">✅</span>
+          <span><strong>${sfLastSaved.count} comment${sfLastSaved.count === 1 ? '' : 's'}</strong> saved to
+            <strong>${esc(sfLastSaved.project)}</strong> · <strong>${esc(sfLastSaved.round)}</strong> — written to the sheet as new rows.</span>
+          <a class="df-banner-link" href="${SHEET_URL}" target="_blank" rel="noopener">Open sheet ↗</a>
+        </div>` : ''}
+        ${sfError ? `<div class="df-banner error">
+          <span class="df-banner-icon">⚠️</span><span>${esc(sfError)}</span>
+        </div>` : ''}
+
+        <div class="card df-card">
+          <div class="card-header">
+            <span class="card-title">💬 Log feedback</span>
+            <span class="df-summary">${projects.length} website${projects.length === 1 ? '' : 's'} · ${all.length} logged</span>
+          </div>
+          <div class="df-body">
+            <div class="df-grid">
+              <div class="form-group">
+                <label class="form-label" for="df-project">1 · Website / project</label>
+                <select class="form-select" id="df-project">
+                  ${projects.map((p) => `<option value="${esc(p.id)}" ${p.id === proj.id ? 'selected' : ''}>${esc(p.project)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="df-round">2 · Feedback round</label>
+                <select class="form-select" id="df-round">
+                  ${rounds.map((r) => `<option value="${esc(r)}" ${r === sfRound ? 'selected' : ''}>💬 ${esc(r)}</option>`).join('')}
+                  <option value="__new__" ${isNewRound ? 'selected' : ''}>➕ Start a new round — “${esc(sfNextRoundName(proj))}”</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="df-comments">3 · Comments
+                <span class="df-hint-inline">one per line — add as many as you like</span>
+              </label>
+              <textarea class="form-textarea" id="df-comments" rows="7"
+                placeholder="Paste or type the feedback, one comment per line.&#10;&#10;Homepage hero image should be swapped for the new photo&#10;Services page needs the updated phone number&#10;Add the summer promo banner to the footer">${esc(sfComments)}</textarea>
+            </div>
+
+            <div class="df-foot">
+              <div class="df-preview" id="df-preview">${sfPreviewHtml(comments, proj, roundName)}</div>
+              <button class="btn btn-primary" id="df-save" ${sfSaving ? 'disabled' : ''}>${sfSaving ? '⏳ Saving…' : 'Save to Google Sheet'}</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card df-recent-card">
+          <div class="card-header">
+            <span class="card-title">🕓 Recent feedback &amp; work</span>
+            <span class="df-summary">${recent.length ? `latest ${recent.length}` : 'nothing yet'}</span>
+          </div>
+          <div class="df-recent">
+            ${recent.length ? recent.map((u) => {
+              const st = String(u.status || '').toLowerCase().replace(/\s+/g, '_');
+              const note = u.notes || u.devNotes || '—';
+              return `<div class="df-recent-row">
+                <span class="df-recent-site">${esc(u.project)}</span>
+                <span class="df-recent-note" title="${esc(note)}">${esc(note)}</span>
+                ${u.feedbackGroup ? `<span class="df-chip">💬 ${esc(u.feedbackGroup)}</span>` : ''}
+                <span class="df-chip">${esc(u.displayDate || '')}</span>
+                <span class="df-status st-${esc(st || 'pending')}">${esc(u.status || '')}</span>
+              </div>`;
+            }).join('') : '<div class="df-empty">No feedback or work logged yet — the first comment you save will appear here.</div>'}
+          </div>
+        </div>
+      </div>`;
+
+    // ── wiring ──────────────────────────────────────────────────────────────
+    $('df-project')?.addEventListener('change', (e) => {
+      sfProjectId = e.target.value;
+      sfRound = '';            // let the new project pick its newest round
+      sfLastSaved = null;
+      sfError = '';
+      renderSimpleFeedback();
+    });
+
+    $('df-round')?.addEventListener('change', (e) => {
+      sfRound = e.target.value;
+      sfLastSaved = null;
+      sfError = '';
+      const p = sfProject();
+      const name = sfRound === '__new__' ? sfNextRoundName(p) : sfRound;
+      const pv = $('df-preview');
+      if (pv) pv.innerHTML = sfPreviewHtml(sfParsedComments(), p, name);
+    });
+
+    $('df-comments')?.addEventListener('input', (e) => {
+      sfComments = e.target.value;
+      const p = sfProject();
+      const name = sfRound === '__new__' ? sfNextRoundName(p) : sfRound;
+      const pv = $('df-preview');
+      if (pv) pv.innerHTML = sfPreviewHtml(sfParsedComments(), p, name);
+    });
+
+    $('df-save')?.addEventListener('click', saveSimpleFeedback);
+
+    $('df-advanced')?.addEventListener('click', () => {
+      activeMainView = 'projects-workspace';
+      render();
+    });
+
+    $('df-refresh')?.addEventListener('click', async () => {
+      const btn = $('df-refresh');
+      if (btn) { btn.disabled = true; btn.textContent = '↻ Refreshing…'; }
+      try {
+        await POST('/api/master/dev-projects/fetch-live');
+        await loadData();
+        toast('Pulled the latest rows from Google Sheets', 'success');
+      } catch (e) {
+        toast('Refresh failed: ' + e.message, 'error');
+      }
+      renderSimpleFeedback();
+    });
+  }
+
+  /**
+   * Saves the textarea, one comment per line, into the chosen project + round.
+   *
+   * Sequential on purpose: each append is a real Google Sheets call, and firing
+   * ten in parallel is how you get rate-limited halfway through a batch. A
+   * failure is reported per-run ("2 of 3 saved") instead of losing the rest.
+   */
+  async function saveSimpleFeedback() {
+    if (sfSaving) return;
+    const proj = sfProject();
+    if (!proj) return;
+
+    const comments = sfParsedComments();
+    if (!comments.length) {
+      toast('Type at least one comment first', 'warning');
+      $('df-comments')?.focus();
+      return;
+    }
+
+    const isNewRound = sfRound === '__new__';
+    const roundName = isNewRound ? sfNextRoundName(proj) : sfRound;
+    const today = sfToday();
+    const hadText = sfComments;
+
+    sfSaving = true;
+    sfError = '';
+    sfLastSaved = null;
+    renderSimpleFeedback();
+
+    let saved = 0;
+    let sheetMissed = 0;
+    const failures = [];
+
+    const addItem = async (note) => {
+      try {
+        const res = await POST(`/api/master/dev-projects/${encodeURIComponent(proj.id)}/items`, {
+          feedbackGroup: roundName,
+          date: today,
+          status: 'Pending',
+          notes: note,
+          extra: {},
+        });
+        if (res && res.sheetResult === null) sheetMissed++;
+        saved++;
+      } catch (e) {
+        failures.push(e.message || String(e));
+      }
+    };
+
+    try {
+      if (isNewRound) {
+        // A new round is created together with its first comment (the sheet gets
+        // the "Feedback-N URL" section header + the comment in one write); the
+        // remaining comments are appended beneath it.
+        const res = await POST(`/api/master/dev-projects/${encodeURIComponent(proj.id)}/feedback-round`, {
+          feedbackGroup: roundName,
+          date: today,
+          status: 'Pending',
+          notes: comments[0],
+        });
+        if (res && res.sheetResult === null) sheetMissed++;
+        saved = 1;
+        for (const note of comments.slice(1)) await addItem(note);
+      } else {
+        for (const note of comments) await addItem(note);
+      }
+    } catch (e) {
+      failures.push(e.message || String(e));
+    }
+
+    sfSaving = false;
+
+    if (failures.length) {
+      sfError = `${saved} of ${comments.length} comment${comments.length === 1 ? '' : 's'} saved. Last error: ${failures[failures.length - 1]}`;
+      toast(sfError, 'error');
+    }
+    if (sheetMissed) {
+      const msg = `The dashboard saved ${saved}, but ${sheetMissed} Google Sheet write${sheetMissed === 1 ? '' : 's'} failed — use Refresh after checking the sheet connection.`;
+      sfError = sfError ? `${sfError} ${msg}` : msg;
+      toast(msg, 'warning');
+    }
+
+    if (saved > 0) {
+      sfLastSaved = { project: proj.project, round: roundName, count: saved };
+      sfComments = '';
+      sfRound = roundName;      // keep logging into the same round
+      try { await loadData(); } catch { /* keep the saved banner even if the reload fails */ }
+      if (!failures.length && !sheetMissed) {
+        toast(`✅ ${saved} comment${saved === 1 ? '' : 's'} saved to ${proj.project} · ${roundName}`, 'success');
+      }
+    } else {
+      sfComments = hadText;     // put their words back if nothing could be saved
+    }
+    renderSimpleFeedback();
+  }
+
   function render() {
     const allUpdates = getAllRecentUpdates();
-    const sitePulses = getWebsitesPulse(allUpdates);
 
     if (activeMainView === 'quick-view') {
-      renderQuickView(allUpdates, sitePulses);
+      renderSimpleFeedback(allUpdates);
     } else {
       renderProjectsWorkspaceView(allUpdates);
     }
