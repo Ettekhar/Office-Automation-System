@@ -220,6 +220,43 @@ check('and the failure says it timed out', dead.error === 'Timeout', JSON.string
 await new Promise(res => awkward.close(res));
 await new Promise(res => blackhole.close(res));
 
+// ════════════════════════════════════════════════════════════════════════════
+section('6. Mass-failure guard (a local network loss is not a fleet outage)');
+
+// 13 sites on a refused port: every probe fails at once, exactly like a laptop
+// whose Wi-Fi just dropped. None of that may reach the records.
+const deadFleet = Array.from({ length: 13 }, (_, i) => ({
+  id: 'dead' + i,
+  url: `http://127.0.0.1:59999/site${i}`,
+  status: 'Active',
+  account: 'CW',
+}));
+db.setSites(deadFleet);
+db.setMeta({});
+
+const g1 = await mon.runSweep({ source: 'test' });
+check('a sweep where every probe fails is discarded',
+  g1.skipped === true && g1.reason === 'mass-failure', JSON.stringify(g1).slice(0, 160));
+check('the discarded sweep writes nothing onto the site records',
+  db.getSites().every(s => !s.uptimeStatus && !s.uptimeFails));
+check('the discard is visible in meta for diagnosis',
+  !!db.getMeta().uptimeMeta.lastSkippedSweepAt && db.getMeta().uptimeMeta.lastSkippedSweepFailed === 13);
+
+const g2 = await mon.runSweep({ source: 'test' });
+check('a second consecutive mass failure is still discarded', g2.skipped === true);
+
+const g3 = await mon.runSweep({ source: 'test' });
+check('past the skip budget the results are trusted (a real mass outage is not hidden forever)',
+  g3.skipped !== true, JSON.stringify(g3).slice(0, 120));
+check('...and only then do the failures start counting',
+  db.getSites().every(s => s.uptimeFails === 1));
+
+// A small or targeted sweep can never look like a mass failure.
+db.setSites([{ id: 'solo', url: 'http://127.0.0.1:59999/x', status: 'Active' }]);
+const g4 = await mon.runSweep({ source: 'test', siteIds: ['solo'] });
+check('a single-site sweep is never treated as a mass failure',
+  g4.skipped !== true && g4.checked === 1, JSON.stringify(g4).slice(0, 120));
+
 await new Promise(res => server.close(res));
 // Let undici's dead-port socket finish closing before we exit, otherwise Node
 // trips a libuv assertion during teardown on Windows.

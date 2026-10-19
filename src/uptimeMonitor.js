@@ -50,6 +50,19 @@ const EVENTS_CAP = 60;
 /** Parallel HTTP checks in flight at once. */
 const CONCURRENCY = 10;
 
+/**
+ * Mass-failure guard. A laptop losing Wi-Fi, or the office DNS dying, fails
+ * every probe in the same sweep. Recording that would flip the whole fleet to
+ * offline, fill the alert feed, and — in the Worker — write the false state to
+ * KV. When at least MASS_FAILURE_MIN probes were attempted and this share of
+ * them failed, the sweep is treated as a local-network event and discarded.
+ * If it persists for MASS_FAILURE_MAX_SKIPS sweeps it is more likely real, and
+ * the results are applied normally.
+ */
+const MASS_FAILURE_MIN = 12;
+const MASS_FAILURE_RATIO = 0.8;
+const MASS_FAILURE_MAX_SKIPS = 2;
+
 let timer = null;
 let state = {
   enabled: false,
@@ -59,6 +72,7 @@ let state = {
   runs: 0,
   lastRunAt: null,
   lastError: null,
+  massFailureStreak: 0,
 };
 
 function nowIso() { return new Date().toISOString(); }
@@ -216,6 +230,61 @@ export async function runSweep(opts = {}) {
   }
 
   const results = await sweepTargets(targets);
+
+  // ── Mass-failure guard ────────────────────────────────────────────────────
+  // Distinguish "one site is down" from "this machine has no network". The
+  // latter is not a fleet outage and must not be written into the records.
+  const guardOn = String(process.env.UPTIME_MASS_FAILURE_GUARD ?? 'true').toLowerCase() !== 'false';
+  const attempted = results.size;
+  const failed = Array.from(results.values()).filter(r => r.status !== 'online').length;
+  const massFailure = guardOn && attempted >= MASS_FAILURE_MIN && failed / attempted >= MASS_FAILURE_RATIO;
+
+  if (massFailure) {
+    const parsedSkips = Number(process.env.UPTIME_MASS_FAILURE_SKIPS);
+    const skipLimit = Number.isFinite(parsedSkips) && parsedSkips >= 0 ? parsedSkips : MASS_FAILURE_MAX_SKIPS;
+
+    if (state.massFailureStreak < skipLimit) {
+      state.massFailureStreak++;
+      const at = nowIso();
+      const meta = db.getMeta() || {};
+      db.setMeta({
+        uptimeMeta: {
+          ...(meta.uptimeMeta || {}),
+          lastSkippedSweepAt: at,
+          lastSkippedSweepChecked: attempted,
+          lastSkippedSweepFailed: failed,
+          lastSkippedSweepStreak: state.massFailureStreak,
+          lastSkippedSweepReason: 'mass failure - presumed local network loss; results discarded',
+        },
+      });
+      state.runs++;
+      state.lastRunAt = at;
+      state.lastError = `mass failure: ${failed}/${attempted} probes failed - sweep discarded`;
+      const allDown = monitorable(db.getSites()).filter(s => s.uptimeStatus === 'offline');
+      return {
+        ok: true,
+        skipped: true,
+        reason: 'mass-failure',
+        source,
+        checked: 0,
+        online: 0,
+        offline: 0,
+        unknown: 0,
+        attempted,
+        failed,
+        transitions: [],
+        downCount: allDown.length,
+        tookMs: Date.now() - startedAt,
+        lastSweepAt: at,
+        note: 'mass failure discarded - local network suspected',
+      };
+    }
+
+    // Persistent: past the skip budget, so trust it and fall through.
+    state.massFailureStreak++;
+  } else {
+    state.massFailureStreak = 0;
+  }
 
   // Re-read immediately before writing so the write window is as small as it
   // can be: any site edited while the checks were in flight keeps its edit.
@@ -383,6 +452,10 @@ export function startLocalScheduler(opts = {}) {
   const tick = async () => {
     try {
       const r = await runSweep({ source: 'local' });
+      if (r.skipped) {
+        console.warn(`[uptime] sweep discarded: ${r.failed}/${r.attempted} probes failed — probable local network loss (nothing recorded)`);
+        return;
+      }
       const downNote = r.downCount ? ` — ${r.downCount} DOWN` : '';
       console.log(`[uptime] sweep: ${r.checked} checked (${r.online} up, ${r.offline} down, ${r.unknown} unknown) in ${r.tookMs}ms${downNote}`);
       if (r.transitions && r.transitions.length) {

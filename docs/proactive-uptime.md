@@ -37,6 +37,18 @@ Each check escalates only as far as it must:
 Cells are cleaned before use: `Note:https://site.com/` is read as
 `https://site.com/`, not as an invalid URL pretending to be an outage.
 
+### When the machine itself goes offline
+
+A laptop losing Wi-Fi fails **every** probe in the same sweep. That is not a
+fleet outage, so it is not recorded as one: if at least 12 probes were attempted
+and 80% or more of them failed, the sweep is discarded — no site record changes,
+no alert, no KV write of false state. The discard is noted in
+`data/meta.json → uptimeMeta.lastSkippedSweepAt` and in the server log.
+
+The guard backs off: after **2** consecutive discarded sweeps the results are
+trusted anyway, so a real mass outage is still reported (about 9 minutes late)
+rather than hidden forever. Small and targeted sweeps are never guarded.
+
 ## What you see
 
 - **Pinned banner** — one banner, from any view, listing the down sites with a
@@ -82,6 +94,8 @@ per invocation.
 | `UPTIME_MONITOR_ENABLED` | `true` | `false` stops the local scheduler; the manual sweep endpoint still works |
 | `UPTIME_MONITOR_INTERVAL_MS` | `180000` | local sweep cadence |
 | `UPTIME_PROBE_TIMEOUT_MS` | `7000` | per-probe ceiling |
+| `UPTIME_MASS_FAILURE_GUARD` | `true` | `false` disables the "machine has no network" guard |
+| `UPTIME_MASS_FAILURE_SKIPS` | `2` | consecutive all-fail sweeps to discard before trusting them |
 
 Turning the monitor off leaves the last known state on the records, so the dots
 keep showing what was last seen rather than going blank.
