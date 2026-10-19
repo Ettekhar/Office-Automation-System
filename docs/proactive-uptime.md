@@ -86,6 +86,31 @@ per invocation.
 Turning the monitor off leaves the last known state on the records, so the dots
 keep showing what was last seen rather than going blank.
 
+## Deploying the Worker
+
+`npm run dashboard:deploy` is what puts the cron in the cloud — the local
+scheduler does not need it.
+
+`dashboard-wrangler.toml` keeps `[triggers]` at the **end** of the file on
+purpose. In TOML every bare key after a table header belongs to that table, so a
+`[triggers]` placed above `name` / `main` / `compatibility_date` /
+`compatibility_flags` / `workers_dev` makes wrangler read those as `triggers.*`.
+It then sees no `main`, treats the Worker as assets-only, and aborts with
+`Cannot use assets with a binding in an assets-only Worker`.
+
+Validate without deploying:
+
+```
+npx wrangler deploy --dry-run --config cloudflare-worker/dashboard-wrangler.toml
+```
+
+After a deploy, confirm which build is actually live (the asset query string is
+the tell — `v=20261019_uptime_v7` or later, not `design_v3`):
+
+```
+curl -s https://<worker>/master.html | grep -o 'v=20[0-9]*_[A-Za-z0-9_]*'
+```
+
 ## Tests
 
 ```
