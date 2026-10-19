@@ -134,11 +134,35 @@ the tell — `v=20261019_uptime_v7` or later, not `design_v3`):
 curl -s https://<worker>/master.html | grep -o 'v=20[0-9]*_[A-Za-z0-9_]*'
 ```
 
+## Worker budget (free plan)
+
+The Worker gets 50 subrequests per invocation, 1,000 KV writes/day and 100k
+requests/day. Three rules keep uptime inside that:
+
+- **Probes never follow redirects** (`redirect: 'manual'`). One probe = one
+  subrequest, always; a 3xx (or an opaque redirect with status 0) counts as
+  "serving", because the origin answered. Before this, an http→https→www chain
+  cost extra subrequests and a redirect-heavy tick could blow the cap.
+- **The cron slice is sized by the worst case**: `CLOUD_SLICE_SIZE` (12) ×
+  `MAX_PROBES_PER_SITE` (3) = 36 ≤ 50, so a tick survives even when every site
+  walks the full probe ladder. 144 ticks/day × 2 KV writes (`sites`, `meta`) =
+  288 writes/day, well inside the 1,000/day budget.
+- **Manual sweeps are clamped on Workers** by `resolveSweepScope()` in
+  `src/uptimeMonitor.js`. Both "check all" buttons post no scope; the Worker
+  turns that into one 12-site batch (`scope.capped: true`, `workerBatch: true`)
+  instead of ~294 subrequests, and the legacy `/api/master/check-uptime`
+  all-check (which used to write KV once per site) is short-circuited to the
+  same bounded sweep. Local behaviour stays unbounded.
+
+`node scratch/verify-worker-budget.mjs` pins all of this down.
+
 ## Tests
 
 ```
 node scratch/verify-uptime-monitor.mjs   # hysteresis, sweep priority, probe ladder, real sweeps
 node scratch/verify-cache-layer.mjs      # sheets SWR + persistence, db memoisation
+node scratch/verify-worker-budget.mjs    # subrequest + KV guards, no network
+node scratch/verify-assignments.mjs      # My Tasks asks store (separate feature)
 ```
 
 Both run against a throwaway `OFFICEOS_DATA_DIR` and a throwaway local HTTP
