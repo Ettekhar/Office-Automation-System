@@ -149,10 +149,13 @@ RM_SPREADSHEET_ID = "1UHR_PP-Ri1OPU042l62c55LvMVA5KJ-8RufY7KBkr2I"
 # state in KV. This cron makes the Worker re-check site URLs on its own, so a
 # dead site shows as down with the operator's laptop OFF.
 #
-# Per tick: a bounded slice (src/uptimeMonitor.js CLOUD_SLICE_SIZE = 40 sites,
-# offline first, then never-checked, then stalest) — deliberately under the
-# Workers subrequest cap, and one tick writes at most ONE sites.json write plus
-# ONE meta.json write because a whole sweep is a single state write.
+# Per tick: a bounded slice (src/uptimeMonitor.js CLOUD_SLICE_SIZE = 12 sites,
+# offline first, then never-checked, then stalest). 12 is a WORST-CASE number,
+# not an average: a probe climbs a ladder (HEAD -> ranged GET -> site root), so
+# one site can cost 3 subrequests and the free plan caps an invocation at 50.
+# 12 x 3 = 36 leaves room for the warm-up plus the sweep's own KV traffic.
+# One tick writes at most ONE sites.json write plus ONE meta.json write, because
+# a whole sweep is a single state write.
 #
 # Budget at */10: 144 ticks/day x 2 writes = ~288 KV writes/day, inside the
 # free tier's 1,000 writes/day with room for normal dashboard use. Tightening

@@ -43,8 +43,20 @@ import * as db from './db.js';
 export const DOWN_THRESHOLD = 2;
 /** Consecutive passes before a down site is reported back up. */
 export const UP_THRESHOLD = 2;
-/** Sites per cloud sweep — stays well under the Workers subrequest cap (50). */
-export const CLOUD_SLICE_SIZE = 40;
+/**
+ * Sites per cloud sweep.
+ *
+ * Sized by the WORST case, not the average: a probe climbs the ladder (HEAD ->
+ * ranged GET -> site root), so one site can cost 3 subrequests, and the free
+ * plan caps a single invocation at 50. 12 x 3 = 36 leaves headroom for the
+ * warm-up and for the KV reads/writes the sweep itself performs. A larger slice
+ * looks cheaper only while every site answers its HEAD — the moment several
+ * sites go flaky the invocation blows the cap and the whole tick is lost,
+ * exactly when the monitor matters most.
+ */
+export const CLOUD_SLICE_SIZE = 12;
+/** Worst-case subrequests one site can cost (the full probe ladder). */
+export const MAX_PROBES_PER_SITE = 3;
 /** How many transitions to keep for the UI alert feed. */
 const EVENTS_CAP = 60;
 /** Parallel HTTP checks in flight at once. */

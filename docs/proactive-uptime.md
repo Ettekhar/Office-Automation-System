@@ -80,12 +80,21 @@ many sites it checked. That is what keeps the KV write budget intact.
 KV allows 1,000 writes and 100,000 reads per day; Workers allow 50 subrequests
 per invocation.
 
-- Cloud cron: every 10 min, at most `CLOUD_SLICE_SIZE` (40) sites per run →
-  6 runs/hour → **288 scheduled runs/day → ~576 KV writes/day** for state, well
-  inside 1,000. Reads are per-request and far below 100,000.
+- Cloud cron: every 10 min → **144 ticks/day**, each checking at most
+  `CLOUD_SLICE_SIZE` (12) sites and writing **2 KV keys** (sites + meta) →
+  **~288 KV writes/day**, well inside 1,000. Reads are per-request and far below
+  100,000.
+- 12 is a **worst case**, not an average: one site can cost 3 subrequests
+  (`HEAD` → ranged `GET` → site root), and the free plan allows 50 subrequests
+  per invocation. 12 × 3 = 36 leaves room for the warm-up and the sweep's own KV
+  traffic. A 40-site slice blows that cap as soon as a dozen sites need a
+  fallback rung — i.e. exactly during an incident.
+- Coverage with the laptop off: 144 ticks × 12 = 1,728 site-checks/day over ~98
+  monitored sites — every site roughly 17 times a day (~85 min cadence).
 - The cloud slice takes the worst sites first (down → never checked → stalest),
   so a worker-only deployment still covers the whole fleet over several runs.
-- Tightening is a one-line change in `dashboard-wrangler.toml`.
+- Changing the cadence is a one-line change in `dashboard-wrangler.toml`;
+  changing the slice is `CLOUD_SLICE_SIZE`.
 
 ## Knobs (all optional, all read-only)
 

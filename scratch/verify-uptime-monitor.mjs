@@ -257,6 +257,15 @@ const g4 = await mon.runSweep({ source: 'test', siteIds: ['solo'] });
 check('a single-site sweep is never treated as a mass failure',
   g4.skipped !== true && g4.checked === 1, JSON.stringify(g4).slice(0, 120));
 
+// The cloud slice is sized by the WORST case: every site climbing the whole
+// probe ladder. Free-plan Workers allow 50 subrequests per invocation, so this
+// must stay comfortably under it or the cron tick dies exactly when it matters.
+check('cloud slice x worst-case probe ladder fits the Worker subrequest cap',
+  mon.CLOUD_SLICE_SIZE * mon.MAX_PROBES_PER_SITE <= 50 - 10,
+  `${mon.CLOUD_SLICE_SIZE} x ${mon.MAX_PROBES_PER_SITE} = ${mon.CLOUD_SLICE_SIZE * mon.MAX_PROBES_PER_SITE}`);
+check('the cloud slice still covers the fleet over a day of ticks',
+  mon.CLOUD_SLICE_SIZE * 144 >= 1000, String(mon.CLOUD_SLICE_SIZE * 144));
+
 await new Promise(res => server.close(res));
 // Let undici's dead-port socket finish closing before we exit, otherwise Node
 // trips a libuv assertion during teardown on Windows.
