@@ -11870,6 +11870,13 @@ html[data-theme="light"] .df-count { color: #059669; background: rgba(5, 150, 10
 .df-status.st-completed { color: #34D399; background: rgba(16, 185, 129, 0.10); border-color: rgba(16, 185, 129, 0.24); }
 .df-status.st-in_progress { color: #fbbf24; background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.22); }
 html[data-theme="light"] .df-status.st-completed { color: #059669; }
+/* The design-system primary button is a soft accent pill (--accent on
+   --accent-subtle). On a light page that leaves #34D399 text on near-white
+   (~1.8:1) — keep the pill, darken just this primary action's label. */
+html[data-theme="light"] #df-save {
+  color: #047857 !important;
+  border-color: rgba(4, 120, 87, 0.35) !important;
+}
 .df-empty { padding: 16px 22px; color: var(--text-muted); font-size: 13px; }
 
 @media (max-width: 640px) {
