@@ -11679,3 +11679,156 @@ html[data-theme] .cs-tab-select {
   box-sizing: border-box !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHONE-WIDTH CARD POLISH — from a 390px audit of all 21 views
+   The page never scrolled sideways at 390px; what broke was content INSIDE
+   cards: grid tracks with a hard 320/360px minimum that cannot shrink below
+   it, a nowrap progress line, and header rows whose buttons were wider than
+   the card. Everything here is either scoped to phones (≤560px) or replaces a
+   hard minimum with min(…, 100%), so tablet and desktop layout is untouched.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A 320px/360px track stays 320px/360px even when the container is 295px, so
+   a "single column" card grid was still wider than the card holding it and the
+   cards were cut off at the right edge. min(320px, 100%) makes the track follow
+   the container instead of overflowing it. */
+html[data-theme] .cs-cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)) !important;
+}
+
+html[data-theme] .sheet-manager-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr)) !important;
+}
+
+/* Same story in the Uptime Monitor: a 280px minimum cannot fit a 271px column. */
+html[data-theme] .uptime-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
+}
+
+/* The uptime row is a nowrap flex line and .uptime-url carries flex-basis: 0
+   with overflow: hidden, so once the row held a pill + latency + age + re-check
+   button the site address collapsed to ~21px and was unreadable at EVERY width
+   (the title tooltip was the only way to read it). Let the row wrap, and give
+   the URL a floor it may not shrink below; a long domain ellipsises on one line
+   so rows stay compact. Phones give it a line of its own (see below). */
+html[data-theme] .uptime-item {
+  flex-wrap: wrap !important;
+}
+
+html[data-theme] .uptime-url {
+  flex: 1 1 60% !important;
+  min-width: 110px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 560px) {
+  /* KPI cards: chip (40px) + status pill (79px) + gap needs ~129px inside a
+     105px content box, and .stat-card is overflow: hidden — the pill was
+     clipped mid-word. Let the top row wrap and give it a little more room;
+     the smart-KPI layer's 16px/18px padding overrode the older ≤520px rule, so
+     re-assert the phone padding here (this block is last, so it wins). */
+  html[data-theme] .stat-card {
+    padding: 12px !important;
+    min-height: 0 !important;
+    gap: 9px !important;
+  }
+
+  html[data-theme] .ds-kpi-top {
+    flex-wrap: wrap !important;
+    row-gap: 6px !important;
+  }
+
+  html[data-theme] .ds-chip {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  html[data-theme] .ds-chip svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  html[data-theme] .ds-kpi-status {
+    font-size: 9.5px !important;
+    padding: 3px 7px !important;
+  }
+
+  /* Custom sheets: "72 of 191 items completed" is nowrap and 300px+ long in a
+     247px row, and the progress bar holds a 220px minimum. Both overflowed the
+     hero card; neither needs to. */
+  html[data-theme] .cs-progress-details {
+    white-space: normal !important;
+  }
+
+  html[data-theme] .cs-bar-wrap {
+    min-width: 0 !important;
+  }
+
+  html[data-theme] .cs-hero-card {
+    padding: 16px !important;
+  }
+
+  /* Card headers and long action buttons: wrap the row and let labels break
+     instead of running past the card edge ("➕ Add Websites to Asset Manager"
+     was a 290px button in a 251px content box). */
+  html[data-theme] .card-header {
+    flex-wrap: wrap !important;
+    row-gap: 8px !important;
+  }
+
+  /* On a phone the uptime row is narrow enough that the URL should take a line
+     of its own and wrap, rather than ellipsise. */
+  html[data-theme] .uptime-url {
+    flex: 1 1 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html[data-theme] .team-dir-header {
+    padding: 14px !important;
+  }
+
+  html[data-theme] .team-dir-header .btn {
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  /* The Sites list card hides its overflow, so on a phone the table's columns
+     were unreachable rather than scrollable. Let it scroll sideways like every
+     other table on the dashboard. */
+  html[data-theme] .linear-list-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Sites action bar: the status pills are a nowrap row, and the search box
+     squeezes "+ New site" until its label is cut off. Wrap both groups, give
+     the search its own line, and let the buttons keep their own width (the
+     keyboard hints are dead weight on a touch screen). */
+  html[data-theme] .linear-action-bar-left,
+  html[data-theme] .linear-action-bar-right {
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+  }
+
+  html[data-theme] .linear-action-bar-left > div {
+    flex-wrap: wrap !important;
+  }
+
+  html[data-theme] .linear-action-bar .search-wrap {
+    flex: 1 1 100% !important;
+  }
+
+  html[data-theme] .linear-action-bar .linear-kbd {
+    display: none !important;
+  }
+
+  html[data-theme] .linear-action-bar .btn-linear-capsule,
+  html[data-theme] .linear-action-bar .btn-linear-primary {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+}
+
