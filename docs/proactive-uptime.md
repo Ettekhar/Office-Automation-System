@@ -86,9 +86,17 @@ per invocation.
   100,000.
 - 12 is a **worst case**, not an average: one site can cost 3 subrequests
   (`HEAD` → ranged `GET` → site root), and the free plan allows 50 subrequests
-  per invocation. 12 × 3 = 36 leaves room for the warm-up and the sweep's own KV
-  traffic. A 40-site slice blows that cap as soon as a dozen sites need a
-  fallback rung — i.e. exactly during an incident.
+  per invocation. The cron warms **2 keys** (`sites`, `meta`) and writes 2, so
+  12 × 3 + 2 + 2 = **40 ≤ 50**. A 40-site slice blows that cap as soon as a
+  dozen sites need a fallback rung — i.e. exactly during an incident.
+- **KV operations are subrequests too.** This is what bit the first version of
+  the guard (2026-10-19): the cron called `ensureWarm()`, which reads all 24
+  `STATE_KEYS` — 24 of the 50 subrequests — and the tail of a cold tick then ran
+  out mid-slice. The resulting platform error ("Too many subrequests by single
+  Worker invocation") was recorded as a **site failure** and pushed three
+  healthy sites to DOWN. Fixed by warming only `sites` + `meta` in
+  `scheduled()`, and by classifying platform errors as `infra` rather than
+  "offline" (see below).
 - Coverage with the laptop off: 144 ticks × 12 = 1,728 site-checks/day over ~98
   monitored sites — every site roughly 17 times a day (~85 min cadence).
 - The cloud slice takes the worst sites first (down → never checked → stalest),
@@ -137,22 +145,32 @@ curl -s https://<worker>/master.html | grep -o 'v=20[0-9]*_[A-Za-z0-9_]*'
 ## Worker budget (free plan)
 
 The Worker gets 50 subrequests per invocation, 1,000 KV writes/day and 100k
-requests/day. Three rules keep uptime inside that:
+requests/day. Four rules keep uptime inside that:
 
 - **Probes never follow redirects** (`redirect: 'manual'`). One probe = one
   subrequest, always; a 3xx (or an opaque redirect with status 0) counts as
   "serving", because the origin answered. Before this, an http→https→www chain
   cost extra subrequests and a redirect-heavy tick could blow the cap.
-- **The cron slice is sized by the worst case**: `CLOUD_SLICE_SIZE` (12) ×
-  `MAX_PROBES_PER_SITE` (3) = 36 ≤ 50, so a tick survives even when every site
-  walks the full probe ladder. 144 ticks/day × 2 KV writes (`sites`, `meta`) =
-  288 writes/day, well inside the 1,000/day budget.
+- **KV reads and writes spend the same budget as probes.** The cron handler
+  warms exactly the two keys `runSweep()` touches (`sites`, `meta`); it does not
+  call `ensureWarm()` (24 reads). Cron worst case: 2 reads + 12 × 3 probes + 2
+  writes = **40**. A manual sweep runs after the request path has already warmed
+  all 24 keys, so its batch is smaller: `WORKER_MANUAL_BATCH` (6) → 24 + 18 + 2 =
+  **44**. 144 ticks/day × 2 writes = 288 writes/day, well inside 1,000.
+- **Platform errors are never site failures.** `probe()` marks
+  "Too many subrequests…", "Worker exceeded CPU…", "Network connection lost",
+  etc. as `infra`; `checkSite()` returns `status: 'unknown'` and `sweepTargets()`
+  drops the result before `applyResult()`. A budget overrun therefore cannot
+  move a fail counter, fire a "down" toast, or write a false status to KV — it
+  shows up as `skippedInfra` in the sweep response and in
+  `monitor.lastSweepSkippedInfra`. Genuine failures ("fetch failed", DNS, TLS,
+  timeouts) are unaffected and still count.
 - **Manual sweeps are clamped on Workers** by `resolveSweepScope()` in
   `src/uptimeMonitor.js`. Both "check all" buttons post no scope; the Worker
-  turns that into one 12-site batch (`scope.capped: true`, `workerBatch: true`)
+  turns that into one 6-site batch (`scope.capped: true`, `workerBatch: true`)
   instead of ~294 subrequests, and the legacy `/api/master/check-uptime`
   all-check (which used to write KV once per site) is short-circuited to the
-  same bounded sweep. Local behaviour stays unbounded.
+  same bounded sweep. Local behaviour stays unbounded (`cap: 0`).
 
 `node scratch/verify-worker-budget.mjs` pins all of this down.
 

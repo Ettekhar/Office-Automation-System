@@ -234,16 +234,34 @@ export default {
    * sites first, then never-checked, then the stalest) rather than the whole
    * fleet, because a Worker invocation may only make ~50 subrequests and KV
    * bills one write per key per tick. One sweep writes data/sites.json once and
-   * meta.json once, no matter how many sites changed.
+   * meta.json once, no matter how many sites changed. It warms only the two
+   * keys it reads: warming the full state here spent 24 of the 50 subrequests
+   * and could push a cold tick over the cap.
    */
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
-        await ensureWarm(env, ctx);
+        // Warm ONLY the two keys this sweep touches — not the whole state.
+        //
+        // Every KV get is a subrequest against the same 50-per-invocation cap
+        // the probes spend. A cold isolate (the usual case ten minutes after
+        // the previous tick) that warmed all 24 STATE_KEYS had only ~26 left
+        // for a 36-probe slice; the tail of the sweep then threw "Too many
+        // subrequests by single Worker invocation" and that platform error was
+        // recorded as a site failure (theguildhotel.com, reitzunionhotel.com,
+        // miamikdistribution.com, 2026-10-19). Budget now: 2 reads + 12 x 3
+        // probes + 2 writes = 40, inside the cap with margin.
+        //
+        // runSweep() reads and writes only sites + meta, so nothing else is
+        // needed here. `warmed` stays null on purpose: a later request in this
+        // isolate still performs the full ensureWarm() it needs.
+        if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+        await kvShim.warm(env.DASHBOARD_KV, ['sites', 'meta']);
         const { runCloudSweep } = await import('../src/uptimeMonitor.js');
         const r = await runCloudSweep();
         const downNote = r.downCount ? ` — ${r.downCount} DOWN` : '';
-        console.log(`[uptime] cloud sweep (${event && event.cron || 'cron'}): ${r.checked} checked, ${r.online} up, ${r.offline} down, ${r.transitions.length} transitions, ${r.tookMs}ms${downNote}`);
+        const skipNote = r.skippedInfra ? `, ${r.skippedInfra} infra-skipped` : '';
+        console.log(`[uptime] cloud sweep (${event && event.cron || 'cron'}): ${r.checked} checked, ${r.online} up, ${r.offline} down, ${r.transitions.length} transitions${skipNote}, ${r.tookMs}ms${downNote}`);
       } catch (e) {
         console.error('[uptime] cloud sweep failed:', e && (e.stack || e.message || e));
       }

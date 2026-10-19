@@ -3907,7 +3907,9 @@ const server = http.createServer(async (req, res) => {
           if (!url) return err(400, 'Could not resolve URL to check');
           const result = await checkSite(url);
           let updated = null;
-          if (site) {
+          // An infra failure says nothing about the site: leave the stored
+          // status alone instead of stamping 'unknown' over it.
+          if (site && !result.infra) {
             updated = db.updateSite(site.id, {
               uptimeStatus: result.status,
               uptimeStatusCode: result.statusCode,
@@ -3915,7 +3917,7 @@ const server = http.createServer(async (req, res) => {
               lastUptimeCheck: result.checkedAt,
             });
           }
-          return ok({ site: updated, result });
+          return ok({ site: updated || site, result });
         }
 
         // Fleet check. The Worker must not run the naive loop below: ~98 sites
@@ -3924,8 +3926,10 @@ const server = http.createServer(async (req, res) => {
         // 1,000/day budget). One bounded sweep instead — same monitor, one
         // sites write, one meta write, and it returns a result.
         if (!!globalThis.__OFFICEOS_WORKER__) {
-          const { runSweep, resolveSweepScope } = await import('./uptimeMonitor.js');
-          const scope = resolveSweepScope({ isWorker: true });
+          const { runSweep, resolveSweepScope, WORKER_MANUAL_BATCH } = await import('./uptimeMonitor.js');
+          // A manual sweep runs after the request path has warmed all STATE_KEYS,
+          // so its budget is smaller than the cron's — see WORKER_MANUAL_BATCH.
+          const scope = resolveSweepScope({ isWorker: true, maxSites: WORKER_MANUAL_BATCH });
           const r = await runSweep({ limit: scope.limit, source: 'manual' });
           return ok({ ...r, workerBatch: true, limitedTo: scope.limit });
         }
@@ -3977,16 +3981,18 @@ const server = http.createServer(async (req, res) => {
       // Manual "Check now" + the scheduler entry point. One sweep, one write.
       if (pathname === '/api/master/uptime-sweep' && method === 'POST') {
         const b = await body();
-        const { runSweep, resolveSweepScope } = await import('./uptimeMonitor.js');
+        const { runSweep, resolveSweepScope, WORKER_MANUAL_BATCH } = await import('./uptimeMonitor.js');
         // The Worker cannot sweep the whole fleet in one invocation (50
-        // subrequests, up to 3 per site). An unbounded request becomes the next
-        // bounded batch instead of an invocation that dies mid-sweep with no
-        // result and no write. Locally the unbounded behaviour is kept.
+        // subrequests, up to 3 per site, minus the 24-key warm this request has
+        // already paid). An unbounded request becomes the next bounded batch
+        // instead of an invocation that dies mid-sweep with no result and no
+        // write. Locally the unbounded behaviour is kept.
         const isWorker = !!globalThis.__OFFICEOS_WORKER__;
         const scope = resolveSweepScope({
           limit: Number(b.limit) > 0 ? Math.min(Number(b.limit), 500) : 0,
           siteIds: b.siteIds,
           isWorker,
+          maxSites: WORKER_MANUAL_BATCH,
         });
         const result = await runSweep({ limit: scope.limit, siteIds: scope.siteIds, source: b.source || 'manual' });
         return ok({ ...result, scope: { ...scope, workerBatch: isWorker } });

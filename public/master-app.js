@@ -1784,6 +1784,10 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
           siteId: btn.dataset.siteId || undefined,
         });
         btn.classList.remove('spinning');
+        if (resp.result?.status === 'unknown') {
+          toast(`⚠️ Check skipped — ${resp.result.error || 'monitor error'}`, 'error', 6000);
+          return;
+        }
         const isUp = resp.result?.status === 'online';
         const dot = document.getElementById(`live-dot-${btn.dataset.rowId}`);
         if (dot) {
@@ -5176,7 +5180,13 @@ async function viewSites() {
       // On the cloud dashboard a fleet check is a bounded batch (Worker
       // subrequest budget), so say how many were actually checked.
       const batch = r.workerBatch ? ` · cloud batch of ${r.checked}` : '';
-      toast(`✅ ${r.online} online, ${r.offline} offline${batch}`, 'success', 6000);
+      if (!r.checked && r.skippedInfra) {
+        // Platform budget ran out — that is not a fleet outage, say so.
+        toast(`⚠️ No site could be checked — ${r.skippedInfra} skipped after a monitor error`, 'error', 6000);
+      } else {
+        const skip = r.skippedInfra ? ` · ${r.skippedInfra} skipped (worker limit)` : '';
+        toast(`✅ ${r.online} online, ${r.offline} offline${batch}${skip}`, 'success', 6000);
+      }
       navigate('sites');
     } catch (e) { toast(e.message, 'error'); }
   });
@@ -6254,9 +6264,15 @@ async function viewUptime() {
       btn.textContent = '⏳';
       try {
         const { result } = await POST('/api/master/check-uptime', { siteId: btn.dataset.id });
+        btn.textContent = label;
+        if (result.status === 'unknown') {
+          // The platform could not finish the probe. Do not repaint the row
+          // (or the pill) as if the site had answered.
+          toast(`⚠️ Check skipped — ${result.error || 'monitor error'}`, 'error', 6000);
+          return;
+        }
         const item = btn.closest('.uptime-item');
         if (item) { item.className = 'uptime-item ' + result.status; _patchUptimePill(item, result.status); }
-        btn.textContent = label;
         toast(`${result.status === 'online' ? '🟢 Online' : '🔴 Offline'}${result.responseTime ? ' · ' + result.responseTime + 'ms' : ''}`, result.status === 'online' ? 'success' : 'error');
         uptimeTick();
       } catch (e) { toast(e.message, 'error'); btn.textContent = label; }

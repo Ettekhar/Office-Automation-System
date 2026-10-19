@@ -50,6 +50,24 @@ export function sanitizeUrl(raw) {
 }
 
 /**
+ * Does this error describe the MONITOR failing rather than the site?
+ *
+ * These are runtime/platform strings, not origin strings. The one that matters
+ * in production is the Workers free-plan cap: once an invocation has spent its
+ * 50 subrequests every later fetch throws "Too many subrequests by single
+ * Worker invocation", which used to be recorded as a site failure and pushed
+ * healthy sites through the 2-fail hysteresis to DOWN (2026-10-19:
+ * theguildhotel.com, reitzunionhotel.com, miamikdistribution.com).
+ *
+ * A probe that fails this way still returns a result; checkSite() marks it
+ * `infra` and the sweep drops it instead of applying it (see sweepTargets in
+ * uptimeMonitor.js). "fetch failed", DNS, TLS and timeout errors are NOT infra
+ * — those are genuine evidence about the site.
+ */
+const INFRA_ERROR_RE = /too many subrequests|exceeded (?:its )?cpu time|worker exceeded|error 110[12]|network connection lost|the script will never generate a response/i;
+export const isInfraError = (msg) => INFRA_ERROR_RE.test(String(msg || ''));
+
+/**
  * One HTTP attempt. Never throws: a failure is a result, because every failure
  * here is a data point about the site rather than an error in the monitor.
  */
@@ -75,9 +93,13 @@ async function probe(target, method, { range = false, timeoutMs = TIMEOUT_MS } =
     try { if (res.body && res.body.cancel) await res.body.cancel(); } catch { /* already closed */ }
     return { ok: true, statusCode: res.status || 0, responseTime: Date.now() - start };
   } catch (err) {
+    const message = err && err.name === 'AbortError' ? 'Timeout' : (err && err.message) || 'Request failed';
     return {
       ok: false,
-      error: err && err.name === 'AbortError' ? 'Timeout' : (err && err.message) || 'Request failed',
+      error: message,
+      // A timeout is evidence about the site; a platform error is evidence
+      // about the monitor's budget. Never conflate the two.
+      infra: !(err && err.name === 'AbortError') && isInfraError(message),
       responseTime: Date.now() - start,
     };
   } finally {
@@ -101,8 +123,18 @@ const isServing = (code) => code >= 200 && code < 500;
 const answered = (result) => !!result.ok && (result.statusCode === 0 || isServing(result.statusCode));
 
 /**
+ * The probe never reached a verdict about the site: the runtime that made the
+ * request failed. 'unknown' is not a status the hysteresis acts on — the sweep
+ * drops these results (sweepTargets in uptimeMonitor.js), so a budget overrun
+ * can never mark a site down.
+ */
+const infraResult = (p, checkedAt) => ({
+  status: 'unknown', infra: true, error: p.error, checkedAt,
+});
+
+/**
  * Check if a single URL is reachable.
- * @returns {Promise<{ status: 'online'|'offline', statusCode?: number, responseTime?: number, checkedAt: string, error?: string, note?: string }>}
+ * @returns {Promise<{ status: 'online'|'offline'|'unknown', infra?: boolean, statusCode?: number, responseTime?: number, checkedAt: string, error?: string, note?: string }>}
  */
 export async function checkSite(rawUrl) {
   const checkedAt = new Date().toISOString();
@@ -119,6 +151,7 @@ export async function checkSite(rawUrl) {
 
   // 1. HEAD — one request for the overwhelmingly common healthy case.
   let result = await probe(target, 'HEAD');
+  if (result.infra) return infraResult(result, checkedAt);
   if (answered(result)) {
     return { status: 'online', statusCode: result.statusCode, responseTime: result.responseTime, checkedAt };
   }
@@ -126,6 +159,7 @@ export async function checkSite(rawUrl) {
   // 2. GET with a 1-byte range — servers that dislike HEAD.
   if (!result.ok) {
     const viaGet = await probe(target, 'GET', { range: true });
+    if (viaGet.infra) return infraResult(viaGet, checkedAt);
     if (answered(viaGet)) {
       return { status: 'online', statusCode: viaGet.statusCode, responseTime: viaGet.responseTime, checkedAt };
     }
@@ -138,6 +172,7 @@ export async function checkSite(rawUrl) {
   const root = `${url.protocol}//${url.host}/`;
   if (root !== target) {
     const viaRoot = await probe(root, 'GET', { range: true });
+    if (viaRoot.infra) return infraResult(viaRoot, checkedAt);
     if (answered(viaRoot)) {
       const reason = result.error || `HTTP ${result.statusCode}`;
       return {

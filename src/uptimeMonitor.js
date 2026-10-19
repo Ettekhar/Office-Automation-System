@@ -48,17 +48,36 @@ export const UP_THRESHOLD = 2;
  *
  * Sized by the WORST case, not the average: a probe climbs the ladder (HEAD ->
  * ranged GET -> site root), so one site can cost 3 subrequests, and the free
- * plan caps a single invocation at 50. 12 x 3 = 36 leaves headroom for the
- * warm-up and for the KV reads/writes the sweep itself performs. A larger slice
- * looks cheaper only while every site answers its HEAD — the moment several
- * sites go flaky the invocation blows the cap and the whole tick is lost,
- * exactly when the monitor matters most.
+ * plan caps a single invocation at 50. The cron warm costs 2 reads and the
+ * sweep owes 2 writes, so 12 x 3 + 2 + 2 = 40. (A MANUAL Worker sweep has a
+ * smaller slice — WORKER_MANUAL_BATCH — because its request already warmed all
+ * 24 state keys before routing.) A larger slice looks cheaper only while every
+ * site answers its HEAD; the moment several go flaky the invocation blows the
+ * cap and the tail of the sweep is lost, exactly when the monitor matters most.
  */
 export const CLOUD_SLICE_SIZE = 12;
 /** Worst-case subrequests one site can cost (the full probe ladder). */
 export const MAX_PROBES_PER_SITE = 3;
 /** Free-plan ceiling for outbound requests in a single invocation. */
 export const WORKER_SUBREQUEST_CAP = 50;
+/**
+ * Sites per MANUAL Worker sweep.
+ *
+ * A manual sweep runs inside an HTTP request that has already paid for the full
+ * KV warm (STATE_KEYS = 24 reads) before routing, and the sweep itself owes two
+ * writes (sites.json, meta.json). 50 - 24 - 2 = 24 subrequests of headroom, and
+ * one site can cost MAX_PROBES_PER_SITE, so 6 x 3 = 18 leaves 6 spare.
+ *
+ * The CRON sweep is larger (CLOUD_SLICE_SIZE) because scheduled() warms only
+ * the two keys it actually reads instead — see dashboard-worker.js.
+ */
+export const WORKER_MANUAL_BATCH = 6;
+/** KV reads a cold Worker request spends warming STATE_KEYS before routing. */
+export const WORKER_FULL_WARM_READS = 24;
+/** KV reads the cron sweep spends (sites + meta only). */
+export const CLOUD_WARM_READS = 2;
+/** KV writes one sweep performs (sites + meta). */
+export const SWEEP_KV_WRITES = 2;
 /** How many transitions to keep for the UI alert feed. */
 const EVENTS_CAP = 60;
 /** Parallel HTTP checks in flight at once. */
@@ -215,11 +234,15 @@ export function selectCandidates(sites, { limit = 0, siteIds = null } = {}) {
  * has to become "check the next N" rather than an invocation that dies halfway
  * with no result and no write.
  *
- * @param {{ limit?: number, siteIds?: string[]|null, isWorker?: boolean }} opts
+ * `maxSites` exists because the two Worker entry points have different budgets:
+ * the cron warms two keys (12 sites), a manual request has already warmed all
+ * 24 STATE_KEYS (6 sites). See WORKER_MANUAL_BATCH.
+ *
+ * @param {{ limit?: number, siteIds?: string[]|null, isWorker?: boolean, maxSites?: number }} opts
  * @returns {{ limit:number, siteIds:string[]|null, capped:boolean, cap:number }}
  */
-export function resolveSweepScope({ limit = 0, siteIds = null, isWorker = false } = {}) {
-  const cap = CLOUD_SLICE_SIZE;
+export function resolveSweepScope({ limit = 0, siteIds = null, isWorker = false, maxSites = CLOUD_SLICE_SIZE } = {}) {
+  const cap = Math.max(1, Math.floor(Number(maxSites) || CLOUD_SLICE_SIZE));
   const ids = Array.isArray(siteIds) ? siteIds.filter(Boolean) : [];
   let lim = Number(limit) > 0 ? Math.floor(Number(limit)) : 0;
 
@@ -237,6 +260,7 @@ export function resolveSweepScope({ limit = 0, siteIds = null, isWorker = false 
 /** Run `checkSite` over a list with bounded concurrency. */
 async function sweepTargets(targets) {
   const results = new Map();
+  let infraSkipped = 0;
   let cursor = 0;
   const lanes = Math.max(1, Math.min(CONCURRENCY, targets.length || 1));
   await Promise.all(Array.from({ length: lanes }, async () => {
@@ -248,10 +272,17 @@ async function sweepTargets(targets) {
       } catch (e) {
         result = { status: 'offline', error: (e && e.message) || 'Check failed', checkedAt: nowIso() };
       }
+      // A platform failure (Worker out of subrequests, CPU killed, ...) says
+      // nothing about the site. Dropping it here is what keeps "the monitor ran
+      // out of budget" from being reported as "theguildhotel.com is DOWN":
+      // skipped results never reach applyResult(), so the hysteresis never
+      // counts them and no transition can fire. The count is reported as
+      // skippedInfra instead.
+      if (result && result.infra) { infraSkipped++; continue; }
       results.set(site.id, result);
     }
   }));
-  return results;
+  return { results, infraSkipped };
 }
 
 /**
@@ -272,7 +303,7 @@ export async function runSweep(opts = {}) {
     return { ok: true, checked: 0, source, note: 'no monitorable sites', transitions: [] };
   }
 
-  const results = await sweepTargets(targets);
+  const { results, infraSkipped } = await sweepTargets(targets);
 
   // ── Mass-failure guard ────────────────────────────────────────────────────
   // Distinguish "one site is down" from "this machine has no network". The
@@ -315,6 +346,7 @@ export async function runSweep(opts = {}) {
         unknown: 0,
         attempted,
         failed,
+        skippedInfra: infraSkipped,
         transitions: [],
         downCount: allDown.length,
         tookMs: Date.now() - startedAt,
@@ -369,6 +401,7 @@ export async function runSweep(opts = {}) {
       lastSweepOnline: online,
       lastSweepOffline: offline,
       lastSweepUnknown: unknown,
+      lastSweepSkippedInfra: infraSkipped,
       sweepCount: (prevMeta.sweepCount || 0) + 1,
       lastTransitionAt: transitions.length ? finishedAt : prevMeta.lastTransitionAt || null,
     },
@@ -387,6 +420,7 @@ export async function runSweep(opts = {}) {
     online,
     offline,
     unknown,
+    skippedInfra: infraSkipped,
     transitions,
     downCount: down.length,
     tookMs: Date.now() - startedAt,
@@ -453,6 +487,12 @@ export function getSnapshot() {
       runs: state.runs,
       lastRunAt: state.lastRunAt,
       lastError: state.lastError,
+      // Diagnostics for the Worker budget: a sweep that had to skip probes
+      // because the platform ran out of subrequests says so here instead of
+      // reporting those sites as down. (State is per-isolate; lastSweepAt in
+      // KV above is the fleet-wide "the cron is alive" signal.)
+      sweepCount: (meta.uptimeMeta && meta.uptimeMeta.sweepCount) || 0,
+      lastSweepSkippedInfra: (meta.uptimeMeta && meta.uptimeMeta.lastSweepSkippedInfra) || 0,
     },
   };
 }
