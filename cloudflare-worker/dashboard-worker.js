@@ -48,7 +48,7 @@ globalThis.__OFFICEOS_WORKER__ = true;
 
 // The dashboard's state, as KV key names. data/*.json -> same basename.
 const STATE_KEYS = [
-  'users', 'sites', 'tasks', 'properties', 'dev-projects', 'notices',
+  'users', 'sites', 'tasks', 'assignments', 'properties', 'dev-projects', 'notices',
   'conditional-notes', 'daily-review', 'domain-expiry-requests', 'meta',
   'custom-sheets', 'sheet-credentials', 'assistant-config', 'sync-conflicts',
   'user-aliases', 'audit-log', 'master-overrides',

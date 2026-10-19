@@ -57,6 +57,8 @@ export const UP_THRESHOLD = 2;
 export const CLOUD_SLICE_SIZE = 12;
 /** Worst-case subrequests one site can cost (the full probe ladder). */
 export const MAX_PROBES_PER_SITE = 3;
+/** Free-plan ceiling for outbound requests in a single invocation. */
+export const WORKER_SUBREQUEST_CAP = 50;
 /** How many transitions to keep for the UI alert feed. */
 const EVENTS_CAP = 60;
 /** Parallel HTTP checks in flight at once. */
@@ -201,6 +203,35 @@ export function selectCandidates(sites, { limit = 0, siteIds = null } = {}) {
     return staleness(a) - staleness(b);
   });
   return limit > 0 ? ordered.slice(0, limit) : ordered;
+}
+
+/**
+ * How many sites one sweep may touch.
+ *
+ * Locally a sweep may take the whole fleet (limit 0 = all) — it costs time, not
+ * quota. On Workers the budget is hard: one site costs up to
+ * MAX_PROBES_PER_SITE subrequests and one invocation may make
+ * WORKER_SUBREQUEST_CAP, so a manual "check all" (which posts no scope at all)
+ * has to become "check the next N" rather than an invocation that dies halfway
+ * with no result and no write.
+ *
+ * @param {{ limit?: number, siteIds?: string[]|null, isWorker?: boolean }} opts
+ * @returns {{ limit:number, siteIds:string[]|null, capped:boolean, cap:number }}
+ */
+export function resolveSweepScope({ limit = 0, siteIds = null, isWorker = false } = {}) {
+  const cap = CLOUD_SLICE_SIZE;
+  const ids = Array.isArray(siteIds) ? siteIds.filter(Boolean) : [];
+  let lim = Number(limit) > 0 ? Math.floor(Number(limit)) : 0;
+
+  if (!isWorker) {
+    return { limit: lim, siteIds: ids.length ? ids : null, capped: false, cap: 0 };
+  }
+
+  let capped = false;
+  if (lim === 0) { lim = cap; capped = true; }   // "all" becomes one bounded batch
+  if (lim > cap) { lim = cap; capped = true; }
+  if (ids.length > cap) { ids.length = cap; capped = true; }
+  return { limit: lim, siteIds: ids.length ? ids : null, capped, cap };
 }
 
 /** Run `checkSite` over a list with bounded concurrency. */

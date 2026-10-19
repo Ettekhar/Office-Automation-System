@@ -17,6 +17,12 @@
  *   2. GET with Range: bytes=0-0       (HEAD-hostile servers)
  *   3. GET on the site root            (guarded sub-path; result carries a note)
  *
+ * Redirects are NOT followed. On Cloudflare Workers every redirect hop is a
+ * separate subrequest, and the free plan caps one invocation at 50 — a batch of
+ * redirect-y sites (http -> https -> www is common) could blow the cap halfway
+ * through a sweep. The origin answering with a 3xx still proves it is serving,
+ * so a redirect counts as online and costs exactly one subrequest.
+ *
  * Anything that still fails is offline, and the error we report is from the
  * listed URL — that is the thing the operator cares about.
  */
@@ -55,6 +61,9 @@ async function probe(target, method, { range = false, timeoutMs = TIMEOUT_MS } =
     const res = await fetch(target, {
       method,
       signal: controller.signal,
+      // One subrequest per probe, always — see the header note. A 3xx is still
+      // an answer from the origin, so it counts as serving below.
+      redirect: 'manual',
       headers: {
         'User-Agent': USER_AGENT,
         Accept: 'text/html',
@@ -80,6 +89,18 @@ async function probe(target, method, { range = false, timeoutMs = TIMEOUT_MS } =
 const isServing = (code) => code >= 200 && code < 500;
 
 /**
+ * Did the origin answer us?
+ *
+ * `probe` resolves only when fetch returned a Response — network/DNS/TLS
+ * failures throw and come back as `ok: false`. With `redirect: 'manual'` a
+ * redirect can surface as the real 3xx (Node, Workers) or as an opaque response
+ * with status 0 (spec behaviour in some runtimes), and both mean "the server is
+ * there". Treating status 0 as serving is what keeps a redirect from being
+ * misread as an outage.
+ */
+const answered = (result) => !!result.ok && (result.statusCode === 0 || isServing(result.statusCode));
+
+/**
  * Check if a single URL is reachable.
  * @returns {Promise<{ status: 'online'|'offline', statusCode?: number, responseTime?: number, checkedAt: string, error?: string, note?: string }>}
  */
@@ -98,14 +119,14 @@ export async function checkSite(rawUrl) {
 
   // 1. HEAD — one request for the overwhelmingly common healthy case.
   let result = await probe(target, 'HEAD');
-  if (result.ok && isServing(result.statusCode)) {
+  if (answered(result)) {
     return { status: 'online', statusCode: result.statusCode, responseTime: result.responseTime, checkedAt };
   }
 
   // 2. GET with a 1-byte range — servers that dislike HEAD.
   if (!result.ok) {
     const viaGet = await probe(target, 'GET', { range: true });
-    if (viaGet.ok && isServing(viaGet.statusCode)) {
+    if (answered(viaGet)) {
       return { status: 'online', statusCode: viaGet.statusCode, responseTime: viaGet.responseTime, checkedAt };
     }
     result = viaGet;
@@ -117,7 +138,7 @@ export async function checkSite(rawUrl) {
   const root = `${url.protocol}//${url.host}/`;
   if (root !== target) {
     const viaRoot = await probe(root, 'GET', { range: true });
-    if (viaRoot.ok && isServing(viaRoot.statusCode)) {
+    if (answered(viaRoot)) {
       const reason = result.error || `HTTP ${result.statusCode}`;
       return {
         status: 'online',

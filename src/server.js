@@ -2911,6 +2911,98 @@ const server = http.createServer(async (req, res) => {
         return ok({ success: true });
       }
 
+      // ── ASSIGNMENTS (personal asks / requests / reminders) ──────
+      // Anyone can ask anyone. The sender is always taken from the session (or
+      // the app's identity headers), never from the request body.
+      const assignmentActor = () => {
+        const au = db.resolveAuthUser(req);
+        if (au && au.id) {
+          return { id: au.id, name: au.name || au.email || 'Teammate', role: au.role || 'user' };
+        }
+        const a = actorFrom(req, {}, reqUrl);
+        return a.id ? { id: a.id, name: a.name, role: a.role || 'user' } : null;
+      };
+      const isLead = role => role === 'admin' || role === 'superadmin';
+
+      // GET /api/master/assignments?scope=mine|sent|all&status=open|done|all
+      if (pathname === '/api/master/assignments' && method === 'GET') {
+        const me = assignmentActor();
+        if (!me) return err(401, 'Sign in to see your tasks.');
+        const scope = reqUrl.searchParams.get('scope') || 'mine';
+        const status = reqUrl.searchParams.get('status') || 'open';
+        const filter = { status };
+        if (scope === 'sent') filter.fromUserId = me.id;
+        else if (scope === 'all') {
+          if (!isLead(me.role)) return err(403, 'Only admins can see the whole team.');
+        } else {
+          filter.toUserId = me.id;
+          filter.toUserName = me.name;
+        }
+        const date = reqUrl.searchParams.get('date');
+        if (date) filter.date = date;
+        filter.limit = Number(reqUrl.searchParams.get('limit')) || 500;
+        return ok({ assignments: db.getAssignments(filter), me: { id: me.id, name: me.name } });
+      }
+
+      // POST /api/master/assignments — send an ask to a teammate
+      if (pathname === '/api/master/assignments' && method === 'POST') {
+        const b = await body();
+        const me = assignmentActor();
+        if (!me) return err(401, 'Sign in to send a task.');
+        const to = db.getUserById(b.toUserId) || (b.toUserName ? db.getUserByName(b.toUserName) : null);
+        if (!to || to.active === false) return err(400, 'Choose an active teammate.');
+        try {
+          const assignment = db.createAssignment({
+            title: b.title,
+            details: b.details,
+            kind: b.kind,
+            date: b.date,
+            time: b.time,
+            remindAt: b.remindAt,
+            toUserId: to.id,
+            toUserName: to.name,
+            fromUserId: me.id,
+            fromUserName: me.name,
+          });
+          return ok({ assignment });
+        } catch (e) { return err(400, e.message); }
+      }
+
+      // PUT /api/master/assignments/:id — complete, snooze, or edit
+      if (/^\/api\/master\/assignments\/([^/]+)$/.test(pathname) && method === 'PUT') {
+        const id = decodeURIComponent(pathname.split('/').pop());
+        const b = await body();
+        const me = assignmentActor();
+        if (!me) return err(401, 'Sign in to update this task.');
+        const cur = db.getAssignmentById(id);
+        if (!cur) return err(404, 'That task is gone.');
+        const isSender = cur.fromUserId === me.id;
+        const isAssignee = cur.toUserId === me.id ||
+          String(cur.toUserName || '').toLowerCase() === String(me.name || '').toLowerCase();
+        if (!isSender && !isAssignee && !isLead(me.role)) return err(403, 'This task is not yours.');
+        // The person receiving an ask can finish, snooze or dismiss it — only the
+        // sender (or an admin) can rewrite what was asked.
+        if (!isSender && !isLead(me.role)) {
+          const allowed = new Set(['status', 'remindAt', 'remindedAt', 'snoozeMinutes']);
+          const bad = Object.keys(b).filter(k => !allowed.has(k));
+          if (bad.length) return err(403, 'Only the sender can edit this ask.');
+        }
+        try { return ok({ assignment: db.updateAssignment(id, b) }); }
+        catch (e) { return err(400, e.message); }
+      }
+
+      // DELETE /api/master/assignments/:id — cancel what you sent
+      if (/^\/api\/master\/assignments\/([^/]+)$/.test(pathname) && method === 'DELETE') {
+        const id = decodeURIComponent(pathname.split('/').pop());
+        const me = assignmentActor();
+        if (!me) return err(401, 'Sign in to cancel this task.');
+        const cur = db.getAssignmentById(id);
+        if (!cur) return err(404, 'That task is gone.');
+        if (cur.fromUserId !== me.id && !isLead(me.role)) return err(403, 'Only the sender can cancel this ask.');
+        db.deleteAssignment(id);
+        return ok({ success: true });
+      }
+
       // ── PROPERTIES ─────────────────────────────────────────────
       // GET /api/master/properties
       if (pathname === '/api/master/properties' && method === 'GET') {
@@ -3826,6 +3918,18 @@ const server = http.createServer(async (req, res) => {
           return ok({ site: updated, result });
         }
 
+        // Fleet check. The Worker must not run the naive loop below: ~98 sites
+        // x up to 3 probes is ~294 subrequests against a 50-per-invocation cap,
+        // and the SSE path also writes KV once per site (~98 writes out of the
+        // 1,000/day budget). One bounded sweep instead — same monitor, one
+        // sites write, one meta write, and it returns a result.
+        if (!!globalThis.__OFFICEOS_WORKER__) {
+          const { runSweep, resolveSweepScope } = await import('./uptimeMonitor.js');
+          const scope = resolveSweepScope({ isWorker: true });
+          const r = await runSweep({ limit: scope.limit, source: 'manual' });
+          return ok({ ...r, workerBatch: true, limitedTo: scope.limit });
+        }
+
         // Check all (stream progress via SSE)
         const isSSE = req.headers.accept?.includes('text/event-stream');
         if (isSSE) {
@@ -3873,11 +3977,19 @@ const server = http.createServer(async (req, res) => {
       // Manual "Check now" + the scheduler entry point. One sweep, one write.
       if (pathname === '/api/master/uptime-sweep' && method === 'POST') {
         const b = await body();
-        const { runSweep } = await import('./uptimeMonitor.js');
-        const limit = Number(b.limit) > 0 ? Math.min(Number(b.limit), 500) : 0;
-        const siteIds = Array.isArray(b.siteIds) && b.siteIds.length ? b.siteIds : null;
-        const result = await runSweep({ limit, siteIds, source: b.source || 'manual' });
-        return ok(result);
+        const { runSweep, resolveSweepScope } = await import('./uptimeMonitor.js');
+        // The Worker cannot sweep the whole fleet in one invocation (50
+        // subrequests, up to 3 per site). An unbounded request becomes the next
+        // bounded batch instead of an invocation that dies mid-sweep with no
+        // result and no write. Locally the unbounded behaviour is kept.
+        const isWorker = !!globalThis.__OFFICEOS_WORKER__;
+        const scope = resolveSweepScope({
+          limit: Number(b.limit) > 0 ? Math.min(Number(b.limit), 500) : 0,
+          siteIds: b.siteIds,
+          isWorker,
+        });
+        const result = await runSweep({ limit: scope.limit, siteIds: scope.siteIds, source: b.source || 'manual' });
+        return ok({ ...result, scope: { ...scope, workerBatch: isWorker } });
       }
 
       // ── NOTICES (Notice Board) ──────────────────────────────────

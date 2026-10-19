@@ -823,6 +823,158 @@ export function deleteTask(id) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ASSIGNMENTS — personal asks, requests and reminders
+//
+// Deliberately a SEPARATE store from `tasks`. `tasks` is ClickUp's mirror
+// (syncFromSheets.js rewrites it), so mixing hand-written notes into it would
+// lose them on the next sync. These are one teammate asking another for
+// something: "please check the mail", "remind me to call the host at 3".
+//
+// Dates are plain local calendar days (YYYY-MM-DD) and times are local HH:MM,
+// because "today" means the user's today, not UTC's. remindAt is the absolute
+// instant the browser should ring, computed from those two fields.
+// ═══════════════════════════════════════════════════════════════════════════════
+export const ASSIGNMENT_KINDS = ['task', 'request', 'reminder'];
+export const ASSIGNMENT_STATUSES = ['open', 'done', 'dismissed'];
+
+const ASSIGN_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ASSIGN_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const ASSIGN_PATCHABLE = [
+  'title', 'details', 'kind', 'toUserId', 'toUserName', 'date', 'time',
+  'remindAt', 'status', 'remindedAt', 'snoozeMinutes',
+];
+
+/** Local calendar date, YYYY-MM-DD. Never UTC — "today" is the user's today. */
+export function localDate(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** date + "HH:MM" (both local) → ISO instant, or '' when either is missing. */
+export function assignmentRemindAt(date, time) {
+  if (!ASSIGN_DATE_RE.test(String(date || ''))) return '';
+  if (!ASSIGN_TIME_RE.test(String(time || ''))) return '';
+  const d = new Date(`${date}T${time}:00`);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString();
+}
+
+function assignmentOrder(a, b) {
+  const ad = `${a.date || '9999-99-99'}T${a.time || '00:00'}`;
+  const bd = `${b.date || '9999-99-99'}T${b.time || '00:00'}`;
+  if (ad !== bd) return ad < bd ? -1 : 1;
+  return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+}
+
+export function getAssignments(filter = {}) {
+  let rows = ensureArray(dbRead('assignments'));
+  if (filter.toUserId) {
+    const wantName = String(filter.toUserName || '').toLowerCase().trim();
+    rows = rows.filter(a => a.toUserId === filter.toUserId ||
+      (wantName && String(a.toUserName || '').toLowerCase().trim() === wantName));
+  }
+  if (filter.fromUserId) rows = rows.filter(a => a.fromUserId === filter.fromUserId);
+  if (filter.status && filter.status !== 'all') rows = rows.filter(a => a.status === filter.status);
+  if (filter.date) rows = rows.filter(a => a.date === filter.date);
+  if (filter.dueBefore) rows = rows.filter(a => a.date && a.date <= filter.dueBefore);
+  rows = rows.slice().sort(assignmentOrder);
+  const limit = Number(filter.limit) > 0 ? Math.min(Number(filter.limit), 1000) : 0;
+  return limit ? rows.slice(0, limit) : rows;
+}
+
+export function getAssignmentById(id) {
+  return ensureArray(dbRead('assignments')).find(a => a.id === id) || null;
+}
+
+export function createAssignment(input = {}) {
+  const title = String(input.title || '').trim().slice(0, 300);
+  if (!title) throw new Error('Write what you need first.');
+  if (!input.toUserId) throw new Error('Pick who this is for.');
+  const date = ASSIGN_DATE_RE.test(String(input.date || '')) ? input.date : localDate();
+  const time = ASSIGN_TIME_RE.test(String(input.time || '')) ? input.time : '';
+  const kind = ASSIGNMENT_KINDS.includes(input.kind) ? input.kind : 'task';
+  const ts = now();
+  const item = {
+    id: uuid(),
+    title,
+    details: String(input.details || '').trim().slice(0, 2000),
+    kind,
+    toUserId: String(input.toUserId),
+    toUserName: String(input.toUserName || ''),
+    fromUserId: String(input.fromUserId || ''),
+    fromUserName: String(input.fromUserName || ''),
+    date,
+    time,
+    remindAt: input.remindAt || assignmentRemindAt(date, time),
+    status: 'open',
+    createdAt: ts,
+    updatedAt: ts,
+    completedAt: '',
+    remindedAt: '',
+    snoozeCount: 0,
+  };
+  const rows = ensureArray(dbRead('assignments'));
+  rows.push(item);
+  dbWrite('assignments', rows);
+  return item;
+}
+
+export function updateAssignment(id, updates = {}) {
+  const rows = ensureArray(dbRead('assignments'));
+  const idx = rows.findIndex(a => a.id === id);
+  if (idx === -1) throw new Error(`Assignment not found: ${id}`);
+  const cur = rows[idx];
+  const next = { ...cur, updatedAt: now() };
+
+  for (const key of ASSIGN_PATCHABLE) {
+    if (updates[key] !== undefined) next[key] = updates[key];
+  }
+  // The sender never changes — a client must not be able to rewrite history.
+  next.fromUserId = cur.fromUserId;
+  next.fromUserName = cur.fromUserName;
+
+  if (next.title !== undefined) {
+    const t = String(next.title || '').trim().slice(0, 300);
+    next.title = t || cur.title;
+  }
+  next.details = String(next.details || '').trim().slice(0, 2000);
+  next.kind = ASSIGNMENT_KINDS.includes(next.kind) ? next.kind : cur.kind;
+
+  if (updates.date !== undefined) next.date = ASSIGN_DATE_RE.test(String(next.date || '')) ? next.date : cur.date;
+  if (updates.time !== undefined) next.time = ASSIGN_TIME_RE.test(String(next.time || '')) ? next.time : '';
+
+  if (updates.remindAt !== undefined) {
+    next.remindAt = updates.remindAt ? String(updates.remindAt) : '';
+  } else if (updates.date !== undefined || updates.time !== undefined) {
+    next.remindAt = assignmentRemindAt(next.date, next.time);
+  }
+
+  if (updates.snoozeMinutes !== undefined) {
+    const mins = Math.min(Math.max(Number(updates.snoozeMinutes) || 0, 1), 1440);
+    next.remindAt = new Date(Date.now() + mins * 60_000).toISOString();
+    next.snoozeCount = (Number(cur.snoozeCount) || 0) + 1;
+    next.status = 'open';
+    next.completedAt = '';
+  }
+
+  if (updates.status !== undefined) {
+    if (!ASSIGNMENT_STATUSES.includes(updates.status)) throw new Error('Unknown status.');
+    next.status = updates.status;
+    if (updates.status === 'done') next.completedAt = updates.completedAt || now();
+    else if (updates.status === 'open') next.completedAt = '';
+  }
+  if (next.status === 'done' && !next.completedAt) next.completedAt = now();
+
+  delete next.snoozeMinutes;
+  rows[idx] = next;
+  dbWrite('assignments', rows);
+  return next;
+}
+
+export function deleteAssignment(id) {
+  dbWrite('assignments', ensureArray(dbRead('assignments')).filter(a => a.id !== id));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // PROPERTIES
 // ═══════════════════════════════════════════════════════════════════════════════
 export function getProperties() { return ensureArray(dbRead('properties')); }

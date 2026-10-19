@@ -423,6 +423,7 @@ const NAV_SECTIONS = {
       title: 'Workspace',
       items: [
         { id: 'overview', icon: 'overview', label: 'Overview' },
+        { id: 'my-tasks', icon: 'my-tasks', label: 'My Tasks' },
         { id: 'dev-projects', icon: 'dev-projects', label: 'Dev Tracker & Sitemaps', badge: 'Live' },
         { id: 'all-users', icon: 'all-users', label: 'Team Progress' },
       ],
@@ -450,6 +451,7 @@ const NAV_SECTIONS = {
       title: 'Workspace',
       items: [
         { id: 'overview', icon: 'overview', label: 'Overview' },
+        { id: 'my-tasks', icon: 'my-tasks', label: 'My Tasks' },
         { id: 'dev-projects', icon: 'dev-projects', label: 'Dev Tracker & Sitemaps', badge: 'Live' },
         { id: 'all-users', icon: 'all-users', label: 'Team Progress' },
       ],
@@ -508,6 +510,9 @@ function buildNav(role) {
   // Re-apply the proactive-uptime badge — the nav is rebuilt on login and role
   // change, so the down-count badge has to be repainted with it.
   applyUptimeNavBadge();
+
+  // Same for the personal "due today" count on My Tasks.
+  applyAssignmentNavBadge();
 }
 
 function getAssignedCoveringUsers() {
@@ -1104,6 +1109,10 @@ function enterApp() {
   // down surfaces here (banner + nav badge + toast) without anyone opening the
   // Uptime Monitor. Nothing is checked from the browser — the server sweeps.
   startUptimeWatch();
+
+  // Personal asks/reminders: one poll a minute, so a timed alarm rings even when
+  // the user is on another view. Cheap — it is one local JSON read.
+  startAssignmentWatch();
 
   // Default view
   const defaultViews = { user: 'my-sites', admin: 'overview', superadmin: 'overview' };
@@ -3103,44 +3112,568 @@ function editDailyReviewRowModal(row, onSaved) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// VIEW: MY TASKS (User)
+// VIEW: MY TASKS — personal asks, requests and reminders
 // ═══════════════════════════════════════════════════════════════════════════════
-async function viewMyTasks() {
-  if (!S.userName || S.userName === 'Superadmin' || S.userName === 'Admin') {
-    const activeUsers = (S.users || []).filter(u => u.active !== false);
-    const selfMatch = activeUsers.find(u => u.id === (S.authUser && S.authUser.id)) ||
-                      activeUsers.find(u => u.name && S.authUser && u.name.toLowerCase() === (S.authUser.name || '').toLowerCase()) ||
-                      activeUsers[0];
-    if (selfMatch) {
-      S.userId = selfMatch.id;
-      S.userName = selfMatch.name;
-    }
+// A teammate can ask anyone for anything ("please check the mail"), pick the day,
+// and optionally set a time. The receiver sees it in My Tasks with a nav badge,
+// and at that time the open dashboard rings an alarm (toast + chime + browser
+// notification). This is a SEPARATE store from ClickUp's `tasks` mirror, so a
+// sheet sync can never wipe a hand-written ask.
+const ASSIGN = {
+  mine: [],
+  sent: [],
+  tab: 'mine',
+  kind: 'task',
+  ticker: null,
+  inFlight: null,
+  lastAt: 0,
+  startedAt: 0,
+  audio: null,
+  fired: null,
+};
+
+const ASSIGN_FIRED_KEY = 'officeos_assign_fired_v1';
+
+function _assignMe() {
+  const au = S.authUser || {};
+  return {
+    id: au.id || S.userId || '',
+    name: au.name || S.userName || 'You',
+    role: au.role || S.role || 'user',
+  };
+}
+
+/** Local calendar date, YYYY-MM-DD — "today" is the user's today, not UTC's. */
+function _assignToday(d = new Date()) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function _assignDateOf(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : _assignToday(d);
+}
+
+function _assignDayLabel(dateStr) {
+  if (!dateStr) return 'someday';
+  const today = _assignToday();
+  if (dateStr === today) return 'Today';
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  if (dateStr === _assignToday(t)) return 'Tomorrow';
+  const parsed = new Date(`${dateStr}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return dateStr;
+  return parsed.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function _assignChip(kind) {
+  const k = kind === 'request' ? 'request' : kind === 'reminder' ? 'reminder' : 'task';
+  const label = k === 'request' ? 'Request' : k === 'reminder' ? 'Reminder' : 'Task';
+  return `<span class="mt-chip mt-chip--${k}">${label}</span>`;
+}
+
+function _assignEmpty(title, sub) {
+  return `<div class="mt-empty">
+    <div class="mt-empty-icon" aria-hidden="true">✓</div>
+    <div><div class="mt-empty-title">${esc(title)}</div><div class="mt-empty-sub">${esc(sub)}</div></div>
+  </div>`;
+}
+
+function _assignRow(a, mode) {
+  const today = _assignToday();
+  const late = a.status === 'open' && a.date && a.date < today;
+  const done = a.status === 'done';
+  const dismissed = a.status === 'dismissed';
+  const who = mode === 'sent'
+    ? `to <b>${esc(a.toUserName || 'someone')}</b>`
+    : `from <b>${esc(a.fromUserName || 'a teammate')}</b>`;
+  const statusChip = mode === 'sent'
+    ? `<span class="mt-status mt-status--${esc(a.status || 'open')}">${done ? 'Done' : dismissed ? 'Dismissed' : 'Waiting'}</span>`
+    : '';
+  return `
+    <div class="mt-row ${late ? 'is-late' : ''} ${done ? 'is-done' : ''} ${dismissed ? 'is-dismissed' : ''}" data-id="${esc(a.id)}">
+      <div class="mt-row-time">${a.time ? esc(a.time) : '<span class="mt-anytime">Any time</span>'}</div>
+      <div class="mt-row-body">
+        <div class="mt-row-top">
+          <span class="mt-row-title">${esc(a.title)}</span>
+          ${_assignChip(a.kind)}
+          ${statusChip}
+        </div>
+        <div class="mt-row-meta">${who} · ${esc(_assignDayLabel(a.date))}${late ? ' · <span class="mt-late">overdue</span>' : ''}</div>
+        ${a.details ? `<div class="mt-row-note">${esc(a.details)}</div>` : ''}
+      </div>
+      <div class="mt-row-actions">
+        ${mode === 'mine' && a.status === 'open' ? `
+          <button type="button" class="mt-act mt-act--done" data-act="done" title="Mark done">✓ Done</button>
+          ${(a.time || a.remindAt) ? `<button type="button" class="mt-act" data-act="snooze" title="Snooze 10 minutes">+10m</button>` : ''}
+          <button type="button" class="mt-act mt-act--quiet" data-act="dismiss" title="Dismiss">✕</button>` : ''}
+        ${mode === 'sent' && a.status === 'open' ? `<button type="button" class="mt-act mt-act--quiet" data-act="cancel" title="Cancel this ask">✕</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function _assignListHtml(list, mode) {
+  const today = _assignToday();
+  if (mode === 'sent') {
+    const rows = (list || []).slice().sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    if (!rows.length) return _assignEmpty('Nothing sent yet', 'Ask someone above — it lands in their My Tasks.');
+    return `<div class="mt-group"><div class="mt-group-head">Your asks <span>${rows.length}</span></div>${rows.map(a => _assignRow(a, 'sent')).join('')}</div>`;
   }
 
-  setPage('My Tasks', `Assigned tasks for ${S.userName || 'You'}`);
-  let tasks = [];
+  const rows = (list || []).slice().sort((a, b) => {
+    const ak = `${a.date || '9999-99-99'}T${a.time || '00:00'}`;
+    const bk = `${b.date || '9999-99-99'}T${b.time || '00:00'}`;
+    return ak.localeCompare(bk);
+  });
+  const open = rows.filter(a => a.status === 'open');
+  const doneToday = rows.filter(a => a.status === 'done' && _assignDateOf(a.completedAt) === today);
+  if (!open.length && !doneToday.length) {
+    return _assignEmpty('Nothing for today', 'Ask someone above, or enjoy the quiet.');
+  }
+  const late = open.filter(a => a.date && a.date < today);
+  const due = open.filter(a => a.date === today);
+  const later = open.filter(a => !a.date || a.date > today);
+  const group = (title, items, cls = '') => items.length
+    ? `<div class="mt-group ${cls}"><div class="mt-group-head">${title} <span>${items.length}</span></div>${items.map(a => _assignRow(a, 'mine')).join('')}</div>`
+    : '';
+  return [
+    group('Overdue', late, 'mt-group--late'),
+    group('Today', due),
+    group('Upcoming', later),
+    group('Done today', doneToday.slice(0, 8), 'mt-group--done'),
+    (!open.length ? `<div class="mt-clear">All clear for today ✓</div>` : ''),
+  ].join('');
+}
+
+function _assignUpdateHero(list) {
+  const today = _assignToday();
+  const rows = list || ASSIGN.mine;
+  const open = rows.filter(a => a.status === 'open');
+  const late = open.filter(a => a.date && a.date < today).length;
+  const due = open.filter(a => a.date === today).length + late;
+  const done = rows.filter(a => a.status === 'done' && _assignDateOf(a.completedAt) === today).length;
+  const set = (id, n) => { const el = $(id); if (el) el.textContent = String(n); };
+  set('mt-stat-due', due);
+  set('mt-stat-done', done);
+  set('mt-stat-late', late);
+  const tabCount = $('mt-tab-count');
+  if (tabCount) tabCount.textContent = due ? String(due) : '';
+  const sub = $('mt-hero-sub');
+  if (sub) {
+    sub.textContent = open.length
+      ? `${open.length} open${due ? ` · ${due} for today` : ''}${late ? ` · ${late} overdue` : ''}`
+      : 'Nothing open — enjoy the quiet.';
+  }
+}
+
+function _assignFiredMap() {
+  if (ASSIGN.fired) return ASSIGN.fired;
   try {
-    const qParts = [];
-    if (S.userId && S.userName !== 'All Team Sites') qParts.push(`assigneeId=${encodeURIComponent(S.userId)}`);
-    if (S.userName && S.userName !== 'All Team Sites') qParts.push(`user=${encodeURIComponent(S.userName)}`);
-    const qStr = qParts.length ? `?${qParts.join('&')}` : '';
-    const data = await GET(`/api/master/tasks${qStr}`);
-    tasks = data.tasks || [];
+    ASSIGN.fired = new Map(Object.entries(JSON.parse(localStorage.getItem(ASSIGN_FIRED_KEY) || '{}')));
+  } catch { ASSIGN.fired = new Map(); }
+  return ASSIGN.fired;
+}
+
+function _assignFiredSave() {
+  try {
+    const m = _assignFiredMap();
+    const cutoff = Date.now() - 7 * 864e5;
+    for (const [id, at] of m) {
+      const t = Date.parse(at);
+      if (!t || t < cutoff) m.delete(id);
+    }
+    localStorage.setItem(ASSIGN_FIRED_KEY, JSON.stringify(Object.fromEntries(m)));
+  } catch { }
+}
+
+/** Create/resume the audio context. Browsers only allow this after a gesture. */
+function _assignPrimeAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!ASSIGN.audio) ASSIGN.audio = new Ctx();
+    if (ASSIGN.audio.state === 'suspended') ASSIGN.audio.resume();
+  } catch { }
+}
+
+/** Three soft notes — a nudge, not a fire alarm. */
+function _assignChime() {
+  const ctx = ASSIGN.audio;
+  if (!ctx) return;
+  try {
+    if (ctx.state === 'suspended') ctx.resume();
+    const t0 = ctx.currentTime;
+    [0, 0.2, 0.4].forEach((off, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = i === 1 ? 1046.5 : 880;
+      g.gain.setValueAtTime(0.0001, t0 + off);
+      g.gain.exponentialRampToValueAtTime(0.16, t0 + off + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.18);
+      o.connect(g).connect(ctx.destination);
+      o.start(t0 + off);
+      o.stop(t0 + off + 0.2);
+    });
+  } catch { }
+}
+
+function _assignFire(a) {
+  const from = a.fromUserName ? ` · from ${a.fromUserName}` : '';
+  toast(`⏰ ${a.title}${from}${a.time ? ` · ${a.time}` : ''}`, 'info', 15000);
+  _assignChime();
+  try {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const kind = a.kind === 'reminder' ? 'Reminder' : a.kind === 'request' ? 'Request' : 'Task';
+      new Notification(`⏰ ${a.title}`, {
+        body: `${kind} from ${a.fromUserName || 'a teammate'}${a.time ? ` at ${a.time}` : ''}`,
+        icon: '/favicon.svg',
+        tag: `officeos-ask-${a.id}`,
+      });
+    }
+  } catch { }
+}
+
+/** Ring once per item per remindAt, across tabs (localStorage), never for history. */
+function _assignAlarms(list) {
+  const now = Date.now();
+  const start = ASSIGN.startedAt || now;
+  const firedMap = _assignFiredMap();
+  let fired = 0;
+  for (const a of list) {
+    if (a.status !== 'open' || !a.remindAt) continue;
+    const at = Date.parse(a.remindAt);
+    if (!at || at > now) continue;
+    if (firedMap.get(a.id) === a.remindAt) continue;
+    firedMap.set(a.id, a.remindAt);
+    if (at < start - 5 * 60_000) continue; // loaded a page with old asks: stay quiet
+    _assignFire(a);
+    if (++fired >= 3) break;
+  }
+  if (fired) _assignFiredSave();
+}
+
+/** Red count badge on the My Tasks nav item (due today + overdue). */
+function applyAssignmentNavBadge(list) {
+  const rows = Array.isArray(list) ? list : ASSIGN.mine;
+  const today = _assignToday();
+  const late = rows.filter(a => a.status === 'open' && a.date && a.date < today).length;
+  const due = rows.filter(a => a.status === 'open' && a.date === today).length;
+  const count = due + late;
+  const nav = document.getElementById('nav-my-tasks');
+  if (!nav) return;
+  let badge = nav.querySelector('.nav-pill-badge[data-ask-badge]');
+  if (!count) {
+    if (badge) badge.remove();
+    nav.removeAttribute('title');
+    return;
+  }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'nav-pill-badge';
+    badge.dataset.askBadge = '1';
+    nav.appendChild(badge);
+  }
+  badge.textContent = String(count);
+  badge.classList.toggle('nav-pill-badge--danger', late > 0);
+  nav.title = `My Tasks — ${count} for today${late ? ` (${late} overdue)` : ''}`;
+}
+
+/** One poll: my open asks → badge, alarms, and a live list if the view is open. */
+async function assignmentTick() {
+  if (ASSIGN.inFlight) return ASSIGN.inFlight;
+  if (!_assignMe().id) return null;
+  ASSIGN.inFlight = (async () => {
+    try {
+      const data = await GET('/api/master/assignments?scope=mine&status=all&limit=200');
+      const list = (data && data.assignments) || [];
+      ASSIGN.mine = list;
+      ASSIGN.lastAt = Date.now();
+      applyAssignmentNavBadge(list);
+      _assignAlarms(list);
+      if (S.view === 'my-tasks' && ASSIGN.tab === 'mine') {
+        const box = $('mt-list');
+        if (box) {
+          box.innerHTML = _assignListHtml(list, 'mine');
+          _wireAssignRows();
+        }
+        _assignUpdateHero(list);
+      }
+      return list;
+    } catch {
+      return null;
+    } finally {
+      ASSIGN.inFlight = null;
+    }
+  })();
+  return ASSIGN.inFlight;
+}
+
+function startAssignmentWatch() {
+  ASSIGN.startedAt = Date.now();
+  document.addEventListener('pointerdown', _assignPrimeAudio, { passive: true });
+  assignmentTick();
+  if (ASSIGN.ticker) return;
+  // Timed asks must ring even when the tab is in the background — that is
+  // exactly when an alarm earns its keep. Background timers are throttled to
+  // about one a minute by the browser, which is the same cadence anyway.
+  ASSIGN.ticker = setInterval(() => assignmentTick(), 60_000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - ASSIGN.lastAt > 30_000) assignmentTick();
+  });
+}
+
+async function _assignSend() {
+  const me = _assignMe();
+  const toUserId = $('mt-to') && $('mt-to').value;
+  const title = (($('mt-title') && $('mt-title').value) || '').trim();
+  if (!title) { $('mt-title')?.focus(); toast('Write what you need first.', 'error'); return; }
+  if (!toUserId) { toast('Pick a teammate.', 'error'); return; }
+  const date = ($('mt-date') && $('mt-date').value) || _assignToday();
+  const time = ($('mt-time') && $('mt-time').value) || '';
+  const btn = $('mt-send');
+  const label = btn ? btn.textContent : 'Send';
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  _assignPrimeAudio();
+  try {
+    const r = await POST('/api/master/assignments', {
+      toUserId, title, date, time, kind: ASSIGN.kind,
+      details: ($('mt-details') && $('mt-details').value) || '',
+    });
+    const a = r.assignment;
+    ASSIGN.sent.unshift(a);
+    if (a.toUserId === me.id) ASSIGN.mine.push(a);
+    $('mt-title').value = '';
+    $('mt-details').value = '';
+    $('mt-time').value = '';
+    ASSIGN.tab = 'mine';
+    document.querySelectorAll('#mt-tabs button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === 'mine'));
+    $('mt-list').innerHTML = _assignListHtml(ASSIGN.mine, 'mine');
+    applyAssignmentNavBadge(ASSIGN.mine);
+    _assignUpdateHero(ASSIGN.mine);
+    _wireAssignRows();
+    toast(`Sent to ${a.toUserName} · ${_assignDayLabel(date)}${time ? ` at ${time} — alarm set` : ''}`, 'success', 5000);
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
+}
+
+function _wireAssignRows() {
+  const box = $('mt-list');
+  if (!box) return;
+  box.querySelectorAll('.mt-row-actions button[data-act]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const row = btn.closest('.mt-row');
+      const id = row && row.dataset.id;
+      if (!id) return;
+      const act = btn.dataset.act;
+      const item = (ASSIGN.mine || []).find(a => a.id === id) || (ASSIGN.sent || []).find(a => a.id === id);
+      if (!item) return;
+      btn.disabled = true;
+      try {
+        if (act === 'done') {
+          await PUT(`/api/master/assignments/${encodeURIComponent(id)}`, { status: 'done' });
+          item.status = 'done';
+          item.completedAt = new Date().toISOString();
+          toast('Done ✓', 'success', 2000);
+        } else if (act === 'dismiss') {
+          await PUT(`/api/master/assignments/${encodeURIComponent(id)}`, { status: 'dismissed' });
+          item.status = 'dismissed';
+        } else if (act === 'snooze') {
+          const r = await PUT(`/api/master/assignments/${encodeURIComponent(id)}`, { snoozeMinutes: 10 });
+          item.remindAt = r.assignment.remindAt;
+          item.snoozeCount = r.assignment.snoozeCount;
+          item.status = 'open';
+          _assignFiredMap().delete(id); // the new instant may ring again
+          toast('Snoozed 10 minutes', 'info', 2500);
+        } else if (act === 'cancel') {
+          if (!confirm('Cancel this ask?')) { btn.disabled = false; return; }
+          await DELETE(`/api/master/assignments/${encodeURIComponent(id)}`);
+          ASSIGN.sent = ASSIGN.sent.filter(a => a.id !== id);
+          toast('Cancelled', 'info', 2000);
+        }
+        $('mt-list').innerHTML = _assignListHtml(ASSIGN.tab === 'sent' ? ASSIGN.sent : ASSIGN.mine, ASSIGN.tab);
+        applyAssignmentNavBadge(ASSIGN.mine);
+        _assignUpdateHero(ASSIGN.mine);
+        _wireAssignRows();
+      } catch (e) {
+        toast(e.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+function _wireAssignView() {
+  const seg = $('mt-kind-seg');
+  if (seg) {
+    seg.querySelectorAll('button[data-kind]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        ASSIGN.kind = btn.dataset.kind;
+        seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+  }
+
+  $('mt-quick-day')?.querySelectorAll('button[data-day]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = new Date();
+      d.setDate(d.getDate() + Number(btn.dataset.day));
+      $('mt-date').value = _assignToday(d);
+      $('mt-quick-day').querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  $('mt-alarms-btn')?.addEventListener('click', async () => {
+    try {
+      const p = await Notification.requestPermission();
+      const b = $('mt-alarms-btn');
+      if (p === 'granted') {
+        toast('Alarms on — keep this dashboard open to hear them.', 'success', 5000);
+        if (b) b.outerHTML = '<span class="mt-alarm-on">🔔 Alarms on</span>';
+      } else {
+        toast('Alarms stay silent in the tab; the badge still updates.', 'info', 5000);
+      }
+    } catch { }
+  });
+
+  $('mt-send')?.addEventListener('click', _assignSend);
+  $('mt-title')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); _assignSend(); }
+  });
+
+  $('mt-tabs')?.querySelectorAll('button[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      ASSIGN.tab = btn.dataset.tab;
+      $('mt-tabs').querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      $('mt-list').innerHTML = _assignListHtml(ASSIGN.tab === 'sent' ? ASSIGN.sent : ASSIGN.mine, ASSIGN.tab);
+      _wireAssignRows();
+    });
+  });
+
+  _wireAssignRows();
+}
+
+async function viewMyTasks() {
+  setPage('My Tasks', 'Ask anyone — it lands on their day. Set a time to ring an alarm.');
+  const me = _assignMe();
+
+  if (!S.users || !S.users.length) {
+    try { const u = await GET('/api/master/users'); if (u && u.users) S.users = u.users; } catch { }
+  }
+
+  let mine = [];
+  let sent = [];
+  try {
+    const [m, s] = await Promise.all([
+      GET('/api/master/assignments?scope=mine&status=all&limit=200'),
+      GET('/api/master/assignments?scope=sent&status=all&limit=200'),
+    ]);
+    mine = (m && m.assignments) || [];
+    sent = (s && s.assignments) || [];
   } catch (e) { toast(e.message, 'error'); }
+  ASSIGN.mine = mine;
+  ASSIGN.sent = sent;
+  ASSIGN.tab = 'mine';
+  applyAssignmentNavBadge(mine);
+
+  // ClickUp's mirrored work tasks are kept — folded away at the bottom so they
+  // never crowd out the personal asks this page is actually for.
+  let work = [];
+  try {
+    let wid = S.userId;
+    let wname = S.userName;
+    if (!wid || wname === 'Superadmin' || wname === 'Admin') {
+      const au = S.authUser || {};
+      if (au.id) { wid = au.id; wname = au.name; }
+    }
+    const qParts = [];
+    if (wid && wname !== 'All Team Sites') qParts.push(`assigneeId=${encodeURIComponent(wid)}`);
+    if (wname && wname !== 'All Team Sites') qParts.push(`user=${encodeURIComponent(wname)}`);
+    const data = await GET(`/api/master/tasks${qParts.length ? '?' + qParts.join('&') : ''}`);
+    work = data.tasks || [];
+  } catch { }
+
+  const today = _assignToday();
+  const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  const users = (S.users || []).filter(u => u.active !== false && !u.mergedInto);
+  const canNotify = 'Notification' in window;
+  const alarmState = canNotify ? Notification.permission : 'unsupported';
 
   mainEl.innerHTML = `
-    <div class="fade-in">
-      <div class="card">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-          <span class="card-title">📋 Assigned Tasks (${tasks.length})</span>
-          ${S.userName !== 'All Team Sites' ? `
-            <button class="btn btn-secondary btn-sm" id="btn-view-all-tasks" style="font-size:12px">View All Tasks</button>
-          ` : ''}
+    <div class="fade-in mt-page">
+      <div class="mt-hero">
+        <div class="mt-hero-copy">
+          <div class="mt-kicker">MY DAY</div>
+          <div class="mt-hero-title">${esc(dateLabel)}</div>
+          <div class="mt-hero-sub" id="mt-hero-sub"></div>
         </div>
+        <div class="mt-hero-stats">
+          <div class="mt-stat"><b id="mt-stat-due">0</b><span>due today</span></div>
+          <div class="mt-stat"><b id="mt-stat-done">0</b><span>done</span></div>
+          <div class="mt-stat mt-stat--late"><b id="mt-stat-late">0</b><span>overdue</span></div>
+        </div>
+      </div>
+
+      <div class="card mt-ask">
+        <div class="mt-ask-head">
+          <div class="mt-ask-title">Ask someone</div>
+          <div class="mt-seg" id="mt-kind-seg">
+            <button type="button" data-kind="task" class="active">Task</button>
+            <button type="button" data-kind="request">Request</button>
+            <button type="button" data-kind="reminder">Reminder</button>
+          </div>
+        </div>
+        <div class="mt-ask-row">
+          <label class="mt-field mt-field--to"><span>To</span>
+            <select id="mt-to" class="form-select">
+              ${users.map(u => `<option value="${esc(u.id)}"${u.id === me.id ? ' selected' : ''}>${esc(u.name)}${u.id === me.id ? ' (me)' : ''}</option>`).join('')}
+            </select>
+          </label>
+          <label class="mt-field mt-field--what"><span>What</span>
+            <input id="mt-title" class="form-input" maxlength="300" placeholder="e.g. Please check the morning mail" autocomplete="off">
+          </label>
+        </div>
+        <div class="mt-ask-row mt-ask-row--when">
+          <label class="mt-field mt-field--day"><span>Day</span>
+            <input id="mt-date" type="date" class="form-input" value="${today}">
+          </label>
+          <div class="mt-quick-day" id="mt-quick-day">
+            <button type="button" data-day="0" class="active">Today</button>
+            <button type="button" data-day="1">Tomorrow</button>
+          </div>
+          <label class="mt-field mt-field--time"><span>Time <em>optional</em></span>
+            <input id="mt-time" type="time" class="form-input">
+          </label>
+          <button class="btn btn-primary mt-send" id="mt-send">Send</button>
+        </div>
+        <input id="mt-details" class="form-input mt-details" maxlength="2000" placeholder="Add a note (optional)" autocomplete="off">
+        <div class="mt-ask-foot">
+          <span class="mt-hint">Add a time and their dashboard rings like an alarm.</span>
+          ${alarmState === 'default' ? '<button type="button" class="mt-alarm-btn" id="mt-alarms-btn">🔔 Enable alarms</button>'
+            : alarmState === 'granted' ? '<span class="mt-alarm-on">🔔 Alarms on</span>' : ''}
+        </div>
+      </div>
+
+      <div class="mt-tabs" id="mt-tabs">
+        <button type="button" data-tab="mine" class="active">For me <span id="mt-tab-count"></span></button>
+        <button type="button" data-tab="sent">I sent</button>
+        <span class="mt-tabs-me">${esc(me.name)}</span>
+      </div>
+
+      <div class="card mt-list-card">
+        <div id="mt-list">${_assignListHtml(mine, 'mine')}</div>
+      </div>
+
+      <details class="card mt-work">
+        <summary>Assigned work tasks <span class="mt-work-count">${work.length}</span><span class="mt-work-sub">ClickUp mirror</span></summary>
         <div class="table-wrap">
           <table class="table-smart-fit">
             <thead><tr><th>Task</th><th>Site</th><th>Type</th><th>Priority</th><th>Status</th><th>ClickUp</th></tr></thead>
-            <tbody>${tasks.length ? tasks.map(t => `
+            <tbody>${work.length ? work.map(t => `
               <tr>
                 <td style="font-weight:500">${esc(t.taskName)}</td>
                 <td class="url-cell"><a href="${esc(t.siteUrl)}" target="_blank">${esc(shortUrl(t.siteUrl))}</a></td>
@@ -3148,21 +3681,15 @@ async function viewMyTasks() {
                 <td>${priorityBadge(t.priority)}</td>
                 <td>${statusBadge(t.status)}</td>
                 <td>${t.clickupLink ? `<a class="btn btn-ghost btn-sm" href="${esc(t.clickupLink)}" target="_blank">Open</a>` : '—'}</td>
-              </tr>`).join('') : '<tr><td colspan="6" class="empty-state" style="text-align:center;padding:32px">No tasks assigned to ' + esc(S.userName || 'you') + '</td></tr>'}
+              </tr>`).join('') : '<tr><td colspan="6" class="empty-state" style="text-align:center;padding:24px">No work tasks assigned.</td></tr>'}
             </tbody>
           </table>
         </div>
-      </div>
+      </details>
     </div>`;
 
-  const btnAll = $('btn-view-all-tasks');
-  if (btnAll) {
-    btnAll.addEventListener('click', () => {
-      S.userName = 'All Team Sites';
-      S.userId = null;
-      viewMyTasks();
-    });
-  }
+  _assignUpdateHero(mine);
+  _wireAssignView();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -4643,10 +5170,13 @@ async function viewSites() {
 
   // Check uptime
   $('check-uptime-btn')?.addEventListener('click', async () => {
-    toast('Checking all sites… this may take a few minutes', 'info', 10000);
+    toast('Checking sites…', 'info', 8000);
     try {
       const r = await POST('/api/master/check-uptime', {});
-      toast(`✅ ${r.online} online, ${r.offline} offline`, 'success', 6000);
+      // On the cloud dashboard a fleet check is a bounded batch (Worker
+      // subrequest budget), so say how many were actually checked.
+      const batch = r.workerBatch ? ` · cloud batch of ${r.checked}` : '';
+      toast(`✅ ${r.online} online, ${r.offline} offline${batch}`, 'success', 6000);
       navigate('sites');
     } catch (e) { toast(e.message, 'error'); }
   });
@@ -5698,11 +6228,13 @@ async function viewUptime() {
     btn.disabled = true;
     btn.textContent = '⏳ Checking…';
     prog.classList.remove('hidden');
-    prog.textContent = `Sweeping ${sites.length} sites — the page stays responsive`;
+    prog.textContent = 'Sweeping sites — the page stays responsive';
     try {
       const r = await POST('/api/master/uptime-sweep', {});
-      prog.textContent = `${r.checked} checked · ${r.online} up · ${r.offline} down · ${Math.round((r.tookMs || 0) / 1000)}s`;
-      toast(`Sweep done — ${r.online} online, ${r.offline} down`, r.offline ? 'error' : 'success', 4000);
+      const capped = !!(r.scope && r.scope.capped);
+      prog.textContent = `${r.checked} checked · ${r.online} up · ${r.offline} down · ${Math.round((r.tookMs || 0) / 1000)}s`
+        + (capped ? ' — cloud batch; run again for the next sites' : '');
+      toast(`Sweep done — ${r.online} online, ${r.offline} down` + (capped ? ' · next batch with another click' : ''), r.offline ? 'error' : 'success', 4000);
       await uptimeTick();
       const fresh = await GET('/api/master/sites').catch(() => null);
       if (fresh && fresh.sites) applyUptimeToView(fresh.sites);
