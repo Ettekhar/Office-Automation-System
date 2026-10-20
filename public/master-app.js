@@ -385,6 +385,29 @@ function shortUrl(url, max = 38) {
   return s.length > max ? s.slice(0, max) + '…' : s;
 }
 
+/**
+ * Sheet URL cells are hand-entered. Some start with https://, many are bare
+ * domains ("example.com"). The table should make every one of them clickable
+ * without guessing at arbitrary text, so only turn values that really look like
+ * a hostname into a URL.
+ */
+function normalizeWebsiteUrl(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (/^\/\//.test(raw)) return `https:${raw}`;
+  if (/^(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+(?:[/:?#][^\s]*)?$/i.test(raw)) {
+    return `https://${raw}`;
+  }
+  return '';
+}
+
+/** "Updated & Backup" is the sheet's finished marker for a month column. */
+function isCompletedSheetValue(value) {
+  const s = String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return /^(updated\s*(?:&|and)\s*back(?:up(?:ped)?|ed\s*up)|completed?|done|finished)$/.test(s);
+}
+
 // ─── Vector Nav Icons ────────────────────────────────────────────────────────
 function getNavSvg(key) {
   const map = {
@@ -10955,6 +10978,14 @@ async function viewCustomSheet(sheetId) {
   let activeAssigneeFilter = '';
   let viewMode = 'cards';
   try { viewMode = localStorage.getItem('officeos_sheet_view_mode') || 'cards'; } catch { }
+  let hideCompletedMonths = true;
+  try { hideCompletedMonths = localStorage.getItem('officeos_sheet_hide_completed') !== '0'; } catch { }
+
+  function setHideCompletedMonths(next) {
+    hideCompletedMonths = !!next;
+    try { localStorage.setItem('officeos_sheet_hide_completed', hideCompletedMonths ? '1' : '0'); } catch { }
+    loadAndRender();
+  }
 
   async function loadAndRender() {
     mainEl.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div><p>Connecting to Google Sheets…</p></div>';
@@ -10983,6 +11014,7 @@ async function viewCustomSheet(sheetId) {
       rows = [], total = 0, headers = [], pages = 1, canEdit = false, title = '', tabName = '', tabs = [], spreadsheetId = '',
       statusColKeys = [], assigneeColKeys = [], urlColKeys = [], titleColKeys = [],
       primaryStatusKey = null, primaryAssigneeKey = null, primaryUrlKey = null, primaryTitleKey = null,
+      monthColKeys = [], completedMonthKeys = [], emptyMonthKeys = [], latestMonthKey = null,
       statusSummary = {}, assigneeSummary = {}, allStatuses = [], metrics = {}
     } = data;
 
@@ -11007,6 +11039,17 @@ async function viewCustomSheet(sheetId) {
         return (!isNaN(an) && !isNaN(bn) ? (an - bn) : av.localeCompare(bv)) * sortDir;
       });
     }
+
+    // Month focus view: collapse historical month columns that are entirely
+    // "Updated & Backup" (or empty). The newest month column always stays
+    // visible because it is the current maintenance cycle. This is display
+    // only; toggling it back restores every column and the table scrolls.
+    const hiddenMonthKeys = new Set(hideCompletedMonths ? [...completedMonthKeys, ...emptyMonthKeys] : []);
+    if (latestMonthKey) hiddenMonthKeys.delete(latestMonthKey);
+    const visibleHeaders = headers.filter(h => !hiddenMonthKeys.has(h.key));
+    const hiddenMonthCount = headers.length - visibleHeaders.length;
+    const monthKeySet = new Set(monthColKeys);
+    const hasMonthFocus = (completedMonthKeys.length + emptyMonthKeys.length) > 0;
 
     const totalCount = metrics.total || total || 0;
     const completedCount = metrics.completed || 0;
@@ -11166,6 +11209,14 @@ async function viewCustomSheet(sheetId) {
             </div>
 
             <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap">
+              ${hasMonthFocus ? `
+                <label class="cs-focus-toggle" title="Hide month columns that are entirely 'Updated & Backup' or empty. The newest month always stays visible.">
+                  <input type="checkbox" id="cs-hide-completed" ${hideCompletedMonths ? 'checked' : ''}>
+                  <span class="cs-focus-track" aria-hidden="true"><span class="cs-focus-thumb"></span></span>
+                  <span>Hide completed months</span>
+                  ${hideCompletedMonths && hiddenMonthCount ? `<span class="cs-focus-count">${hiddenMonthCount}</span>` : ''}
+                </label>
+              ` : ''}
               ${(activeStatusFilter || activeAssigneeFilter) ? `
                 <div style="display:flex;align-items:center;gap:6px">
                   <span class="badge badge-accent" style="font-size:11px">
@@ -11207,9 +11258,17 @@ async function viewCustomSheet(sheetId) {
                   ${filtered.map(r => {
       const titleVal = primaryTitleKey ? String(r[primaryTitleKey] || '').trim() : '';
       const displayTitle = titleVal || Object.values(r).find(v => typeof v === 'string' && v.trim() && !v.startsWith('http')) || `Row #${r._rowNumber}`;
-      const urlVal = primaryUrlKey ? String(r[primaryUrlKey] || '').trim() : Object.values(r).find(v => String(v).startsWith('http'));
+      const rawUrlVal = primaryUrlKey ? String(r[primaryUrlKey] || '').trim() : Object.values(r).find(v => String(v).startsWith('http'));
+      const urlVal = normalizeWebsiteUrl(rawUrlVal);
       const statusVal = primaryStatusKey ? String(r[primaryStatusKey] || '').trim() : '';
       const statusColObj = headers.find(h => h.key === primaryStatusKey);
+
+      const metaHeaders = headers.filter(h => {
+        const value = String(r[h.key] || '').trim();
+        if (!value || h.key === primaryTitleKey || h.key === primaryUrlKey || h.key === primaryStatusKey) return false;
+        if (hideCompletedMonths && monthKeySet.has(h.key) && h.key !== latestMonthKey && isCompletedSheetValue(value)) return false;
+        return true;
+      });
 
       const stLower = statusVal.toLowerCase();
       const statusClass = (stLower.includes('completed') || stLower.includes('done') || stLower.includes('active'))
@@ -11237,17 +11296,20 @@ async function viewCustomSheet(sheetId) {
                         <div>
                           <div class="cs-item-card-title">${esc(displayTitle)}</div>
                           ${urlVal ? `
-                            <div style="margin-top:5px">
-                              <a href="${esc(urlVal)}" target="_blank" rel="noreferrer" class="cs-item-card-url">
+                            <div class="cs-url-row" style="margin-top:5px">
+                              <a href="${esc(urlVal)}" target="_blank" rel="noopener noreferrer" class="cs-item-card-url" title="${esc(urlVal)}">
                                 ${getSvg('external', 11)} ${esc(shortUrl(urlVal, 38))}
                               </a>
+                              <button type="button" class="btn-copy-url cs-card-copy" data-url="${esc(urlVal)}" title="Copy website URL" aria-label="Copy website URL">
+                                ${getSvg('copy', 11)}
+                              </button>
                             </div>
                           ` : ''}
                         </div>
 
                         <!-- Metadata tags -->
                         <div class="cs-item-card-meta">
-                          ${headers.filter(h => h.key !== primaryTitleKey && h.key !== primaryUrlKey && h.key !== primaryStatusKey && String(r[h.key] || '').trim()).slice(0, 4).map(h => `
+                          ${metaHeaders.slice(0, 4).map(h => `
                             <span class="cs-meta-tag" title="${esc(h.label)}: ${esc(r[h.key])}">
                               <strong>${esc(h.label)}:</strong> ${esc(shortUrl(String(r[h.key]), 24))}
                             </span>
@@ -11269,12 +11331,16 @@ async function viewCustomSheet(sheetId) {
             </div>
           ` : `
             <!-- DATA TABLE VIEW -->
-            <div class="table-scroll-wrapper" style="overflow-x:auto">
-              <table class="linear-table" style="min-width:${Math.max(750, headers.length * 135)}px">
+            <div class="cs-table-scroll-hint">
+              <span>${getSvg('sort', 10)} ${hideCompletedMonths && hiddenMonthCount ? `${visibleHeaders.length} columns shown · ${hiddenMonthCount} completed/empty months hidden` : `All ${headers.length} columns shown`} — swipe or scroll right to see more</span>
+              ${hideCompletedMonths && hiddenMonthCount ? `<button type="button" class="cs-show-all-btn" id="cs-show-all-months">Show all</button>` : ''}
+            </div>
+            <div class="table-scroll-wrapper cs-table-scroll" style="overflow-x:auto" tabindex="0" role="region" aria-label="Sheet data table. Scroll horizontally to see more columns.">
+              <table class="linear-table" style="min-width:${Math.max(750, visibleHeaders.length * 135 + 50)}px">
                 <thead>
                   <tr>
                     <th style="width:50px;text-align:center">#</th>
-                    ${headers.map(h => `
+                    ${visibleHeaders.map(h => `
                       <th class="cs-sort-th" data-key="${h.key}" style="cursor:pointer;white-space:nowrap;user-select:none">
                         <div style="display:flex;align-items:center;gap:5px">
                           ${esc(h.label)}
@@ -11285,25 +11351,34 @@ async function viewCustomSheet(sheetId) {
                 </thead>
                 <tbody>
                   ${filtered.length === 0 ? `
-                    <tr><td colspan="${headers.length + 1}" class="empty-state" style="text-align:center;padding:40px">No matching records found${currentSearch ? ' for "' + esc(currentSearch) + '"' : ''}</td></tr>
+                    <tr><td colspan="${visibleHeaders.length + 1}" class="empty-state" style="text-align:center;padding:40px">No matching records found${currentSearch ? ' for "' + esc(currentSearch) + '"' : ''}</td></tr>
                   ` : filtered.map(r => `
                     <tr data-row="${r._rowNumber}">
                       <td style="font-size:11px;color:var(--text-dim);text-align:center">${r._rowNumber}</td>
-                      ${headers.map(h => {
+                      ${visibleHeaders.map(h => {
       const val = r[h.key];
       const isStatusCol = (statusColKeys || []).includes(h.key);
-      const isUrl = String(val).startsWith('http');
+      const isMonthCol = monthKeySet.has(h.key);
+      const isUrlCol = (urlColKeys || []).includes(h.key);
+      const linkUrl = isUrlCol ? normalizeWebsiteUrl(val) : (/^https?:\/\//i.test(String(val).trim()) ? String(val).trim() : '');
+      const canCopyUrl = h.key === primaryUrlKey || /website|site url|domain/i.test(String(h.label || ''));
+      const hideFinishedCell = hideCompletedMonths && isMonthCol && h.key !== latestMonthKey && isCompletedSheetValue(val);
       const stStr = String(val).toLowerCase();
       return `
                           <td class="cs-cell ${canEdit ? 'cs-editable-cell' : ''}" data-row="${r._rowNumber}" data-col="${h.index}" data-key="${h.key}" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(val || '')} ${canEdit ? '(Double-click to edit)' : ''}">
-                            ${isStatusCol ? `
+                            ${hideFinishedCell ? `
+                              <span class="cs-completed-mark" title="Updated &amp; Backup hidden — turn off “Hide completed months” to show it" aria-label="Completed value hidden">${getSvg('check', 11)}</span>
+                            ` : isStatusCol ? `
                               <span class="badge ${stStr.includes('active') || stStr.includes('done') || stStr.includes('completed') ? 'badge-success' : (stStr.includes('progress') || stStr.includes('review') ? 'badge-info' : 'badge-dim')}" style="cursor:${canEdit ? 'pointer' : 'default'}">
                                 ${esc(val || '—')}
                               </span>
-                            ` : (isUrl ? `
-                              <a href="${esc(val)}" target="_blank" rel="noreferrer" style="color:var(--accent-1);display:inline-flex;align-items:center;gap:4px">
-                                ${esc(shortUrl(val, 36))} ${getSvg('external', 10)}
-                              </a>
+                            ` : (linkUrl ? `
+                              <span class="cs-sheet-url-wrap">
+                                <a href="${esc(linkUrl)}" target="_blank" rel="noopener noreferrer" class="cs-sheet-link" title="${esc(linkUrl)}">
+                                  ${esc(shortUrl(linkUrl, 36))} ${getSvg('external', 10)}
+                                </a>
+                                ${canCopyUrl ? `<button type="button" class="btn-copy-url" data-url="${esc(linkUrl)}" title="Copy website URL" aria-label="Copy website URL">${getSvg('copy', 11)}</button>` : ''}
+                              </span>
                             ` : (val ? esc(val) : '<span class="dim-dash">—</span>'))}
                           </td>`;
     }).join('')}
@@ -11337,6 +11412,15 @@ async function viewCustomSheet(sheetId) {
       viewMode = 'table';
       try { localStorage.setItem('officeos_sheet_view_mode', 'table'); } catch { }
       loadAndRender();
+    });
+
+    // Completed-month focus toggle. This only changes what is displayed; the
+    // sheet, its values and the export data are untouched.
+    $('cs-hide-completed')?.addEventListener('change', e => {
+      setHideCompletedMonths(e.target.checked);
+    });
+    $('cs-show-all-months')?.addEventListener('click', () => {
+      setHideCompletedMonths(false);
     });
 
     // KPI Card Click Filter

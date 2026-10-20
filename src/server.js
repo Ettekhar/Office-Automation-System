@@ -4540,6 +4540,32 @@ const server = http.createServer(async (req, res) => {
           const defaultStatuses = ['Active', 'In Progress', 'Completed', 'Done', 'Pending', 'To Do', 'Deactive'];
           const allStatuses = Array.from(new Set([...rawStatusKeys, ...defaultStatuses])).filter(Boolean);
 
+          // Month-column focus metadata for the Sheet Manager. CW/RM Website List
+          // tabs are 60+ columns wide and most historical month columns are a wall
+          // of "Updated & Backup". Detect month headers and tell the client which
+          // columns are entirely finished (or empty) so it can collapse them.
+          // The newest month column is never auto-hidden: it is the current cycle.
+          const monthHeaderPattern = /^(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust|us)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\s*['.,-]?\s*\d{1,4})?\s*$/i;
+          const isFinishedMonthValue = v => /^(updated\s*(?:&|and)\s*back(?:up(?:ped)?|ed\s*up)|completed?|done|finished)$/i.test(String(v).trim());
+          const monthHeaders = headers.filter(h => monthHeaderPattern.test(String(h.label || '').trim()));
+          const monthColKeys = monthHeaders.map(h => h.key);
+          const latestMonthKey = monthColKeys.length ? monthColKeys[monthColKeys.length - 1] : null;
+          const completedMonthKeys = [];
+          const emptyMonthKeys = [];
+          monthHeaders.forEach(h => {
+            if (h.key === latestMonthKey) return;
+            let nonBlank = 0;
+            let finished = 0;
+            rows.forEach(r => {
+              const val = String(r[h.key] ?? '').trim();
+              if (!val) return;
+              nonBlank++;
+              if (isFinishedMonthValue(val)) finished++;
+            });
+            if (nonBlank === 0) emptyMonthKeys.push(h.key);
+            else if (finished === nonBlank) completedMonthKeys.push(h.key);
+          });
+
           // Search filter
           if (search) {
             rows = rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(search)));
@@ -4565,6 +4591,10 @@ const server = http.createServer(async (req, res) => {
             primaryUrlKey,
             primaryTitleKey,
             primaryPriorityKey,
+            monthColKeys,
+            completedMonthKeys,
+            emptyMonthKeys,
+            latestMonthKey,
             statusSummary,
             assigneeSummary,
             allStatuses,

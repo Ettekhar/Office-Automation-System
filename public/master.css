@@ -5728,6 +5728,265 @@ html[data-theme="light"] .sm-role-chk-label:hover {
   box-shadow: 0 1px 6px rgba(52,211,153, 0.2);
 }
 
+/* Sheet Manager: completed-month focus switch. The switch slides right to
+   enable the compact view; turning it off restores every historical column. */
+.cs-focus-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cs-focus-toggle:hover {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.cs-focus-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cs-focus-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 17px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  transition: background 0.18s ease;
+}
+
+.cs-focus-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.cs-focus-toggle input:checked + .cs-focus-track {
+  background: rgba(52, 211, 153, 0.3);
+}
+
+.cs-focus-toggle input:checked + .cs-focus-track .cs-focus-thumb {
+  transform: translateX(13px);
+  background: #34D399;
+}
+
+.cs-focus-toggle input:focus-visible + .cs-focus-track {
+  outline: 2px solid #34D399;
+  outline-offset: 2px;
+}
+
+.cs-focus-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.14);
+  color: #34D399;
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Website URLs in the live sheet table: readable link + a copy affordance that
+   never gets lost when the text is ellipsised. */
+.cs-sheet-url-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.cs-sheet-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--accent-1);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* master.css has a global `html[data-theme] a { color: var(--link) !important }`
+   for body links. Sheet website links are a workspace signal, so keep them on
+   the green accent in both themes, with a specific selector that outranks it. */
+html[data-theme] .linear-table .cs-sheet-link,
+html[data-theme] .cs-url-row .cs-item-card-url {
+  color: #34D399 !important;
+}
+
+html[data-theme="light"] .linear-table .cs-sheet-link,
+html[data-theme="light"] .cs-url-row .cs-item-card-url {
+  color: #047857 !important;
+}
+
+.cs-sheet-link:hover {
+  text-decoration: underline;
+}
+
+.cs-sheet-url-wrap .btn-copy-url {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.cs-completed-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.11);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: #34D399;
+  vertical-align: middle;
+}
+
+.cs-table-scroll-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.cs-table-scroll-hint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cs-show-all-btn {
+  padding: 2px 7px;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  border-radius: 5px;
+  background: rgba(52, 211, 153, 0.08);
+  color: #34D399;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cs-show-all-btn:hover {
+  background: rgba(52, 211, 153, 0.16);
+}
+
+.cs-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.cs-table-scroll:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, 0.55);
+  outline-offset: -2px;
+}
+
+.cs-table-scroll::-webkit-scrollbar {
+  height: 9px;
+}
+
+.cs-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+.cs-url-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cs-url-row .cs-item-card-url {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-card-copy {
+  padding: 3px;
+  flex: 0 0 auto;
+}
+
+html[data-theme="light"] .cs-focus-toggle {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+html[data-theme="light"] .cs-focus-track {
+  background: #cbd5e1;
+}
+
+html[data-theme="light"] .cs-focus-toggle input:checked + .cs-focus-track {
+  background: rgba(5, 150, 105, 0.22);
+}
+
+html[data-theme="light"] .cs-focus-toggle input:checked + .cs-focus-track .cs-focus-thumb {
+  background: #059669;
+}
+
+html[data-theme="light"] .cs-focus-count {
+  color: #047857;
+  background: rgba(5, 150, 105, 0.1);
+}
+
+html[data-theme="light"] .cs-sheet-link,
+html[data-theme="light"] .cs-show-all-btn {
+  color: #047857;
+}
+
+html[data-theme="light"] .cs-completed-mark {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+
 /* Visual Cards View Grid */
 .cs-cards-grid {
   display: grid;
@@ -11806,6 +12065,17 @@ html[data-theme] .uptime-url {
 
   html[data-theme] .cs-hero-card {
     padding: 16px !important;
+  }
+
+  html[data-theme] .cs-focus-toggle {
+    font-size: 11px !important;
+    padding: 5px 9px !important;
+    white-space: normal !important;
+    max-width: 100% !important;
+  }
+
+  html[data-theme] .cs-table-scroll-hint {
+    padding: 8px 12px !important;
   }
 
   /* Card headers and long action buttons: wrap the row and let labels break
