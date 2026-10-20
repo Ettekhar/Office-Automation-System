@@ -203,23 +203,56 @@ export function resetSheetsClient() {
  */
 const queue = [];
 let queueRunning = false;
-const inFlight = new Map(); // cacheKey → Promise<value>
+// Heartbeat for the watchdog below: the timestamp of the last time the loop
+// made progress (started a task or finished its cool-down).
+let queueBeatAt = 0;
+const inFlight = new Map(); // cacheKey → { promise, startedAt }
+
+// On Cloudflare a Worker cancels pending timers and I/O the moment the request
+// that created them finishes unless they are registered with ctx.waitUntil().
+// The queue loop is NOT owned by any single request, so it could be cancelled
+// mid-await and leave queueRunning === true with an empty queue: every later
+// read then queued and never ran, and all reads on that isolate timed out until
+// it was recycled. That is the "Sheet data read timed out after 25s" error.
+// Two guards keep that from wedging anything:
+//   * this watchdog restarts the loop if it has not advanced in a long time;
+//   * keepAlive() on each task (and the cool-down) stops the cancellation.
+const QUEUE_WEDGE_SLACK_MS = Number(process.env.SHEETS_QUEUE_WEDGE_SLACK_MS || 15000);
+const QUEUE_WEDGE_MS = QUEUE_TASK_TIMEOUT_MS + QUEUE_WEDGE_SLACK_MS;
+const INFLIGHT_MAX_MS = QUEUE_TASK_TIMEOUT_MS + QUEUE_WEDGE_SLACK_MS;
+
+/** True when the loop has not advanced for so long that it must be dead. */
+export function isQueueWedged(now = Date.now()) {
+  return queueRunning && now - queueBeatAt > QUEUE_WEDGE_MS;
+}
+
+/** Diagnostic snapshot of the serial queue (also asserted by the test suite). */
+export function getQueueHealth() {
+  return { running: queueRunning, msSinceBeat: queueBeatAt ? Date.now() - queueBeatAt : null, queued: queue.length, inFlight: inFlight.size };
+}
 
 async function processQueue() {
   if (queueRunning) return;
   queueRunning = true;
+  queueBeatAt = Date.now();
 
   try {
     while (queue.length > 0) {
       const { fn, resolve, reject } = queue.shift();
+      const task = Promise.resolve().then(fn);
+      keepAlive(task.catch(() => {}));
       try {
-        resolve(await withTaskTimeout(fn(), QUEUE_TASK_TIMEOUT_MS, 'Sheets API call'));
+        resolve(await withTaskTimeout(task, QUEUE_TASK_TIMEOUT_MS, 'Sheets API call'));
       } catch (err) {
         reject(err);
       }
+      queueBeatAt = Date.now();
       // Mandatory cool-down between real API calls
       if (queue.length > 0) {
-        await new Promise((r) => setTimeout(r, QUEUE_INTERVAL_MS));
+        const sleep = new Promise((r) => setTimeout(r, QUEUE_INTERVAL_MS));
+        keepAlive(sleep);
+        await sleep;
+        queueBeatAt = Date.now();
       }
     }
   } finally {
@@ -234,17 +267,32 @@ async function processQueue() {
  * Enqueue an API call.  Returns the same Promise for duplicate in-flight keys.
  */
 function enqueue(cacheKey, fn) {
-  // Deduplicate: if the same key is already being fetched, join that Promise
-  if (inFlight.has(cacheKey)) {
-    return inFlight.get(cacheKey);
+  const now = Date.now();
+
+  // Deduplicate: if the same key is already being fetched, join that Promise.
+  // But never join a corpse — an entry older than the task timeout belongs to a
+  // request that was cancelled, so drop it and start a fresh attempt.
+  const existing = inFlight.get(cacheKey);
+  if (existing && now - existing.startedAt < INFLIGHT_MAX_MS) {
+    return existing.promise;
+  }
+  if (existing) inFlight.delete(cacheKey);
+
+  // Self-heal a loop that was cancelled by an ended Worker event.
+  if (isQueueWedged(now)) {
+    console.warn('[sheets] queue watchdog: restarting a stalled sheets queue');
+    queueRunning = false;
   }
 
   const promise = new Promise((resolve, reject) => {
     queue.push({ fn, resolve, reject });
     processQueue();
-  }).finally(() => inFlight.delete(cacheKey));
+  }).finally(() => {
+    const cur = inFlight.get(cacheKey);
+    if (cur && cur.promise === promise) inFlight.delete(cacheKey);
+  });
 
-  inFlight.set(cacheKey, promise);
+  inFlight.set(cacheKey, { promise, startedAt: now });
   return promise;
 }
 
@@ -398,6 +446,30 @@ export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId =
     console.log(`[sheets] fetched "${tabName}" (${values.length} rows)`);
     return values;
   });
+}
+
+/**
+ * Read a tab WITHOUT the cache read-through and WITHOUT the serial queue.
+ *
+ * Use only as a last resort when the queued read has already timed out: the
+ * queue can be momentarily busy or stalled, and a direct read is what turns
+ * "Unable to load sheet" into a working page. It still refreshes the cache so
+ * the next normal read is a hit.
+ */
+export async function getTabValuesDirect(tabName, range = 'A1:ZZ2000', spreadsheetId = null) {
+  const targetId = spreadsheetId || config.spreadsheetId;
+  const sheets = await getSheetsClient();
+  const res = await withRetry(() =>
+    sheets.spreadsheets.values.get({
+      spreadsheetId: targetId,
+      range: `'${tabName}'!${range}`,
+      valueRenderOption: 'FORMATTED_VALUE',
+    })
+  );
+  const values = res.data.values || [];
+  cacheSet(tabValuesCacheKey(targetId, tabName, range), values);
+  console.log(`[sheets] fetched "${tabName}" directly (${values.length} rows)`);
+  return values;
 }
 
 /** Converts a 0-indexed column number to spreadsheet column letter (0->A, 25->Z, 26->AA, 63->BL) */

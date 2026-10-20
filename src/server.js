@@ -2773,7 +2773,8 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/master/sheets/cache-status' && method === 'GET') {
         const role = reqUrl.searchParams.get('role') || '';
         if (role !== 'admin' && role !== 'superadmin') return err(403, 'Admin access required');
-        return ok(getCacheStatus());
+        const { getQueueHealth } = await import('./sheets.js');
+        return ok({ ...getCacheStatus(), queue: getQueueHealth() });
       }
       // PUT /api/master/daily-review/:id  (user: their own row)
       if (/^\/api\/master\/daily-review\/([^/]+)$/.test(pathname) && method === 'PUT') {
@@ -4402,7 +4403,7 @@ const server = http.createServer(async (req, res) => {
         const limit = Math.min(500, Math.max(10, Number(reqUrl.searchParams.get('limit') || 200)));
 
         try {
-          const { getTabValues, listTabTitles } = await import('./sheets.js');
+          const { getTabValues, getTabValuesDirect, listTabTitles } = await import('./sheets.js');
           const headerRowNum = cred.headerRow || 1;
           const reqTab = reqUrl.searchParams.get('tab');
           let targetTab = reqTab || cred.tabName;
@@ -4412,28 +4413,46 @@ const server = http.createServer(async (req, res) => {
           try {
             allRows = await withTimeout(
               getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
-              25000,
+              15000,
               'Sheet data read',
             ) || [];
           } catch (tabErr) {
-            // If requested tab failed, fetch available tabs and auto-heal to first available tab
-            availableTabs = await withTimeout(
-              listTabTitles(cred.spreadsheetId),
-              10000,
-              'Sheet tab list read',
-            ).catch(() => []);
-            if (availableTabs.length) {
-              targetTab = availableTabs[0];
-              allRows = await withTimeout(
-              getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
-              25000,
-              'Sheet data read',
-            ) || [];
-              if (!reqTab) {
-                db.updateSheetCredential(id, { tabName: targetTab, detectedTabs: availableTabs });
-              }
+            // The shared Google request queue can be momentarily busy (or have
+            // been stalled by a cancelled Worker event). Before surfacing any
+            // failure, read the tab directly — bypassing the cache and queue —
+            // so the Sheet Manager still loads instead of showing
+            // "Sheet data read timed out after 25s".
+            let direct = null;
+            try {
+              direct = await withTimeout(
+                getTabValuesDirect(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
+                20000,
+                'Sheet data read',
+              );
+            } catch { direct = null; }
+
+            if (direct) {
+              allRows = direct;
             } else {
-              throw tabErr;
+              // If requested tab failed, fetch available tabs and auto-heal to first available tab
+              availableTabs = await withTimeout(
+                listTabTitles(cred.spreadsheetId),
+                10000,
+                'Sheet tab list read',
+              ).catch(() => []);
+              if (availableTabs.length) {
+                targetTab = availableTabs[0];
+                allRows = await withTimeout(
+                  getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
+                  15000,
+                  'Sheet data read',
+                ) || [];
+                if (!reqTab) {
+                  db.updateSheetCredential(id, { tabName: targetTab, detectedTabs: availableTabs });
+                }
+              } else {
+                throw tabErr;
+              }
             }
           }
 

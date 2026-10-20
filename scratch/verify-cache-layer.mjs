@@ -21,9 +21,13 @@ process.env.OFFICEOS_DATA_DIR = dataDir;
 // Short fresh window / long stale window so the test can cross the boundary in ms.
 process.env.SHEETS_CACHE_TTL_MS = '300';
 process.env.SHEETS_SWR_MAX_STALE_MS = '60000';
+// Shrink the queue's task timeout and wedge slack so a stuck call is provable
+// in milliseconds instead of 45 s.
+process.env.SHEETS_QUEUE_TASK_TIMEOUT_MS = '400';
+process.env.SHEETS_QUEUE_WEDGE_SLACK_MS = '200';
 
 const cache = await import('../src/sheetsCache.js');
-const { readThrough } = await import('../src/sheets.js');
+const { readThrough, isQueueWedged, getQueueHealth } = await import('../src/sheets.js');
 const db = await import('../src/db.js');
 
 let pass = 0;
@@ -134,6 +138,35 @@ check('and the new read is a different object', r3 !== r1);
 
 db.dbInvalidate('memo-probe');
 check('explicit invalidation works', db.dbRead('memo-probe')[0].v === 'rewritten');
+
+// ════════════════════════════════════════════════════════════════════════════
+section('7. Serial queue: a hung Google call cannot wedge later reads');
+
+check('the wedge predicate is false while the queue is idle', isQueueWedged() === false);
+
+const hungKey = cache.tabValuesCacheKey('SHEET-HANG', 'T', 'A1:ZZ9');
+const hungStart = Date.now();
+let hungOutcome = 'resolved';
+try {
+  // Slower than the 400 ms task timeout, but bounded so the test process can
+  // still exit: a real Google call that hangs is abandoned the same way.
+  await readThrough(hungKey, () => new Promise((r) => setTimeout(r, 900)));
+} catch (e) {
+  hungOutcome = /timed out/i.test(e.message) ? 'timed-out' : `other:${e.message}`;
+}
+const hungMs = Date.now() - hungStart;
+check('a never-settling fetch is abandoned by the task watchdog', hungOutcome === 'timed-out', hungOutcome);
+check('and abandoned promptly instead of hanging forever', hungMs < 5000, `${hungMs}ms`);
+
+const afterKey = cache.tabValuesCacheKey('SHEET-AFTER', 'T', 'A1:ZZ9');
+const after = await readThrough(afterKey, async () => {
+  cache.cacheSet(afterKey, [['still-alive']]);
+  return [['still-alive']];
+});
+check('a read queued behind the hang still completes', after[0][0] === 'still-alive', JSON.stringify(after));
+
+const health = getQueueHealth();
+check('the queue reports itself idle afterwards', health.running === false && health.queued === 0, JSON.stringify(health));
 
 // ════════════════════════════════════════════════════════════════════════════
 console.log(`\n${fail === 0 ? '\u2705 ALL PASSED' : '\u274c FAILURES'} — ${pass} passed, ${fail} failed`);
