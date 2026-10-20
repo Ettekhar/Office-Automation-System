@@ -586,6 +586,7 @@ export function getDailyReview(filter = {}) {
           siteUrl: s.url,
           company: s.company || s.account || '',
           rowIndex: null,
+          hidden: false,
           // Per-person work, never inherited.
           maintenanceStatus: 'todo',
           maintenanceRaw: 'To Do',
@@ -626,6 +627,9 @@ export function getDailyReview(filter = {}) {
     if (!r.company && s) r.company = s.company || s.account || '';
     if (!r.clickupLink && s?.clickupUrl) r.clickupLink = s.clickupUrl;
     if (!r.clickupTimeTrackUrl && s?.clickupTimeTrackUrl) r.clickupTimeTrackUrl = s.clickupTimeTrackUrl;
+    // Site lifecycle status, so the checklist can hide rows for sites that have
+    // been deactivated in the Uptime Monitor without deleting any history.
+    r.siteStatus = s?.status || '';
     r.uptimeStatus = s?.uptimeStatus || (r.uptimeRobot && /yes/i.test(r.uptimeRobot) ? 'online' : 'unknown');
     r.domainExpiry = s?.domainExpiry || '';
     r.daysLeft = s?.daysLeft ?? (r.domainExpiry ? calcDaysUntil(r.domainExpiry) : null);

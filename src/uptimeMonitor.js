@@ -112,7 +112,9 @@ function nowIso() { return new Date().toISOString(); }
 
 /** Sites we monitor: active only, with a usable URL. */
 function monitorable(sites) {
-  return sites.filter(s => s && s.url && String(s.url).trim() && String(s.status || '').toLowerCase() !== 'deactive');
+  // "Deactived" (a legacy typo present in the live registry) must count as
+  // deactivated too; an exact !== 'deactive' check left that site monitored.
+  return sites.filter(s => s && s.url && String(s.url).trim() && !String(s.status || '').toLowerCase().includes('deactiv'));
 }
 
 function isUnknown(site) {

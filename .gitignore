@@ -27,6 +27,8 @@ data/daily-reports.json
 # exact cell and value written, and a read of it lists real client hostnames. It is
 # a machine-local record, not source, and the GitHub remote is PUBLIC.
 data/audit-log.json
+# Assignment schedules edited from the live dashboard. Machine-local runtime data.
+data/assignments.json
 # Sync conflict quarantine. Holds row snapshots of real client sheets.
 data/sync-conflicts.json
 # Conditional-note registry. Each record's `condition` is a literal keyword that is
@@ -61,6 +63,11 @@ server-stderr.log
 scratch/*-snapshot.json
 scratch/*_preview.json
 scratch/row-highlight-before.json
+# One-off repair transcripts from the 2026-10-20 sheet fix. They contain live
+# client hostnames and row values; keep them local, never publish them.
+scratch/repair-sheet-drift*.json
+scratch/restore-cleared-sent*.json
+scratch/kv-daily-review-patch.json
 # One-off probes against the LIVE sheets. Each hardcodes a hostname or row number
 # from a single investigation, so they are transcripts, not reusable tests - and
 # running them again hits the live spreadsheets. Kept locally for the record.

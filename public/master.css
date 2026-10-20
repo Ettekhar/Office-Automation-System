@@ -2169,6 +2169,29 @@ tr:last-child td {
   gap: 8px;
 }
 
+@media (max-width: 760px) {
+  .bulk-dock {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    transform: none;
+    animation: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+    max-height: 72vh;
+    overflow-y: auto;
+  }
+  .bulk-dock-controls { flex-wrap: wrap; gap: 6px; }
+  .bulk-dock-controls .form-select {
+    flex: 1 1 110px;
+    width: auto !important;
+    min-width: 0;
+  }
+  .bulk-dock-controls .btn { flex: 0 0 auto; }
+}
+
 .row-checkbox,
 .select-all-checkbox {
   cursor: pointer;
@@ -2614,6 +2637,11 @@ tr:last-child td {
   color: var(--text-muted);
   border: 1px solid var(--border);
 }
+
+/* A row hidden from the active checklist stays in the DOM so the Hidden filter
+   can reveal it; dim it rather than deleting or disabling its controls. */
+tr.is-hidden-row { opacity: 0.62; }
+tr.is-hidden-row:hover { opacity: 1; }
 
 .badge-cw {
   background: rgba(14, 165, 233, 0.15);

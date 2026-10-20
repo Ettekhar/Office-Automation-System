@@ -2546,17 +2546,23 @@ const server = http.createServer(async (req, res) => {
         const baseRows = db.getDailyReview();
         const rows = month ? overlayMonthStatus(baseRows, month) : baseRows;
         const users = db.getUsers().filter(u => u.active !== false);
+        const isHiddenRow = r => r && (r.hidden === true || /deactiv/i.test(String(r.siteStatus || '').trim()));
         const summary = users.map(u => {
-          const uRows = rows.filter(r => r.userId === u.id);
+          // Hidden rows (and rows whose site was deactivated) are history, not
+          // active work. N/A is a real status and stays out of Pending and the
+          // completion denominator, matching the checklist stat cards.
+          const uRows = rows.filter(r => r.userId === u.id && !isHiddenRow(r));
+          const counted = uRows.filter(r => r.maintenanceStatus !== 'n/a');
           const completed = uRows.filter(r => r.maintenanceStatus === 'completed').length;
           return {
             userId: u.id, user: u.name, role: u.role,
             total: uRows.length,
             completed,
             inProgress: uRows.filter(r => r.maintenanceStatus === 'in_progress').length,
-            pending: uRows.filter(r => !['completed','in_progress'].includes(r.maintenanceStatus)).length,
+            pending: uRows.filter(r => !['completed','in_progress','n/a'].includes(r.maintenanceStatus)).length,
+            na: uRows.filter(r => r.maintenanceStatus === 'n/a').length,
             reportSent: uRows.filter(r => r.reportSentRaw?.toLowerCase() === 'yes').length,
-            pct: uRows.length ? Math.round(completed / uRows.length * 100) : 0,
+            pct: counted.length ? Math.round(completed / counted.length * 100) : 0,
           };
         });
         return ok({ summary });
@@ -2690,6 +2696,9 @@ const server = http.createServer(async (req, res) => {
           // Normalize raw status fields if needed
           if (!b.maintenanceRaw && b.maintenanceStatusRaw) b.maintenanceRaw = b.maintenanceStatusRaw;
           if (!b.reportSentRaw && b.reportSentStatusRaw) b.reportSentRaw = b.reportSentStatusRaw;
+          // Visibility is dashboard-only (the sheet row and all its data stay
+          // untouched), so a hidden row can always be restored later.
+          if (b.hidden !== undefined) b.hidden = b.hidden === true || b.hidden === 'true' || b.hidden === 1;
 
           const updatedRow = db.updateDailyReviewRow(id, b);
 
@@ -2708,6 +2717,7 @@ const server = http.createServer(async (req, res) => {
               { f: 'cloudflare', label: 'cloudflare' },
               { f: 'clientResponse', label: 'client response' },
               { f: 'uptimeRobot', label: 'uptime robot' },
+              { f: 'hidden', label: 'hidden' },
             ];
             for (const { f, label } of fieldMap) {
               if (before && b[f] !== undefined && String(before[f] ?? '') !== String(b[f] ?? '')) {
@@ -2813,6 +2823,9 @@ const server = http.createServer(async (req, res) => {
             });
             return;
           }
+        }
+        if (b.updates && b.updates.hidden !== undefined) {
+          b.updates.hidden = b.updates.hidden === true || b.updates.hidden === 'true' || b.updates.hidden === 1;
         }
         const rows = db.updateDailyReviewBatch(b.ids, b.updates || {});
         // Bi-directional batch sync: CW/RM Maintenance sheet + Daily Review sheet per row

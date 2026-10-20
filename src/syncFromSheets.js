@@ -452,6 +452,24 @@ async function mergeDomains(sites, ctx = makeCtx()) {
 }
 
 // ─── Step 4: Import Daily Review + Assign Users to Sites ─────────────────────
+/**
+ * Soft-delete policy for a PARTIAL sync: decide whether an existing
+ * daily-review row survives this run when it was not seen in the sheet.
+ *
+ * Rows tied to a site in the registry survive as before. A row the team
+ * deliberately hid also survives even when its site is gone (an orphan),
+ * because hiding is an explicit request to keep the history. Exported so the
+ * carry-forward rule can be tested without touching Google Sheets.
+ */
+export function shouldCarryForwardDailyRow(row, { seenKeys, siteIds, drRows }) {
+  if (!row) return false;
+  if (seenKeys.has(`${row.siteId}::${row.userId}`)) return false;
+  if (drRows.some(r => r.id === row.id)) return false;
+  const hidden = row.hidden === true || row.hidden === 'true' || row.hidden === 1;
+  if (hidden) return true;
+  return Boolean(row.siteId && siteIds.has(row.siteId));
+}
+
 async function importDailyReview(sites, userMap, ctx = makeCtx()) {
   report('Importing daily review…', 25);
   const drRows = [];
@@ -636,6 +654,9 @@ async function importDailyReview(sites, userMap, ctx = makeCtx()) {
           siteUrl: site.url,
           company: compVal || site.company || site.account || '',
           rowIndex: rowIdx + 2, // 1-indexed + header
+          // Dashboard-only visibility flag. A full sheet sync must never
+          // resurrect a row the team deliberately hid.
+          hidden: existingDr?.hidden === true || existingDr?.hidden === 'true' || existingDr?.hidden === 1,
           ...provenance('DAILY_REVIEW', dbUser.name, rowIdx + 2),
           maintenanceStatus: existingDr && !maintRaw ? existingDr.maintenanceStatus : normStatus(maintRaw),
           maintenanceRaw: existingDr && !maintRaw ? existingDr.maintenanceRaw : maintRaw,
@@ -667,8 +688,7 @@ async function importDailyReview(sites, userMap, ctx = makeCtx()) {
   const seenKeys = new Set(drRows.map(r => `${r.siteId}::${r.userId}`));
   const siteIds = new Set(sites.map(s => s.id));
   for (const row of existingDrList) {
-    const key = `${row.siteId}::${row.userId}`;
-    if (!seenKeys.has(key) && row.siteId && siteIds.has(row.siteId) && !drRows.some(r => r.id === row.id)) {
+    if (shouldCarryForwardDailyRow(row, { seenKeys, siteIds, drRows })) {
       drRows.push(row);
     }
   }

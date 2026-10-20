@@ -8,6 +8,7 @@ const S = {
   users: [],          // cached user list
   tableMode: 'smart', // 'smart'|'full'
   mySitesMode: 'normal', // 'normal'|'maintenance' — My Sites user view
+  mySitesFilter: '',   // ''|'completed'|...|'hidden' — preserved across hide/restore
 };
 try { S.tableMode = localStorage.getItem('officeos_table_mode') || 'smart'; } catch { }
 try { S.mySitesMode = localStorage.getItem('officeos_mysites_mode') || 'normal'; } catch { }
@@ -247,6 +248,9 @@ function getSvg(name, size = 14, extraClass = '') {
       return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
     case 'eye':
       return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    case 'eyeOff':
+    case 'eye-off':
+      return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
     case 'plus':
       return `<svg ${cls} width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
     case 'refresh':
@@ -1736,12 +1740,16 @@ async function updateExpiryApprovalsBadge() {
 }
 
 // ─── Shared Checklist Table Interactivity (Quick Uptime, Bulk Edit, Live Stats) ───
-function initChecklistTable(containerEl, isUserView = false, activeUserId = null) {
+function initChecklistTable(containerEl, isUserView = false, activeUserId = null, onRefresh = null) {
   // 1. Recalculate stats helper
   function recalcStats() {
     const rows = containerEl.querySelectorAll('tr.smart-row, tr[data-status]:not(.smart-row):not(.detail-accordion-row)');
-    let comp = 0, inProg = 0, pending = 0, na = 0, total = rows.length;
+    let comp = 0, inProg = 0, pending = 0, na = 0, total = 0;
     rows.forEach(r => {
+      // Hidden rows are kept in the DOM so the Hidden filter can reveal them,
+      // but they must never count toward the active checklist stats.
+      if (r.dataset.hidden === '1') return;
+      total++;
       const s = r.dataset.status;
       if (s === 'completed') comp++;
       else if (s === 'in_progress') inProg++;
@@ -1776,6 +1784,13 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
     }
   }
 
+  // Re-render whichever checklist this table belongs to (My Sites or a team
+  // member's panel) without re-implementing each view's load path here.
+  const refreshView = () => {
+    if (typeof onRefresh === 'function') return onRefresh();
+    return viewMySites();
+  };
+
   // 2. Quick Uptime Check button listener
   containerEl.querySelectorAll('.btn-uptime-check').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -1807,6 +1822,33 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
     });
   });
 
+  // 2b. Hide / restore one row. Dashboard-only: the sheet row and every value
+  // stay where they are, so hiding never deletes history.
+  containerEl.querySelectorAll('.toggle-hide-row-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const nextHidden = btn.dataset.hidden !== '1';
+      const okToChange = confirm(nextHidden
+        ? 'Hide this row from the active checklist?\n\nThe Google Sheet row and all its data are kept. Restore it any time from the Hidden filter.'
+        : 'Restore this row to the active checklist?');
+      if (!okToChange) return;
+      btn.disabled = true;
+      try {
+        const tr = btn.closest('tr');
+        await PUT(`/api/master/daily-review/${id}`, {
+          hidden: nextHidden,
+          expectedUpdatedAt: tr?.dataset?.updatedAt || undefined,
+        });
+        toast(nextHidden ? 'Row hidden — all data kept' : 'Row restored to the checklist', 'success');
+        await refreshView();
+      } catch (err) {
+        btn.disabled = false;
+        toast(err.message, 'error');
+      }
+    });
+  });
+
   // 3. Status change listener for live stat recalculation
   containerEl.querySelectorAll('.select-maint-compact, .select-maint').forEach(sel => {
     sel.addEventListener('change', () => {
@@ -1830,8 +1872,13 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
       else dock.classList.add('hidden');
     }
     if (selectAll) {
-      selectAll.checked = rowCheckboxes.length > 0 && checked.length === rowCheckboxes.length;
-      selectAll.indeterminate = checked.length > 0 && checked.length < rowCheckboxes.length;
+      const visibleBoxes = [...rowCheckboxes].filter(cb => {
+        const tr = cb.closest('tr');
+        return tr && !tr.classList.contains('hidden');
+      });
+      const checkedVisible = visibleBoxes.filter(cb => cb.checked).length;
+      selectAll.checked = visibleBoxes.length > 0 && checkedVisible === visibleBoxes.length;
+      selectAll.indeterminate = checkedVisible > 0 && checkedVisible < visibleBoxes.length;
     }
   }
 
@@ -1936,6 +1983,69 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
     });
   }
 
+  const bulkHideBtn = containerEl.querySelector('#btn-bulk-hide') || $('btn-bulk-hide');
+  if (bulkHideBtn) {
+    bulkHideBtn.addEventListener('click', async () => {
+      const checked = [...containerEl.querySelectorAll('.row-checkbox:checked')];
+      if (!checked.length) return;
+      const okToHide = confirm(`Hide ${checked.length} selected row(s) from the active checklist?\n\nThe Google Sheet rows and all their data are kept. Restore them any time from the Hidden filter.`);
+      if (!okToHide) return;
+      const ids = checked.map(cb => cb.dataset.rowId);
+      const expectedUpdatedAtMap = {};
+      checked.forEach(cb => {
+        const tr = cb.closest('tr');
+        if (tr && tr.dataset.updatedAt) expectedUpdatedAtMap[cb.dataset.rowId] = tr.dataset.updatedAt;
+      });
+      bulkHideBtn.disabled = true;
+      try {
+        await POST('/api/master/daily-review/batch', { ids, updates: { hidden: true }, expectedUpdatedAtMap });
+        toast(`Hidden ${ids.length} row(s) — all data kept`, 'success');
+        await refreshView();
+      } catch (err) {
+        bulkHideBtn.disabled = false;
+        toast(err.message, 'error');
+      }
+    });
+  }
+
+  const bulkRestoreBtn = containerEl.querySelector('#btn-bulk-restore') || $('btn-bulk-restore');
+  if (bulkRestoreBtn) {
+    bulkRestoreBtn.addEventListener('click', async () => {
+      const checked = [...containerEl.querySelectorAll('.row-checkbox:checked')];
+      if (!checked.length) return;
+      // A site-deactivated row is hidden by the site's lifecycle status, not
+      // by its own flag; restoring it here would be a no-op. Report those
+      // separately instead of pretending they were restored.
+      const restorable = checked.filter(cb => {
+        const tr = cb.closest('tr');
+        const btn = tr && tr.querySelector('.toggle-hide-row-btn');
+        return btn && btn.dataset.hidden === '1';
+      });
+      const siteDeact = checked.length - restorable.length;
+      if (!restorable.length) {
+        toast('Selected row(s) are hidden because their site is deactivated — reactivate the site in Uptime Monitor to restore them.', 'warning', 6500);
+        return;
+      }
+      const okToRestore = confirm(`Restore ${restorable.length} selected row(s) to the active checklist?${siteDeact ? `\n\n${siteDeact} site-deactivated row(s) will stay hidden until their site is reactivated.` : ''}`);
+      if (!okToRestore) return;
+      const ids = restorable.map(cb => cb.dataset.rowId);
+      const expectedUpdatedAtMap = {};
+      restorable.forEach(cb => {
+        const tr = cb.closest('tr');
+        if (tr && tr.dataset.updatedAt) expectedUpdatedAtMap[cb.dataset.rowId] = tr.dataset.updatedAt;
+      });
+      bulkRestoreBtn.disabled = true;
+      try {
+        await POST('/api/master/daily-review/batch', { ids, updates: { hidden: false }, expectedUpdatedAtMap });
+        toast(`Restored ${ids.length} row(s)${siteDeact ? ` · ${siteDeact} site-deactivated skipped` : ''}`, 'success');
+        await refreshView();
+      } catch (err) {
+        bulkRestoreBtn.disabled = false;
+        toast(err.message, 'error');
+      }
+    });
+  }
+
   const bulkUptimeBtn = containerEl.querySelector('#btn-bulk-uptime') || $('btn-bulk-uptime');
   if (bulkUptimeBtn) {
     bulkUptimeBtn.addEventListener('click', async () => {
@@ -1987,8 +2097,7 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
       e.stopPropagation();
       const { siteId, url, current, rowId } = btn.dataset;
       openExpiryEditModal({ siteId, siteUrl: url, currentDate: current, rowId }, () => {
-        if (isUserView) viewMySites();
-        else if (activeUserId) loadUser(activeUserId);
+        refreshView();
       });
     });
   });
@@ -2204,12 +2313,24 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
-  const inProgress = rows.filter(r => r.maintenanceStatus === 'in_progress').length;
-  const na = rows.filter(r => r.maintenanceStatus === 'n/a').length;
-  const pending = rows.filter(r => !['completed', 'in_progress', 'n/a'].includes(r.maintenanceStatus)).length;
-  const counted = rows.length - na;
+  // A hidden row still exists and still keeps its history; it just does not
+  // count toward the active checklist. Site-deactivated rows are auto-hidden.
+  const hiddenRows = rows.filter(isDailyRowHidden);
+  const activeRows = rows.filter(r => !isDailyRowHidden(r));
+
+  const completed = activeRows.filter(r => r.maintenanceStatus === 'completed').length;
+  const inProgress = activeRows.filter(r => r.maintenanceStatus === 'in_progress').length;
+  const na = activeRows.filter(r => r.maintenanceStatus === 'n/a').length;
+  const pending = activeRows.filter(r => !['completed', 'in_progress', 'n/a'].includes(r.maintenanceStatus)).length;
+  const counted = activeRows.length - na;
   const pct = counted ? Math.round(completed / counted * 100) : 0;
+
+  // Keep the chosen filter across hide/restore re-renders, but never strand the
+  // user on a Hidden view that no longer has anything in it.
+  const validFilters = new Set(['', 'completed', 'in_progress', 'pending', 'n/a', 'cw', 'rm', 'hidden']);
+  let initialFilter = validFilters.has(S.mySitesFilter) ? S.mySitesFilter : '';
+  if (initialFilter === 'hidden' && hiddenRows.length === 0) initialFilter = '';
+  if (activeRows.length === 0 && hiddenRows.length > 0) initialFilter = 'hidden';
   
   // Unified 3-mode active state
   const activeViewMode = S.mySitesMode === 'maintenance' ? 'maintenance' : (S.tableMode === 'full' ? 'full' : 'smart');
@@ -2232,7 +2353,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
     <div class="fade-in">
       ${coveringNoticeHtml}
       <div class="stat-grid">
-        <div class="stat-card accent"><div class="stat-value" id="stat-total">${rows.length}</div><div class="stat-label">Assigned Sites</div></div>
+        <div class="stat-card accent"><div class="stat-value" id="stat-total">${activeRows.length}</div><div class="stat-label">Assigned Sites</div></div>
         <div class="stat-card success"><div class="stat-value" id="stat-completed">${completed}</div><div class="stat-label">Completed</div></div>
         <div class="stat-card warning"><div class="stat-value" id="stat-inprogress">${inProgress}</div><div class="stat-label">In Progress</div></div>
         <div class="stat-card danger"><div class="stat-value" id="stat-pending">${pending}</div><div class="stat-label">Pending Review</div></div>
@@ -2272,13 +2393,14 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
             </select>
           </div>
           <div style="display:flex;gap:5px;flex-wrap:wrap" id="quick-filter-chips">
-            <button class="btn btn-secondary btn-sm chip-btn active" data-filter="">All (${rows.length})</button>
+            <button class="btn btn-secondary btn-sm chip-btn active" data-filter="">All (${activeRows.length})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="completed">Completed (${completed})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="in_progress">In Progress (${inProgress})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="pending">Pending (${pending})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="n/a">N/A (${na})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="cw">CW</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="rm">RM</button>
+            ${hiddenRows.length > 0 ? `<button class="btn btn-secondary btn-sm chip-btn" data-filter="hidden" title="Rows hidden from the active checklist — all data is kept">${getSvg('eyeOff', 11)} Hidden (${hiddenRows.length})</button>` : ''}
           </div>
         </div>
 
@@ -2375,6 +2497,8 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
               <option value="N/A">N/A</option>
             </select>
             <button class="btn btn-primary btn-sm" id="btn-apply-bulk">Apply Updates</button>
+            <button class="btn btn-secondary btn-sm" id="btn-bulk-hide" title="Hide selected rows — all data is kept and can be restored from the Hidden filter">${getSvg('eyeOff', 12)} Hide</button>
+            <button class="btn btn-secondary btn-sm" id="btn-bulk-restore" title="Restore selected hidden rows">${getSvg('eye', 12)} Restore</button>
             <button class="btn btn-secondary btn-sm" id="btn-bulk-uptime" title="Check uptime for all selected sites">↺ Check Uptime</button>
             <button class="btn btn-ghost btn-sm" id="btn-clear-selection" title="Clear selection">✕</button>
           </div>
@@ -2385,7 +2509,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
   // Search + Filter Chips
   const tbody = $('sites-tbody');
   const allRows = [...tbody.querySelectorAll('tr')];
-  let activeFilter = '';
+  let activeFilter = initialFilter;
 
   function applyFilter() {
     const q = ($('site-search').value || '').toLowerCase().trim();
@@ -2403,14 +2527,15 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
       const url = tr.dataset.url || '';
       const status = tr.dataset.status || '';
       const text = tr.innerText.toLowerCase();
+      const isHiddenRow = tr.dataset.hidden === '1';
 
-      let matchFilter = true;
-      if (activeFilter === 'completed') matchFilter = status === 'completed';
-      else if (activeFilter === 'in_progress') matchFilter = status === 'in_progress';
-      else if (activeFilter === 'n/a') matchFilter = status === 'n/a';
-      else if (activeFilter === 'pending') matchFilter = !['completed', 'in_progress', 'n/a'].includes(status);
-      else if (activeFilter === 'cw') matchFilter = text.includes('cw');
-      else if (activeFilter === 'rm') matchFilter = text.includes('rm');
+      let matchFilter = activeFilter === 'hidden' ? isHiddenRow : !isHiddenRow;
+      if (activeFilter === 'completed') matchFilter = !isHiddenRow && status === 'completed';
+      else if (activeFilter === 'in_progress') matchFilter = !isHiddenRow && status === 'in_progress';
+      else if (activeFilter === 'n/a') matchFilter = !isHiddenRow && status === 'n/a';
+      else if (activeFilter === 'pending') matchFilter = !isHiddenRow && !['completed', 'in_progress', 'n/a'].includes(status);
+      else if (activeFilter === 'cw') matchFilter = !isHiddenRow && text.includes('cw');
+      else if (activeFilter === 'rm') matchFilter = !isHiddenRow && text.includes('rm');
 
       const matchQuery = !q || url.includes(q) || text.includes(q);
       const isVisible = matchFilter && matchQuery;
@@ -2425,14 +2550,32 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
 
   $('site-search').addEventListener('input', applyFilter);
 
-  document.querySelectorAll('.chip-btn').forEach(btn => {
+  document.querySelectorAll('#quick-filter-chips .chip-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('btn-primary', 'active'));
+      document.querySelectorAll('#quick-filter-chips .chip-btn').forEach(b => b.classList.remove('btn-primary', 'active'));
       btn.classList.add('btn-primary', 'active');
       activeFilter = btn.dataset.filter;
+      S.mySitesFilter = activeFilter;
+      // A selection belongs to the rows the user can see. Clear it when the
+      // filter changes so a row that becomes hidden can never be bulk-acted on
+      // by accident.
+      tbody.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      });
       applyFilter();
     });
   });
+
+  // Restore the selected chip after a re-render (e.g. after hiding a row).
+  if (initialFilter) {
+    document.querySelectorAll('#quick-filter-chips .chip-btn').forEach(b => {
+      const on = b.dataset.filter === initialFilter;
+      b.classList.toggle('active', on);
+      b.classList.toggle('btn-primary', on);
+    });
+  }
+  applyFilter();
 
   $('exit-coverage-btn')?.addEventListener('click', () => navigate('my-sites'));
 
@@ -2490,15 +2633,17 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
           localStorage.setItem('officeos_table_mode', mode);
         } catch { }
       }
-      viewMySites(rows); // Instant 0ms switch without network re-fetch!
+      viewMySites(rows, isCoveringView ? targetUserOverride : null); // Instant 0ms switch without network re-fetch!
     });
   });
 
   // Export CSV
   $('export-csv-btn').addEventListener('click', () => {
     const filename = `Daily_Maintenance_${S.userName}_${new Date().toISOString().slice(0, 10)}.csv`;
-    if (isMaint) exportMaintenanceCsv(rows, filename);
-    else exportChecklistCsv(rows, filename);
+    // Never export the hidden history into the active checklist by default.
+    const exportRows = activeFilter === 'hidden' ? hiddenRows : activeRows;
+    if (isMaint) exportMaintenanceCsv(exportRows, filename);
+    else exportChecklistCsv(exportRows, filename);
   });
 
   // Status dropdown auto-save
@@ -2590,7 +2735,11 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
     });
   });
 
-  initChecklistTable(mainEl, true);
+  initChecklistTable(mainEl, true, null, () => {
+    // Keep Temporary Coverage on the same person's checklist after a hide,
+    // restore, or expiry edit.
+    return viewMySites(null, isCoveringView ? targetUserOverride : null);
+  });
 }
 
 function exportChecklistCsv(rows, filename) {
@@ -2665,6 +2814,17 @@ function exportMaintenanceCsv(rows, filename) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('📥 Maintenance list exported to CSV', 'success');
+}
+
+/**
+ * A row is hidden from the active checklist when the team hid that individual
+ * row, or when its site was deactivated in the Uptime Monitor. Hiding is
+ * dashboard-only: the sheet row and every value stay intact.
+ */
+function isDailyRowHidden(r) {
+  if (!r) return false;
+  if (r.hidden === true || r.hidden === 'true' || r.hidden === 1) return true;
+  return String(r.siteStatus || '').toLowerCase().includes('deactiv');
 }
 
 function siteRow(r, i, mode = (S.tableMode || 'smart')) {
@@ -2797,6 +2957,12 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   const netSt = isOffline ? 'offline' : (isOnline ? 'online' : 'pending');
   const liveBall = `<span class="live-network-icon ${netSt}" id="live-dot-${r.id}" title="${isOffline ? 'Website Offline / Down' : (isOnline ? 'Website Active & Online' : 'Website Status: Unknown')}">${getSvg('network', 11)}</span>`;
   const co = (r.company || 'CW').trim();
+  const isHidden = isDailyRowHidden(r);
+  const isSiteDeact = String(r.siteStatus || '').toLowerCase().includes('deactiv');
+  const hiddenBadge = isHidden
+    ? `<span class="badge badge-dim badge-xs" title="${isSiteDeact ? 'Site deactivated in the Uptime Monitor — row hidden from the active checklist' : 'Hidden from the active checklist — all data is kept'}">${isSiteDeact ? 'Site Deactive' : 'Hidden'}</span>`
+    : '';
+  const hideBtn = isSiteDeact ? '' : `<button class="btn btn-ghost btn-sm toggle-hide-row-btn" data-id="${r.id}" data-hidden="${isHidden ? '1' : '0'}" title="${isHidden ? 'Restore this row to the active checklist' : 'Hide this row from the checklist (all data is kept)'}">${getSvg(isHidden ? 'eye' : 'eyeOff', 12)}</button>`;
 
   // Smart Fit Expiry Badge line
   let smartExpiryBadge = '';
@@ -2840,7 +3006,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
 
   if (mode === 'smart') {
     return `
-      <tr class="smart-row" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-updated-at="${esc(r.updatedAt || '')}">
+      <tr class="smart-row${isHidden ? ' is-hidden-row' : ''}" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-updated-at="${esc(r.updatedAt || '')}" data-hidden="${isHidden ? '1' : '0'}">
         <td class="col-select" style="text-align:center">
           <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
         </td>
@@ -2849,6 +3015,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
             <div class="site-identity-cell">
               ${liveBall}
               <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'} badge-xs">${esc(co)}</span>
+              ${hiddenBadge}
               <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
                 ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
               </a>
@@ -2887,6 +3054,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         <td class="col-resp" data-col="response">${respHtml}</td>
         <td class="col-actions" data-col="actions" style="text-align:right">
           <div class="actions-grp" style="justify-content:flex-end">
+            ${hideBtn}
             <button class="btn btn-ghost btn-sm toggle-detail-btn" data-id="${r.id}" title="Show all 12 details" style="display:inline-flex;align-items:center;gap:4px">${getSvg('eye', 12)}</button>
             <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit row data" style="display:inline-flex;align-items:center;gap:4px">${getSvg('edit', 12)}</button>
           </div>
@@ -2930,7 +3098,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
 
   // Full spreadsheet mode
   return `
-    <tr data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+    <tr class="${isHidden ? 'is-hidden-row' : ''}" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-hidden="${isHidden ? '1' : '0'}">
       <td style="color:var(--text-dim);font-size:11px;text-align:center">
         <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
       </td>
@@ -2938,6 +3106,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         <div class="site-identity-cell">
           ${liveBall}
           <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">${esc(shortUrl(r.siteUrl))} ↗</a>
+          ${hiddenBadge}
           <button class="btn-copy-url" data-url="${esc(r.siteUrl)}" title="Copy website URL to clipboard">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
@@ -2956,6 +3125,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
       <td data-col="expiry">${expiryHtml}</td>
       <td data-col="cloudflare">${cfHtml}</td>
       <td data-col="actions">
+        ${hideBtn}
         <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit all columns" style="display:inline-flex;align-items:center;gap:5px">${getSvg('edit', 12)} Edit</button>
       </td>
     </tr>`;
@@ -3000,9 +3170,15 @@ function maintSiteRow(r, i) {
   const netSt = isOffline ? 'offline' : (isOnline ? 'online' : 'pending');
   const liveBall = `<span class="live-network-icon ${netSt}" id="live-dot-${r.id}" title="${isOffline ? 'Website Offline / Down' : (isOnline ? 'Website Active & Online' : 'Website Status: Unknown')}">${getSvg('network', 11)}</span>`;
   const co = (r.siteAccount || r.company || 'CW').trim();
+  const isHidden = isDailyRowHidden(r);
+  const isSiteDeact = String(r.siteStatus || '').toLowerCase().includes('deactiv');
+  const hiddenBadge = isHidden
+    ? `<span class="badge badge-dim badge-xs" title="${isSiteDeact ? 'Site deactivated in the Uptime Monitor — row hidden from the active checklist' : 'Hidden from the active checklist — all data is kept'}">${isSiteDeact ? 'Site Deactive' : 'Hidden'}</span>`
+    : '';
+  const hideBtn = isSiteDeact ? '' : `<button class="btn btn-ghost btn-sm toggle-hide-row-btn" data-id="${r.id}" data-hidden="${isHidden ? '1' : '0'}" title="${isHidden ? 'Restore this row to the active checklist' : 'Hide this row from the checklist (all data is kept)'}">${getSvg(isHidden ? 'eye' : 'eyeOff', 12)}</button>`;
 
   return `
-    <tr data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}">
+    <tr class="${isHidden ? 'is-hidden-row' : ''}" data-url="${esc((r.siteUrl || '').toLowerCase())}" data-status="${r.maintenanceStatus}" data-id="${r.id}" data-hidden="${isHidden ? '1' : '0'}">
       <td class="col-select" style="text-align:center">
         <input type="checkbox" class="row-checkbox" data-row-id="${r.id}" data-url="${esc(r.siteUrl)}" data-company="${esc(co)}" />
       </td>
@@ -3010,6 +3186,7 @@ function maintSiteRow(r, i) {
         <div class="site-identity-cell">
           ${liveBall}
           <span class="badge badge-${co.toLowerCase().includes('cw') ? 'cw' : 'rm'} badge-xs">${esc(co)}</span>
+          ${hiddenBadge}
           <a href="${esc(r.siteUrl)}" target="_blank" class="site-domain-link" title="${esc(r.siteUrl)}">
             ${esc(shortUrl(r.siteUrl, 26))} <span class="ext-icon">↗</span>
           </a>
@@ -3026,6 +3203,7 @@ function maintSiteRow(r, i) {
       <td data-col="acm">${acmHtml}</td>
       <td data-col="actions" style="text-align:right">
         <div class="actions-grp" style="justify-content:flex-end">
+          ${hideBtn}
           <button class="btn btn-ghost btn-sm edit-dr-row-btn" data-id="${r.id}" title="Edit row data" style="display:inline-flex;align-items:center;gap:4px">${getSvg('edit', 12)}</button>
         </div>
       </td>
@@ -4644,7 +4822,7 @@ async function viewAllUsers() {
         });
       });
 
-      initChecklistTable(panel, false, userId);
+      initChecklistTable(panel, false, userId, () => loadUser(userId, userName));
     } catch (e) {
       panel.innerHTML = `<div class="card" style="padding:20px;color:var(--danger)">Failed to load: ${esc(e.message)}</div>`;
     }
@@ -6089,7 +6267,7 @@ function uptimeMonitorBar(snap) {
  * why they must never be counted as part of the current outage picture.
  */
 function _monitorable(s) {
-  return !!s && !!String(s.url || '').trim() && String(s.status || '').toLowerCase() !== 'deactive';
+  return !!s && !!String(s.url || '').trim() && !String(s.status || '').toLowerCase().includes('deactiv');
 }
 
 /**
