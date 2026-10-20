@@ -1740,14 +1740,18 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
   // 1. Recalculate stats helper
   function recalcStats() {
     const rows = containerEl.querySelectorAll('tr.smart-row, tr[data-status]:not(.smart-row):not(.detail-accordion-row)');
-    let comp = 0, inProg = 0, pending = 0, total = rows.length;
+    let comp = 0, inProg = 0, pending = 0, na = 0, total = rows.length;
     rows.forEach(r => {
       const s = r.dataset.status;
       if (s === 'completed') comp++;
       else if (s === 'in_progress') inProg++;
+      else if (s === 'n/a') na++;
       else pending++;
     });
-    const pct = total ? Math.round(comp / total * 100) : 0;
+    // N/A is not work: do not inflate Pending, and keep it out of the
+    // completion-percentage denominator.
+    const counted = total - na;
+    const pct = counted ? Math.round(comp / counted * 100) : 0;
 
     // Update stat cards
     const cEl = $('stat-completed'); if (cEl) cEl.textContent = comp;
@@ -2202,8 +2206,10 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
 
   const completed = rows.filter(r => r.maintenanceStatus === 'completed').length;
   const inProgress = rows.filter(r => r.maintenanceStatus === 'in_progress').length;
-  const pending = rows.filter(r => !['completed', 'in_progress'].includes(r.maintenanceStatus)).length;
-  const pct = rows.length ? Math.round(completed / rows.length * 100) : 0;
+  const na = rows.filter(r => r.maintenanceStatus === 'n/a').length;
+  const pending = rows.filter(r => !['completed', 'in_progress', 'n/a'].includes(r.maintenanceStatus)).length;
+  const counted = rows.length - na;
+  const pct = counted ? Math.round(completed / counted * 100) : 0;
   
   // Unified 3-mode active state
   const activeViewMode = S.mySitesMode === 'maintenance' ? 'maintenance' : (S.tableMode === 'full' ? 'full' : 'smart');
@@ -2270,6 +2276,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="completed">Completed (${completed})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="in_progress">In Progress (${inProgress})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="pending">Pending (${pending})</button>
+            <button class="btn btn-secondary btn-sm chip-btn" data-filter="n/a">N/A (${na})</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="cw">CW</button>
             <button class="btn btn-secondary btn-sm chip-btn" data-filter="rm">RM</button>
           </div>
@@ -2400,7 +2407,8 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
       let matchFilter = true;
       if (activeFilter === 'completed') matchFilter = status === 'completed';
       else if (activeFilter === 'in_progress') matchFilter = status === 'in_progress';
-      else if (activeFilter === 'pending') matchFilter = !['completed', 'in_progress'].includes(status);
+      else if (activeFilter === 'n/a') matchFilter = status === 'n/a';
+      else if (activeFilter === 'pending') matchFilter = !['completed', 'in_progress', 'n/a'].includes(status);
       else if (activeFilter === 'cw') matchFilter = text.includes('cw');
       else if (activeFilter === 'rm') matchFilter = text.includes('rm');
 
@@ -2896,7 +2904,7 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
             </div>
             <div class="detail-bento-card">
               <div class="dbc-head">🛠️ Review &amp; Report</div>
-              <div class="dbc-row"><span class="dbc-lbl">Maintenance:</span> <span class="badge badge-${r.maintenanceStatus === 'completed' ? 'success' : r.maintenanceStatus === 'in_progress' ? 'info' : 'warning'}">${esc(r.maintenanceRaw || r.maintenanceStatus || 'Pending')}</span></div>
+              <div class="dbc-row"><span class="dbc-lbl">Maintenance:</span> <span class="badge badge-${r.maintenanceStatus === 'completed' ? 'success' : r.maintenanceStatus === 'in_progress' ? 'info' : r.maintenanceStatus === 'n/a' ? 'dim' : 'warning'}">${esc(r.maintenanceRaw || r.maintenanceStatus || 'Pending')}</span></div>
               <div class="dbc-row"><span class="dbc-lbl">Report Sent:</span> <span class="badge badge-${r.reportSentStatus === 'sent' ? 'success' : 'dim'}">${esc(r.reportSentRaw || r.reportSentStatus || 'No')}</span></div>
               <div class="dbc-row"><span class="dbc-lbl">Client Response:</span> <span class="dbc-val">${esc(r.clientResponse || '—')}</span></div>
             </div>
@@ -3026,7 +3034,7 @@ function maintSiteRow(r, i) {
 
 function editDailyReviewRowModal(row, onSaved) {
   if (!row) return;
-  const maintOptions = ['Completed', 'In Progress', 'To Do', 'Pending'].map(o =>
+  const maintOptions = ['Completed', 'In Progress', 'To Do', 'Pending', 'N/A'].map(o =>
     `<option ${row.maintenanceRaw === o ? 'selected' : ''}>${o}</option>`).join('');
   const sentOptions = ['Yes', 'No', 'To Do'].map(o =>
     `<option ${row.reportSentRaw === o ? 'selected' : ''}>${o}</option>`).join('');
@@ -4510,6 +4518,7 @@ async function viewAllUsers() {
                 <option value="completed">Completed</option>
                 <option value="in_progress">In Progress</option>
                 <option value="todo">To Do</option>
+                <option value="n/a">N/A</option>
               </select>
               <select class="form-select select-sm" id="bulk-report-status" style="width:110px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
                 <option value="">— Report —</option>
@@ -4616,7 +4625,7 @@ async function viewAllUsers() {
         sel.addEventListener('change', async e => {
           const { rowId, field } = e.target.dataset;
           const value = e.target.value;
-          const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','Yes':'sent','No':'no' };
+          const normMap = { 'Completed':'completed','In Progress':'in_progress','To Do':'todo','Pending':'pending','N/A':'n/a','Yes':'sent','No':'no' };
           try {
             const isMaint = field === 'maintenanceStatus' || field === 'maintenanceRaw';
             await PUT(`/api/master/daily-review/${rowId}`, {
