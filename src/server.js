@@ -2754,7 +2754,7 @@ const server = http.createServer(async (req, res) => {
           }
 
           // Bi-directional sync: write to BOTH the CW/RM Maintenance sheet AND the Daily Review sheet
-          if (b.maintenanceStatus || b.maintenanceRaw || b.reportSentStatus || b.reportSentRaw) {
+          if (b.maintenanceStatus || b.maintenanceRaw || b.reportSentStatus || b.reportSentRaw || b.ga4 !== undefined) {
             import('./sheets.js').then(({ syncSiteStatusToSheet, syncStatusToDailyReviewSheet }) => {
               const activeMonth = db.getActiveMonth();
               // 1. CW/RM Maintenance sheet — correct month column
@@ -2766,7 +2766,7 @@ const server = http.createServer(async (req, res) => {
                   status: b.maintenanceRaw || b.maintenanceStatus,
                 }).catch(err => console.warn('[cw-rm-sync error]:', err.message));
               }
-              // 2. Daily Review sheet — user tab Maintenance + Report Sent columns (ACTIVE USERS ONLY)
+              // 2. Daily Review sheet — user tab Maintenance + Report Sent + GA4 columns (ACTIVE USERS ONLY)
               if (updatedRow.userName) {
                 const u = (db.getUsers ? db.getUsers() : []).find(x => (x.name || '').toLowerCase() === (updatedRow.userName || '').toLowerCase() || x.id === updatedRow.userId);
                 if (!u || u.active !== false) {
@@ -2778,6 +2778,7 @@ const server = http.createServer(async (req, res) => {
                     maintenanceRaw: b.maintenanceRaw,
                     reportSentStatus: b.reportSentStatus,
                     reportSentRaw: b.reportSentRaw,
+                    ga4: b.ga4,
                   }).catch(err => console.warn('[daily-review-sync error]:', err.message));
                 } else {
                   console.log('[daily-review-sync] Skipping ' + updatedRow.userName + ' (inactive user)');
@@ -2815,7 +2816,7 @@ const server = http.createServer(async (req, res) => {
         }
         const rows = db.updateDailyReviewBatch(b.ids, b.updates || {});
         // Bi-directional batch sync: CW/RM Maintenance sheet + Daily Review sheet per row
-        if (b.updates?.maintenanceStatus || b.updates?.maintenanceRaw || b.updates?.reportSentStatus || b.updates?.reportSentRaw) {
+        if (b.updates?.maintenanceStatus || b.updates?.maintenanceRaw || b.updates?.reportSentStatus || b.updates?.reportSentRaw || b.updates?.ga4 !== undefined) {
           import('./sheets.js').then(async ({ syncSiteStatusToSheet, syncStatusToDailyReviewSheet }) => {
             const activeM = db.getActiveMonth();
             const activeUsersSet = new Set(
@@ -2847,6 +2848,7 @@ const server = http.createServer(async (req, res) => {
                   maintenanceRaw: b.updates.maintenanceRaw,
                   reportSentStatus: b.updates.reportSentStatus,
                   reportSentRaw: b.updates.reportSentRaw,
+                  ga4: b.updates.ga4,
                 }).catch(() => {});
               }
             }

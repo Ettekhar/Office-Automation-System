@@ -1871,7 +1871,10 @@ function initChecklistTable(containerEl, isUserView = false, activeUserId = null
       const updates = {};
       if (maintVal) {
         updates.maintenanceStatus = maintVal;
-        updates.maintenanceRaw = maintVal === 'completed' ? 'Completed' : (maintVal === 'in_progress' ? 'In Progress' : 'To Do');
+        updates.maintenanceRaw = maintVal === 'completed' ? 'Completed'
+          : maintVal === 'in_progress' ? 'In Progress'
+          : maintVal === 'n/a' ? 'N/A'
+          : 'To Do';
       }
       if (reportVal) {
         updates.reportSentStatus = reportVal;
@@ -2349,6 +2352,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
               <option value="completed">Completed</option>
               <option value="in_progress">In Progress</option>
               <option value="todo">To Do</option>
+              <option value="n/a">N/A</option>
             </select>
             <select class="form-select select-sm" id="bulk-report-status" style="width:110px;background:var(--bg-surface-3);color:#fff;border-color:var(--border)">
               <option value="">— Report —</option>
@@ -2494,7 +2498,7 @@ async function viewMySites(preloadedRows = null, targetUserOverride = null) {
     sel.addEventListener('change', async e => {
       const { rowId, field } = e.target.dataset;
       const value = e.target.value;
-      const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'Yes': 'sent', 'No': 'no' };
+      const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'N/A': 'n/a', 'Yes': 'sent', 'No': 'no' };
       const isMaint = field === 'maintenanceStatus' || field === 'maintenanceRaw';
       const statusKey = isMaint ? 'maintenanceStatus' : 'reportSentStatus';
       const rawKey = isMaint ? 'maintenanceRaw' : 'reportSentRaw';
@@ -2661,11 +2665,12 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
   const _mStatus = (r.maintenanceStatus || '').toLowerCase();
   const _mRaw    = (r.maintenanceRaw || '').trim();
   const maintOpts = [
-    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress') },
+    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress' && _mStatus !== 'n/a') },
     { val: 'Completed',   label: 'Completed',     sel: _mStatus === 'completed'   || _mRaw === 'Completed'   },
     { val: 'In Progress', label: 'In Progress',    sel: _mStatus === 'in_progress' || _mRaw === 'In Progress' },
     { val: 'To Do',       label: 'To Do',          sel: _mRaw === 'To Do' },
     { val: 'Pending',     label: 'Pending',         sel: _mRaw === 'Pending' },
+    { val: 'N/A',         label: 'N/A',             sel: _mStatus === 'n/a' || _mRaw === 'N/A' },
   ].map(o => `<option value="${o.val}" ${o.sel ? 'selected' : ''}>${o.label}</option>`).join('');
   const sentOpts = ['Yes', 'No', 'To Do'].map(o =>
     `<option ${r.reportSentRaw === o ? 'selected' : ''}>${o}</option>`).join('');
@@ -2953,11 +2958,12 @@ function maintSiteRow(r, i) {
   const _mStatus = (r.maintenanceStatus || '').toLowerCase();
   const _mRaw    = (r.maintenanceRaw || '').trim();
   const maintOpts = [
-    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress') },
+    { val: '',            label: '\u2014 Pending \u2014', sel: _mStatus === 'todo' || _mStatus === 'pending' || (!_mRaw && _mStatus !== 'completed' && _mStatus !== 'in_progress' && _mStatus !== 'n/a') },
     { val: 'Completed',   label: 'Completed',     sel: _mStatus === 'completed'   || _mRaw === 'Completed'   },
     { val: 'In Progress', label: 'In Progress',    sel: _mStatus === 'in_progress' || _mRaw === 'In Progress' },
     { val: 'To Do',       label: 'To Do',          sel: _mRaw === 'To Do' },
     { val: 'Pending',     label: 'Pending',         sel: _mRaw === 'Pending' },
+    { val: 'N/A',         label: 'N/A',             sel: _mStatus === 'n/a' || _mRaw === 'N/A' },
   ].map(o => `<option value="${o.val}" ${o.sel ? 'selected' : ''}>${o.label}</option>`).join('');
 
   // ClickUp link (same treatment as siteRow)
@@ -3087,7 +3093,7 @@ function editDailyReviewRowModal(row, onSaved) {
       label: 'Save Changes', cls: 'btn btn-primary', onClick: async () => {
         const maintRaw = $('edr-maint').value;
         const sentRaw = $('edr-sent').value;
-        const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'Yes': 'sent', 'No': 'no' };
+        const normMap = { 'Completed': 'completed', 'In Progress': 'in_progress', 'To Do': 'todo', 'Pending': 'pending', 'N/A': 'n/a', 'Yes': 'sent', 'No': 'no' };
 
         const updates = {
           company: $('edr-company').value.trim(),

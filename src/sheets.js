@@ -1144,15 +1144,22 @@ export function dailyReviewMaintenanceCellValue(rec = {}) {
  * The affirmative token is accepted as BOTH "yes" and "sent": the live DB stores
  * "yes" (measured 2026-09-26: no|pending|todo|yes, zero "sent"), while the
  * pre-existing check here only compared against "sent" and so rendered every
- * "yes" row as "No". Anything else falls back to "No"; empty stays empty rather
- * than defaulting to "No".
+ * "yes" row as "No". Anything else falls back to "No".
+ *
+ * Contract: when NEITHER field is supplied the result is null — the caller must
+ * not touch the cell. (Before 2026-10-20 this returned '', and a maintenance-only
+ * sync therefore cleared the Report Sent cell.) An explicitly supplied empty
+ * string is a real clear and still returns ''.
  */
 export function dailyReviewReportSentCellValue({ reportSentRaw, reportSentStatus } = {}) {
-  if (reportSentRaw !== undefined && reportSentRaw !== null) {
+  const hasRaw = reportSentRaw !== undefined && reportSentRaw !== null;
+  const hasStatus = reportSentStatus !== undefined && reportSentStatus !== null;
+  if (!hasRaw && !hasStatus) return null;
+  if (hasRaw) {
     const raw = String(reportSentRaw).trim();
     if (raw) return raw;
   }
-  if (reportSentStatus) {
+  if (hasStatus && String(reportSentStatus).trim() !== '') {
     const s = String(reportSentStatus).toLowerCase().trim();
     return (s === 'yes' || s === 'sent') ? 'Yes' : 'No';
   }
@@ -1310,8 +1317,9 @@ export async function syncStatusToDailyReviewSheet({
   maintenanceRaw,
   reportSentStatus,
   reportSentRaw,
+  ga4,
 }) {
-  if (!userName || (!maintenanceStatus && !maintenanceRaw && !reportSentStatus && !reportSentRaw)) {
+  if (!userName || (!maintenanceStatus && !maintenanceRaw && !reportSentStatus && !reportSentRaw && ga4 === undefined)) {
     return { success: false, error: 'userName and at least one status field are required' };
   }
 
@@ -1388,6 +1396,17 @@ export async function syncStatusToDailyReviewSheet({
     return -1;
   })();
 
+  // GA4 is imported from this same tab by syncFromSheets (hi(h, 'ga4')), so
+  // writing it here closes the loop: a dashboard edit survives the next sync
+  // instead of being reverted to the stale sheet value.
+  const ga4Col = (() => {
+    for (const c of ['ga4 report', 'ga4', 'google analytics']) {
+      const i = h.findIndex(x => x && x.toLowerCase().includes(c));
+      if (i !== -1) return i;
+    }
+    return -1;
+  })();
+
   let sheetRow = (rowIndex && rowIndex >= 2) ? rowIndex : null;
   if (!sheetRow) {
     const normSearch = (siteUrl || '')
@@ -1430,12 +1449,18 @@ export async function syncStatusToDailyReviewSheet({
 
   let sheetSentValue = dailyReviewReportSentCellValue({ reportSentRaw, reportSentStatus });
 
+  let sheetGa4Value = null;
+  if (ga4 !== undefined && ga4 !== null) sheetGa4Value = String(ga4);
+
   const updates = [];
   if (sheetMaintValue !== null && maintCol !== -1) {
     updates.push({ cell: `${colIndexToA1(maintCol)}${sheetRow}`, value: sheetMaintValue });
   }
   if (sheetSentValue !== null && sentCol !== -1) {
     updates.push({ cell: `${colIndexToA1(sentCol)}${sheetRow}`, value: sheetSentValue });
+  }
+  if (sheetGa4Value !== null && ga4Col !== -1) {
+    updates.push({ cell: `${colIndexToA1(ga4Col)}${sheetRow}`, value: sheetGa4Value });
   }
 
   if (updates.length === 0) {
