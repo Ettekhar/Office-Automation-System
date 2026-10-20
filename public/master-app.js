@@ -2864,9 +2864,11 @@ function siteRow(r, i, mode = (S.tableMode || 'smart')) {
         </td>
         <td class="col-integ" data-col="ga4">
           <div class="integrations-pill-grp">
-            ${ga4SelectHtml}
-            ${newsHtml !== '<span class="dim-dash">—</span>' ? newsHtml : ''}
-            ${formHtml !== '<span class="dim-dash">—</span>' ? formHtml : ''}
+            <div class="integ-row integ-row-ga4">${ga4SelectHtml}</div>
+            <div class="integ-row integ-row-mail">
+              ${newsHtml !== '<span class="dim-dash">—</span>' ? newsHtml : ''}
+              ${formHtml !== '<span class="dim-dash">—</span>' ? formHtml : ''}
+            </div>
           </div>
         </td>
         <td class="col-resp" data-col="response">${respHtml}</td>

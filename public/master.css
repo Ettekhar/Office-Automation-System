@@ -12080,3 +12080,72 @@ html[data-theme="light"] .mt-clear { color: #047857; }
   .mt-clear { padding: 11px 14px; }
 }
 
+
+/* ---------------------------------------------------------------------------
+   SMART FIT v2 � a deliberate column budget (desktop)
+   ---------------------------------------------------------------------------
+   Auto layout gave every spare pixel to the URL column: measured at 1500px it
+   took 796px while Tasks & Links held 120px and Integrations 159px, so the
+   three link pills stacked three high and the mail chips stacked three high �
+   a 99px row that looked nothing like "fit". Fixed layout + percentages keeps
+   every control column wide enough for its content: pills on one line, GA4 on
+   one line with the two mail chips under it. Rows land near 64px.
+
+   Desktop only (>=1180px): below that the smart table keeps auto layout, so the
+   existing tablet/phone behaviour is untouched.
+   --------------------------------------------------------------------------- */
+@media (min-width: 1180px) {
+  .table-smart-fit { table-layout: fixed; }
+  .table-smart-fit th { white-space: nowrap; }
+  .table-smart-fit th,
+  .table-smart-fit td { vertical-align: middle; }
+  .table-smart-fit td { overflow: hidden; }
+
+  .table-smart-fit .col-select  { width: 34px; }
+  .table-smart-fit .col-url     { width: 26%; min-width: 0; }
+  .table-smart-fit .col-maint   { width: 15%; }
+  .table-smart-fit .col-links   { width: 21%; }
+  .table-smart-fit .col-integ   { width: 20%; }
+  .table-smart-fit .col-resp    { width: 7%; }
+  .table-smart-fit .col-actions { width: 78px; }
+
+  /* Tasks & Links: compact pills that share one row when they fit, wrapping
+     cleanly (never clipping) at the narrow end of the desktop range. */
+  .table-smart-fit .quick-links-grp { flex-wrap: wrap; gap: 6px; }
+  .table-smart-fit .quick-links-grp > * { flex: 0 0 auto; }
+  .table-smart-fit .btn-timetrack,
+  .table-smart-fit .btn-clickup,
+  .table-smart-fit .btn-booking { padding: 3px 7px; font-size: 10.5px; gap: 4px; }
+
+  /* Maintenance: select + report toggle share a line when there is room */
+  .table-smart-fit .status-cell-grp { flex-wrap: wrap; gap: 5px; }
+  .table-smart-fit .select-maint-compact { min-width: 0; width: 108px; }
+
+  /* Integrations: GA4 on its own line, the two mail chips side by side
+     (the column direction itself is set in the integ-row block below). */
+  .table-smart-fit .integrations-pill-grp .select-ga4-status { flex: 0 0 100%; max-width: 132px; }
+  .table-smart-fit .cell-text-badge { max-width: 104px; }
+}
+
+/* Integration cell: GA4 owns its line, mail chips share the next one.
+   The wrappers exist in the smart row only; full-spread keeps single cells. */
+.integ-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 1180px) {
+  .table-smart-fit .integrations-pill-grp {
+    flex-direction: column;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 4px;
+    max-width: none;
+  }
+  .table-smart-fit .integ-row-ga4 { width: 100%; }
+  .table-smart-fit .integ-row-mail { width: 100%; }
+}
