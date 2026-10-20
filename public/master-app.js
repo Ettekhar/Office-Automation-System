@@ -11210,7 +11210,7 @@ async function viewCustomSheet(sheetId) {
 
             <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap">
               ${hasMonthFocus ? `
-                <label class="cs-focus-toggle" title="Hide month columns that are entirely 'Updated & Backup' or empty. The newest month always stays visible.">
+                <label class="cs-focus-toggle" title="Hide month columns that have no open work left — every cell is 'Updated & Backup', 'N/A' or a report link. Months with an 'In Progress' value stay visible, and the newest month always stays visible.">
                   <input type="checkbox" id="cs-hide-completed" ${hideCompletedMonths ? 'checked' : ''}>
                   <span class="cs-focus-track" aria-hidden="true"><span class="cs-focus-thumb"></span></span>
                   <span>Hide completed months</span>
@@ -11367,7 +11367,7 @@ async function viewCustomSheet(sheetId) {
       return `
                           <td class="cs-cell ${canEdit ? 'cs-editable-cell' : ''}" data-row="${r._rowNumber}" data-col="${h.index}" data-key="${h.key}" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(val || '')} ${canEdit ? '(Double-click to edit)' : ''}">
                             ${hideFinishedCell ? `
-                              <span class="cs-completed-mark" title="Updated &amp; Backup hidden — turn off “Hide completed months” to show it" aria-label="Completed value hidden">${getSvg('check', 11)}</span>
+                              <span class="cs-completed-mark" title="Finished value hidden — turn off “Hide completed months” to show it" aria-label="Completed value hidden">${getSvg('check', 11)}</span>
                             ` : isStatusCol ? `
                               <span class="badge ${stStr.includes('active') || stStr.includes('done') || stStr.includes('completed') ? 'badge-success' : (stStr.includes('progress') || stStr.includes('review') ? 'badge-info' : 'badge-dim')}" style="cursor:${canEdit ? 'pointer' : 'default'}">
                                 ${esc(val || '—')}

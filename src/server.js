@@ -4543,10 +4543,16 @@ const server = http.createServer(async (req, res) => {
           // Month-column focus metadata for the Sheet Manager. CW/RM Website List
           // tabs are 60+ columns wide and most historical month columns are a wall
           // of "Updated & Backup". Detect month headers and tell the client which
-          // columns are entirely finished (or empty) so it can collapse them.
-          // The newest month column is never auto-hidden: it is the current cycle.
+          // columns have no open work left so it can collapse them. A month counts
+          // as done when every non-blank cell is a completion marker, "N/A" (the
+          // site was not applicable that month) or a report link; anything else
+          // (e.g. "In Progress") keeps the column visible so pending months are
+          // never hidden. The newest month column is never auto-hidden: it is the
+          // current cycle.
           const monthHeaderPattern = /^(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust|us)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\s*['.,-]?\s*\d{1,4})?\s*$/i;
           const isFinishedMonthValue = v => /^(updated\s*(?:&|and)\s*back(?:up(?:ped)?|ed\s*up)|completed?|done|finished)$/i.test(String(v).trim());
+          const isNotApplicableMonthValue = v => /^(n\/?a|n\.a\.?|not[ _-]?applicable)$/i.test(String(v).trim().replace(/\s+/g, ' '));
+          const isLinkMonthValue = v => /^(https?:\/\/|www\.)/i.test(String(v).trim());
           const monthHeaders = headers.filter(h => monthHeaderPattern.test(String(h.label || '').trim()));
           const monthColKeys = monthHeaders.map(h => h.key);
           const latestMonthKey = monthColKeys.length ? monthColKeys[monthColKeys.length - 1] : null;
@@ -4555,15 +4561,15 @@ const server = http.createServer(async (req, res) => {
           monthHeaders.forEach(h => {
             if (h.key === latestMonthKey) return;
             let nonBlank = 0;
-            let finished = 0;
+            let done = 0;
             rows.forEach(r => {
               const val = String(r[h.key] ?? '').trim();
               if (!val) return;
               nonBlank++;
-              if (isFinishedMonthValue(val)) finished++;
+              if (isFinishedMonthValue(val) || isNotApplicableMonthValue(val) || isLinkMonthValue(val)) done++;
             });
             if (nonBlank === 0) emptyMonthKeys.push(h.key);
-            else if (finished === nonBlank) completedMonthKeys.push(h.key);
+            else if (done === nonBlank) completedMonthKeys.push(h.key);
           });
 
           // Search filter
