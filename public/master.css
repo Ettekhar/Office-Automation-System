@@ -2264,7 +2264,7 @@ tr:last-child td {
 }
 
 .btn-notice-meet {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #047857, #065f46);
   color: white !important;
   font-weight: 600;
   font-size: 12px;
@@ -2274,13 +2274,14 @@ tr:last-child td {
   align-items: center;
   gap: 6px;
   text-decoration: none;
-  box-shadow: 0 2px 10px rgba(16,185,129, 0.15);
+  box-shadow: 0 2px 10px rgba(4,120,87, 0.25);
   transition: all var(--transition);
 }
 
 .btn-notice-meet:hover {
+  background: linear-gradient(135deg, #065f46, #064e3b);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(16,185,129, 0.25);
+  box-shadow: 0 4px 14px rgba(4,120,87, 0.35);
 }
 
 /* ─── GA4 Report Status Dropdown & Pill ─── */
@@ -11216,6 +11217,15 @@ html[data-theme] .linear-title:hover,
 html[data-theme] .url-cell a:hover,
 html[data-theme] a:hover {
   color: var(--link) !important;
+}
+
+/* The green "Join Google Meet" notice CTA needs white text in both themes.
+   The generic themed link rules above are more specific than .btn-notice-meet
+   and were painting its label blue, which is hard to read on green. */
+html[data-theme] .btn-notice-meet,
+html[data-theme] .btn-notice-meet:hover,
+html[data-theme] .btn-notice-meet:focus-visible {
+  color: #ffffff !important;
 }
 
 html[data-theme] .ext-icon {
