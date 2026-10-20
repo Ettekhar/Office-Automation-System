@@ -5918,6 +5918,16 @@ html[data-theme="light"] .cs-url-row .cs-item-card-url {
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  cursor: grab;
+}
+
+/* Click-and-hold panning: the table is often far wider than the window and its
+   scrollbar sits below dozens of rows, so holding the mouse and sliding left or
+   right pans the columns directly. */
+.cs-table-scroll.cs-dragging,
+.cs-table-scroll.cs-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
 }
 
 .cs-table-scroll:focus-visible {

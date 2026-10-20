@@ -11040,16 +11040,45 @@ async function viewCustomSheet(sheetId) {
       });
     }
 
-    // Month focus view: collapse historical month columns that are entirely
-    // "Updated & Backup" (or empty). The newest month column always stays
-    // visible because it is the current maintenance cycle. This is display
-    // only; toggling it back restores every column and the table scrolls.
-    const hiddenMonthKeys = new Set(hideCompletedMonths ? [...completedMonthKeys, ...emptyMonthKeys] : []);
-    if (latestMonthKey) hiddenMonthKeys.delete(latestMonthKey);
+    // Month focus view: show ONLY the running month column. The running month is
+    // the newest month column (the app's active month, e.g. "October 26"), and
+    // every other month column — finished, N/A, report-link, or even one holding
+    // a stray leftover "In Progress" — is collapsed so the running month is the
+    // only month on screen. Detection is tolerant of header typos (the RM tab has
+    // an "octobor" column). This is display only; the toggle / "Show all"
+    // restores every column and the table still scrolls.
+    const isMonthLikeLabel = (label) => {
+      const word = String(label || '').toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+      if (!word || word.includes(' ')) return false;
+      const abbr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const full = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      if (abbr.includes(word) || full.includes(word)) return true;
+      const lev = (a, b) => {
+        const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+        for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+          for (let j = 1; j <= b.length; j++) {
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+          }
+        }
+        return dp[a.length][b.length];
+      };
+      return [...full, ...abbr].some(m => lev(word, m) <= 1);
+    };
+    const monthKeySet = new Set(monthColKeys);
+    const focusKeepKey = latestMonthKey || (monthColKeys.length ? monthColKeys[monthColKeys.length - 1] : null);
+    const isMonthLikeHeader = (h) => monthKeySet.has(h.key) || isMonthLikeLabel(h.label);
+    const hiddenMonthKeys = new Set();
+    if (hideCompletedMonths && focusKeepKey) {
+      for (const h of headers) {
+        if (h.key === focusKeepKey) continue;
+        if (isMonthLikeHeader(h)) hiddenMonthKeys.add(h.key);
+      }
+    }
     const visibleHeaders = headers.filter(h => !hiddenMonthKeys.has(h.key));
     const hiddenMonthCount = headers.length - visibleHeaders.length;
-    const monthKeySet = new Set(monthColKeys);
-    const hasMonthFocus = (completedMonthKeys.length + emptyMonthKeys.length) > 0;
+    const latestMonthLabel = (headers.find(h => h.key === focusKeepKey) || {}).label || '';
+    const hasMonthFocus = !!focusKeepKey && headers.some(h => h.key !== focusKeepKey && isMonthLikeHeader(h));
 
     const totalCount = metrics.total || total || 0;
     const completedCount = metrics.completed || 0;
@@ -11210,10 +11239,10 @@ async function viewCustomSheet(sheetId) {
 
             <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap">
               ${hasMonthFocus ? `
-                <label class="cs-focus-toggle" title="Hide month columns that have no open work left — every cell is 'Updated & Backup', 'N/A' or a report link. Months with an 'In Progress' value stay visible, and the newest month always stays visible.">
+                <label class="cs-focus-toggle" title="Show only the running month (${esc(latestMonthLabel || 'current')}) and collapse every other month column. Turn this off or press “Show all” to see all months again.">
                   <input type="checkbox" id="cs-hide-completed" ${hideCompletedMonths ? 'checked' : ''}>
                   <span class="cs-focus-track" aria-hidden="true"><span class="cs-focus-thumb"></span></span>
-                  <span>Hide completed months</span>
+                  <span>Only ${esc(latestMonthLabel || 'running month')}</span>
                   ${hideCompletedMonths && hiddenMonthCount ? `<span class="cs-focus-count">${hiddenMonthCount}</span>` : ''}
                 </label>
               ` : ''}
@@ -11266,7 +11295,7 @@ async function viewCustomSheet(sheetId) {
       const metaHeaders = headers.filter(h => {
         const value = String(r[h.key] || '').trim();
         if (!value || h.key === primaryTitleKey || h.key === primaryUrlKey || h.key === primaryStatusKey) return false;
-        if (hideCompletedMonths && monthKeySet.has(h.key) && h.key !== latestMonthKey && isCompletedSheetValue(value)) return false;
+        if (hiddenMonthKeys.has(h.key)) return false;
         return true;
       });
 
@@ -11332,7 +11361,7 @@ async function viewCustomSheet(sheetId) {
           ` : `
             <!-- DATA TABLE VIEW -->
             <div class="cs-table-scroll-hint">
-              <span>${getSvg('sort', 10)} ${hideCompletedMonths && hiddenMonthCount ? `${visibleHeaders.length} columns shown · ${hiddenMonthCount} completed/empty months hidden` : `All ${headers.length} columns shown`} — swipe or scroll right to see more</span>
+              <span>${getSvg('sort', 10)} ${hideCompletedMonths && hiddenMonthCount ? `${visibleHeaders.length} columns shown · only ${esc(latestMonthLabel || 'the running month')} kept (${hiddenMonthCount} other months hidden)` : `All ${headers.length} columns shown`} — swipe or scroll right to see more</span>
               ${hideCompletedMonths && hiddenMonthCount ? `<button type="button" class="cs-show-all-btn" id="cs-show-all-months">Show all</button>` : ''}
             </div>
             <div class="table-scroll-wrapper cs-table-scroll" style="overflow-x:auto" tabindex="0" role="region" aria-label="Sheet data table. Scroll horizontally to see more columns.">
@@ -11367,7 +11396,7 @@ async function viewCustomSheet(sheetId) {
       return `
                           <td class="cs-cell ${canEdit ? 'cs-editable-cell' : ''}" data-row="${r._rowNumber}" data-col="${h.index}" data-key="${h.key}" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(val || '')} ${canEdit ? '(Double-click to edit)' : ''}">
                             ${hideFinishedCell ? `
-                              <span class="cs-completed-mark" title="Finished value hidden — turn off “Hide completed months” to show it" aria-label="Completed value hidden">${getSvg('check', 11)}</span>
+                              <span class="cs-completed-mark" title="Finished value hidden — turn off the month focus to show it" aria-label="Completed value hidden">${getSvg('check', 11)}</span>
                             ` : isStatusCol ? `
                               <span class="badge ${stStr.includes('active') || stStr.includes('done') || stStr.includes('completed') ? 'badge-success' : (stStr.includes('progress') || stStr.includes('review') ? 'badge-info' : 'badge-dim')}" style="cursor:${canEdit ? 'pointer' : 'default'}">
                                 ${esc(val || '—')}
@@ -12396,6 +12425,54 @@ document.addEventListener("click", (e) => {
     });
   }
 });
+
+// ── Hold-and-slide horizontal panning for wide sheet tables ──────────────────
+// Sheet Manager tables can be thousands of pixels wide and their scrollbar sits
+// below every row, so grabbing the table and sliding left/right pans it. Mouse
+// only: touch devices already swipe-scroll natively, and hijacking touch would
+// break that.
+(function enableSheetDragScroll() {
+  let drag = null;
+
+  const isInteractive = (el) => !!(el && el.closest && el.closest("a, button, input, select, textarea, label, [contenteditable='true']"));
+
+  document.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    const sc = e.target.closest && e.target.closest(".cs-table-scroll");
+    if (!sc) return;
+    if (isInteractive(e.target)) return;
+    drag = { sc, startX: e.clientX, startLeft: sc.scrollLeft, moved: false, pointerId: e.pointerId };
+    sc.classList.add("cs-dragging");
+    try { sc.setPointerCapture(e.pointerId); } catch { }
+  });
+
+  document.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const dx = e.clientX - drag.startX;
+    if (!drag.moved && Math.abs(dx) < 4) return;
+    drag.moved = true;
+    drag.sc.scrollLeft = drag.startLeft - dx;
+    e.preventDefault();
+  });
+
+  const endDrag = (e) => {
+    if (!drag) return;
+    if (e && e.pointerId !== undefined && e.pointerId !== drag.pointerId) return;
+    const { sc, moved, pointerId } = drag;
+    drag = null;
+    sc.classList.remove("cs-dragging");
+    try { sc.releasePointerCapture(pointerId); } catch { }
+    if (moved) {
+      // A drag should not also trigger a link click or cell double-click.
+      const swallow = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+      document.addEventListener("click", swallow, { capture: true, once: true });
+      setTimeout(() => document.removeEventListener("click", swallow, true), 0);
+    }
+  };
+
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+})();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // VIEW: MAILER SETTINGS
