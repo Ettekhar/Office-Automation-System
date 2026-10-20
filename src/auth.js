@@ -44,10 +44,21 @@ function safeUser(user) {
  * On Cloudflare Workers the host comes from the request URL.
  */
 function oauthRedirectUri(req) {
-  const customBase = process.env.APP_BASE_URL || '';
-  if (customBase) return customBase.replace(/\/$/, '') + '/api/auth/google/callback';
   const host = (req.headers && req.headers.host) || 'localhost:3000';
-  const proto = IS_PRODUCTION ? 'https' : 'http';
+  const requestIsLocal = /^(localhost|127\.|\[::1\])(?::\d+)?$/i.test(host);
+  const customBase = (process.env.APP_BASE_URL || '').trim();
+  const customIsLocal = /^https?:\/\/(localhost|127\.|\[::1\])(?::\d+)?$/i.test(customBase);
+
+  // Never send Google a localhost callback from a public deployment. A stale
+  // APP_BASE_URL used to leak http://localhost:3000 into the live OAuth
+  // request, which Google rejects with redirect_uri_mismatch.
+  if (customBase && !(customIsLocal && !requestIsLocal)) {
+    return customBase.replace(/\/$/, '') + '/api/auth/google/callback';
+  }
+
+  // Derive the protocol from the request host instead of NODE_ENV, which is
+  // not set inside the Cloudflare Worker bundle.
+  const proto = requestIsLocal ? 'http' : 'https';
   return `${proto}://${host}/api/auth/google/callback`;
 }
 
