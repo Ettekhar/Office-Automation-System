@@ -31,6 +31,9 @@
  * Cloudflare Access as well; this gate is defence in depth, not a replacement.
  */
 
+// Must precede src/server.js: it sets __OFFICEOS_WORKER__ before sheetsCache.js
+// captures isWorker at module-evaluation time.
+import './dashboard/worker-flag.js';
 import * as kvShim from './dashboard/kv-shim.js';
 import { configure as configureGoogle } from './dashboard/google-shim.js';
 
@@ -66,7 +69,10 @@ async function ensureWarm(env, ctx) {
   if (warmed) {
     // Even on subsequent requests, re-register ctx.waitUntil so new writes
     // (e.g. a session created on this request) are guaranteed to complete.
-    if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+    if (ctx && ctx.waitUntil) {
+      kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+      globalThis.__OFFICEOS_WAIT_UNTIL__ = ctx.waitUntil.bind(ctx);
+    }
     return warmed;
   }
   warmed = (async () => {
@@ -97,7 +103,10 @@ async function ensureWarm(env, ctx) {
 
     kvShim.init(env.DASHBOARD_KV);
     // Register waitUntil BEFORE warm so any writes during warm are also covered.
-    if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+    if (ctx && ctx.waitUntil) {
+      kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+      globalThis.__OFFICEOS_WAIT_UNTIL__ = ctx.waitUntil.bind(ctx);
+    }
     const loaded = await kvShim.warm(env.DASHBOARD_KV, STATE_KEYS);
     console.log(`[dashboard] warmed ${loaded}/${STATE_KEYS.length} state keys from KV`);
 
@@ -142,6 +151,11 @@ export default {
     const url = new URL(request.url);
 
     try {
+      // Background stale-while-revalidate refreshes must survive the response
+      // (src/sheets.js keepAlive), otherwise the cache never heals and a newly
+      // added sheet column stays invisible until the isolate is recycled.
+      if (ctx && ctx.waitUntil) globalThis.__OFFICEOS_WAIT_UNTIL__ = ctx.waitUntil.bind(ctx);
+
       // ---- liveness only -------------------------------------------------------
       if (url.pathname === '/api/worker-health' || url.pathname === '/__health') {
         return json({ service: 'officeos-dashboard', ok: true });
@@ -255,7 +269,10 @@ export default {
         // runSweep() reads and writes only sites + meta, so nothing else is
         // needed here. `warmed` stays null on purpose: a later request in this
         // isolate still performs the full ensureWarm() it needs.
-        if (ctx && ctx.waitUntil) kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+        if (ctx && ctx.waitUntil) {
+          kvShim.setWaitUntil(ctx.waitUntil.bind(ctx));
+          globalThis.__OFFICEOS_WAIT_UNTIL__ = ctx.waitUntil.bind(ctx);
+        }
         await kvShim.warm(env.DASHBOARD_KV, ['sites', 'meta']);
         const { runCloudSweep } = await import('../src/uptimeMonitor.js');
         const r = await runCloudSweep();

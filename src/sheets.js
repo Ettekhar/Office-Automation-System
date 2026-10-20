@@ -114,6 +114,7 @@ import { resolveUserTabUrlColumn, getUserTabFallbackUrlColumn } from './columnMa
 import {
   cacheGet,
   cacheSet,
+  cacheDelete,
   peekStale,
   observeStaleServe,
   observeRefresh,
@@ -129,6 +130,43 @@ import {
 // ─── Minimum ms between consecutive real API calls ──────────────────────────
 // 60 000 ms / 43 = ~1 395 ms  → keeps us at ≤43 req/min (quota is 60).
 const QUEUE_INTERVAL_MS = Number(process.env.SHEETS_QUEUE_INTERVAL_MS || 1400);
+
+// A single Google call (or its 429 retry loop) must never wedge the serial
+// queue forever. Without this watchdog one hung request blocks every later
+// read in the isolate — that is what made Sheet Manager hang until the Worker
+// timed out while the top-bar month endpoint kept serving stale cache data.
+const QUEUE_TASK_TIMEOUT_MS = Number(process.env.SHEETS_QUEUE_TASK_TIMEOUT_MS || 45000);
+
+/**
+ * Keep a background promise alive for the lifetime of a Cloudflare Worker
+ * invocation. In Node this is a no-op; the Worker sets the hook from
+ * ctx.waitUntil() in dashboard-worker.js.
+ *
+ * This is REQUIRED for stale-while-revalidate: the response is sent
+ * immediately, and without waitUntil the runtime cancels the refresh that was
+ * supposed to cache the new sheet column. The stale value then survives until
+ * eviction, which is exactly how a newly added month stayed invisible.
+ */
+function keepAlive(promise) {
+  const waitUntil = globalThis.__OFFICEOS_WAIT_UNTIL__;
+  if (typeof waitUntil === 'function') {
+    try { waitUntil(promise); } catch {}
+  }
+}
+
+function withTaskTimeout(promise, ms, label) {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`)),
+      ms,
+    );
+    if (timer && typeof timer.unref === 'function') timer.unref();
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 
 // ─── Shared API client ───────────────────────────────────────────────────────
 let sheetsClient = null;
@@ -171,20 +209,25 @@ async function processQueue() {
   if (queueRunning) return;
   queueRunning = true;
 
-  while (queue.length > 0) {
-    const { fn, resolve, reject } = queue.shift();
-    try {
-      resolve(await fn());
-    } catch (err) {
-      reject(err);
+  try {
+    while (queue.length > 0) {
+      const { fn, resolve, reject } = queue.shift();
+      try {
+        resolve(await withTaskTimeout(fn(), QUEUE_TASK_TIMEOUT_MS, 'Sheets API call'));
+      } catch (err) {
+        reject(err);
+      }
+      // Mandatory cool-down between real API calls
+      if (queue.length > 0) {
+        await new Promise((r) => setTimeout(r, QUEUE_INTERVAL_MS));
+      }
     }
-    // Mandatory cool-down between real API calls
-    if (queue.length > 0) {
-      await new Promise((r) => setTimeout(r, QUEUE_INTERVAL_MS));
-    }
+  } finally {
+    queueRunning = false;
+    // A task can add work while the loop is unwinding (or a timeout can let
+    // the loop finish with a late arrival). Never strand it.
+    if (queue.length > 0) processQueue();
   }
-
-  queueRunning = false;
 }
 
 /**
@@ -258,11 +301,14 @@ export function readThrough(cacheKey, fetcher) {
     const stale = peekStale(cacheKey, { maxAgeMs: maxStaleMs });
     if (stale) {
       observeStaleServe(cacheKey, stale.ageMs);
-      enqueue(cacheKey, async () => {
+      const refresh = enqueue(cacheKey, async () => {
         const value = await fetcher();
         observeRefresh(cacheKey);
         return value;
       }).catch((e) => console.warn(`[sheets] background refresh failed for ${cacheKey}: ${e?.message || e}`));
+      // On Workers the response can finish before this promise does; without
+      // waitUntil the runtime kills the refresh and the cache never heals.
+      keepAlive(refresh);
       return Promise.resolve(stale.value);
     }
   }
@@ -321,10 +367,18 @@ export async function listTabMeta(spreadsheetId = null) {
   });
 }
 
-/** Returns the full 2D array of values for a given tab. */
-export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId = null) {
+/**
+ * Returns the full 2D array of values for a given tab.
+ *
+ * opts.force bypasses the cached copy for this read. Use it only when the
+ * caller has a reason to believe the sheet changed (a new month column, a
+ * manual refresh) — normal reads should keep the cache.
+ */
+export async function getTabValues(tabName, range = 'A1:ZZ2000', spreadsheetId = null, opts = {}) {
   const targetId = spreadsheetId || config.spreadsheetId;
   const cacheKey = tabValuesCacheKey(targetId, tabName, range);
+
+  if (opts && opts.force) cacheDelete(cacheKey);
 
   return readThrough(cacheKey, async () => {
     // Double-check cache

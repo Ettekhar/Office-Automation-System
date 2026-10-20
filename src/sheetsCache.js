@@ -224,6 +224,10 @@ export function cacheSet(key, value) {
 
 /** Force-refresh support for a single read while preserving the shared queue. */
 export function cacheDelete(key) {
+  // Load the persisted copy first. Otherwise a delete on a cold process is
+  // immediately undone by ensureLoaded() inside the next cacheGet(), and the
+  // "force" read silently serves the old value.
+  ensureLoaded();
   delete store[key];
   schedulePersist();
 }

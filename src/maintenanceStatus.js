@@ -208,6 +208,39 @@ export function findMonthlyHistoryEntry(history, month) {
 }
 
 /**
+ * Strict period lookup for import and coverage checks.
+ *
+ * Same as findMonthlyHistoryEntry() for exact labels and same-name/same-year
+ * matches, but deliberately does NOT let a year-qualified query be satisfied by
+ * a year-less entry. The masters contain old bare "October" columns right next
+ * to "October 26"; the tolerant rule treats the bare (previous year's) column as
+ * this year's month, which hides a newly added column and reports the old
+ * year's work under the new label. Imports and "does this month exist yet?"
+ * checks must be exact; display code can keep the tolerant matcher.
+ *
+ * A bare query only matches a bare entry (both sides make no year claim).
+ */
+export function findExactMonthlyHistoryEntry(history, month) {
+  const list = Array.isArray(history) ? history : [];
+  const wantLabel = String(month ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!wantLabel) return null;
+
+  const exact = list.find((h) => String((h && h.month) ?? '').trim().toLowerCase().replace(/\s+/g, ' ') === wantLabel);
+  if (exact) return exact;
+
+  const want = parseMonthLabel(wantLabel);
+  if (!want) return null;
+
+  for (const h of list) {
+    const got = parseMonthLabel(h && h.month);
+    if (!got || got.name !== want.name) continue;
+    if (want.year && got.year && want.year === got.year) return h;
+    if (!want.year && !got.year) return h;
+  }
+  return null;
+}
+
+/**
  * Decide whether a reconcile value may be written over what a cell already
  * holds. "Higher wins", never a downgrade.
  *

@@ -20,9 +20,9 @@ import {
   removePromotedAmMatch,
 } from './clickup.js';
 import { runClickUpCloseout } from './clickupCloseout.js';
-import { invalidateCache, getCacheStatus } from './sheetsCache.js';
+import { invalidateCache, getCacheStatus, peekStale, tabValuesCacheKey } from './sheetsCache.js';
 import { syncAssignmentToUserTabs } from './assignmentWriteBack.js';
-import { findMonthlyHistoryEntry, shouldWriteReconciledStatus, maintenanceStatusRank } from './maintenanceStatus.js';
+import { findMonthlyHistoryEntry, findExactMonthlyHistoryEntry, shouldWriteReconciledStatus, maintenanceStatusRank } from './maintenanceStatus.js';
 import * as db from './db.js';
 
 // Hydrate process.env from database (data/mailer-credentials.json or KV)
@@ -72,6 +72,24 @@ function overlayMonthStatus(rows, month, sites = null) {
       _origMaintenanceRaw: row.maintenanceRaw || '',
       _hadMonthEntry: true,
     };
+  });
+}
+
+/**
+ * Bound a promise so one slow dependency cannot hold an HTTP response open
+ * until the Worker platform kills it. The timer is cleared on both paths.
+ */
+function withTimeout(promise, ms, label = 'Operation') {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`)),
+      ms,
+    );
+    if (timer && typeof timer.unref === 'function') timer.unref();
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
   });
 }
 
@@ -1492,41 +1510,100 @@ const server = http.createServer(async (req, res) => {
       // ── MONTHS ──────────────────────────────────────────────
       // GET /api/master/months — returns all month columns detected from CW sheet + active month
       if (pathname === '/api/master/months' && method === 'GET') {
-        const activeMonth = db.getActiveMonth();
-        // Try to fetch live month columns from the CW sheet header row
+        let activeMonth = db.getActiveMonth();
         let sheetMonths = [];
+        let monthImport = null;
+
+        // Prefer the live env var, then fall back to the value stored in DB, then hardcoded default
+        const dbMailerCreds = db.dbRead('mailer-credentials');
+        // The database/KV is the source of truth for settings saved through
+        // Mailer Settings. Check it before process.env because a Worker can
+        // retain a deployment-time fallback ID until KV hydration completes.
+        const CW_ID = dbMailerCreds?.vars?.CW_SPREADSHEET_ID ||
+          process.env.CW_SPREADSHEET_ID ||
+          '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
+        const CW_TAB = dbMailerCreds?.vars?.CW_MASTER_TAB_NAME || process.env.CW_MASTER_TAB_NAME || 'Website List';
+
+        // Read the header row from the CW sheet. Month detection goes through
+        // the same year-aware resolver the importer uses, so junk headers such
+        // as "Maintenance Report URL" are not mistaken for months.
         try {
           const { getTabValues } = await import('./sheets.js');
-          // Prefer the live env var, then fall back to the value stored in DB, then hardcoded default
-          const dbMailerCreds = db.dbRead('mailer-credentials');
-          // The database/KV is the source of truth for settings saved through
-          // Mailer Settings. Check it before process.env because a Worker can
-          // retain a deployment-time fallback ID until KV hydration completes.
-          const CW_ID = dbMailerCreds?.vars?.CW_SPREADSHEET_ID ||
-            process.env.CW_SPREADSHEET_ID ||
-            '19aIBNOb0C4_Fx47bsZ2mUMVAxogX7j_tly8tSg-bldE';
-          const CW_TAB = dbMailerCreds?.vars?.CW_MASTER_TAB_NAME || process.env.CW_MASTER_TAB_NAME || 'Website List';
+          const { detectColumns } = await import('./reportUtils.js');
+          const headerKey = tabValuesCacheKey(CW_ID, CW_TAB, 'A2:ZZ2');
+          const cachedHeader = peekStale(headerKey);
+          // The header is one tiny read. Refresh it at most once a minute so a
+          // column added by hand becomes visible without waiting for the
+          // five-minute fresh window (or for an isolate to be recycled).
+          const forceHeader = !cachedHeader || cachedHeader.ageMs > 60_000;
           // Top-bar month data is non-critical. Never leave the whole UI in
           // "Loading…" while the Google API queue retries a slow header read.
-          const rows = await Promise.race([
-            getTabValues(CW_TAB, 'A2:ZZ2', CW_ID),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Sheet header read timed out')), 8000)),
-          ]);
+          const rows = await withTimeout(
+            getTabValues(CW_TAB, 'A2:ZZ2', CW_ID, { force: forceHeader }),
+            8000,
+            'Sheet header read',
+          );
           const headers = rows?.[0] || [];
-          // Month columns: anything that looks like a month name (with optional year) after first 9 fixed columns
-          sheetMonths = headers
-            .filter((h, i) => i >= 9 && h && /[a-zA-Z]/.test(h) && /[a-zA-Z]+(\.?\s*\d{0,4})?/.test(h.trim()))
-            .map(h => h.trim())
-            .filter(Boolean);
+          const cols = detectColumns(headers);
+          sheetMonths = Array.from(new Set(
+            (cols.MONTHS || [])
+              .map(m => String(m.label ?? '').trim())
+              .filter(Boolean),
+          ));
         } catch (e) {
           console.warn('[months API] Could not fetch sheet columns:', e.message);
         }
+
+        // Self-heal the month data. There are two cases:
+        //  1. a month column exists that the registry has never seen, or
+        //  2. the active month exists in the sheet but almost no site has a
+        //     monthlyHistory entry for it (the stale-September-under-
+        //     October-label state).
+        // The import is deliberately small (two sheet reads + one DB write) so
+        // it is safe on the Worker; it never writes to Google Sheets.
+        try {
+          const sitesNow = db.getSites({});
+          const totalSites = sitesNow.length;
+          const withActive = activeMonth
+            ? sitesNow.filter(s => findExactMonthlyHistoryEntry(s.monthlyHistory || [], activeMonth)).length
+            : 0;
+          const newest = sheetMonths[sheetMonths.length - 1] || '';
+          const newestCoverage = newest
+            ? sitesNow.filter(s => findExactMonthlyHistoryEntry(s.monthlyHistory || [], newest)).length
+            : 0;
+          const newestMissing = !!newest && totalSites > 0 &&
+            newestCoverage < Math.max(1, Math.floor(totalSites * 0.5));
+          const missingActive = !!activeMonth && totalSites > 0 &&
+            withActive < Math.max(1, Math.floor(totalSites * 0.5));
+
+          if (newestMissing || missingActive) {
+            const { importMonthColumns } = await import('./monthImport.js');
+            monthImport = await withTimeout(
+              importMonthColumns({ force: true }),
+              15000,
+              'Month import',
+            );
+            if (Array.isArray(monthImport?.monthLabels) && monthImport.monthLabels.length) {
+              sheetMonths = Array.from(new Set([...sheetMonths, ...monthImport.monthLabels]));
+            }
+            activeMonth = db.getActiveMonth();
+          }
+        } catch (e) {
+          console.warn('[months API] Month data import failed:', e.message);
+        }
+
         // Merge with db months (in case sheet fetch failed)
         const dbMonths = db.getAllMonths();
         const allSet = new Set([...sheetMonths, ...dbMonths]);
         // Remove very short or purely numeric entries
         const allMonths = Array.from(allSet).filter(m => m.length >= 3 && /[a-zA-Z]/.test(m));
-        return ok({ activeMonth, months: allMonths, sheetMonths, dbMonths });
+        return ok({
+          activeMonth,
+          months: allMonths,
+          sheetMonths,
+          dbMonths,
+          ...(monthImport ? { monthImport } : {}),
+        });
       }
 
       // POST /api/master/months/select — set active month (no sheet column creation)
@@ -2248,6 +2325,14 @@ const server = http.createServer(async (req, res) => {
           userName = null;
         }
         const month    = reqUrl.searchParams.get('month') || db.getActiveMonth();
+        // A month imported from a previously unseen sheet column is a fresh
+        // period. The per-user daily-review store still holds last month's
+        // value, and the reconcile guard is right not to overwrite the sheet
+        // from a blank column. But the DISPLAY must be the sheet: blank means
+        // pending, not last month's completed status. So for this month only,
+        // skip the legacy "restore the old value" / reconcile-write path. No
+        // data is written or deleted; this is read-only display selection.
+        const freshMonth = !!month && db.getMeta().activeMonthFresh === month;
         let rows = db.getDailyReview({ userId, userName });
 
         if (rows.length === 0 && (userName === 'Superadmin' || userName === 'Admin' || !userName)) {
@@ -2340,11 +2425,19 @@ const server = http.createServer(async (req, res) => {
           // harmless only because the restore block below put the old value back
           // first, so they were written as no-ops. Filtering on the decision rather
           // than on presence is what makes "refused" mean "not written at all".
-          const mismatchRows = reconcileDecisions.filter(Boolean).filter(d => d.decision.write).map(d => d.row);
+          // On a fresh month the sheet is the display source. Do not run the
+          // legacy reconcile write, and do not restore stored values over the
+          // overlay; both paths exist for months whose daily-review data is
+          // real history, which a newly added month is not.
+          const mismatchRows = freshMonth
+            ? []
+            : reconcileDecisions.filter(Boolean).filter(d => d.decision.write).map(d => d.row);
           // EVERY refusal, not just one reason string. Matching on
           // 'downgrade-refused' alone meant the empty-source refusals fell through
           // the restore block below and kept the blank value on the row.
-          const refusedDowngrades = reconcileDecisions.filter(Boolean).filter(d => !d.decision.write);
+          const refusedDowngrades = freshMonth
+            ? []
+            : reconcileDecisions.filter(Boolean).filter(d => !d.decision.write);
 
           for (const d of refusedDowngrades) {
             const monthVal = (d.row.maintenanceRaw || '').trim();
@@ -4317,13 +4410,25 @@ const server = http.createServer(async (req, res) => {
 
           let allRows;
           try {
-            allRows = await getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId) || [];
+            allRows = await withTimeout(
+              getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
+              25000,
+              'Sheet data read',
+            ) || [];
           } catch (tabErr) {
             // If requested tab failed, fetch available tabs and auto-heal to first available tab
-            availableTabs = await listTabTitles(cred.spreadsheetId).catch(() => []);
+            availableTabs = await withTimeout(
+              listTabTitles(cred.spreadsheetId),
+              10000,
+              'Sheet tab list read',
+            ).catch(() => []);
             if (availableTabs.length) {
               targetTab = availableTabs[0];
-              allRows = await getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId) || [];
+              allRows = await withTimeout(
+              getTabValues(targetTab, 'A1:ZZ2000', cred.spreadsheetId),
+              25000,
+              'Sheet data read',
+            ) || [];
               if (!reqTab) {
                 db.updateSheetCredential(id, { tabName: targetTab, detectedTabs: availableTabs });
               }
@@ -4333,7 +4438,11 @@ const server = http.createServer(async (req, res) => {
           }
 
           if (!availableTabs.length) {
-            availableTabs = await listTabTitles(cred.spreadsheetId).catch(() => [targetTab]);
+            availableTabs = await withTimeout(
+              listTabTitles(cred.spreadsheetId),
+              10000,
+              'Sheet tab list read',
+            ).catch(() => [targetTab]);
           }
 
           if (allRows.length < headerRowNum) {

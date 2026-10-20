@@ -1699,6 +1699,7 @@ export function addNewMonth(monthName) {
 
   setMeta({
     activeMonth: cleanMonth,
+    activeMonthFresh: cleanMonth,
     months: Array.from(months),
     lastMonthAdded: cleanMonth,
     lastMonthAddedAt: now(),

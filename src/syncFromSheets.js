@@ -844,7 +844,7 @@ async function importProperties(userMap, ctx = makeCtx()) {
     const take = (map, mapName, k) => {
       const bucket = map.get(k);
       if (!bucket) return null;
-      const ck = `${mapName} ${k}`;
+      const ck = `${mapName} ${k}`;
       let i = cursors.get(ck) || 0;
       while (i < bucket.length && used.has(bucket[i].id)) i++;   // never re-emit a taken id
       if (i >= bucket.length) return null;
